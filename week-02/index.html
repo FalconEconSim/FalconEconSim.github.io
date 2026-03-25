@@ -480,10 +480,6 @@ mjx-container[display="true"] {
   white-space: pre;
 }
 .code-output.error { color: #f97583; }
-.pyodide-loading {
-  color: #f8c555;
-  font-style: italic;
-}
 
 /* ─── CALLOUT BOXES ─── */
 .callout {
@@ -565,22 +561,7 @@ td:first-child { font-weight: 600; color: var(--ink); }
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-  <!-- Pyodide (lazy-loaded on demand) -->
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js" defer></script>
   <script>
-// ─── CODE PANEL TOGGLE ───────────────────────────────────────────────────────
-function initCodeToggles() {
-  document.querySelectorAll('.code-toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = document.getElementById(btn.dataset.target);
-      if (!target) return;
-      const visible = target.classList.toggle('visible');
-      btn.classList.toggle('open', visible);
-      btn.querySelector('.arrow').textContent = visible ? '▶' : '▶';
-    });
-  });
-}
-
 // ─── ACTIVE SIDEBAR LINK ON SCROLL ───────────────────────────────────────────
 function initScrollSpy() {
   const sections = document.querySelectorAll('.section-block[id]');
@@ -597,1151 +578,1027 @@ function initScrollSpy() {
   sections.forEach(s => observer.observe(s));
 }
 
-// ─── PYODIDE SETUP ────────────────────────────────────────────────────────────
-let pyodideReady = false;
-let pyodideInstance = null;
-let pyodideLoadPromise = null;
-
-async function getPyodide() {
-  if (pyodideReady) return pyodideInstance;
-  if (pyodideLoadPromise) return pyodideLoadPromise;
-  pyodideLoadPromise = (async () => {
-    pyodideInstance = await loadPyodide();
-    pyodideReady = true;
-    return pyodideInstance;
-  })();
-  return pyodideLoadPromise;
-}
-
-async function runPythonCode(code, outputEl) {
-  outputEl.textContent = '⏳ Loading Python runtime…';
-  outputEl.className = 'code-output pyodide-loading';
-  try {
-    const py = await getPyodide();
-    outputEl.textContent = '⏳ Running…';
-    // Capture stdout
-    py.runPython(`
-import sys, io
-_stdout_capture = io.StringIO()
-sys.stdout = _stdout_capture
-`);
-    try {
-      py.runPython(code);
-      const out = py.runPython(`_stdout_capture.getvalue()`);
-      outputEl.textContent = out || '✓ Ran successfully (no output)';
-      outputEl.className = 'code-output';
-    } catch (err) {
-      outputEl.textContent = '✗ ' + err.message;
-      outputEl.className = 'code-output error';
-    } finally {
-      py.runPython(`sys.stdout = sys.__stdout__`);
-    }
-  } catch (err) {
-    outputEl.textContent = '✗ Failed to load Python: ' + err.message;
-    outputEl.className = 'code-output error';
-  }
-}
-
-function initRunButtons() {
-  document.querySelectorAll('.code-run-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const editorId = btn.dataset.editor;
-      const outputId = btn.dataset.output;
-      const editor = document.getElementById(editorId);
-      const output = document.getElementById(outputId);
-      if (!editor || !output) return;
-      await runPythonCode(editor.value, output);
-    });
-  });
-}
-
 // ─── INIT ALL ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  initCodeToggles();
   initScrollSpy();
-  initRunButtons();
 });
 
 </script>
-  <script>
+<script>
 /* =============================================================================
-   WEEK 2 — Consumer Choice: JSXGraph Visualizations
-   Each visualization uses native JSXGraph interactivity:
-   sliders ON the board, gliders on curves, live text, 3D surface, shading.
-   No freeBoard redraw on slider drag — everything updates live.
+   WEEK 2 — Consumer Choice · Visualizations v4
+   Key principles:
+   - Interaction only where pedagogically meaningful
+   - No text on board that overlaps curves
+   - Axis names at END of axis
+   - Generous bounding boxes
    ============================================================================= */
-
 JXG.Options.text.useMathJax = true;
 
-/* ---------------------------------------------------------------------------
-   Shared helpers
-   --------------------------------------------------------------------------- */
-function safePos(x, min, max) { return Math.max(min, Math.min(max, x)); }
+function safePos(x,lo,hi){return Math.max(lo,Math.min(hi,x));}
+function slVal(id){return parseFloat(document.getElementById(id).value);}
 
-function cobbY(x, k, alpha) {
-  var b = 1 - alpha;
-  return x > 0 ? Math.pow(k / Math.pow(x, alpha), 1/b) : NaN;
-}
-
-function initBoard(id, bbox, axisOn) {
+/* mkBoard: axis NAMES placed at the far end of each axis via label offset trick.
+   JSXGraph places the axis name label at the end of the axis automatically
+   when you use the `name` attribute on the axis — the label offset just fine-tunes. */
+function mkBoard(id, bbox) {
   return JXG.JSXGraph.initBoard(id, {
     boundingbox: bbox,
-    axis: axisOn !== false,
+    axis: true,
     showNavigation: false,
     showCopyright: false,
-    pan: { enabled: false },
-    zoom: { enabled: false }
+    pan:  {enabled:false},
+    zoom: {enabled:false},
+    defaultAxes: {
+      x: {
+        withLabel: true, name: 'X',
+        label: {
+          position: 'rt',       /* 'rt' = right tip of axis */
+          offset:   [0, -14],
+          anchorX:  'right',
+          fontSize: 13,
+          color:    '#555'
+        },
+        ticks: {strokeColor:'#e8e8e8', label:{fontSize:10, color:'#aaa'}}
+      },
+      y: {
+        withLabel: true, name: 'Y',
+        label: {
+          position: 'rt',       /* top tip of axis */
+          offset:   [-14, 0],
+          anchorX:  'right',
+          fontSize: 13,
+          color:    '#555'
+        },
+        ticks: {strokeColor:'#e8e8e8', label:{fontSize:10, color:'#aaa'}}
+      }
+    }
   });
 }
 
+function mk3DBoard(id, bbox) {
+  return JXG.JSXGraph.initBoard(id, {
+    boundingbox: bbox,
+    axis: false,
+    showNavigation: false,
+    showCopyright: false,
+    pan:  {enabled:false},
+    zoom: {enabled:false}
+  });
+}
+
+var C = {
+  blue:  '#3d5a80',
+  blue2: '#6b8cae',
+  blue3: '#c5d9eb',
+  red:   '#c0392b',
+  amber: '#d4813a',
+  green: '#2e8b57',
+  ink:   '#1a1a2a'
+};
+
 /* =============================================================================
-   1. INDIFFERENCE CURVE EXPLORER
-   JSXGraph 3D view3d: rotatable utility surface + live level-curve projection.
-   Left board: 3D surface with draggable point whose height = U(x,y).
-   Right board (2D IC map): shows the horizontal slice at that U value.
-   Type buttons switch IC family; alpha slider reshapes.
+   1. IC EXPLORER
+   3D: Cobb-Douglas surface with a semi-transparent horizontal cutting plane
+       that slides up/down. The red curve is the IC at that utility level.
+   2D: IC map with a glider P on the Cobb-Douglas curve showing live MRS.
+       For other types: static IC families, no glider (no crash).
    ============================================================================= */
+var icBoard3D, icBoard2D, icView3D;
+var icCurves2D=[], icGlider2D=null, icTangent2D=null;
+var icDropH=null, icDropV=null, icMRSText=null, icHighlightFn=null;
 
 var IC_INFO = {
   cobb: {
-    label: 'Cobb-Douglas',
-    fn:    '\\(U(X,Y)=X^{\\alpha}Y^{1-\\alpha}\\)',
-    shape: 'Smooth, convex (bowed toward origin)',
-    mrs:   'Diminishing: \\(MRS=\\frac{\\alpha Y}{(1-\\alpha)X}\\)',
-    desc:  'Drag the orange point on the 3D surface or move it in the 2D map. ' +
-           'The highlighted indifference curve is the level curve at the current utility value. ' +
-           'MRS diminishes as you move right along any curve.'
+    label:'Cobb-Douglas',
+    fn:'\\(U(X,Y)=X^{\\alpha}Y^{1-\\alpha}\\)',
+    shape:'Smooth and convex (bowed toward origin)',
+    mrs:'Diminishing: \\(MRS=\\tfrac{\\alpha Y}{(1-\\alpha)X}\\)',
+    desc:'Drag point P along the highlighted curve — the tangent line and MRS value update live. Use the utility level slider to move the cutting plane on the 3D surface and watch the highlighted IC change.'
   },
   substitutes: {
-    label: 'Perfect Substitutes',
-    fn:    '\\(U(X,Y)=aX+bY\\)',
-    shape: 'Straight parallel lines, slope \\(-a/b\\)',
-    mrs:   'Constant everywhere: \\(MRS=a/b\\)',
-    desc:  'The consumer is always willing to trade at the same fixed rate regardless of quantities. ' +
-           'Drag the point horizontally and note the tangent slope never changes.'
+    label:'Perfect Substitutes',
+    fn:'\\(U(X,Y)=X+Y\\)',
+    shape:'Straight parallel lines with slope \\(-1\\)',
+    mrs:'Constant: \\(MRS=1\\) everywhere',
+    desc:'The consumer is always willing to trade one unit of X for one unit of Y, regardless of quantities held. The optimal bundle is a corner solution.'
   },
   complements: {
-    label: 'Perfect Complements',
-    fn:    '\\(U(X,Y)=\\min(X,Y)\\)',
-    shape: 'L-shaped, kink on the 45° ray',
-    mrs:   '\\(0\\), \\(\\infty\\), or undefined at the kink',
-    desc:  'Extra units of one good without the other provide zero additional utility. ' +
-           'The optimum always lies at the kink. Drag along either arm and observe utility unchanged.'
+    label:'Perfect Complements',
+    fn:'\\(U(X,Y)=\\min(X,Y)\\)',
+    shape:'L-shaped curves, kink on the 45\\(^\\circ\\) ray',
+    mrs:'\\(0\\), \\(\\infty\\), or undefined at the kink',
+    desc:'Goods must be consumed in fixed proportions. Extra units of one good alone add zero utility. The consumer always chooses the bundle at the kink of the L.'
   },
   neutral: {
-    label: 'Neutral Good (Y)',
-    fn:    '\\(U(X,Y)=X\\)',
-    shape: 'Vertical lines — independent of \\(Y\\)',
-    mrs:   '\\(\\infty\\): Y adds nothing',
-    desc:  'Utility depends only on X. Moving vertically (changing Y) keeps you on the same curve. ' +
-           'Only moving rightward increases utility.'
+    label:'Neutral Good (Y)',
+    fn:'\\(U(X,Y)=X\\)',
+    shape:'Vertical lines — utility independent of \\(Y\\)',
+    mrs:'Undefined: \\(Y\\) is completely irrelevant',
+    desc:'Utility depends only on X. Any change in Y leaves the consumer exactly indifferent. Only moving rightward — consuming more X — increases welfare.'
   },
   bad: {
-    label: 'Economic Bad (Y)',
-    fn:    '\\(U(X,Y)=X-Y\\)',
-    shape: 'Upward-sloping lines',
-    mrs:   'Negative: more Y requires compensation in X',
-    desc:  'Y actively reduces utility. To stay on the same curve as Y increases, ' +
-           'the consumer must receive more X as compensation — hence the upward slope.'
+    label:'Economic Bad (Y)',
+    fn:'\\(U(X,Y)=X-Y\\)',
+    shape:'Upward-sloping lines',
+    mrs:'Negative: more Y requires compensation in X',
+    desc:'Good Y actively reduces utility. To remain on the same indifference curve as Y rises, the consumer must receive additional X as compensation, producing the upward slope.'
   }
 };
 
-var icBoard3D, icBoard2D;
-
 function initICExplorer() {
-  // ── 3D board ──────────────────────────────────────────────────────────────
-  icBoard3D = initBoard('jxg-ic-3d', [-9, 8, 9, -5.5], false);
-  icBoard3D.resizeContainer(icBoard3D.containerObj.offsetWidth,
-                            icBoard3D.containerObj.offsetHeight);
+  /* ── 3D board ── */
+  icBoard3D = mk3DBoard('jxg-ic-3d', [-10, 9, 10, -7]);
 
-  var box3 = [0, 7];
-  var view = icBoard3D.create('view3d', [
-    [-5, -3], [9, 8], [box3, box3, [0, 6]]
+  var box3 = [0.1, 6.5];
+  icView3D = icBoard3D.create('view3d', [
+    [-7, -4], [14, 11.5], [box3, box3, [0, 5.5]]
   ], {
-    xPlaneRear: { visible: false },
-    yPlaneRear: { visible: false },
-    projection: 'central',
-    xAxis: { strokeColor: '#aaa', ticks: { label: { visible: false } } },
-    yAxis: { strokeColor: '#aaa', ticks: { label: { visible: false } } },
-    zAxis: { strokeColor: '#888', ticks: { label: { visible: false } }, withLabel: true,
-             name: 'U', label: { offset: [5, 0], color: '#3d5a80', fontSize: 13 } }
-  });
-
-  var alpha3d = 0.5;
-
-  // The surface: U(x,y) = x^alpha * y^(1-alpha)
-  var surf = view.create('functiongraph3d', [
-    function(x, y) {
-      return x > 0.01 && y > 0.01 ? Math.pow(x, alpha3d) * Math.pow(y, 1-alpha3d) : 0;
-    }, box3, box3
-  ], { strokeColor: '#3d5a80', strokeWidth: 0.6, stepsU: 40, stepsV: 40 });
-
-  // Draggable base point
-  var pxy = view.create('point3d', [3, 3, 0], {
-    withLabel: false, size: 5, fillColor: '#d4813a', strokeColor: '#fff',
-    showInfobox: false
-  });
-
-  // Surface point (always at height U(pxy.X, pxy.Y))
-  var psurf = view.create('point3d', [
-    function() {
-      var x = safePos(pxy.X(), 0.1, 6.9);
-      var y = safePos(pxy.Y(), 0.1, 6.9);
-      return [x, y, x > 0.01 && y > 0.01 ? Math.pow(x, alpha3d) * Math.pow(y, 1-alpha3d) : 0];
+    xPlaneRear: {visible:false},
+    yPlaneRear: {visible:false},
+    projection:  'central',
+    zAxis: {
+      strokeColor:'#aaa', withLabel:true, name:'U',
+      label:{offset:[5,0], color:C.blue, fontSize:12},
+      ticks:{label:{visible:false}}
     }
-  ], { withLabel: false, fixed: true, size: 5, fillColor: '#c0392b', strokeColor: '#fff',
-       showInfobox: false });
-
-  // Vertical dashed line from base to surface
-  view.create('line3d', [pxy, psurf], { dash: 2, strokeColor: '#aaa', strokeWidth: 1 });
-
-  // ── 2D IC board ───────────────────────────────────────────────────────────
-  icBoard2D = initBoard('jxg-ic-2d', [-0.5, 11, 11, -0.5]);
-
-  // Type buttons
-  document.getElementById('ic-type-btns').addEventListener('click', function(e) {
-    var btn = e.target.closest('.type-btn');
-    if (!btn) return;
-    document.querySelectorAll('#ic-type-btns .type-btn').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    var type = btn.dataset.type;
-    document.getElementById('alpha-ctrl').style.display = type === 'cobb' ? '' : 'none';
-    drawIC2D(type, parseFloat(document.getElementById('alpha-slider').value));
-    setICInfo(type);
   });
 
-  document.getElementById('alpha-slider').addEventListener('input', function(e) {
-    var v = parseFloat(e.target.value);
-    document.getElementById('alpha-val').textContent = v.toFixed(2);
-    alpha3d = v;
-    // Update surface (freeBoard and rebuild)
-    drawIC2D('cobb', v);
+  /* Surface — updates with preference type */
+  icView3D.create('functiongraph3d', [
+    function(x,y) {
+      if (x<=0.05||y<=0.05) return 0;
+      var a=slVal('ic-alpha');
+      var type=(document.querySelector('#ic-type-btns .type-btn.active')||{dataset:{type:'cobb'}}).dataset.type;
+      if (type==='cobb')        return Math.pow(x,a)*Math.pow(y,1-a);
+      if (type==='substitutes') return x+y;
+      if (type==='complements') return Math.min(x,y);
+      if (type==='neutral')     return x;
+      if (type==='bad')         return Math.max(0,x-y);
+      return Math.pow(x,a)*Math.pow(y,1-a);
+    }, box3, box3
+  ], {strokeColor:C.blue, strokeWidth:0.55, stepsU:32, stepsV:32});
+
+  /* Cutting plane — 4 corner points at z=U₀ */
+  var corners = [[box3[0],box3[0]],[box3[1],box3[0]],[box3[1],box3[1]],[box3[0],box3[1]]];
+  var cPts = corners.map(function(c) {
+    var cx=c[0], cy=c[1];
+    return icView3D.create('point3d', [function(){
+      return [cx, cy, slVal('ic-u0')];
+    }], {visible:false, fixed:true, showInfobox:false});
   });
 
-  drawIC2D('cobb', 0.5);
+  /* 4 edges of the plane */
+  [[0,1],[1,2],[2,3],[3,0]].forEach(function(p) {
+    icView3D.create('line3d', [cPts[p[0]], cPts[p[1]]],
+      {strokeColor:C.red, strokeWidth:1.5});
+  });
+
+  /* Fill the cutting plane with evenly spaced horizontal lines (hatch fill).
+     Each line goes from x=box3[0] to x=box3[1] at a fixed y fraction.
+     fillOpacity via strokeOpacity on multiple lines mimics a shaded region. */
+  var numFill=16;
+  for (var fi=1; fi<numFill; fi++) {
+    (function(frac) {
+      var cy0=box3[0]+(box3[1]-box3[0])*frac;
+      var pA=icView3D.create('point3d',[function(){return [box3[0],cy0,slVal('ic-u0')];}],
+        {visible:false,fixed:true,showInfobox:false});
+      var pB=icView3D.create('point3d',[function(){return [box3[1],cy0,slVal('ic-u0')];}],
+        {visible:false,fixed:true,showInfobox:false});
+      icView3D.create('line3d',[pA,pB],
+        {strokeColor:'rgba(192,57,43,0.22)',strokeWidth:1.2});
+    })(fi/numFill);
+  }
+
+  /* IC curve at U₀ — the intersection of cutting plane with surface */
+  icView3D.create('curve3d', [function(t) {
+    var a=slVal('ic-alpha'), b=1-a, u0=slVal('ic-u0');
+    if (u0<=0||a<=0||b<=0) return [NaN,NaN,NaN];
+    var y = t>0.05 ? Math.pow(u0/Math.pow(t,a), 1/b) : NaN;
+    if (!isFinite(y)||y<box3[0]||y>box3[1]) return [NaN,NaN,NaN];
+    return [t, y, u0];
+  }, [box3[0]+0.05, box3[1]]
+  ], {strokeColor:C.red, strokeWidth:3});
+
+  /* ── 2D board ── */
+  icBoard2D = mkBoard('jxg-ic-2d', [-0.8, 12.5, 12.5, -0.8]);
+  drawIC2D('cobb', slVal('ic-alpha'));
   setICInfo('cobb');
+
+  /* Wire controls */
+  document.getElementById('ic-alpha').addEventListener('input', function() {
+    var v = parseFloat(this.value);
+    document.getElementById('alpha-val').textContent = v.toFixed(2);
+    var type=document.querySelector('#ic-type-btns .type-btn.active').dataset.type;
+    drawIC2D(type, v);
+    icBoard3D.update();
+  });
+
+  document.getElementById('ic-u0').addEventListener('input', function() {
+    var u0=parseFloat(this.value);
+    document.getElementById('ic-u0-val').textContent=u0.toFixed(1);
+    icBoard3D.update();
+    /* Always redraw the 2D IC for the current type at the new U₀ */
+    var type=document.querySelector('#ic-type-btns .type-btn.active').dataset.type;
+    redrawIC2DAtU0(type, slVal('ic-alpha'), u0);
+  });
+
+  document.getElementById('ic-type-btns').addEventListener('click', function(e) {
+    var btn=e.target.closest('.type-btn');
+    if (!btn) return;
+    document.querySelectorAll('#ic-type-btns .type-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    var type=btn.dataset.type;
+    document.getElementById('alpha-ctrl').style.display = type==='cobb'?'':'none';
+    document.getElementById('u0-ctrl').style.display    = type==='cobb'?'':'none';
+    drawIC2D(type, slVal('ic-alpha'));
+    setICInfo(type);
+    icBoard3D.update();
+  });
 }
 
+/* redrawIC2DHighlight removed — see redrawIC2DAtU0 */
+
 function setICInfo(type) {
-  var info = IC_INFO[type];
-  document.getElementById('ic-type-label').textContent = info.label;
-  document.getElementById('ic-utility-fn').innerHTML   = info.fn;
-  document.getElementById('ic-shape').innerHTML        = info.shape;
-  document.getElementById('ic-mrs').innerHTML          = info.mrs;
-  document.getElementById('ic-description').innerHTML  = info.desc;
+  var info=IC_INFO[type];
+  document.getElementById('ic-type-label').textContent=info.label;
+  document.getElementById('ic-utility-fn').innerHTML  =info.fn;
+  document.getElementById('ic-shape').innerHTML       =info.shape;
+  document.getElementById('ic-mrs').innerHTML         =info.mrs;
+  document.getElementById('ic-description').innerHTML =info.desc;
   if (window.retypeset) {
-    var panel = document.getElementById('jxg-ic-2d');
-    if (panel) window.retypeset(panel.closest('.viz-wrapper').querySelector('.viz-panel-right'));
+    var rp=document.querySelector('.viz-panel-right');
+    if (rp) window.retypeset(rp);
   }
 }
 
-var icCurves2D = [], icGlider2D = null, icTangent2D = null, icMRSText = null;
-var icDropH = null, icDropV = null;
-
 function drawIC2D(type, alpha) {
-  // Clear existing dynamic objects
-  icCurves2D.forEach(function(o) { try { icBoard2D.removeObject(o, false); } catch(e){} });
-  icCurves2D = [];
-  if (icGlider2D) { try { icBoard2D.removeObject(icGlider2D, false); } catch(e){} icGlider2D = null; }
-  if (icTangent2D) { try { icBoard2D.removeObject(icTangent2D, false); } catch(e){} icTangent2D = null; }
-  if (icMRSText) { try { icBoard2D.removeObject(icMRSText, false); } catch(e){} icMRSText = null; }
-  if (icDropH) { try { icBoard2D.removeObject(icDropH, false); } catch(e){} icDropH = null; }
-  if (icDropV) { try { icBoard2D.removeObject(icDropV, false); } catch(e){} icDropV = null; }
+  /* Clear safely */
+  icCurves2D.forEach(function(o){try{icBoard2D.removeObject(o,false);}catch(e){}});
+  icCurves2D=[];
+  if (icGlider2D)   {try{icBoard2D.removeObject(icGlider2D,  false);}catch(e){} icGlider2D=null;}
+  if (icTangent2D)  {try{icBoard2D.removeObject(icTangent2D, false);}catch(e){} icTangent2D=null;}
+  if (icMRSText)    {try{icBoard2D.removeObject(icMRSText,   false);}catch(e){} icMRSText=null;}
+  if (icDropH)      {try{icBoard2D.removeObject(icDropH,     false);}catch(e){} icDropH=null;}
+  if (icDropV)      {try{icBoard2D.removeObject(icDropV,     false);}catch(e){} icDropV=null;}
+  if (icHighlightFn){try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){} icHighlightFn=null;}
 
-  var levels = [1.2, 2.0, 3.2, 4.8, 7.0];
-  var colors = ['#c5d9eb','#9db5cc','#6b8cae','#3d5a80','#1e3a5f'];
+  /* Draw ONLY the single IC at current U₀ for the selected type.
+     No static family — the one red curve IS the visualization. */
+  var u0=slVal('ic-u0');
+  redrawIC2DAtU0(type, alpha, u0);
+  icBoard2D.update();
+}
 
-  levels.forEach(function(k, idx) {
-    var isHigh = (idx === 2);
-    var col = colors[idx];
-    var w = isHigh ? 2.8 : 1.5;
-    var c;
+/* Draw the single IC at U₀ for any preference type, with glider for Cobb-Douglas */
+function redrawIC2DAtU0(type, alpha, u0) {
+  /* Remove old highlight objects */
+  if (icHighlightFn){try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){} icHighlightFn=null;}
+  if (icGlider2D)   {try{icBoard2D.removeObject(icGlider2D,  false);}catch(e){} icGlider2D=null;}
+  if (icTangent2D)  {try{icBoard2D.removeObject(icTangent2D, false);}catch(e){} icTangent2D=null;}
+  if (icMRSText)    {try{icBoard2D.removeObject(icMRSText,   false);}catch(e){} icMRSText=null;}
+  if (icDropH)      {try{icBoard2D.removeObject(icDropH,     false);}catch(e){} icDropH=null;}
+  if (icDropV)      {try{icBoard2D.removeObject(icDropV,     false);}catch(e){} icDropV=null;}
 
-    if (type === 'cobb') {
-      var b = 1 - alpha;
-      c = icBoard2D.create('functiongraph', [function(x) {
-        return x > 0.05 ? Math.pow(k / Math.pow(x, alpha), 1/b) : NaN;
-      }], { strokeColor: col, strokeWidth: w, highlight: false });
+  if (u0<=0) return;
+  var b=1-alpha;
 
-    } else if (type === 'substitutes') {
-      c = icBoard2D.create('functiongraph', [function(x) { return k - x; }],
-        { strokeColor: col, strokeWidth: w, highlight: false });
+  if (type==='cobb') {
+    if (b<=0) return;
+    icHighlightFn=icBoard2D.create('functiongraph',[function(x){
+      return x>0.05?Math.pow(u0/Math.pow(x,alpha),1/b):NaN;
+    }],{strokeColor:C.red,strokeWidth:3,highlight:false});
 
-    } else if (type === 'complements') {
-      if (k <= 9.5) {
-        var s1 = icBoard2D.create('segment', [[k, k], [10, k]],
-          { strokeColor: col, strokeWidth: w, fixed: true, highlight: false });
-        var s2 = icBoard2D.create('segment', [[k, k], [k, 10]],
-          { strokeColor: col, strokeWidth: w, fixed: true, highlight: false });
-        icCurves2D.push(s1, s2);
-        if (isHigh) {
-          var kink = icBoard2D.create('point', [k, k], {
-            color: col, size: 4, fixed: true, name: 'Kink',
-            withLabel: true, label: { offset: [6, 4], fontSize: 10 }
-          });
-          icCurves2D.push(kink);
-        }
-      }
-      return;
+  } else if (type==='substitutes') {
+    /* U=X+Y -> IC is X+Y=u0, i.e. Y=u0-X */
+    icHighlightFn=icBoard2D.create('functiongraph',[function(x){return u0-x;}],
+      {strokeColor:C.red,strokeWidth:3,highlight:false});
 
-    } else if (type === 'neutral') {
-      if (k <= 9.5) {
-        c = icBoard2D.create('segment', [[k, 0], [k, 10]],
-          { strokeColor: col, strokeWidth: w, fixed: true, highlight: false });
-      } else return;
-
-    } else if (type === 'bad') {
-      c = icBoard2D.create('functiongraph', [function(x) { return x - k; }],
-        { strokeColor: col, strokeWidth: w, highlight: false });
+  } else if (type==='complements') {
+    /* U=min(X,Y) -> IC is the L-shape with kink at (u0,u0) */
+    if (u0<=11.5) {
+      var s1=icBoard2D.create('segment',[[u0,u0],[12,u0]],{strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
+      var s2=icBoard2D.create('segment',[[u0,u0],[u0,12]],{strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
+      var kk=icBoard2D.create('point',[u0,u0],{
+        size:6,color:C.red,fixed:true,highlight:false,withLabel:false
+      });
+      icCurves2D.push(s1,s2,kk);
     }
 
-    if (c) {
-      icCurves2D.push(c);
-      // Label middle curve
-      if (isHigh) {
-        var lx, ly;
-        if (type === 'cobb')        { lx = 3.5; ly = cobbY(lx, k, alpha) + 0.3; }
-        else if (type === 'substitutes') { lx = 0.5; ly = k - 0.5 + 0.4; }
-        else if (type === 'neutral') { lx = k + 0.3; ly = 2; }
-        else if (type === 'bad')    { lx = k + 0.8; ly = 0.5; }
-        if (lx && ly > 0 && ly < 10.5) {
-          var lbl = icBoard2D.create('text', [lx, ly, 'U\u2081'], {
-            fontSize: 11, color: col, fixed: true, highlight: false
-          });
-          icCurves2D.push(lbl);
-        }
-      }
+  } else if (type==='neutral') {
+    /* U=X -> IC is vertical line X=u0 */
+    if (u0<=11.5) {
+      icHighlightFn=icBoard2D.create('segment',[[u0,0],[u0,12]],
+        {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
     }
-  });
 
-  // Increasing utility arrow
-  var arrLbl = icBoard2D.create('text', [7.5, 9.6,
-    '\u2197 higher utility'], {
-    fontSize: 10, color: '#3d5a80', fixed: true, highlight: false
-  });
-  icCurves2D.push(arrLbl);
+  } else if (type==='bad') {
+    /* U=X-Y -> IC is X-Y=u0, i.e. Y=X-u0 */
+    icHighlightFn=icBoard2D.create('functiongraph',[function(x){return x-u0;}],
+      {strokeColor:C.red,strokeWidth:3,highlight:false});
+  }
 
-  // For Cobb-Douglas: add draggable glider + live tangent + MRS readout
-  if (type === 'cobb') {
-    var kHighlight = levels[2];
-    var b2 = 1 - alpha;
-    var icFn = icBoard2D.create('functiongraph', [function(x) {
-      return x > 0.05 ? Math.pow(kHighlight / Math.pow(x, alpha), 1/b2) : NaN;
-    }], { visible: false, highlight: false });
-    icCurves2D.push(icFn);
+  /* U₀ label — top-right corner of the 2D board */
+  var uLbl=icBoard2D.create('text',[11.5,11.8,'U₀ = '+u0.toFixed(2)],
+    {fontSize:13,color:C.red,fixed:true,anchorX:'right',highlight:false});
+  icCurves2D.push(uLbl);
 
-    // Draggable point — glider on the highlighted IC
-    icGlider2D = icBoard2D.create('glider', [3, cobbY(3, kHighlight, alpha), icFn], {
-      name: 'P', size: 7,
-      fillColor: '#d4813a', strokeColor: '#fff', strokeWidth: 2,
-      withLabel: true, label: { offset: [10, 5], fontSize: 11, color: '#d4813a' },
-      showInfobox: false, highlight: false
+  /* Cobb-Douglas only: glider + tangent + MRS readout */
+  if (type==='cobb'&&icHighlightFn) {
+    var startX=3.0;
+    var startY=u0>0&&b>0?Math.pow(u0/Math.pow(startX,alpha),1/b):0;
+    if (!isFinite(startY)||startY>11||startY<0.1) { startX=1.5; startY=Math.pow(u0/Math.pow(startX,alpha),1/b); }
+    if (!isFinite(startY)) return;
+
+    icGlider2D=icBoard2D.create('glider',[startX,startY,icHighlightFn],{
+      name:'P',size:7,
+      fillColor:C.amber,strokeColor:'#fff',strokeWidth:2,
+      withLabel:true,label:{offset:[10,4],fontSize:12,color:C.amber},
+      showInfobox:false
     });
-
-    // Tangent line at glider
-    icTangent2D = icBoard2D.create('tangent', [icGlider2D], {
-      strokeColor: '#d4813a', strokeWidth: 2, dash: 2,
-      highlight: false, withLabel: false
-    });
-
-    // Drop lines to axes
-    icDropH = icBoard2D.create('segment', [
-      [0, function() { return icGlider2D.Y(); }],
-      [function() { return icGlider2D.X(); }, function() { return icGlider2D.Y(); }]
-    ], { strokeColor: '#bbb', strokeWidth: 1, dash: 2, fixed: false, highlight: false });
-
-    icDropV = icBoard2D.create('segment', [
-      [function() { return icGlider2D.X(); }, 0],
-      [function() { return icGlider2D.X(); }, function() { return icGlider2D.Y(); }]
-    ], { strokeColor: '#bbb', strokeWidth: 1, dash: 2, fixed: false, highlight: false });
-
-    // Live MRS text
-    icMRSText = icBoard2D.create('text', [0.4, 9.5, function() {
-      var gx = safePos(icGlider2D.X(), 0.2, 9.8);
-      var gy = safePos(icGlider2D.Y(), 0.2, 9.8);
-      var mrs = (alpha * gy) / ((1 - alpha) * gx);
-      return 'MRS = ' + mrs.toFixed(3);
-    }], { fontSize: 12, color: '#d4813a', fixed: false, highlight: false });
-
-    icCurves2D.push(icFn, icGlider2D, icTangent2D, icMRSText, icDropH, icDropV);
+    icTangent2D=icBoard2D.create('tangent',[icGlider2D],
+      {strokeColor:C.amber,strokeWidth:2,dash:2,highlight:false,withLabel:false});
+    icDropH=icBoard2D.create('segment',[
+      [0,function(){return icGlider2D?icGlider2D.Y():0;}],
+      [function(){return icGlider2D?icGlider2D.X():0;},function(){return icGlider2D?icGlider2D.Y():0;}]
+    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,highlight:false});
+    icDropV=icBoard2D.create('segment',[
+      [function(){return icGlider2D?icGlider2D.X():0;},0],
+      [function(){return icGlider2D?icGlider2D.X():0;},function(){return icGlider2D?icGlider2D.Y():0;}]
+    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,highlight:false});
+    /* MRS label: floats slightly above/right of P */
+    icMRSText=icBoard2D.create('text',[
+      function(){return icGlider2D?Math.min(icGlider2D.X()+0.4,10.5):10;},
+      function(){return icGlider2D?Math.min(icGlider2D.Y()+0.5,11.5):11;},
+      function(){
+        if (!icGlider2D) return '';
+        var gx=safePos(icGlider2D.X(),0.2,11);
+        var gy=safePos(icGlider2D.Y(),0.2,11);
+        if (gx<=0||alpha<=0||alpha>=1) return '';
+        return 'MRS = '+(alpha*gy/((1-alpha)*gx)).toFixed(3);
+      }
+    ],{fontSize:13,color:C.amber,fixed:false,highlight:false});
+    icCurves2D.push(icGlider2D,icTangent2D,icMRSText,icDropH,icDropV);
   }
 
   icBoard2D.update();
 }
 
 /* =============================================================================
-   2. UTILITY SURFACE + LEVEL CURVES  (JSXGraph 3D view3d)
-   Single full-width board. The 3D surface is rotatable by dragging.
-   A JSXGraph slider (on the board itself) controls alpha.
-   A draggable point on the floor shows the level curve at that (x,y).
-   The current level curve is drawn in red on the surface.
+   1b. IC FAMILY MAP — shows 5 curves for the selected type (separate viz)
+   This is the second board in §2.1, showing the full family.
+   ============================================================================= */
+var icFamilyBoard=null, icFamilyObjects=[];
+
+function initICFamily() {
+  icFamilyBoard=mkBoard('jxg-ic-family',[-0.8,12.5,12.5,-0.8]);
+  drawICFamily('cobb', 0.5);
+
+  document.getElementById('ic-alpha').addEventListener('input', function() {
+    var type=document.querySelector('#ic-type-btns .type-btn.active').dataset.type;
+    drawICFamily(type, parseFloat(this.value));
+  });
+  document.getElementById('ic-type-btns').addEventListener('click', function(e) {
+    var btn=e.target.closest('.type-btn');
+    if (!btn) return;
+    drawICFamily(btn.dataset.type, slVal('ic-alpha'));
+  });
+}
+
+function drawICFamily(type, alpha) {
+  if (!icFamilyBoard) return;
+  icFamilyObjects.forEach(function(o){try{icFamilyBoard.removeObject(o,false);}catch(e){}});
+  icFamilyObjects=[];
+
+  var levels=[0.7,1.4,2.4,3.8,5.8];
+  var cols=['#c5d9eb','#9db5cc','#6b8cae',C.blue,'#1e3a5f'];
+  var b=1-alpha;
+
+  levels.forEach(function(k,idx){
+    var col=cols[idx], w=idx===2?2.5:1.4, c;
+
+    if (type==='cobb') {
+      (function(kk,bb){
+        c=icFamilyBoard.create('functiongraph',[function(x){
+          return x>0.05?Math.pow(kk/Math.pow(x,alpha),1/bb):NaN;
+        }],{strokeColor:col,strokeWidth:w,highlight:false});
+      })(k,b);
+
+    } else if (type==='substitutes') {
+      (function(kk){
+        c=icFamilyBoard.create('functiongraph',[function(x){return kk-x;}],
+          {strokeColor:col,strokeWidth:w,highlight:false});
+      })(k);
+
+    } else if (type==='complements') {
+      if (k<=11.5) {
+        var s1=icFamilyBoard.create('segment',[[k,k],[12,k]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
+        var s2=icFamilyBoard.create('segment',[[k,k],[k,12]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
+        icFamilyObjects.push(s1,s2);
+      }
+      return;
+
+    } else if (type==='neutral') {
+      if (k<=11.5) {
+        c=icFamilyBoard.create('segment',[[k,0],[k,12]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
+      } else return;
+
+    } else if (type==='bad') {
+      (function(kk){
+        c=icFamilyBoard.create('functiongraph',[function(x){return x-kk;}],
+          {strokeColor:col,strokeWidth:w,highlight:false});
+      })(k);
+    }
+    if(c) icFamilyObjects.push(c);
+
+    /* Label the middle curve */
+    if (idx===2) {
+      var lx,ly;
+      if (type==='cobb')        {lx=6.5;ly=b>0?Math.pow(k/Math.pow(lx,alpha),1/b)+0.25:0;}
+      else if (type==='substitutes'){lx=0.6;ly=k-0.6+0.4;}
+      else if (type==='neutral'){lx=k+0.25;ly=3;}
+      else if (type==='bad')    {lx=k+1.2;ly=0.5;}
+      else return;
+      if (lx&&ly>0&&ly<11.5) {
+        icFamilyObjects.push(icFamilyBoard.create('text',[lx,ly,'U₂'],
+          {fontSize:11,color:col,fixed:true,highlight:false}));
+      }
+    }
+  });
+
+  /* Higher-U direction arrow */
+  icFamilyObjects.push(icFamilyBoard.create('text',[10.5,11.8,'↗ higher U'],
+    {fontSize:11,color:C.blue,fixed:true,anchorX:'right',highlight:false}));
+
+  icFamilyBoard.update();
+}
+
+/* =============================================================================
+   2. UTILITY SURFACE — standalone 3D, draggable floor point, level curve
    ============================================================================= */
 function initUtilitySurface() {
-  var board3d = initBoard('jxg-surf3d', [-9, 8, 9, -5.5], false);
+  var board=mk3DBoard('jxg-surf3d',[-10,9,10,-7]);
+  var box=[0.1,6];
 
-  var box = [0.1, 6];
-  var view = board3d.create('view3d', [
-    [-5.5, -3], [10, 8], [box, box, [0, 5]]
-  ], {
-    xPlaneRear: { visible: false },
-    yPlaneRear: { visible: false },
-    zPlaneRear: { visible: false },
-    projection: 'central'
+  var view=board.create('view3d',[
+    [-7,-4],[14,11.5],[box,box,[0,5]]
+  ],{
+    xPlaneRear:{visible:false},
+    yPlaneRear:{visible:false},
+    zPlaneRear:{visible:false},
+    projection:'central',
+    zAxis:{withLabel:true,name:'U',
+      label:{offset:[5,0],color:C.blue,fontSize:13},
+      ticks:{label:{visible:false}}}
   });
 
-  // Alpha slider on the 2D board
-  var slAlpha = board3d.create('slider', [[-6.5, -4.2], [4, -4.2], [0.1, 0.5, 0.9]], {
-    name: '\u03b1', snapWidth: 0.05,
-    baseline: { strokeColor: '#3d5a80' },
-    highline: { strokeColor: '#3d5a80' },
-    label: { fontSize: 12 }
+  view.create('functiongraph3d',[
+    function(x,y){var a=slVal('surf-alpha');
+      return x>0.05&&y>0.05?Math.pow(x,a)*Math.pow(y,1-a):0;
+    },box,box
+  ],{strokeColor:C.blue,strokeWidth:0.5,stepsU:36,stepsV:36});
+
+  var floorPt=view.create('point3d',[2.5,2.5,0],
+    {withLabel:false,size:6,fillColor:C.amber,strokeColor:'#fff',showInfobox:false});
+
+  var surfPt=view.create('point3d',[function(){
+    var a=slVal('surf-alpha');
+    var px=safePos(floorPt.X(),0.12,5.9),py=safePos(floorPt.Y(),0.12,5.9);
+    return [px,py,px>0&&py>0?Math.pow(px,a)*Math.pow(py,1-a):0];
+  }],{withLabel:false,fixed:true,size:5,fillColor:C.red,strokeColor:'#fff',showInfobox:false});
+
+  view.create('line3d',[floorPt,surfPt],{dash:2,strokeColor:'#bbb',strokeWidth:1});
+
+  var axPt=view.create('point3d',[function(){return[safePos(floorPt.X(),0.12,5.9),0,0];}],
+    {size:2,fillColor:'#aaa',withLabel:false,fixed:true,showInfobox:false});
+  var ayPt=view.create('point3d',[function(){return[0,safePos(floorPt.Y(),0.12,5.9),0];}],
+    {size:2,fillColor:'#aaa',withLabel:false,fixed:true,showInfobox:false});
+  view.create('line3d',[floorPt,axPt],{dash:2,strokeColor:'#ccc',strokeWidth:0.8});
+  view.create('line3d',[floorPt,ayPt],{dash:2,strokeColor:'#ccc',strokeWidth:0.8});
+
+  view.create('curve3d',[function(t){
+    var a=slVal('surf-alpha'),b=1-a;
+    var px=safePos(floorPt.X(),0.12,5.9),py=safePos(floorPt.Y(),0.12,5.9);
+    var k=px>0&&py>0?Math.pow(px,a)*Math.pow(py,b):1;
+    var y=t>0.05?Math.pow(k/Math.pow(t,a),1/b):NaN;
+    if (!isFinite(y)||y<box[0]||y>box[1]) return [NaN,NaN,NaN];
+    return [t,y,Math.pow(t,a)*Math.pow(y,b)];
+  },[box[0]+0.05,box[1]]],{strokeColor:C.red,strokeWidth:2.5});
+
+  floorPt.on('drag',function(){
+    var a=slVal('surf-alpha');
+    var px=safePos(floorPt.X(),0.12,5.9),py=safePos(floorPt.Y(),0.12,5.9);
+    var u=px>0&&py>0?Math.pow(px,a)*Math.pow(py,1-a):0;
+    document.getElementById('surf-u-readout').textContent=
+      'U('+px.toFixed(2)+', '+py.toFixed(2)+') = '+u.toFixed(3);
   });
 
-  // The utility surface
-  var surf3d = view.create('functiongraph3d', [
-    function(x, y) {
-      var a = slAlpha.Value();
-      return x > 0.01 && y > 0.01 ? Math.pow(x, a) * Math.pow(y, 1-a) : 0;
-    }, box, box
-  ], {
-    strokeColor: '#3d5a80', strokeWidth: 0.5, stepsU: 35, stepsV: 35
-  });
-
-  // Draggable floor point
-  var floorPt = view.create('point3d', [3, 3, 0], {
-    withLabel: false, size: 5,
-    fillColor: '#d4813a', strokeColor: '#fff', showInfobox: false
-  });
-
-  // Surface point directly above floor point
-  var surfPt = view.create('point3d', [
-    function() {
-      var a  = slAlpha.Value();
-      var px = safePos(floorPt.X(), 0.15, 5.9);
-      var py = safePos(floorPt.Y(), 0.15, 5.9);
-      var uz = px > 0 && py > 0 ? Math.pow(px, a) * Math.pow(py, 1-a) : 0;
-      return [px, py, uz];
-    }
-  ], { withLabel: false, fixed: true, size: 5, fillColor: '#c0392b', strokeColor: '#fff', showInfobox: false });
-
-  // Vertical line from floor to surface
-  view.create('line3d', [floorPt, surfPt], { dash: 2, strokeColor: '#aaa', strokeWidth: 1 });
-
-  // Dashed drop lines to axes
-  var axPt = view.create('point3d', [
-    function() { return [safePos(floorPt.X(),0.15,5.9), 0, 0]; }
-  ], { size: 2, fillColor: '#999', visible: true, withLabel: false, fixed: true, showInfobox: false });
-  var ayPt = view.create('point3d', [
-    function() { return [0, safePos(floorPt.Y(),0.15,5.9), 0]; }
-  ], { size: 2, fillColor: '#999', visible: true, withLabel: false, fixed: true, showInfobox: false });
-
-  view.create('line3d', [floorPt, axPt], { dash: 2, strokeColor: '#bbb', strokeWidth: 0.8 });
-  view.create('line3d', [floorPt, ayPt], { dash: 2, strokeColor: '#bbb', strokeWidth: 0.8 });
-
-  // Level curve at the current U value (drawn as a parametric 3D curve on the surface)
-  view.create('curve3d', [
-    function(t) {
-      var a  = slAlpha.Value();
-      var b  = 1 - a;
-      var px = safePos(floorPt.X(), 0.15, 5.9);
-      var py = safePos(floorPt.Y(), 0.15, 5.9);
-      var k  = px > 0 && py > 0 ? Math.pow(px, a) * Math.pow(py, b) : 1;
-      // parametric: x = t, y = (k/t^a)^(1/b)
-      var x  = t;
-      var y  = t > 0.05 ? Math.pow(k / Math.pow(t, a), 1/b) : NaN;
-      if (!isFinite(y) || y < box[0] || y > box[1]) return [NaN, NaN, NaN];
-      var z  = Math.pow(x, a) * Math.pow(y, b);
-      return [x, y, z];
-    }, [box[0]+0.05, box[1]]
-  ], { strokeColor: '#c0392b', strokeWidth: 2.5 });
-
-  // U-value readout
-  board3d.create('text', [-7.5, 6.5, function() {
-    var a  = slAlpha.Value();
-    var px = safePos(floorPt.X(), 0.15, 5.9);
-    var py = safePos(floorPt.Y(), 0.15, 5.9);
-    var u  = px > 0 && py > 0 ? Math.pow(px, a) * Math.pow(py, 1-a) : 0;
-    return 'U(' + px.toFixed(2) + ', ' + py.toFixed(2) + ') = ' + u.toFixed(3);
-  }], { fontSize: 12, color: '#c0392b', fixed: false });
-
-  board3d.create('text', [-7.5, 5.5,
-    'Red curve = indifference curve (level curve at current U)'
-  ], { fontSize: 10, color: '#888', fixed: true });
-}
-
-/* =============================================================================
-   3. BUDGET CONSTRAINT
-   Sliders directly ON the JSXGraph board (not HTML sliders).
-   Draggable bundle point shows affordable/over-budget status.
-   Inequality shading of affordable region.
-   ============================================================================= */
-function initBudgetBoard() {
-  var board = initBoard('jxg-budget', [-1.5, 40, 40, -6]);
-
-  // Board sliders for I, Px, Py
-  var slI  = board.create('slider', [[1, -2.5], [20, -2.5], [20, 100, 200]], {
-    name: 'I', snapWidth: 5,
-    baseline: { strokeColor: '#3d5a80' }, highline: { strokeColor: '#3d5a80' },
-    label: { fontSize: 11 }
-  });
-  var slPx = board.create('slider', [[1, -3.8], [20, -3.8], [1, 5, 20]], {
-    name: 'Px', snapWidth: 1,
-    baseline: { strokeColor: '#c0392b' }, highline: { strokeColor: '#c0392b' },
-    label: { fontSize: 11 }
-  });
-  var slPy = board.create('slider', [[1, -5], [20, -5], [1, 4, 20]], {
-    name: 'Py', snapWidth: 1,
-    baseline: { strokeColor: '#2e8b57' }, highline: { strokeColor: '#2e8b57' },
-    label: { fontSize: 11 }
-  });
-
-  // Budget line as functiongraph (live with sliders)
-  var bLine = board.create('functiongraph', [function(x) {
-    var I = slI.Value(), Px = slPx.Value(), Py = slPy.Value();
-    return (I - Px * x) / Py;
-  }, function() { return 0; }, function() { return slI.Value() / slPx.Value() + 0.5; }], {
-    strokeColor: '#1a1a2a', strokeWidth: 2.5, highlight: false
-  });
-
-  // Shaded affordable region (inequality below the budget line)
-  var ineq = board.create('inequality', [bLine], {
-    fillColor: '#3d5a80', fillOpacity: 0.08, inverse: false, highlight: false
-  });
-
-  // X-intercept point (live)
-  board.create('point', [function() { return slI.Value() / slPx.Value(); }, 0], {
-    color: '#c0392b', size: 5, fixed: true, highlight: false,
-    name: function() { return 'X\u2098\u2090\u2093 = ' + (slI.Value()/slPx.Value()).toFixed(1); },
-    withLabel: true, label: { offset: [4, -14], fontSize: 10 }
-  });
-
-  // Y-intercept point (live)
-  board.create('point', [0, function() { return slI.Value() / slPy.Value(); }], {
-    color: '#c0392b', size: 5, fixed: true, highlight: false,
-    name: function() { return 'Y\u2098\u2090\u2093 = ' + (slI.Value()/slPy.Value()).toFixed(1); },
-    withLabel: true, label: { offset: [5, 5], fontSize: 10 }
-  });
-
-  // Draggable bundle
-  var bundle = board.create('point', [8, 8], {
-    name: 'Bundle', color: '#d4813a', size: 7,
-    withLabel: true, label: { offset: [8, 6], fontSize: 11 }
-  });
-
-  // Live cost/affordability text
-  board.create('text', [1.5, function() { return slI.Value()/slPy.Value() * 0.82; },
-    function() {
-      var I = slI.Value(), Px = slPx.Value(), Py = slPy.Value();
-      var bx = safePos(bundle.X(), 0, 35), by = safePos(bundle.Y(), 0, 35);
-      var cost = Px*bx + Py*by;
-      return cost <= I + 0.5
-        ? 'Cost $' + cost.toFixed(1) + ' \u2264 $' + I.toFixed(0) + '  \u2713 Affordable'
-        : 'Cost $' + cost.toFixed(1) + ' > $' + I.toFixed(0) + '  \u2717 Over budget';
-    }
-  ], { fontSize: 11, color: '#1a1a2a', fixed: false, highlight: false });
-
-  // Slope annotation
-  board.create('text', [function() { return slI.Value()/slPx.Value()*0.6; },
-    function() { return slI.Value()/slPy.Value()*0.7; },
-    function() {
-      return 'slope = \u2212' + (slPx.Value()/slPy.Value()).toFixed(2);
-    }
-  ], { fontSize: 11, color: '#3d5a80', fixed: false, highlight: false });
-
-  // Update HTML sidebar on any drag
-  function updateBCSidebar() {
-    var I = slI.Value(), Px = slPx.Value(), Py = slPy.Value();
-    var xInt = I/Px, yInt = I/Py;
-    document.getElementById('bc-equation').textContent = Px.toFixed(0)+'X + '+Py.toFixed(0)+'Y = '+I.toFixed(0);
-    document.getElementById('bc-x-int').textContent    = xInt.toFixed(2);
-    document.getElementById('bc-y-int').textContent    = yInt.toFixed(2);
-    document.getElementById('bc-slope').textContent    = (-(Px/Py)).toFixed(3);
-    document.getElementById('bc-opp-cost').textContent = (Px/Py).toFixed(2);
-  }
-  slI.on('drag', updateBCSidebar);
-  slPx.on('drag', updateBCSidebar);
-  slPy.on('drag', updateBCSidebar);
-  updateBCSidebar();
-}
-
-/* =============================================================================
-   4. SHIFT vs PIVOT
-   Two budget lines side-by-side on one board.
-   A JSXGraph slider changes the "change amount".
-   The pivot point is animated with a visible marker.
-   Arrows show direction of intercept movement.
-   ============================================================================= */
-function initShiftBoard() {
-  var board = initBoard('jxg-shifts', [-2, 44, 44, -5]);
-
-  // Base parameters (fixed)
-  var I0 = 100, Px0 = 5, Py0 = 4;
-
-  // Slider for change magnitude (on-board)
-  var slMag = board.create('slider', [[1, -2.8], [22, -2.8], [5, 30, 80]], {
-    name: 'change %', snapWidth: 5,
-    baseline: { strokeColor: '#3d5a80' }, highline: { strokeColor: '#3d5a80' },
-    label: { fontSize: 11 }
-  });
-
-  // Helper: compute modified params given change type
-  function getParams(type) {
-    var mag = slMag.Value() / 100;
-    var I2 = I0, Px2 = Px0, Py2 = Py0;
-    if (type === 'income-up')  I2  = I0  * (1 + mag);
-    if (type === 'income-down')I2  = I0  * (1 - mag);
-    if (type === 'px-up')      Px2 = Px0 * (1 + mag);
-    if (type === 'px-down')    Px2 = Px0 * (1 - mag * 0.9);
-    if (type === 'py-up')      Py2 = Py0 * (1 + mag);
-    if (type === 'py-down')    Py2 = Py0 * (1 - mag * 0.9);
-    return { I2: I2, Px2: Px2, Py2: Py2 };
-  }
-
-  // Change type from dropdown
-  function curType() {
-    return document.getElementById('shift-type').value;
-  }
-
-  // Original budget line (always same)
-  board.create('functiongraph', [function(x) {
-    return (I0 - Px0 * x) / Py0;
-  }, 0, I0/Px0 + 0.5], {
-    strokeColor: '#3d5a80', strokeWidth: 2, dash: 3, highlight: false
-  });
-  board.create('text', [function() { return I0/Px0 * 0.4; },
-    function() { return I0/Py0 * 0.65; }, 'Original'], {
-    fontSize: 10, color: '#3d5a80', fixed: false, highlight: false
-  });
-
-  // New budget line (updates with slider + dropdown)
-  board.create('functiongraph', [function(x) {
-    var p = getParams(curType());
-    return (p.I2 - p.Px2 * x) / p.Py2;
-  }, 0, function() {
-    var p = getParams(curType());
-    return p.I2/p.Px2 + 0.5;
-  }], {
-    strokeColor: '#c0392b', strokeWidth: 2.5, highlight: false
-  });
-  board.create('text', [function() {
-    var p = getParams(curType()); return p.I2/p.Px2 * 0.55;
-  }, function() {
-    var p = getParams(curType()); return p.I2/p.Py2 * 0.4;
-  }, 'New'], {
-    fontSize: 10, color: '#c0392b', fixed: false, highlight: false
-  });
-
-  // Pivot point marker (shows when it's a price change)
-  board.create('point', [function() {
-    var t = curType();
-    if (t.startsWith('px')) return 0;
-    if (t.startsWith('py')) return I0/Px0;
-    return -99;  // off-screen when income change
-  }, function() {
-    var t = curType();
-    if (t.startsWith('px')) return I0/Py0;
-    if (t.startsWith('py')) return 0;
-    return -99;
-  }], {
-    color: '#d4813a', size: 8, fixed: true,
-    name: 'Pivot', withLabel: true,
-    label: { offset: [8, 6], fontSize: 11, color: '#d4813a' },
-    highlight: false
-  });
-
-  // Slope labels on the board
-  board.create('text', [function(){ var p=getParams(curType()); return Math.max(p.I2/p.Px2,p.I2/p.Py2)*0.45; }, function(){ var p=getParams(curType()); return Math.max(p.I2/p.Px2,p.I2/p.Py2)*0.92; }, function() {
-    var p = getParams(curType());
-    return 'Original slope: \u2212' + (Px0/Py0).toFixed(2)
-         + '    New slope: \u2212' + (p.Px2/p.Py2).toFixed(2);
-  }], { fontSize: 11, color: '#1a1a2a', fixed: true, anchorX: 'left' });
-
-  // Description text
-  board.create('text', [function(){ var p=getParams(curType()); return Math.max(p.I2/p.Px2,p.I2/p.Py2)*0.45; }, function(){ var p=getParams(curType()); return Math.max(p.I2/p.Px2,p.I2/p.Py2)*0.82; }, function() {
-    var t = curType();
-    if (t.startsWith('income')) return 'Parallel shift: both intercepts move, slope unchanged';
-    return 'Pivot: one intercept fixed, slope changes';
-  }], { fontSize: 11, color: '#888', fixed: true, anchorX: 'left' });
-
-  // Wire dropdown to board update
-  document.getElementById('shift-type').addEventListener('change', function() {
+  document.getElementById('surf-alpha').addEventListener('input',function(){
+    document.getElementById('surf-alpha-val').textContent=parseFloat(this.value).toFixed(2);
     board.update();
-    updateShiftSidebar();
   });
-  slMag.on('drag', updateShiftSidebar);
-
-  function updateShiftSidebar() {
-    var t = curType();
-    var p = getParams(t);
-    document.getElementById('shift-change-label').textContent =
-      t.replace('income-up','Income \u2191').replace('income-down','Income \u2193')
-       .replace('px-up','Px \u2191').replace('px-down','Px \u2193')
-       .replace('py-up','Py \u2191').replace('py-down','Py \u2193')
-      + ' ' + slMag.Value().toFixed(0) + '%';
-    document.getElementById('shift-slope1').textContent = (-(Px0/Py0)).toFixed(3);
-    document.getElementById('shift-slope2').textContent = (-(p.Px2/p.Py2)).toFixed(3);
-    document.getElementById('shift-fixed').textContent  =
-      t.startsWith('px') ? 'Y-intercept fixed' :
-      t.startsWith('py') ? 'X-intercept fixed' : 'Neither (parallel shift)';
-    document.getElementById('shift-description').textContent =
-      t.startsWith('income') ? 'Both intercepts move proportionally. The slope is unchanged because prices did not change.' :
-      t.startsWith('px')     ? 'The Y-intercept is anchored. The X-intercept moves. The line pivots around the Y-axis intercept.' :
-                               'The X-intercept is anchored. The Y-intercept moves. The line pivots around the X-axis intercept.';
-  }
-  updateShiftSidebar();
 }
 
 /* =============================================================================
-   5. CONSUMER OPTIMUM
-   ICs drawn as functiongraph. Budget line live. Glider on budget line
-   shows utility at each point. A separate fixed marker shows the maximum.
-   For Cobb-Douglas: curveintersection highlights tangency region.
-   Type selector switches between preference types.
+   3. BUDGET CONSTRAINT — redesigned with DRAGGABLE intercepts
+   The student drags the X-intercept dot along the X-axis and the Y-intercept
+   dot along the Y-axis. The budget line pivots live. This makes the geometry
+   tangible: dragging in means income fell or price rose.
+   Shaded region is fixed polygon — not draggable.
    ============================================================================= */
+var bcBoard;
+
+var bcObjects=[];
+
+function initBudgetBoard() {
+  bcBoard = mkBoard('jxg-budget', [-1.5, 38, 38, -1.5]);
+  buildBudgetBoard();
+  ['bc-I','bc-Px','bc-Py'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function() {
+      document.getElementById(id+'-val').textContent = parseFloat(this.value).toFixed(0);
+      buildBudgetBoard();
+    });
+  });
+}
+
+function buildBudgetBoard() {
+  bcObjects.forEach(function(o){try{bcBoard.removeObject(o,false);}catch(e){}});
+  bcObjects=[];
+
+  var I=slVal('bc-I'), Px=slVal('bc-Px'), Py=slVal('bc-Py');
+  var xI=I/Px, yI=I/Py;
+  var m=Math.max(xI,yI)*1.32;
+  bcBoard.setBoundingBox([-m*0.06,m*1.12,m*1.12,-m*0.06],false);
+
+  /* Shaded affordable region — fixed, not draggable */
+  bcObjects.push(bcBoard.create('polygon',[[0,0],[xI,0],[0,yI]],{
+    fillColor:C.blue,fillOpacity:0.08,strokeWidth:0,
+    vertices:{visible:false,fixed:true},fixed:true,highlight:false
+  }));
+
+  /* Budget line */
+  bcObjects.push(bcBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
+    {strokeColor:C.ink,strokeWidth:2.5,highlight:false}));
+
+  /* Intercept markers — FIXED, no dragging */
+  bcObjects.push(bcBoard.create('point',[xI,0],{
+    size:5,color:C.red,fixed:true,highlight:false,
+    name:xI.toFixed(1),withLabel:true,label:{offset:[0,-15],anchorX:'middle',fontSize:11}
+  }));
+  bcObjects.push(bcBoard.create('point',[0,yI],{
+    size:5,color:C.red,fixed:true,highlight:false,
+    name:yI.toFixed(1),withLabel:true,label:{offset:[-9,0],anchorX:'right',fontSize:11}
+  }));
+
+  /* Slope label — midpoint of the line, offset above-right so it clears the line */
+  var mx2=xI*0.45, my2=(I-Px*mx2)/Py;
+  bcObjects.push(bcBoard.create('text',[mx2+m*0.04,my2+m*0.05,
+    'slope = \u2212'+(Px/Py).toFixed(2)
+  ],{fontSize:12,color:C.blue,fixed:true,highlight:false,anchorX:'left'}));
+
+  /* Sidebar — no plain P_X text */
+  document.getElementById('bc-equation').textContent=Px.toFixed(1)+'X + '+Py.toFixed(1)+'Y = '+I.toFixed(0);
+  document.getElementById('bc-x-int').textContent=xI.toFixed(2);
+  document.getElementById('bc-y-int').textContent=yI.toFixed(2);
+  document.getElementById('bc-slope').textContent=(-(Px/Py)).toFixed(3);
+  document.getElementById('bc-opp-cost').textContent=(Px/Py).toFixed(2);
+
+  bcBoard.update();
+}
+
+/* =============================================================================
+   4. SHIFT vs PIVOT — button group, clean board
+   ============================================================================= */
+var shiftBoard, shiftObjects=[];
+
+function initShiftBoard() {
+  shiftBoard=mkBoard('jxg-shifts',[-1.5,40,40,-1.5]);
+  buildShiftBoard();
+  document.getElementById('shift-btns').addEventListener('click',function(e){
+    var btn=e.target.closest('.shift-btn');
+    if (!btn) return;
+    document.querySelectorAll('#shift-btns .shift-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    buildShiftBoard();
+  });
+  document.getElementById('shift-mag').addEventListener('input',function(){
+    document.getElementById('shift-mag-val').textContent=this.value+'%';
+    buildShiftBoard();
+  });
+}
+
+function getShiftType(){
+  var a=document.querySelector('#shift-btns .shift-btn.active');
+  return a?a.dataset.type:'income-up';
+}
+
+function buildShiftBoard() {
+  shiftObjects.forEach(function(o){try{shiftBoard.removeObject(o,false);}catch(e){}});
+  shiftObjects=[];
+
+  var I0=100,Px0=5,Py0=4;
+  var mag=slVal('shift-mag')/100;
+  var type=getShiftType();
+
+  var I2=I0,Px2=Px0,Py2=Py0;
+  if (type==='income-up')   I2 =I0*(1+mag);
+  if (type==='income-down') I2 =I0*(1-mag);
+  if (type==='px-up')       Px2=Px0*(1+mag);
+  if (type==='px-down')     Px2=Px0*(1-mag*0.85);
+  if (type==='py-up')       Py2=Py0*(1+mag);
+  if (type==='py-down')     Py2=Py0*(1-mag*0.85);
+
+  var xi1=I0/Px0, yi1=I0/Py0, xi2=I2/Px2, yi2=I2/Py2;
+  var m=Math.max(xi1,yi1,xi2,yi2)*1.3;
+  shiftBoard.setBoundingBox([-m*0.06,m*1.1,m*1.1,-m*0.06],false);
+
+  /* Original (dashed) */
+  var l1=shiftBoard.create('functiongraph',[function(x){return(I0-Px0*x)/Py0;},0,xi1],
+    {strokeColor:C.blue,strokeWidth:2,dash:3,highlight:false});
+  /* New (solid) */
+  var l2=shiftBoard.create('functiongraph',[function(x){return(I2-Px2*x)/Py2;},0,xi2],
+    {strokeColor:C.red,strokeWidth:2.5,highlight:false});
+  shiftObjects.push(l1,l2);
+
+  /* Labels — placed at 65% of X-range along each line to stay in middle of graph,
+     well clear of the axes and intercepts */
+  var frac=0.62;
+  var lx1=xi1*frac, ly1=(I0-Px0*lx1)/Py0;
+  var lx2=xi2*frac, ly2=(I2-Px2*lx2)/Py2;
+  /* Offset perpendicular to the line direction so the label doesn't sit on the line */
+  var slope1=-(Px0/Py0), slope2=-(Px2/Py2);
+  var len1=Math.sqrt(1+slope1*slope1), len2=Math.sqrt(1+slope2*slope2);
+  var offMag=m*0.055;
+  /* Perpendicular direction: (-slope/len, 1/len) rotated upward */
+  var t1=shiftBoard.create('text',
+    [lx1+(-slope1/len1)*(-offMag*0.3), ly1+(1/len1)*offMag*0.8,'B\u2080 (original)'],
+    {fontSize:12,color:C.blue,fixed:true,highlight:false,anchorX:'middle'});
+  var t2=shiftBoard.create('text',
+    [lx2+(-slope2/len2)*(-offMag*0.3), ly2+(1/len2)*offMag*0.8,'B\u2081 (new)'],
+    {fontSize:12,color:C.red,fixed:true,highlight:false,anchorX:'middle'});
+  shiftObjects.push(t1,t2);
+
+  /* Pivot marker */
+  if (type.startsWith('px')) {
+    var piv=shiftBoard.create('point',[0,yi1],{
+      color:C.amber,size:7,fixed:true,highlight:false,
+      name:'Pivot',withLabel:true,label:{offset:[8,4],fontSize:10,color:C.amber}
+    });
+    var arr=shiftBoard.create('arrow',[[xi1,-m*0.04],[xi2,-m*0.04]],
+      {strokeColor:C.amber,strokeWidth:1.5,fixed:true});
+    shiftObjects.push(piv,arr);
+  }
+  if (type.startsWith('py')) {
+    var piv2=shiftBoard.create('point',[xi1,0],{
+      color:C.amber,size:7,fixed:true,highlight:false,
+      name:'Pivot',withLabel:true,label:{offset:[0,-14],fontSize:10,color:C.amber}
+    });
+    var arr2=shiftBoard.create('arrow',[[-m*0.04,yi1],[-m*0.04,yi2]],
+      {strokeColor:C.amber,strokeWidth:1.5,fixed:true});
+    shiftObjects.push(piv2,arr2);
+  }
+
+  /* Sidebar */
+  var lbl=type.replace('income-up','Income\u2191').replace('income-down','Income\u2193')
+              .replace('px-up','P\u2093\u2191').replace('px-down','P\u2093\u2193')
+              .replace('py-up','P\u1D67\u2191').replace('py-down','P\u1D67\u2193');
+  document.getElementById('shift-change-label').textContent=lbl+' '+Math.round(mag*100)+'%';
+  document.getElementById('shift-slope1').textContent=(-Px0/Py0).toFixed(3);
+  document.getElementById('shift-slope2').textContent=(-Px2/Py2).toFixed(3);
+  document.getElementById('shift-fixed').textContent=
+    type.startsWith('px')?'Y-intercept I/P\u1D67':
+    type.startsWith('py')?'X-intercept I/P\u2093':'Neither (parallel shift)';
+  document.getElementById('shift-description').textContent=
+    type.startsWith('income')?
+      'Both intercepts scale proportionally. The slope \u2212P\u2093/P\u1D67 is unchanged.':
+    type.startsWith('px')?
+      'The Y-intercept is anchored (P\u1D67 and I unchanged). The X-intercept moves. Slope changes.':
+      'The X-intercept is anchored (P\u2093 and I unchanged). The Y-intercept moves. Slope changes.';
+
+  shiftBoard.update();
+}
+
+/* =============================================================================
+   5. CONSUMER OPTIMUM — clean, with tangent line + drop lines
+   ============================================================================= */
+var optBoard, optObjects=[];
+
 function initOptimumBoard() {
-  var board = initBoard('jxg-optimum', [-1.5, 38, 38, -6]);
-
-  // On-board sliders
-  var slI  = board.create('slider', [[0.5, -2.2], [18, -2.2], [20, 100, 200]], {
-    name: 'I', snapWidth: 5,
-    baseline: { strokeColor: '#1a1a2a' }, highline: { strokeColor: '#1a1a2a' },
-    label: { fontSize: 11 }
+  optBoard=mkBoard('jxg-optimum',[-1.5,36,36,-1.5]);
+  buildOptimumBoard();
+  ['opt-I','opt-Px','opt-Py','opt-alpha'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',function(){
+      var dp=id==='opt-alpha'?2:0;
+      document.getElementById(id+'-val').textContent=parseFloat(this.value).toFixed(dp);
+      buildOptimumBoard();
+    });
   });
-  var slPx = board.create('slider', [[0.5, -3.5], [18, -3.5], [1, 5, 15]], {
-    name: 'Px', snapWidth: 1,
-    baseline: { strokeColor: '#c0392b' }, highline: { strokeColor: '#c0392b' },
-    label: { fontSize: 11 }
+  document.getElementById('opt-type').addEventListener('change',function(){
+    document.getElementById('opt-alpha-ctrl').style.display=this.value==='cobb'?'':'none';
+    buildOptimumBoard();
   });
-  var slPy = board.create('slider', [[0.5, -4.8], [18, -4.8], [1, 4, 15]], {
-    name: 'Py', snapWidth: 1,
-    baseline: { strokeColor: '#2e8b57' }, highline: { strokeColor: '#2e8b57' },
-    label: { fontSize: 11 }
-  });
-  var slAlpha = board.create('slider', [[19, -2.2], [35, -2.2], [0.1, 0.5, 0.9]], {
-    name: '\u03b1', snapWidth: 0.05,
-    baseline: { strokeColor: '#3d5a80' }, highline: { strokeColor: '#3d5a80' },
-    label: { fontSize: 11 }
-  });
+}
 
-  function curOptType() {
-    return document.getElementById('opt-type').value;
-  }
+function buildOptimumBoard() {
+  optObjects.forEach(function(o){try{optBoard.removeObject(o,false);}catch(e){}});
+  optObjects=[];
 
-  function solveOptimum() {
-    var I = slI.Value(), Px = slPx.Value(), Py = slPy.Value(), a = slAlpha.Value();
-    var t = curOptType();
-    if (t === 'cobb')        return { x: a*I/Px, y: (1-a)*I/Py };
-    if (t === 'complements') { var k = I/(Px+Py); return { x: k, y: k }; }
-    if (t === 'substitutes') {
-      if (1/Px > 1/Py) return { x: I/Px, y: 0 };
-      if (1/Py > 1/Px) return { x: 0,    y: I/Py };
-      return { x: I/(2*Px), y: I/(2*Py) };
-    }
-    if (t === 'ql') { var xq = Py/Px; return { x: xq, y: Math.max(0,(I-Px*xq)/Py) }; }
-    return { x: 0, y: 0 };
-  }
+  var I=slVal('opt-I'),Px=slVal('opt-Px'),Py=slVal('opt-Py'),a=slVal('opt-alpha');
+  var type=document.getElementById('opt-type').value;
+  var xI=I/Px,yI=I/Py,m=Math.max(xI,yI)*1.5;
+  optBoard.setBoundingBox([-m*0.06,m*1.1,m*1.1,-m*0.06],false);
 
-  function calcU(x, y) {
-    var t = curOptType(), a = slAlpha.Value();
-    if (t === 'cobb')        return x > 0 && y > 0 ? Math.pow(x,a)*Math.pow(y,1-a) : 0;
-    if (t === 'complements') return Math.min(x, y);
-    if (t === 'substitutes') return x + y;
-    if (t === 'ql')          return x > 0 ? Math.log(x) + y : 0;
+  function uFn(x,y){
+    if(type==='cobb')        return x>0&&y>0?Math.pow(x,a)*Math.pow(y,1-a):0;
+    if(type==='complements') return Math.min(x,y);
+    if(type==='substitutes') return x+y;
+    if(type==='ql')          return x>0?Math.log(x)+y:0;
     return 0;
   }
 
-  // Budget line
-  var bLine = board.create('functiongraph', [function(x) {
-    var I = slI.Value(), Px = slPx.Value(), Py = slPy.Value();
-    return (I - Px*x) / Py;
-  }, 0, function() { return slI.Value()/slPx.Value() + 0.3; }], {
-    strokeColor: '#1a1a2a', strokeWidth: 2.5, highlight: false
-  });
+  var xs,ys;
+  if (type==='cobb')             {xs=a*I/Px; ys=(1-a)*I/Py;}
+  else if (type==='complements') {var kc=I/(Px+Py); xs=kc; ys=kc;}
+  else if (type==='substitutes') {
+    if (1/Px>1/Py){xs=I/Px;ys=0;} else if(1/Py>1/Px){xs=0;ys=I/Py;} else{xs=I/(2*Px);ys=I/(2*Py);}
+  } else if (type==='ql') {xs=Py/Px; ys=Math.max(0,(I-Px*xs)/Py);}
+  var uStar=uFn(xs,ys);
 
-  // Three ICs (below, at, above optimum)
-  [-0.45, 0, 0.5].forEach(function(offset, idx) {
-    var colors = ['#c5d9eb', '#3d5a80', '#c5d9eb'];
-    var widths  = [1.4, 2.8, 1.4];
-    board.create('functiongraph', [function(x) {
-      var opt = solveOptimum();
-      var uStar = calcU(opt.x, opt.y);
-      var k = uStar * (1 + (idx - 1) * 0.45);
-      if (k <= 0) return NaN;
-      var t = curOptType(), a = slAlpha.Value();
-      if (t === 'cobb') {
-        return x > 0.05 ? Math.pow(k / Math.pow(x, a), 1/(1-a)) : NaN;
+  /* Three ICs */
+  [uStar*0.5,uStar,uStar*1.55].forEach(function(k,idx){
+    if(k<=0) return;
+    var col=[C.blue3,C.blue,C.blue3][idx], w=idx===1?2.8:1.4, c;
+    if(type==='cobb'){
+      (function(kk){c=optBoard.create('functiongraph',[function(x){
+        return x>0.05?Math.pow(kk/Math.pow(x,a),1/(1-a)):NaN;
+      }],{strokeColor:col,strokeWidth:w,highlight:false});})(k);
+    } else if(type==='substitutes'){
+      (function(kk){c=optBoard.create('functiongraph',[function(x){return kk-x;}],
+        {strokeColor:col,strokeWidth:w,highlight:false});})(k);
+    } else if(type==='complements'){
+      if(k<=m*0.9){
+        optObjects.push(
+          optBoard.create('segment',[[k,k],[m,k]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false}),
+          optBoard.create('segment',[[k,k],[k,m]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false})
+        );
       }
-      if (t === 'substitutes') return k - x;
-      if (t === 'ql') return x > 0.05 ? k - Math.log(x) : NaN;
-      return NaN;
-    }], { strokeColor: colors[idx], strokeWidth: widths[idx], highlight: false });
-  });
-
-  // Glider on budget line showing utility
-  var glider = board.create('glider', [
-    function() { var o = solveOptimum(); return o.x * 0.6; },
-    function() {
-      var I = slI.Value(), Px = slPx.Value(), Py = slPy.Value();
-      var x = glider ? glider.X() : solveOptimum().x * 0.6;
-      return (I - Px * x) / Py;
-    },
-    bLine
-  ], {
-    name: '', size: 5, fillColor: '#d4813a', strokeColor: '#fff',
-    showInfobox: false, highlight: false
-  });
-
-  // Utility readout at glider position
-  board.create('text', [function() { return glider.X() + 0.3; },
-    function() { return glider.Y() + 0.5; },
-    function() {
-      var u = calcU(safePos(glider.X(),0.01,30), safePos(glider.Y(),0.01,30));
-      return 'U = ' + u.toFixed(3);
+      return;
+    } else if(type==='ql'){
+      (function(kk){c=optBoard.create('functiongraph',[function(x){
+        return x>0.05?kk-Math.log(x):NaN;
+      }],{strokeColor:col,strokeWidth:w,highlight:false});})(k);
     }
-  ], { fontSize: 10, color: '#d4813a', fixed: false, highlight: false });
-
-  // Optimal bundle point
-  board.create('point', [
-    function() { return solveOptimum().x; },
-    function() { return solveOptimum().y; }
-  ], {
-    color: '#c0392b', size: 7, fixed: true,
-    name: function() {
-      var o = solveOptimum();
-      return '(' + o.x.toFixed(1) + ', ' + o.y.toFixed(1) + ')';
-    },
-    withLabel: true, label: { offset: [8, 6], fontSize: 11 },
-    highlight: false
+    if(c) optObjects.push(c);
   });
 
-  // Tangent line at optimum (for Cobb-Douglas)
-  board.create('functiongraph', [function(x) {
-    if (curOptType() !== 'cobb') return NaN;
-    var Px = slPx.Value(), Py = slPy.Value();
-    var o  = solveOptimum();
-    return o.y - (Px/Py) * (x - o.x);
-  }], {
-    strokeColor: '#d4813a', strokeWidth: 1.8, dash: 2, highlight: false
-  });
+  /* Budget line */
+  optObjects.push(optBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
+    {strokeColor:C.ink,strokeWidth:2.4,highlight:false}));
 
-  // Dashed drop lines from optimum to axes
-  board.create('segment', [
-    [0, function() { return solveOptimum().y; }],
-    [function() { return solveOptimum().x; }, function() { return solveOptimum().y; }]
-  ], { strokeColor: '#ccc', strokeWidth: 1, dash: 2, fixed: false, highlight: false });
-  board.create('segment', [
-    [function() { return solveOptimum().x; }, 0],
-    [function() { return solveOptimum().x; }, function() { return solveOptimum().y; }]
-  ], { strokeColor: '#ccc', strokeWidth: 1, dash: 2, fixed: false, highlight: false });
-
-  // X* and Y* labels on axes
-  board.create('text', [
-    function() { return solveOptimum().x; }, -0.8,
-    function() { return 'X* = ' + solveOptimum().x.toFixed(1); }
-  ], { fontSize: 10, color: '#c0392b', fixed: false, anchorX: 'middle', highlight: false });
-  board.create('text', [
-    -0.9, function() { return solveOptimum().y; },
-    function() { return 'Y* = ' + solveOptimum().y.toFixed(1); }
-  ], { fontSize: 10, color: '#c0392b', fixed: false, anchorX: 'right', highlight: false });
-
-  // Update sidebar
-  function updateOptSidebar() {
-    var o = solveOptimum();
-    var I = slI.Value(), Px = slPx.Value(), Py = slPy.Value();
-    var t = curOptType(), a = slAlpha.Value();
-    document.getElementById('opt-x-star').textContent  = o.x.toFixed(4);
-    document.getElementById('opt-y-star').textContent  = o.y.toFixed(4);
-    document.getElementById('opt-utility').textContent = calcU(o.x, o.y).toFixed(4);
-    document.getElementById('opt-budget-check').textContent =
-      (Px*o.x + Py*o.y <= I+0.05 ? '\u2713' : '\u2717') +
-      ' $' + (Px*o.x+Py*o.y).toFixed(2) + ' = $' + I.toFixed(0);
-    var methods = {
-      cobb: 'Tangency: Px/Py = MUx/MUy',
-      complements: 'Kink condition: X = Y',
-      substitutes: 'Corner solution',
-      ql: 'Tangency: 1/X = Px/Py'
-    };
-    document.getElementById('opt-method').textContent = methods[t] || '';
-    document.getElementById('opt-tangency-check').textContent =
-      t === 'cobb' ? '\u2713 MRS = ' + (Px/Py).toFixed(3) :
-      t === 'complements' ? '\u2713 At kink' :
-      t === 'substitutes' ? '\u2713 Corner' :
-      '\u2713 MRS = ' + (Px/Py).toFixed(3);
-    // Also update alpha control visibility
-    document.getElementById('opt-alpha-ctrl').style.display = t === 'cobb' ? '' : 'none';
+  /* Tangent (Cobb-Douglas) */
+  if(type==='cobb'&&xs>0&&ys>0){
+    optObjects.push(optBoard.create('functiongraph',[function(x){return ys-(Px/Py)*(x-xs);}],
+      {strokeColor:C.amber,strokeWidth:1.8,dash:2,highlight:false}));
   }
 
-  slI.on('drag', updateOptSidebar);
-  slPx.on('drag', updateOptSidebar);
-  slPy.on('drag', updateOptSidebar);
-  slAlpha.on('drag', updateOptSidebar);
-  document.getElementById('opt-type').addEventListener('change', function() {
-    board.update(); updateOptSidebar();
-  });
-  updateOptSidebar();
+  /* Drop lines + axis labels — placed BELOW negative margin */
+  if(xs>0&&ys>0){
+    optObjects.push(
+      optBoard.create('segment',[[0,ys],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
+      optBoard.create('segment',[[xs,0],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
+      optBoard.create('text',[xs,-m*0.055,'X* = '+xs.toFixed(1)],
+        {fontSize:12,color:C.red,fixed:true,anchorX:'middle',highlight:false}),
+      optBoard.create('text',[-m*0.02,ys,'Y* = '+ys.toFixed(1)],
+        {fontSize:12,color:C.red,fixed:true,anchorX:'left',highlight:false})
+    );
+  }
+
+  /* Optimal point */
+  optObjects.push(optBoard.create('point',[xs,ys],{
+    color:C.red,size:7,fixed:true,
+    name:'Optimum',
+    withLabel:true,label:{offset:[9,6],fontSize:11},highlight:false
+  }));
+
+  optBoard.update();
 }
 
 /* =============================================================================
-   6. MARGINAL UTILITY PER DOLLAR
-   JSXGraph board with a slider for spending allocation.
-   Two vertical bars represent MU(X)/P(X) and MU(Y)/P(Y).
-   A horizontal line shows where they meet (optimum).
-   The IC map sits alongside showing current vs optimal bundle.
+   6. MARGINAL UTILITY PER DOLLAR — redesigned as a BAR CHART
+   Two live bars show MU(X)/P_X and MU(Y)/P_Y side by side.
+   The bars update as spendX slider moves. A horizontal "equalisation" line
+   shows when the ratio is optimal. Much clearer than overlapping text on ICs.
    ============================================================================= */
+var mupBoard, bfbObjects=[];
+
 function initBFBBoard() {
-  var board = initBoard('jxg-bfb', [-1.5, 37, 37, -5]);
-
-  var slSx  = board.create('slider', [[0.5, -1.8], [20, -1.8], [5, 50, 95]], {
-    name: 'spend on X ($)', snapWidth: 5,
-    baseline: { strokeColor: '#3d5a80' }, highline: { strokeColor: '#3d5a80' },
-    label: { fontSize: 10 }
+  /* We use a plain board without the standard axes — custom axes instead */
+  mupBoard=JXG.JSXGraph.initBoard('jxg-bfb',{
+    boundingbox:[-0.5,6,3.5,-0.5],
+    axis:false,
+    showNavigation:false, showCopyright:false,
+    pan:{enabled:false}, zoom:{enabled:false}
   });
-  var slPx  = board.create('slider', [[0.5, -2.8], [20, -2.8], [1, 5, 15]], {
-    name: 'Px', snapWidth: 1,
-    baseline: { strokeColor: '#c0392b' }, highline: { strokeColor: '#c0392b' },
-    label: { fontSize: 10 }
-  });
-  var slPy  = board.create('slider', [[0.5, -3.8], [20, -3.8], [1, 4, 15]], {
-    name: 'Py', snapWidth: 1,
-    baseline: { strokeColor: '#2e8b57' }, highline: { strokeColor: '#2e8b57' },
-    label: { fontSize: 10 }
-  });
-  var slAlpha = board.create('slider', [[21, -1.8], [35, -1.8], [0.1, 0.5, 0.9]], {
-    name: '\u03b1', snapWidth: 0.05,
-    baseline: { strokeColor: '#6b52a8' }, highline: { strokeColor: '#6b52a8' },
-    label: { fontSize: 10 }
-  });
-
-  var I = 100;
-
-  function getCurrent() {
-    var sx = slSx.Value(), px = slPx.Value(), py = slPy.Value(), a = slAlpha.Value();
-    var sy = I - sx;
-    var X  = Math.max(sx / px, 0.01);
-    var Y  = Math.max(sy / py, 0.01);
-    var b  = 1 - a;
-    var MUx = a * Math.pow(X, a-1) * Math.pow(Y, b);
-    var MUy = b * Math.pow(X, a) * Math.pow(Y, b-1);
-    return { X: X, Y: Y, bangX: MUx/px, bangY: MUy/py };
-  }
-
-  // Budget line + ICs
-  board.create('functiongraph', [function(x) {
-    return (I - slPx.Value()*x) / slPy.Value();
-  }, 0, function() { return I/slPx.Value() + 0.3; }], {
-    strokeColor: '#1a1a2a', strokeWidth: 2, highlight: false
-  });
-
-  // Optimal IC
-  board.create('functiongraph', [function(x) {
-    var px = slPx.Value(), py = slPy.Value(), a = slAlpha.Value();
-    var xOpt = a*I/px, yOpt = (1-a)*I/py;
-    var uOpt = Math.pow(xOpt, a) * Math.pow(yOpt, 1-a);
-    return x > 0.05 ? Math.pow(uOpt / Math.pow(x, a), 1/(1-a)) : NaN;
-  }], { strokeColor: '#3d5a80', strokeWidth: 2.5, highlight: false });
-
-  // Current IC
-  board.create('functiongraph', [function(x) {
-    var c = getCurrent(), a = slAlpha.Value();
-    var uCurr = Math.pow(c.X, a) * Math.pow(c.Y, 1-a);
-    return x > 0.05 ? Math.pow(uCurr / Math.pow(x, a), 1/(1-a)) : NaN;
-  }], { strokeColor: '#c5d9eb', strokeWidth: 1.8, dash: 2, highlight: false });
-
-  // Current bundle
-  board.create('point', [function() { return getCurrent().X; },
-                         function() { return getCurrent().Y; }], {
-    color: '#d4813a', size: 6, fixed: true,
-    name: 'Current', withLabel: true, label: { offset: [8,5], fontSize: 10 }, highlight: false
-  });
-
-  // Optimal bundle
-  board.create('point', [function() { return slAlpha.Value()*I/slPx.Value(); },
-                         function() { return (1-slAlpha.Value())*I/slPy.Value(); }], {
-    color: '#c0392b', size: 7, fixed: true,
-    name: 'Optimal', withLabel: true, label: { offset: [8,5], fontSize: 10 }, highlight: false
-  });
-
-  // Arrow from current to optimal
-  board.create('arrow', [
-    [function() { return getCurrent().X; }, function() { return getCurrent().Y; }],
-    [function() { return slAlpha.Value()*I/slPx.Value(); },
-     function() { return (1-slAlpha.Value())*I/slPy.Value(); }]
-  ], { strokeColor: '#d4813a', strokeWidth: 2, highlight: false,
-       lastArrow: { type: 1, size: 7 } });
-
-  // Live MU/P text
-  board.create('text', [20, 33, function() {
-    var c = getCurrent();
-    return 'MU(X)/P(X) = ' + c.bangX.toFixed(4);
-  }], { fontSize: 12, color: '#c0392b', fixed: true, anchorX: 'left' });
-  board.create('text', [20, 30, function() {
-    var c = getCurrent();
-    return 'MU(Y)/P(Y) = ' + c.bangY.toFixed(4);
-  }], { fontSize: 12, color: '#2e8b57', fixed: true, anchorX: 'left' });
-  board.create('text', [20, 27, function() {
-    var c = getCurrent();
-    var tol = 0.02;
-    if (Math.abs(c.bangX - c.bangY) < tol) return '\u2713 Ratios equal: at the optimum';
-    return c.bangX > c.bangY ? 'MU(X)/P(X) > MU(Y)/P(Y): shift toward X'
-                             : 'MU(Y)/P(Y) > MU(X)/P(X): shift toward Y';
-  }], { fontSize: 11, color: '#1a1a2a', fixed: true, anchorX: 'left' });
-
-  // Update sidebar
-  function updateBFBSidebar() {
-    var c = getCurrent();
-    var tol = 0.02;
-    document.getElementById('bfb-mux-px').textContent  = c.bangX.toFixed(4);
-    document.getElementById('bfb-muy-py').textContent  = c.bangY.toFixed(4);
-    var match = Math.abs(c.bangX - c.bangY) < tol;
-    document.getElementById('bfb-verdict').textContent =
-      match ? '\u2713 Ratios equal: optimum reached' :
-      c.bangX > c.bangY ? 'MU(X)/P(X) > MU(Y)/P(Y)' : 'MU(Y)/P(Y) > MU(X)/P(X)';
-    document.getElementById('bfb-action').textContent  =
-      match ? 'No reallocation needed' :
-      c.bangX > c.bangY ? 'Shift spending toward X' : 'Shift spending toward Y';
-  }
-
-  slSx.on('drag', updateBFBSidebar);
-  slPx.on('drag', updateBFBSidebar);
-  slPy.on('drag', updateBFBSidebar);
-  slAlpha.on('drag', updateBFBSidebar);
-  updateBFBSidebar();
-}
-
-/* =============================================================================
-   7. COBB-DOUGLAS DEMAND: income expansion path
-   Three budget lines at I*0.5, I, I*1.5.
-   Optimal bundles on each, connected by the income expansion path.
-   Sliders for alpha, beta, Px, Py. Fixed spending share annotation.
-   ============================================================================= */
-function initCobbBoard() {
-  var board = initBoard('jxg-cobb', [-1.5, 62, 62, -6]);
-
-  var slAlpha = board.create('slider', [[0.5, -2.2], [20, -2.2], [0.1, 0.5, 0.9]], {
-    name: '\u03b1', snapWidth: 0.05,
-    baseline: { strokeColor: '#3d5a80' }, highline: { strokeColor: '#3d5a80' },
-    label: { fontSize: 11 }
-  });
-  var slBeta = board.create('slider', [[0.5, -3.5], [20, -3.5], [0.1, 0.5, 0.9]], {
-    name: '\u03b2', snapWidth: 0.05,
-    baseline: { strokeColor: '#6b52a8' }, highline: { strokeColor: '#6b52a8' },
-    label: { fontSize: 11 }
-  });
-  var slPx = board.create('slider', [[21, -2.2], [38, -2.2], [1, 5, 15]], {
-    name: 'Px', snapWidth: 1,
-    baseline: { strokeColor: '#c0392b' }, highline: { strokeColor: '#c0392b' },
-    label: { fontSize: 11 }
-  });
-  var slPy = board.create('slider', [[21, -3.5], [38, -3.5], [1, 4, 15]], {
-    name: 'Py', snapWidth: 1,
-    baseline: { strokeColor: '#2e8b57' }, highline: { strokeColor: '#2e8b57' },
-    label: { fontSize: 11 }
-  });
-
-  var baseI = 100;
-
-  function shareX() { return slAlpha.Value()/(slAlpha.Value()+slBeta.Value()); }
-  function shareY() { return slBeta.Value()/(slAlpha.Value()+slBeta.Value()); }
-  function xOpt(I) { return shareX()*I/slPx.Value(); }
-  function yOpt(I) { return shareY()*I/slPy.Value(); }
-
-  // Three budget lines
-  [0.5, 1.0, 1.5].forEach(function(scale, idx) {
-    var cols = ['#c5d9eb','#3d5a80','#9db5cc'];
-    var dashes = [2, 0, 2];
-    board.create('functiongraph', [function(x) {
-      var I = baseI * scale;
-      return (I - slPx.Value()*x) / slPy.Value();
-    }, 0, function() {
-      return baseI * scale / slPx.Value() + 0.3;
-    }], { strokeColor: cols[idx], strokeWidth: idx===1?2.5:1.5,
-          dash: dashes[idx], highlight: false });
-  });
-
-  // IC at each optimal bundle
-  [0.5, 1.0, 1.5].forEach(function(scale, idx) {
-    var cols = ['#c5d9eb','#3d5a80','#9db5cc'];
-    var widths = [1.4, 2.8, 1.4];
-    board.create('functiongraph', [function(x) {
-      var I = baseI * scale;
-      var a = slAlpha.Value(), b = slBeta.Value();
-      var xS = shareX()*I/slPx.Value(), yS = shareY()*I/slPy.Value();
-      var k  = xS > 0 && yS > 0 ? Math.pow(xS,a)*Math.pow(yS,b) : 0;
-      if (k <= 0) return NaN;
-      return x > 0.05 ? Math.pow(k / Math.pow(x, a), 1/b) : NaN;
-    }], { strokeColor: cols[idx], strokeWidth: widths[idx], highlight: false });
-  });
-
-  // Income expansion path (the ray through all optima)
-  board.create('functiongraph', [function(x) {
-    var slope = (slBeta.Value()/slAlpha.Value()) * (slPx.Value()/slPy.Value());
-    return slope * x;
-  }, 0, 55], {
-    strokeColor: '#d4813a', strokeWidth: 2, dash: 2, highlight: false
-  });
-
-  // Expansion path label
-  board.create('text', [function() { return 28; },
-    function() {
-      var slope = (slBeta.Value()/slAlpha.Value())*(slPx.Value()/slPy.Value());
-      return slope * 28 + 1.5;
-    }, 'Income expansion path'
-  ], { fontSize: 10, color: '#d4813a', fixed: false, highlight: false });
-
-  // Three optimal bundles
-  [0.5, 1.0, 1.5].forEach(function(scale) {
-    board.create('point', [
-      function() { return xOpt(baseI*scale); },
-      function() { return yOpt(baseI*scale); }
-    ], {
-      color: scale === 1.0 ? '#c0392b' : '#3d5a80',
-      size: scale === 1.0 ? 7 : 4, fixed: true, highlight: false,
-      name: 'I=' + (baseI*scale).toFixed(0),
-      withLabel: true, label: { offset: [5, 5], fontSize: 9 }
+  buildBFBBoard();
+  ['bfb-spendX','bfb-Px','bfb-Py','bfb-alpha'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',function(){
+      var dp=id==='bfb-alpha'?2:0;
+      document.getElementById(id+'-val').textContent=parseFloat(this.value).toFixed(dp);
+      buildBFBBoard();
     });
   });
+}
 
-  // Drop lines from main optimum
-  board.create('segment', [
-    [0, function() { return yOpt(baseI); }],
-    [function() { return xOpt(baseI); }, function() { return yOpt(baseI); }]
-  ], { strokeColor: '#ccc', strokeWidth: 1, dash: 2, fixed: false, highlight: false });
-  board.create('segment', [
-    [function() { return xOpt(baseI); }, 0],
-    [function() { return xOpt(baseI); }, function() { return yOpt(baseI); }]
-  ], { strokeColor: '#ccc', strokeWidth: 1, dash: 2, fixed: false, highlight: false });
+function buildBFBBoard() {
+  bfbObjects.forEach(function(o){try{mupBoard.removeObject(o,false);}catch(e){}});
+  bfbObjects=[];
 
-  // Live spending share text on board
-  board.create('text', [42, function() { return 58; }, function() {
-    return 'Share on X: ' + (shareX()*100).toFixed(1) + '%';
-  }], { fontSize: 12, color: '#3d5a80', fixed: true, anchorX: 'left' });
-  board.create('text', [42, function() { return 52; }, function() {
-    return 'Share on Y: ' + (shareY()*100).toFixed(1) + '%';
-  }], { fontSize: 12, color: '#6b52a8', fixed: true, anchorX: 'left' });
-  board.create('text', [42, function() { return 46; }, function() {
-    return 'X* = ' + xOpt(baseI).toFixed(2) + ',  Y* = ' + yOpt(baseI).toFixed(2);
-  }], { fontSize: 11, color: '#c0392b', fixed: true, anchorX: 'left' });
-  board.create('text', [42, 40, 'Note: shares are constant regardless of I, Px, Py'], { fontSize: 10, color: '#888', fixed: true, anchorX: 'left' });
-  
+  var I=100,spX=slVal('bfb-spendX'),Px=slVal('bfb-Px'),Py=slVal('bfb-Py'),a=slVal('bfb-alpha');
+  var b=1-a,X=Math.max(spX/Px,0.01),Y=Math.max((I-spX)/Py,0.01);
+  var MUx=a*Math.pow(X,a-1)*Math.pow(Y,b), MUy=b*Math.pow(X,a)*Math.pow(Y,b-1);
+  var bangX=MUx/Px, bangY=MUy/Py;
+  var mx=Math.max(bangX,bangY)*1.4;
+  if(mx<0.01) mx=0.01;
 
-  // Update sidebar
-  function updateCobbSidebar() {
-    var a = slAlpha.Value(), b = slBeta.Value();
-    var sX = shareX(), sY = shareY();
-    var xS = xOpt(baseI), yS = yOpt(baseI);
-    document.getElementById('cd-share-x').textContent = (sX*100).toFixed(1) + '%';
-    document.getElementById('cd-share-y').textContent = (sY*100).toFixed(1) + '%';
-    document.getElementById('cd-x-star').textContent  = xS.toFixed(4);
-    document.getElementById('cd-y-star').textContent  = yS.toFixed(4);
-    document.getElementById('cd-spend-x').textContent = '$' + (slPx.Value()*xS).toFixed(2);
-    document.getElementById('cd-spend-y').textContent = '$' + (slPy.Value()*yS).toFixed(2);
+  mupBoard.setBoundingBox([-0.4, mx*1.2, 3.4, -mx*0.08], false);
+
+  /* Y-axis */
+  bfbObjects.push(mupBoard.create('segment',[[0,-mx*0.06],[0,mx*1.15]],
+    {strokeColor:'#999',strokeWidth:1,fixed:true,highlight:false}));
+  /* Y-axis tick labels */
+  [0.25,0.5,0.75,1.0].forEach(function(frac){
+    var yv=mx*frac;
+    bfbObjects.push(mupBoard.create('text',[-0.08,yv,yv.toFixed(3)],
+      {fontSize:10,color:'#aaa',fixed:true,anchorX:'right',highlight:false}));
+    bfbObjects.push(mupBoard.create('segment',[[-0.04,yv],[0,yv]],
+      {strokeColor:'#ccc',strokeWidth:1,fixed:true,highlight:false}));
+  });
+
+  /* Bar for MU(X)/P_X — centred at x=0.7 */
+  var barW=0.55;
+  /* X bar */
+  var bx=mupBoard.create('polygon',
+    [[0.25,0],[0.25+barW,0],[0.25+barW,bangX],[0.25,bangX]],
+    {fillColor:C.red,fillOpacity:0.75,strokeWidth:0,
+     vertices:{visible:false},highlight:false,fixed:true});
+  /* Y bar */
+  var by=mupBoard.create('polygon',
+    [[1.6,0],[1.6+barW,0],[1.6+barW,bangY],[1.6,bangY]],
+    {fillColor:C.blue,fillOpacity:0.75,strokeWidth:0,
+     vertices:{visible:false},highlight:false,fixed:true});
+  bfbObjects.push(bx,by);
+
+  /* Bar labels below x-axis */
+  bfbObjects.push(mupBoard.create('text',[0.525,-mx*0.07,'MU(X)/P\u2093'],
+    {fontSize:13,color:C.red,fixed:true,anchorX:'middle',highlight:false}));
+  bfbObjects.push(mupBoard.create('text',[1.925,-mx*0.07,'MU(Y)/P\u1D67'],
+    {fontSize:13,color:C.blue,fixed:true,anchorX:'middle',highlight:false}));
+
+  /* Value labels AT TOP of each bar — offset upward slightly so no overlap */
+  var topOffX=mx*0.03;
+  bfbObjects.push(mupBoard.create('text',[0.525,bangX+topOffX*1.5,bangX.toFixed(4)],
+    {fontSize:12,color:C.red,fixed:true,anchorX:'middle',highlight:false}));
+  bfbObjects.push(mupBoard.create('text',[1.925,bangY+topOffX*1.5,bangY.toFixed(4)],
+    {fontSize:12,color:C.blue,fixed:true,anchorX:'middle',highlight:false}));
+
+  /* Equalisation horizontal line at the optimal shared value */
+  var bangOpt=(a*Math.pow(a,a-1)*Math.pow(b,b)/Px + b*Math.pow(a,a)*Math.pow(b,b-1)/Py)/2;
+  /* Simpler: optimal is when bangX=bangY, which occurs at x*=a*I/Px, y*=b*I/Py */
+  var xOpt=a*I/Px,yOpt=b*I/Py;
+  var bangOptVal=a*Math.pow(xOpt,a-1)*Math.pow(yOpt,b)/Px;
+  if(isFinite(bangOptVal)&&bangOptVal>0&&bangOptVal<mx*1.1) {
+    bfbObjects.push(mupBoard.create('segment',[[0.1,bangOptVal],[3.0,bangOptVal]],
+      {strokeColor:C.green,strokeWidth:1.5,dash:2,fixed:true,highlight:false}));
+    bfbObjects.push(mupBoard.create('text',[3.0,bangOptVal+topOffX*1.5,'optimum'],
+      {fontSize:11,color:C.green,fixed:true,anchorX:'right',highlight:false}));
   }
 
-  slAlpha.on('drag', updateCobbSidebar);
-  slBeta.on('drag',  updateCobbSidebar);
-  slPx.on('drag',    updateCobbSidebar);
-  slPy.on('drag',    updateCobbSidebar);
-  updateCobbSidebar();
+  /* Arrow indicating which direction to shift */
+  var tol=0.015;
+  var eq=Math.abs(bangX-bangY)<tol;
+  var msg=eq?'Ratios equal: at the optimal bundle':
+    bangX>bangY?'Reallocate: shift spending toward X\u2009\u2192':
+               'Reallocate: shift spending toward Y\u2009\u2192';
+  bfbObjects.push(mupBoard.create('text',[1.5,mx*1.12,msg],
+    {fontSize:13,color:eq?C.green:C.amber,fixed:true,anchorX:'middle',highlight:false}));
+
+  /* Sidebar */
+  document.getElementById('bfb-mux-px').textContent =bangX.toFixed(4);
+  document.getElementById('bfb-muy-py').textContent =bangY.toFixed(4);
+  document.getElementById('bfb-verdict').textContent=eq?'Ratios equal: optimal':
+    bangX>bangY?'MU(X)/P\u2093 > MU(Y)/P\u1D67':'MU(Y)/P\u1D67 > MU(X)/P\u2093';
+  document.getElementById('bfb-action').textContent =eq?'No reallocation needed':
+    bangX>bangY?'Shift spending toward X':'Shift spending toward Y';
+
+  mupBoard.update();
+}
+
+/* =============================================================================
+   7. COBB-DOUGLAS — income expansion path, minimal on-board text
+   ============================================================================= */
+var cdBoard, cdObjects=[];
+
+function initCobbBoard() {
+  cdBoard=mkBoard('jxg-cobb',[-1.5,56,56,-1.5]);
+  buildCobbBoard();
+  ['cd-alpha','cd-beta','cd-I','cd-Px','cd-Py'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',function(){
+      var dp=(id==='cd-alpha'||id==='cd-beta')?2:0;
+      document.getElementById(id+'-val').textContent=parseFloat(this.value).toFixed(dp);
+      buildCobbBoard();
+    });
+  });
+}
+
+function buildCobbBoard() {
+  cdObjects.forEach(function(o){try{cdBoard.removeObject(o,false);}catch(e){}});
+  cdObjects=[];
+
+  var a=slVal('cd-alpha'),b=slVal('cd-beta'),I=slVal('cd-I');
+  var Px=slVal('cd-Px'),Py=slVal('cd-Py');
+  var sX=a/(a+b), sY=b/(a+b);
+  var xS=sX*I/Px, yS=sY*I/Py;
+  var m=Math.max(I/Px,I/Py)*1.65;
+  cdBoard.setBoundingBox([-m*0.06,m*1.1,m*1.1,-m*0.06],false);
+
+  var scales=[0.5,1.0,1.5];
+  var bCols=[C.blue3,C.ink,C.blue2];
+  var bW=[1.4,2.4,1.4];
+
+  /* Three budget lines */
+  scales.forEach(function(sc,idx){
+    var Is=I*sc;
+    (function(Is2){
+      cdObjects.push(cdBoard.create('functiongraph',
+        [function(x){return(Is2-Px*x)/Py;},0,Is2/Px],
+        {strokeColor:bCols[idx],strokeWidth:bW[idx],dash:idx===1?0:2,highlight:false}));
+    })(Is);
+  });
+
+  /* Three optimal ICs */
+  scales.forEach(function(sc,idx){
+    var Is=I*sc, xs2=sX*Is/Px, ys2=sY*Is/Py;
+    var k2=xs2>0&&ys2>0?Math.pow(xs2,a)*Math.pow(ys2,b):0;
+    if(k2<=0) return;
+    (function(kk){
+      cdObjects.push(cdBoard.create('functiongraph',
+        [function(x){return x>0.05?Math.pow(kk/Math.pow(x,a),1/b):NaN;}],
+        {strokeColor:bCols[idx],strokeWidth:idx===1?2.5:1.4,highlight:false}));
+    })(k2);
+  });
+
+  /* Income expansion path */
+  var expSlope=(b/a)*(Px/Py);
+  cdObjects.push(cdBoard.create('functiongraph',
+    [function(x){return expSlope*x;},0,m*0.92],
+    {strokeColor:C.amber,strokeWidth:2,dash:2,highlight:false}));
+
+  /* Expansion path label — perpendicular offset from the path */
+  var lx=m*0.32, ly=expSlope*m*0.32;
+  var len=Math.sqrt(1+expSlope*expSlope);
+  var ox=-expSlope/len*m*0.05, oy=1/len*m*0.05;
+  var epLabelX=m*0.28, epLabelY=expSlope*m*0.28+m*0.06;
+  cdObjects.push(cdBoard.create('text',[epLabelX,epLabelY,'Expansion path'],
+    {fontSize:11,color:C.amber,fixed:true,highlight:false,anchorX:'middle'}));
+
+  /* Three optimal bundle points — NO text labels on the points themselves.
+     Use the sidebar. Put tiny I= labels ABOVE/BELOW each point with enough offset. */
+  scales.forEach(function(sc,idx){
+    var xs3=sX*I*sc/Px, ys3=sY*I*sc/Py;
+    if(xs3>m*1.05||ys3>m*1.05) return;
+    /* Offset the label away from the expansion path direction */
+    /* For 0.5× bundle: label lower-left; 1.0×: upper-right; 1.5×: upper-right */
+    var ptCol=idx===1?C.red:C.blue2;
+    var ptOff=idx===0?[-14,-14]:idx===1?[10,8]:[10,8];
+    cdObjects.push(cdBoard.create('point',[xs3,ys3],{
+      color:ptCol, size:idx===1?7:4, fixed:true, highlight:false,
+      name:'I='+Math.round(I*sc),
+      withLabel:true,
+      label:{offset:ptOff,fontSize:10,color:ptCol}
+    }));
+  });
+
+  /* Drop lines from main optimum only */
+  if(xS>0&&yS>0&&xS<m&&yS<m){
+    cdObjects.push(
+      cdBoard.create('segment',[[0,yS],[xS,yS]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
+      cdBoard.create('segment',[[xS,0],[xS,yS]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
+      cdBoard.create('text',[xS,-m*0.045,'X* = '+xS.toFixed(1)],
+        {fontSize:11,color:C.red,fixed:true,anchorX:'middle',highlight:false}),
+      cdBoard.create('text',[-m*0.025,yS,'Y* = '+yS.toFixed(1)],
+        {fontSize:11,color:C.red,fixed:true,anchorX:'left',highlight:false})
+    );
+  }
+
+  /* Sidebar */
+  document.getElementById('cd-share-x').textContent=(sX*100).toFixed(1)+'%';
+  document.getElementById('cd-share-y').textContent=(sY*100).toFixed(1)+'%';
+  document.getElementById('cd-x-star').textContent=xS.toFixed(4);
+  document.getElementById('cd-y-star').textContent=yS.toFixed(4);
+  document.getElementById('cd-spend-x').textContent='$'+(Px*xS).toFixed(2);
+  document.getElementById('cd-spend-y').textContent='$'+(Py*yS).toFixed(2);
+
+  cdBoard.update();
 }
 
 /* =============================================================================
@@ -1749,6 +1606,7 @@ function initCobbBoard() {
    ============================================================================= */
 document.addEventListener('DOMContentLoaded', function() {
   initICExplorer();
+  initICFamily();
   initUtilitySurface();
   initBudgetBoard();
   initShiftBoard();
@@ -1756,8 +1614,10 @@ document.addEventListener('DOMContentLoaded', function() {
   initBFBBoard();
   initCobbBoard();
 });
-
 </script>
+
+
+
 
 
   <style>
@@ -1871,6 +1731,19 @@ document.addEventListener('DOMContentLoaded', function() {
     .ic-3d-canvas-wrap { position: relative; }
     .canvas-3d { display: block; border-radius: 0; cursor: grab; }
     .canvas-3d:active { cursor: grabbing; }
+    .shift-btn {
+      font-family: 'Source Serif 4', serif;
+      font-size: 0.88rem;
+      padding: 0.3rem 0.75rem;
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      background: #fff;
+      color: var(--ink-light);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .shift-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .shift-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
     .viz-note {
       font-family: 'Source Serif 4', serif;
       font-size: 0.82rem;
@@ -1948,9 +1821,6 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="viz-wrapper">
             <div class="viz-header">
               <span class="viz-title">▸ Indifference Curve Explorer</span>
-              <button class="code-toggle-btn" data-target="code-ic-types">
-                <span>{ }</span> Python <span class="arrow">▶</span>
-              </button>
             </div>
 
             <div class="viz-controls">
@@ -1964,9 +1834,13 @@ document.addEventListener('DOMContentLoaded', function() {
                   <button class="type-btn" data-type="bad">Economic Bad</button>
                 </div>
               </div>
+              <div class="ctrl-group" id="u0-ctrl">
+                <label>Utility level <em>U</em>₀ (cutting plane height) <span class="ctrl-val" id="ic-u0-val">2.0</span></label>
+                <input type="range" id="ic-u0" min="0.3" max="5.5" step="0.1" value="2.0" />
+              </div>
               <div class="ctrl-group" id="alpha-ctrl">
                 <label>Alpha (α), Cobb-Douglas weight <span class="ctrl-val" id="alpha-val">0.5</span></label>
-                <input type="range" id="alpha-slider" min="0.1" max="0.9" step="0.05" value="0.5" />
+                <input type="range" id="ic-alpha" min="0.1" max="0.9" step="0.05" value="0.5" />
               </div>
               <div class="ctrl-group" id="subst-ctrl" style="display:none">
                 <label>MRS = a/b, where a = <span class="ctrl-val" id="subst-val">1</span></label>
@@ -1981,9 +1855,9 @@ document.addEventListener('DOMContentLoaded', function() {
                   <div id="jxg-ic-3d" style="width:100%;height:230px;"></div>
                 </div>
                 <div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">Indifference Map (drag orange point)</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">Single IC at U₀ (drag P to see MRS)</div>
                   <div id="jxg-ic-2d" style="width:100%;height:230px;"></div>
-                </div>
+                  <div id="ic-u-readout" style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#d4813a;padding:0.25rem 0.8rem;min-height:1.2rem;"></div>
               </div>
               <div class="viz-panel-right">
                 <div class="stat-row">
@@ -2007,32 +1881,17 @@ document.addEventListener('DOMContentLoaded', function() {
                   The consumer substitutes X for Y at a <em>decreasing rate</em>, convex ICs reflect the preference for variety. Moving to higher ICs (upper-right) means higher utility.
                 </div>
               </div>
+            </div></div>
+        </div>
+
+        <!-- IC FAMILY MAP — separate viz showing the full family of ICs -->
+        <div style="margin-top:1.5rem">
+          <div class="viz-wrapper">
+            <div class="viz-header">
+              <span class="viz-title">&#9658; Indifference Curve Map (full family)</span>
             </div>
-
-            <div class="code-panel" id="code-ic-types">
-              <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="cm"># Cobb-Douglas: U(X,Y) = X^alpha * Y^(1-alpha)</span>
-<span class="cm"># For a given utility level k, solve for Y:</span>
-<span class="cm">#   k = X^a * Y^b  =>  Y = (k / X^a)^(1/b)</span>
-
-alpha = <span class="nm">0.5</span>
-beta  = <span class="nm">1.0</span> - alpha
-X     = np.linspace(<span class="nm">0.1</span>, <span class="nm">10</span>, <span class="nm">400</span>)
-
-<span class="kw">for</span> k <span class="kw">in</span> [<span class="nm">1</span>, <span class="nm">2</span>, <span class="nm">3</span>, <span class="nm">4</span>]:          <span class="cm"># utility levels</span>
-    Y = (k / X**alpha) ** (<span class="nm">1</span> / beta)
-    <span class="cm"># plot(X, Y) , each curve is one indifference curve</span>
-
-<span class="cm"># Perfect substitutes: U(X,Y) = a*X + b*Y</span>
-<span class="cm"># Indifference curve: Y = (k - a*X) / b , straight line</span>
-
-<span class="cm"># Perfect complements: U(X,Y) = min(X/r, Y)</span>
-<span class="cm"># Kink at X = r*Y, consumer always wants ratio r:1</span>
-
-<span class="cm"># MRS (Cobb-Douglas) = MUx / MUy = (alpha * Y) / ((1-alpha) * X)</span>
-<span class="cm"># MRS is DIMINISHING, decreases as X increases along an IC</span></pre>
-            </div>
+            <div class="viz-note">Five indifference curves for the selected preference type. Each curve represents a different utility level — curves farther from the origin correspond to higher utility.</div>
+            <div id="jxg-ic-family" style="width:100%;height:340px;"></div>
           </div>
         </div>
 
@@ -2044,34 +1903,18 @@ X     = np.linspace(<span class="nm">0.1</span>, <span class="nm">10</span>, <sp
           <div class="viz-wrapper">
             <div class="viz-header">
               <span class="viz-title">▸ Utility Surface &amp; Level Curves (3D)</span>
-              <button class="code-toggle-btn" data-target="code-3d">
-                <span>{ }</span> Python <span class="arrow">▶</span>
-              </button>
             </div>
-            <div style="padding:0.6rem 1rem 0.3rem;font-size:0.85rem;color:var(--ink-light);">
-              Drag the orange floor point to any (X,Y) position. The red curve on the surface is the indifference curve at that utility level. Use sliders on the board to adjust &#945;. Drag the 3D view to rotate.
+            <div class="viz-controls">
+              <div class="ctrl-group">
+                <label>\(\alpha\) (Cobb-Douglas weight) <span class="ctrl-val" id="surf-alpha-val">0.5</span></label>
+                <input type="range" id="surf-alpha" min="0.1" max="0.9" step="0.05" value="0.5" />
+              </div>
+              <div class="ctrl-group" style="justify-content:flex-end">
+                <div id="surf-u-readout" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:#c0392b;"></div>
+              </div>
             </div>
-            <div id="jxg-surf3d" style="width:100%;height:520px;"></div>
-            <div class="code-panel" id="code-3d">
-              <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="cm"># Build a grid of (X, Y) values</span>
-X, Y = np.meshgrid(
-    np.linspace(<span class="nm">0.1</span>, <span class="nm">8</span>, <span class="nm">60</span>),
-    np.linspace(<span class="nm">0.1</span>, <span class="nm">8</span>, <span class="nm">60</span>)
-)
-
-alpha = <span class="nm">0.5</span>
-Z = X**alpha * Y**(<span class="nm">1</span> - alpha)   <span class="cm"># utility surface</span>
-
-<span class="cm"># Each horizontal slice Z = k is one indifference curve</span>
-<span class="cm"># In 2D: Y = (k / X^alpha)^(1/(1-alpha))</span>
-<span class="cm"># The "contour lines" of Z(X,Y) are exactly the ICs</span>
-
-<span class="cm"># This is why economists say ICs are "level curves"</span>
-<span class="cm">#, they are the set of points at a constant utility level</span></pre>
-            </div>
-          </div>
+            <div class="viz-note">Drag the orange floor point to any \((X,Y)\) position. The red curve is the indifference curve (level curve) at that utility level. Drag the 3D view itself to rotate.</div>
+            <div id="jxg-surf3d" style="width:100%;height:520px;"></div></div>
         </div>
 
         <div class="callout common-mistake" style="margin-top:1.5rem">
@@ -2104,34 +1947,49 @@ Z = X**alpha * Y**(<span class="nm">1</span> - alpha)   <span class="cm"># utili
           <div class="viz-wrapper">
             <div class="viz-header">
               <span class="viz-title">▸ Interactive Budget Line</span>
-              <button class="code-toggle-btn" data-target="code-budget">
-                <span>{ }</span> Python <span class="arrow">▶</span>
-              </button>
             </div>
-            <div class="viz-note">Use the sliders inside the graph to adjust Income, Px, and Py. Drag the orange bundle point to test affordability.</div>
-            <div style="padding:0">
-              <div id="jxg-budget" style="width:100%;height:480px;"></div>
+            <div class="viz-controls">
+              <div class="ctrl-group">
+                <label>Income <em>I</em>  <span class="ctrl-val" id="bc-I-val">100</span></label>
+                <input type="range" id="bc-I" min="40" max="200" step="5" value="100" />
               </div>
-            <!-- bc stats now displayed on-board -->
-            <div class="code-panel" id="code-budget">
-              <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-I, Px, Py = <span class="nm">100</span>, <span class="nm">5</span>, <span class="nm">4</span>
-
-x_int = I / Px          <span class="cm"># max X if all income spent on X</span>
-y_int = I / Py          <span class="cm"># max Y if all income spent on Y</span>
-slope = -Px / Py        <span class="cm"># opportunity cost of X in terms of Y</span>
-
-X = np.linspace(<span class="nm">0</span>, x_int, <span class="nm">400</span>)
-Y = (I - Px * X) / Py  <span class="cm"># rearranged budget constraint</span>
-
-<span class="cm"># Budget equation: Px*X + Py*Y = I</span>
-<span class="cm"># Rearranged:      Y = I/Py - (Px/Py)*X</span>
-print(<span class="st">f"X-intercept: </span>{x_int}<span class="st">"</span>)
-print(<span class="st">f"Y-intercept: </span>{y_int}<span class="st">"</span>)
-print(<span class="st">f"Slope:       </span>{slope:.3f}<span class="st">"</span>)</pre>
+              <div class="ctrl-group">
+                <label>Price of X  <em>P<sub>X</sub></em>  <span class="ctrl-val" id="bc-Px-val">5</span></label>
+                <input type="range" id="bc-Px" min="1" max="20" step="1" value="5" />
+              </div>
+              <div class="ctrl-group">
+                <label>Price of Y  <em>P<sub>Y</sub></em>  <span class="ctrl-val" id="bc-Py-val">4</span></label>
+                <input type="range" id="bc-Py" min="1" max="20" step="1" value="4" />
+              </div>
             </div>
-          </div>
+            <div class="viz-note">The shaded region is the affordable set. Adjust the sliders to see how the budget line shifts.</div>
+            <div class="viz-two-col">
+              <div class="viz-panel-left">
+                <div id="jxg-budget" style="width:100%;height:480px;"></div>
+              </div>
+              <div class="viz-panel-right">
+                <div class="stat-row">
+                  <span class="stat-label">Budget Equation</span>
+                  <span class="stat-val accent" id="bc-equation">5X + 4Y = 100</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">X-intercept \(I/P_X\)</span>
+                  <span class="stat-val green" id="bc-x-int">20.00</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Y-intercept \(I/P_Y\)</span>
+                  <span class="stat-val green" id="bc-y-int">25.00</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Slope \(-P_X/P_Y\)</span>
+                  <span class="stat-val red" id="bc-slope">-1.250</span>
+                </div>
+                <hr class="divider-sm"/>
+                <div style="font-size:0.82rem;color:var(--ink-light);line-height:1.55">
+                  For each extra unit of \(X\) purchased, you give up <span id="bc-opp-cost" style="font-weight:600">1.25</span> units of \(Y\).
+                </div>
+              </div>
+            </div></div>
         </div>
       </section>
 
@@ -2161,25 +2019,22 @@ print(<span class="st">f"Slope:       </span>{slope:.3f}<span class="st">"</span
         <div class="viz-wrapper" style="margin-top:1.5rem">
           <div class="viz-header">
             <span class="viz-title">▸ Shift vs. Pivot Explorer</span>
-            <button class="code-toggle-btn" data-target="code-shifts">
-              <span>{ }</span> Python <span class="arrow">▶</span>
-            </button>
           </div>
-          <div class="viz-controls">
-            <div class="ctrl-group">
+          <div class="viz-controls" style="flex-direction:column;align-items:flex-start;gap:0.9rem">
+            <div class="ctrl-group" style="width:100%">
               <label>Change type</label>
-              <select id="shift-type">
-                <option value="income-up">Income increase (parallel shift out)</option>
-                <option value="income-down">Income decrease (parallel shift in)</option>
-                <option value="px-down">P_X decreases (pivot out)</option>
-                <option value="px-up">P_X increases (pivot in)</option>
-                <option value="py-down">P_Y decreases (pivot out)</option>
-                <option value="py-up">P_Y increases (pivot in)</option>
-              </select>
+              <div id="shift-btns" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.3rem">
+                <button class="shift-btn active" data-type="income-up">Income &uarr;</button>
+                <button class="shift-btn" data-type="income-down">Income &darr;</button>
+                <button class="shift-btn" data-type="px-up"><em>P</em><sub>X</sub> &uarr;</button>
+                <button class="shift-btn" data-type="px-down"><em>P</em><sub>X</sub> &darr;</button>
+                <button class="shift-btn" data-type="py-up"><em>P</em><sub>Y</sub> &uarr;</button>
+                <button class="shift-btn" data-type="py-down"><em>P</em><sub>Y</sub> &darr;</button>
+              </div>
             </div>
             <div class="ctrl-group">
-              <label>Magnitude <span class="ctrl-val" id="shift-mag-val">+30%</span></label>
-              <input type="range" id="shift-mag" min="10" max="80" step="10" value="30" />
+              <label>Magnitude <span class="ctrl-val" id="shift-mag-val">30%</span></label>
+              <input type="range" id="shift-mag" min="5" max="80" step="5" value="30" />
             </div>
           </div>
           <div class="viz-two-col">
@@ -2208,34 +2063,7 @@ print(<span class="st">f"Slope:       </span>{slope:.3f}<span class="st">"</span
                 A parallel shift means <strong>only income changed</strong>. Both intercepts move proportionally; the slope is set by prices alone.
               </div>
             </div>
-          </div>
-          <div class="code-panel" id="code-shifts">
-            <pre><span class="cm"># Base parameters</span>
-I, Px, Py = <span class="nm">100</span>, <span class="nm">5</span>, <span class="nm">4</span>
-
-<span class="kw">def</span> <span class="fn">budget_line</span>(I, Px, Py):
-    x_int = I / Px
-    slope = -Px / Py
-    y_int = I / Py
-    <span class="kw">return</span> x_int, y_int, slope
-
-<span class="cm"># INCOME INCREASE → parallel shift</span>
-I_new = I * <span class="nm">1.3</span>
-<span class="cm"># slope unchanged: -Px/Py stays the same</span>
-<span class="cm"># both intercepts scale by 1.3</span>
-
-<span class="cm"># PRICE INCREASE for X → pivot</span>
-Px_new = Px * <span class="nm">1.3</span>
-<span class="cm"># Y-intercept = I/Py is FIXED (Py unchanged)</span>
-<span class="cm"># X-intercept = I/Px_new shrinks inward</span>
-<span class="cm"># Slope = -Px_new/Py becomes steeper</span>
-
-x1, y1, s1 = budget_line(I, Px, Py)
-x2, y2, s2 = budget_line(I_new, Px, Py)
-print(<span class="st">f"Original slope: </span>{s1:.3f}<span class="st">"</span>)
-print(<span class="st">f"After income ↑: slope = </span>{s2:.3f}<span class="st"> (unchanged)"</span>)</pre>
-          </div>
-        </div>
+          </div></div>
       </section>
 
       <!-- ══════════════════════════════════════════════════
@@ -2268,9 +2096,6 @@ print(<span class="st">f"After income ↑: slope = </span>{s2:.3f}<span class="s
           <div class="viz-wrapper">
             <div class="viz-header">
               <span class="viz-title">▸ Consumer Optimum, Find the Best Bundle</span>
-              <button class="code-toggle-btn" data-target="code-optimum">
-                <span>{ }</span> Python <span class="arrow">▶</span>
-              </button>
             </div>
             <div class="viz-controls">
               <div class="ctrl-group">
@@ -2282,44 +2107,34 @@ print(<span class="st">f"After income ↑: slope = </span>{s2:.3f}<span class="s
                   <option value="ql">Quasi-linear (ln X + Y)</option>
                 </select>
               </div>
+              <div class="ctrl-group">
+                <label>Income <em>I</em>  <span class="ctrl-val" id="opt-I-val">80</span></label>
+                <input type="range" id="opt-I" min="20" max="200" step="5" value="80" />
+              </div>
+              <div class="ctrl-group">
+                <label><em>P<sub>X</sub></em>  <span class="ctrl-val" id="opt-Px-val">5</span></label>
+                <input type="range" id="opt-Px" min="1" max="20" step="1" value="5" />
+              </div>
+              <div class="ctrl-group">
+                <label><em>P<sub>Y</sub></em>  <span class="ctrl-val" id="opt-Py-val">4</span></label>
+                <input type="range" id="opt-Py" min="1" max="20" step="1" value="4" />
+              </div>
+              <div class="ctrl-group" id="opt-alpha-ctrl">
+                <label><em>&#945;</em>  <span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
+                <input type="range" id="opt-alpha" min="0.1" max="0.9" step="0.05" value="0.5" />
+              </div>
             </div>
-            <div class="viz-note">Use the sliders inside the graph to adjust I, Px, Py, and α.</div>
-            <div id="jxg-optimum" style="width:100%;height:500px;"></div>
-            <!-- Hidden elements kept for JS compatibility -->
-            <span id="opt-method" style="display:none"></span>
-            <span id="opt-x-star" style="display:none"></span>
-            <span id="opt-y-star" style="display:none"></span>
-            <span id="opt-utility" style="display:none"></span>
+                        <div id="jxg-optimum" style="width:100%;height:500px;"></div>
+            <!-- Results bar shown below the board -->
+            <div style="display:flex;gap:2rem;padding:0.6rem 1.2rem;background:#f8f9fb;border-top:1px solid var(--rule);font-family:'JetBrains Mono',monospace;font-size:0.82rem;flex-wrap:wrap;align-items:center;">
+              <span style="color:var(--faint);text-transform:uppercase;letter-spacing:0.08em;font-size:0.65rem;">Result:</span>
+              <span><span style="color:var(--faint)">Method: </span><span id="opt-method" style="color:var(--ink)">Tangency</span></span>
+              <span><span style="color:var(--faint)">X* = </span><span id="opt-x-star" style="color:#c0392b;font-weight:600">—</span></span>
+              <span><span style="color:var(--faint)">Y* = </span><span id="opt-y-star" style="color:#c0392b;font-weight:600">—</span></span>
+              <span><span style="color:var(--faint)">U* = </span><span id="opt-utility" style="color:var(--ink)">—</span></span>
+            </div>
             <span id="opt-budget-check" style="display:none"></span>
-            <span id="opt-tangency-check" style="display:none"></span>
-            <div class="code-panel" id="code-optimum">
-              <pre><span class="cm"># Cobb-Douglas: U(X,Y) = X^alpha * Y^(1-alpha)</span>
-I, Px, Py = <span class="nm">100</span>, <span class="nm">5</span>, <span class="nm">4</span>
-alpha = <span class="nm">0.5</span>
-
-<span class="cm"># Tangency condition: MUx/MUy = Px/Py</span>
-<span class="cm"># MUx = alpha * X^(alpha-1) * Y^(1-alpha)</span>
-<span class="cm"># MUy = (1-alpha) * X^alpha * Y^(-alpha)</span>
-<span class="cm"># MUx/MUy = (alpha * Y) / ((1-alpha) * X) = Px/Py</span>
-<span class="cm"># => Y = (1-alpha)/alpha * (Px/Py) * X</span>
-
-beta = <span class="nm">1</span> - alpha
-Y_from_tangency = (beta / alpha) * (Px / Py)  <span class="cm"># Y = k*X</span>
-
-<span class="cm"># Plug into budget constraint: Px*X + Py*(k*X) = I</span>
-k = Y_from_tangency
-X_star = I / (Px + Py * k)
-Y_star = k * X_star
-
-<span class="cm"># Equivalently (Cobb-Douglas shortcut):</span>
-X_star = alpha * I / Px
-Y_star = beta  * I / Py
-
-print(<span class="st">f"X* = </span>{X_star:.4f}<span class="st">"</span>)
-print(<span class="st">f"Y* = </span>{Y_star:.4f}<span class="st">"</span>)
-print(<span class="st">f"Budget: </span>{Px*X_star + Py*Y_star:.2f}<span class="st"> = </span>{I}<span class="st">"</span>)</pre>
-            </div>
-          </div>
+            <span id="opt-tangency-check" style="display:none"></span></div>
         </div>
 
         <div class="callout common-mistake" style="margin-top:1.5rem">
@@ -2351,9 +2166,6 @@ print(<span class="st">f"Budget: </span>{Px*X_star + Py*Y_star:.2f}<span class="
         <div class="viz-wrapper">
           <div class="viz-header">
             <span class="viz-title">▸ Marginal Utility per Dollar Reallocation</span>
-            <button class="code-toggle-btn" data-target="code-bang">
-              <span>{ }</span> Python <span class="arrow">▶</span>
-            </button>
           </div>
           <div class="viz-controls">
             <div class="ctrl-group">
@@ -2369,7 +2181,7 @@ print(<span class="st">f"Budget: </span>{Px*X_star + Py*Y_star:.2f}<span class="
               <input type="range" id="bfb-Py" min="1" max="15" step="1" value="4" />
             </div>
             <div class="ctrl-group">
-              <label>α <span class="ctrl-val" id="bfb-alpha-val">0.5</span></label>
+              <label>\(\alpha\) <span class="ctrl-val" id="bfb-alpha-val">0.50</span></label>
               <input type="range" id="bfb-alpha" min="0.1" max="0.9" step="0.05" value="0.5" />
             </div>
           </div>
@@ -2399,35 +2211,7 @@ print(<span class="st">f"Budget: </span>{Px*X_star + Py*Y_star:.2f}<span class="
                 Adjust spending on X to find where both ratios equalize. That is where the consumer's best bundle lies.
               </div>
             </div>
-          </div>
-          <div class="code-panel" id="code-bang">
-            <pre><span class="cm"># Cobb-Douglas: U = X^alpha * Y^(1-alpha)</span>
-<span class="cm"># MUx = alpha * X^(alpha-1) * Y^(1-alpha)</span>
-<span class="cm"># MUy = (1-alpha) * X^alpha * Y^(-alpha)</span>
-
-alpha, I, Px, Py = <span class="nm">0.5</span>, <span class="nm">100</span>, <span class="nm">5</span>, <span class="nm">4</span>
-spend_X = <span class="nm">50</span>   <span class="cm"># dollars on X</span>
-spend_Y = I - spend_X
-
-X = spend_X / Px
-Y = spend_Y / Py
-
-MUx = alpha * X**(alpha-<span class="nm">1</span>) * Y**(<span class="nm">1</span>-alpha)
-MUy = (<span class="nm">1</span>-alpha) * X**alpha * Y**(-alpha)
-
-bang_X = MUx / Px
-bang_Y = MUy / Py
-
-print(<span class="st">f"MUx/Px = </span>{bang_X:.4f}<span class="st">"</span>)
-print(<span class="st">f"MUy/Py = </span>{bang_Y:.4f}<span class="st">"</span>)
-<span class="kw">if</span> bang_X > bang_Y:
-    print(<span class="st">"→ Shift spending toward X"</span>)
-<span class="kw">elif</span> bang_X < bang_Y:
-    print(<span class="st">"→ Shift spending toward Y"</span>)
-<span class="kw">else</span>:
-    print(<span class="st">"→ At the optimum!"</span>)</pre>
-          </div>
-        </div>
+          </div></div>
       </section>
 
       <!-- ══════════════════════════════════════════════════
@@ -2454,22 +2238,19 @@ print(<span class="st">f"MUy/Py = </span>{bang_Y:.4f}<span class="st">"</span>)
         <div class="viz-wrapper">
           <div class="viz-header">
             <span class="viz-title">▸ Cobb-Douglas Demand, Spending Shares</span>
-            <button class="code-toggle-btn" data-target="code-cobb-show">
-              <span>{ }</span> Python <span class="arrow">▶</span>
-            </button>
           </div>
           <div class="viz-controls">
             <div class="ctrl-group">
-              <label>α <span class="ctrl-val" id="cd-alpha-val">0.5</span></label>
+              <label>\(\alpha\) <span class="ctrl-val" id="cd-alpha-val">0.50</span></label>
               <input type="range" id="cd-alpha" min="0.1" max="0.9" step="0.05" value="0.5" />
             </div>
             <div class="ctrl-group">
-              <label>β <span class="ctrl-val" id="cd-beta-val">0.5</span></label>
+              <label>\(\beta\) <span class="ctrl-val" id="cd-beta-val">0.50</span></label>
               <input type="range" id="cd-beta" min="0.1" max="0.9" step="0.05" value="0.5" />
             </div>
             <div class="ctrl-group">
               <label>Income \(I\) <span class="ctrl-val" id="cd-I-val">100</span></label>
-              <input type="range" id="cd-I" min="40" max="300" step="10" value="100" />
+              <input type="range" id="cd-I" min="20" max="300" step="5" value="100" />
             </div>
             <div class="ctrl-group">
               <label>\(P_X\) <span class="ctrl-val" id="cd-Px-val">5</span></label>
@@ -2510,67 +2291,9 @@ print(<span class="st">f"MUy/Py = </span>{bang_Y:.4f}<span class="st">"</span>)
                 <span class="stat-val" id="cd-spend-y">$50.00</span>
               </div>
             </div>
-          </div>
-          <div class="code-panel" id="code-cobb-show">
-            <pre><span class="cm"># General Cobb-Douglas: U(X,Y) = X^alpha * Y^beta</span>
-alpha, beta = <span class="nm">0.5</span>, <span class="nm">0.5</span>
-I, Px, Py   = <span class="nm">100</span>, <span class="nm">5</span>, <span class="nm">4</span>
+          </div></div>
 
-<span class="cm"># Demand functions (from tangency + budget)</span>
-X_star = (alpha / (alpha + beta)) * (I / Px)
-Y_star = (beta  / (alpha + beta)) * (I / Py)
-
-share_X = alpha / (alpha + beta)   <span class="cm"># constant, independent of I, Px, Py!</span>
-share_Y = beta  / (alpha + beta)
-
-print(<span class="st">f"X* = </span>{X_star:.4f}<span class="st">,  Spending = $</span>{Px*X_star:.2f}<span class="st">"</span>)
-print(<span class="st">f"Y* = </span>{Y_star:.4f}<span class="st">,  Spending = $</span>{Py*Y_star:.2f}<span class="st">"</span>)
-print(<span class="st">f"Income share on X: </span>{share_X:.1%}<span class="st">"</span>)
-print(<span class="st">f"Income share on Y: </span>{share_Y:.1%}<span class="st">"</span>)</pre>
-          </div>
-        </div>
-
-        <!-- ── EDITABLE CODE SECTION ── -->
-        <div style="margin-top:2rem">
-          <h3 style="font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:0.5rem">
-            Try It Yourself, Live Python Editor
-          </h3>
-          <p style="font-size:0.9rem;color:var(--ink-light);margin-bottom:1rem">
-            Edit the code below and click <strong>Run</strong>. Pyodide runs Python directly in your browser, no server, no installation needed.
-          </p>
-          <div class="viz-wrapper">
-            <div class="viz-header">
-              <span class="viz-title">▸ Editable: Cobb-Douglas Demand</span>
-            </div>
-            <textarea class="code-editor-area" id="editor-cobb" spellcheck="false"># Solve for the optimal bundle (Cobb-Douglas)
-# Try changing alpha, beta, I, Px, Py
-
-alpha = 0.4
-beta  = 0.6
-I     = 150
-Px    = 6
-Py    = 3
-
-X_star = (alpha / (alpha + beta)) * (I / Px)
-Y_star = (beta  / (alpha + beta)) * (I / Py)
-
-share_X = alpha / (alpha + beta)
-share_Y = beta  / (alpha + beta)
-
-print(f"X* = {X_star:.4f}")
-print(f"Y* = {Y_star:.4f}")
-print(f"Budget spent: ${Px*X_star + Py*Y_star:.2f} (should equal {I})")
-print(f"Income share on X: {share_X:.1%}")
-print(f"Income share on Y: {share_Y:.1%}")
-print()
-print("Notice: shares are fixed regardless of I, Px, Py!")</textarea>
-            <div style="padding:0.3rem 1rem">
-              <button class="code-run-btn" data-editor="editor-cobb" data-output="output-cobb">▶ Run Python</button>
-            </div>
-            <div class="code-output" id="output-cobb">Output will appear here after clicking Run…</div>
-          </div>
-        </div>
-      </section>
+        </section>
 
     </main>
   </div>
