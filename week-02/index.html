@@ -667,8 +667,6 @@ var C = {
 var icBoard3D, icBoard2D, icView3D;
 var icCurves2D=[], icGlider2D=null, icTangent2D=null;
 var icDropH=null, icDropV=null, icMRSText=null, icHighlightFn=null;
-/* Approach 5: pre-created curve set for cobb IC — no destroy/recreate = no flash */
-var icPreCurves=[], icPreCurIdx=-1;
 
 var IC_INFO = {
   cobb: {
@@ -676,108 +674,37 @@ var IC_INFO = {
     fn:'\\(U(X,Y)=X^{\\alpha}Y^{1-\\alpha}\\)',
     shape:'Smooth and convex (bowed toward origin)',
     mrs:'Diminishing: \\(MRS=\\tfrac{\\alpha Y}{(1-\\alpha)X}\\)',
-    desc:'Drag point P along the highlighted curve — the tangent line and MRS value update live. Use the utility level slider to move the cutting plane on the 3D surface and watch the highlighted IC change.'
+    desc:'Drag the orange MRS point along the red curve to see the tangent update. Use the utility level slider to move the cutting plane on the 3D surface and watch the highlighted IC change.'
   },
   substitutes: {
     label:'Perfect Substitutes',
     fn:'\\(U(X,Y)=X+Y\\)',
     shape:'Straight parallel lines with slope \\(-1\\)',
     mrs:'Constant: \\(MRS=1\\) everywhere',
-    desc:'The consumer is always willing to trade one unit of X for one unit of Y, regardless of quantities held. The optimal bundle is a corner solution.'
+    desc:'The consumer substitutes X and Y at a constant one-for-one rate everywhere on the IC. Because the MRS is constant and equal to 1, the ICs are straight lines with slope -1. The optimal bundle is always a corner solution: spend everything on whichever good has a lower price per unit of utility.'
   },
   complements: {
     label:'Perfect Complements',
     fn:'\\(U(X,Y)=\\min(X,Y)\\)',
     shape:'L-shaped curves, kink on the 45\\(^\\circ\\) ray',
     mrs:'\\(0\\), \\(\\infty\\), or undefined at the kink',
-    desc:'Goods must be consumed in fixed proportions. Extra units of one good alone add zero utility. The consumer always chooses the bundle at the kink of the L.'
+    desc:'X and Y are consumed in fixed proportions, like left and right shoes. The utility function $U = \\min(X,Y)$ means extra units of one good, without a matching unit of the other, add nothing. The optimal bundle always lies at the kink of the L, on the 45-degree ray.'
   },
   neutral: {
     label:'Neutral Good (Y)',
     fn:'\\(U(X,Y)=X\\)',
-    shape:'Vertical lines — utility independent of \\(Y\\)',
+    shape:'Vertical lines, utility independent of \\(Y\\)',
     mrs:'Undefined: \\(Y\\) is completely irrelevant',
-    desc:'Utility depends only on X. Any change in Y leaves the consumer exactly indifferent. Only moving rightward — consuming more X — increases welfare.'
+    desc:'Utility depends only on X. Any change in Y leaves the consumer exactly indifferent. Only moving rightward: consuming more X — increases welfare.'
   },
   bad: {
     label:'Economic Bad (Y)',
     fn:'\\(U(X,Y)=X-Y\\)',
     shape:'Upward-sloping lines',
     mrs:'Negative: more Y requires compensation in X',
-    desc:'Good Y actively reduces utility. To remain on the same indifference curve as Y rises, the consumer must receive additional X as compensation, producing the upward slope.'
+    desc:'Y is a bad: more of it reduces utility. To stay on the same IC as Y increases, the consumer must be compensated with more X. This produces upward-sloping ICs. The consumer would pay to have Y removed if possible.'
   }
 };
-
-/* Pre-create 41 Cobb IC curves at u0 = 0.3, 0.4, ... 4.4 (step 0.1).
-   All invisible initially. Toggling visibility = zero JS object creation = zero flash. */
-function initICPreCurves(alpha) {
-  /* Clear any existing pre-curves */
-  icPreCurves.forEach(function(c){
-    try{icBoard2D.removeObject(c.mrs,false);}catch(e){}
-    try{icBoard2D.removeObject(c.dv,false);}catch(e){}
-    try{icBoard2D.removeObject(c.dh,false);}catch(e){}
-    try{icBoard2D.removeObject(c.tang,false);}catch(e){}
-    try{icBoard2D.removeObject(c.glider,false);}catch(e){}
-    try{icBoard2D.removeObject(c.curve,false);}catch(e){}
-  });
-  icPreCurves=[];
-  icPreCurIdx=-1;
-
-  var b=1-alpha;
-  /* Generate u0 values: 0.3 to 4.4 step 0.1 */
-  var uVals=[];
-  for (var v=0.3; v<=4.41; v=Math.round((v+0.1)*100)/100) uVals.push(v);
-
-  uVals.forEach(function(u0) {
-    var u=u0; /* capture */
-    var startX=safePos(u,0.3,11.0);
-    var startY=b>0?Math.pow(u/Math.pow(startX,alpha),1/b):startX;
-    if (!isFinite(startY)||startY>11||startY<0.1) startY=u;
-
-    var curve=icBoard2D.create('functiongraph',[function(x){
-      return x>0.05?Math.pow(u/Math.pow(x,alpha),1/b):NaN;
-    },0.05,13.2],{strokeColor:C.red,strokeWidth:3,visible:false,highlight:false});
-
-    var glider=icBoard2D.create('glider',[startX,startY,curve],{
-      name:'P',size:7,fillColor:C.amber,strokeColor:'#fff',strokeWidth:2,
-      withLabel:true,label:{offset:[10,4],fontSize:12,color:C.amber},
-      visible:false,showInfobox:false
-    });
-
-    var tang=icBoard2D.create('functiongraph',[function(x){
-      var gx=glider.X(), gy=glider.Y();
-      if (gx<=0.01||gy<=0.01) return NaN;
-      var a2=slVal('ic-alpha');
-      if (a2<=0||a2>=1) return NaN;
-      var slope=-(a2*gy)/((1-a2)*gx);
-      var y=gy+slope*(x-gx);
-      return (y>=0&&x>=0.01)?y:NaN;
-    },0.01,13.0],{strokeColor:C.amber,strokeWidth:2.5,dash:3,visible:false,highlight:false});
-
-    var dh=icBoard2D.create('segment',[
-      [0,function(){return Math.max(0,glider.Y());}],
-      [function(){return Math.max(0,glider.X());},function(){return Math.max(0,glider.Y());}]
-    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,visible:false,highlight:false,fixed:true});
-
-    var dv=icBoard2D.create('segment',[
-      [function(){return Math.max(0,glider.X());},0],
-      [function(){return Math.max(0,glider.X());},function(){return Math.max(0,glider.Y());}]
-    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,visible:false,highlight:false,fixed:true});
-
-    var mrs=icBoard2D.create('text',[
-      function(){return Math.min(glider.X()+0.4,10.5);},
-      function(){return Math.min(glider.Y()+0.5,11.5);},
-      function(){
-        var gx=safePos(glider.X(),0.2,11), gy=safePos(glider.Y(),0.2,11);
-        var a2=slVal('ic-alpha');
-        if (gx<=0.01||a2<=0||a2>=1) return '';
-        return 'MRS = '+(a2*gy/((1-a2)*gx)).toFixed(3);
-      }
-    ],{fontSize:13,color:C.amber,fixed:false,visible:false,highlight:false});
-
-    icPreCurves.push({u0:u, curve:curve, glider:glider, tang:tang, dh:dh, dv:dv, mrs:mrs});
-  });
-}
 
 function initICExplorer() {
   /* ── 3D board ── */
@@ -897,8 +824,6 @@ function initICExplorer() {
 
   /* ── 2D board ── */
   icBoard2D = mkBoard('jxg-ic-2d', [-0.6, 13.5, 13.5, -0.6]);
-  /* Pre-create all cobb IC curves BEFORE drawing — approach 5, no flash */
-  initICPreCurves(slVal('ic-alpha'));
   drawIC2D('cobb', slVal('ic-alpha'));
   setICInfo('cobb');
 
@@ -907,15 +832,15 @@ function initICExplorer() {
     var v = parseFloat(this.value);
     document.getElementById('alpha-val').textContent = v.toFixed(2);
     var type=document.querySelector('#ic-type-btns .type-btn.active').dataset.type;
-    if (type==='cobb') {
-      /* Rebuild pre-curves with new alpha, then show correct u0 */
-      initICPreCurves(v);
-      var u0=slVal('ic-u0');
-      redrawIC2DAtU0('cobb', v, u0);
+    if (type === 'cobb') {
+      /* Update state only — curve/tangent/MRS read icU0State.alpha live, no recreate */
+      icU0State.alpha = v;
+      icBoard2D.update();
+      icBoard3D.update();
     } else {
       drawIC2D(type, v);
+      icBoard3D.update();
     }
-    icBoard3D.update();
   });
 
   document.getElementById('ic-u0').addEventListener('input', function() {
@@ -957,7 +882,7 @@ function setICInfo(type) {
 }
 
 function drawIC2D(type, alpha) {
-  /* Clear safely — including any extra objects from previous redrawIC2DAtU0 calls */
+  /* Clear ALL dynamic objects including persistent cobb glider/tangent */
   icCurves2D.forEach(function(o){try{icBoard2D.removeObject(o,false);}catch(e){}});
   icCurves2D=[];
   if (!window.icExtraObjs) window.icExtraObjs=[];
@@ -978,103 +903,117 @@ function drawIC2D(type, alpha) {
 }
 
 /* Draw the single IC at U₀ for any preference type, with glider for Cobb-Douglas */
+/* Approach 3: single persistent curve reads icU0State from closure.
+   Slider sets icU0State and calls board.update(). Zero destroy/recreate. */
+var icU0State = {u0: 2.0, alpha: 0.5};
+
 function redrawIC2DAtU0(type, alpha, u0) {
-  /* For cobb: use pre-created curves (approach 5) — zero destroy/recreate, zero flash.
-     For other types: recreate segments/lines as before. */
-  if (type==='cobb') {
-    /* Find the closest pre-created curve index */
-    var uVals=icPreCurves.map(function(c){return c.u0;});
-    var best=0, bestD=999;
-    for (var i=0;i<uVals.length;i++){var d=Math.abs(uVals[i]-u0);if(d<bestD){bestD=d;best=i;}}
-    if (icBoard2D && icPreCurves.length>0) {
-      icBoard2D.suspendUpdate();
-      if (icPreCurIdx>=0 && icPreCurIdx<icPreCurves.length) {
-        var old=icPreCurves[icPreCurIdx];
-        old.curve.setAttribute({visible:false});
-        old.glider.setAttribute({visible:false});
-        old.tang.setAttribute({visible:false});
-        old.dh.setAttribute({visible:false});
-        old.dv.setAttribute({visible:false});
-        old.mrs.setAttribute({visible:false});
-      }
-      icPreCurIdx=best;
-      var cur=icPreCurves[best];
-      cur.curve.setAttribute({visible:true});
-      cur.glider.setAttribute({visible:true});
-      cur.tang.setAttribute({visible:true});
-      cur.dh.setAttribute({visible:true});
-      cur.dv.setAttribute({visible:true});
-      cur.mrs.setAttribute({visible:true});
-      /* Update global references for compatibility */
-      icHighlightFn=cur.curve;
-      icGlider2D=cur.glider;
-      icTangent2D=cur.tang;
-      icDropH=cur.dh;
-      icDropV=cur.dv;
-      icMRSText=cur.mrs;
-      icBoard2D.unsuspendUpdate();
+  /* Always update the state */
+  icU0State.u0 = u0;
+  icU0State.alpha = alpha;
+
+  /* U0 label */
+  var elU0 = document.getElementById('ic-u0-display');
+  if (elU0) elU0.textContent = 'U₀ = ' + u0.toFixed(2);
+
+  if (type === 'cobb') {
+    /* For Cobb: the curve/glider/tangent are persistent and read icU0State live.
+       Just call board.update() — no object creation or destruction. */
+    if (!icHighlightFn) {
+      /* First time only: create the persistent objects */
+      icHighlightFn = icBoard2D.create('functiongraph', [function(x) {
+        var a = icU0State.alpha, b = 1 - a, u = icU0State.u0;
+        return x > 0.05 ? Math.pow(u / Math.pow(x, a), 1 / b) : NaN;
+      }, 0.05, 13.2], {strokeColor: C.red, strokeWidth: 3, highlight: false});
+
+      icGlider2D = icBoard2D.create('glider', [u0, u0, icHighlightFn], {
+        name: '', size: 7,
+        fillColor: C.amber, strokeColor: '#fff', strokeWidth: 2,
+        withLabel: false,
+        showInfobox: false
+      });
+
+
+      icTangent2D = icBoard2D.create('functiongraph', [function(x) {
+        if (!icGlider2D) return NaN;
+        var gx = icGlider2D.X(), gy = icGlider2D.Y();
+        if (gx <= 0.01 || gy <= 0.01) return NaN;
+        var a = icU0State.alpha;
+        if (a <= 0 || a >= 1) return NaN;
+        var slope = -(a * gy) / ((1 - a) * gx);
+        var y = gy + slope * (x - gx);
+        return (y >= 0 && x >= 0.01) ? y : NaN;
+      }, 0.01, 13.0], {strokeColor: C.amber, strokeWidth: 2.5, dash: 3, highlight: false});
+
+      icDropH = icBoard2D.create('segment', [
+        [0, function() { return icGlider2D ? Math.max(0, icGlider2D.Y()) : 0; }],
+        [function() { return icGlider2D ? Math.max(0, icGlider2D.X()) : 0; },
+         function() { return icGlider2D ? Math.max(0, icGlider2D.Y()) : 0; }]
+      ], {strokeColor: '#ccc', strokeWidth: 1, dash: 2, highlight: false, fixed: true});
+
+      icDropV = icBoard2D.create('segment', [
+        [function() { return icGlider2D ? Math.max(0, icGlider2D.X()) : 0; }, 0],
+        [function() { return icGlider2D ? Math.max(0, icGlider2D.X()) : 0; },
+         function() { return icGlider2D ? Math.max(0, icGlider2D.Y()) : 0; }]
+      ], {strokeColor: '#ccc', strokeWidth: 1, dash: 2, highlight: false, fixed: true});
+
+      icMRSText = icBoard2D.create('text', [
+        function() { return icGlider2D ? Math.min(icGlider2D.X() + 0.4, 10.5) : 10; },
+        function() { return icGlider2D ? Math.min(icGlider2D.Y() + 0.5, 11.5) : 11; },
+        function() {
+          if (!icGlider2D) return '';
+          var gx = safePos(icGlider2D.X(), 0.2, 11);
+          var gy = safePos(icGlider2D.Y(), 0.2, 11);
+          var a = icU0State.alpha;
+          if (gx <= 0.01 || a <= 0 || a >= 1) return '';
+          return 'MRS = ' + (a * gy / ((1 - a) * gx)).toFixed(3);
+        }
+      ], {fontSize: 13, color: C.amber, fixed: false, highlight: false});
     }
-    /* U0 label */
-    var elU0=document.getElementById('ic-u0-display');
-    if (elU0) elU0.textContent='U₀ = '+u0.toFixed(2);
-    return; /* early return — no recreate needed */
+    /* Reset glider to equal-goods point (x=y=u0) so MRS=1 by default */
+    if (icGlider2D && icHighlightFn) {
+      var resetX = safePos(icU0State.u0, 0.3, 11.0);
+      try { icGlider2D.setPosition(JXG.COORDS_BY_USER, [resetX, resetX]); } catch(ex){}
+    }
+    icBoard2D.update();
+    return;
   }
 
-  /* Non-cobb types: clear and recreate as before */
-  if (icHighlightFn){try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){} icHighlightFn=null;}
-  /* Clear the extra objects array */
-  if (!window.icExtraObjs) window.icExtraObjs=[];
+  /* Non-cobb: clear and recreate segments/lines (these don't have gliders) */
+  if (icHighlightFn) { try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){} icHighlightFn=null; }
+  if (!window.icExtraObjs) window.icExtraObjs = [];
   window.icExtraObjs.forEach(function(o){try{icBoard2D.removeObject(o,false);}catch(e){}});
-  window.icExtraObjs=[];
+  window.icExtraObjs = [];
 
-  if (u0<=0) return;
-  var b=1-alpha;
+  if (u0 <= 0) return;
 
-  if (type==='cobb') {
-    if (b<=0) return;
-    icHighlightFn=icBoard2D.create('functiongraph',[function(x){
-      return x>0.05?Math.pow(u0/Math.pow(x,alpha),1/b):NaN;
-    },0.05,13.2],{strokeColor:C.red,strokeWidth:3,highlight:false});
+  if (type === 'substitutes') {
+    icHighlightFn = icBoard2D.create('segment', [[0, u0], [u0, 0]],
+      {strokeColor: C.red, strokeWidth: 3, fixed: true, highlight: false});
 
-  } else if (type==='substitutes') {
-    /* Bounded segment from y-axis to x-axis: [0,u0] to [u0,0] */
-    var xEnd=Math.min(u0, 13.2), yEnd=Math.min(u0, 13.2);
-    icHighlightFn=icBoard2D.create('line',
-      [[-1, u0+1],[u0+1,-1]],
-      {strokeColor:C.red,strokeWidth:3,highlight:false,
-       straightFirst:false,straightLast:false});
-    /* Actually use segment for clean bounds */
-    try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){}
-    icHighlightFn=icBoard2D.create('segment',[[0,u0],[u0,0]],
-      {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
-
-  } else if (type==='complements') {
-    if (u0>0&&u0<=11.5) {
-      var s1=icBoard2D.create('segment',[[u0,u0],[13,u0]],{strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
-      var s2=icBoard2D.create('segment',[[u0,u0],[u0,13]],{strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
-      var kk=icBoard2D.create('point',[u0,u0],{size:5,color:C.red,fixed:true,highlight:false,withLabel:false});
-      window.icExtraObjs.push(s1,s2,kk);
+  } else if (type === 'complements') {
+    if (u0 > 0 && u0 <= 11.5) {
+      var s1 = icBoard2D.create('segment', [[u0,u0],[13,u0]], {strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
+      var s2 = icBoard2D.create('segment', [[u0,u0],[u0,13]], {strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
+      var kk = icBoard2D.create('point', [u0, u0], {size:5,color:C.red,fixed:true,highlight:false,withLabel:false});
+      window.icExtraObjs.push(s1, s2, kk);
     }
 
-  } else if (type==='neutral') {
-    if (u0>0&&u0<=11.5) {
-      var vl=icBoard2D.create('segment',[[u0,0],[u0,13]],{strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
+  } else if (type === 'neutral') {
+    if (u0 > 0 && u0 <= 11.5) {
+      var vl = icBoard2D.create('segment', [[u0,0],[u0,13]],
+        {strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
       window.icExtraObjs.push(vl);
     }
 
-  } else if (type==='bad') {
-    icHighlightFn=icBoard2D.create('functiongraph',[function(x){return x-u0;},u0,13.2],
+  } else if (type === 'bad') {
+    icHighlightFn = icBoard2D.create('functiongraph', [function(x){return x-u0;}, u0, 13.2],
       {strokeColor:C.red,strokeWidth:3,highlight:false});
   }
 
-  /* U0 label — written to HTML element to avoid JSXGraph render glitch */
-  var elU0=document.getElementById('ic-u0-display');
-  if (elU0) elU0.textContent='U₀ = '+u0.toFixed(2);
-
-  /* cobb handled above via pre-created curve toggle */
-
   icBoard2D.update();
 }
+
 
 /* Draw the IC family============================================
    WEEK 2 — Consumer Choice · Visualizations v4
@@ -1158,8 +1097,6 @@ var C = {
 var icBoard3D, icBoard2D, icView3D;
 var icCurves2D=[], icGlider2D=null, icTangent2D=null;
 var icDropH=null, icDropV=null, icMRSText=null, icHighlightFn=null;
-/* Approach 5: pre-created curve set for cobb IC — no destroy/recreate = no flash */
-var icPreCurves=[], icPreCurIdx=-1;
 
 var IC_INFO = {
   cobb: {
@@ -1167,35 +1104,35 @@ var IC_INFO = {
     fn:'\\(U(X,Y)=X^{\\alpha}Y^{1-\\alpha}\\)',
     shape:'Smooth and convex (bowed toward origin)',
     mrs:'Diminishing: \\(MRS=\\tfrac{\\alpha Y}{(1-\\alpha)X}\\)',
-    desc:'Drag point P along the highlighted curve — the tangent line and MRS value update live. Use the utility level slider to move the cutting plane on the 3D surface and watch the highlighted IC change.'
+    desc:'Drag the orange MRS point along the red curve to see the tangent update. Use the utility level slider to move the cutting plane on the 3D surface and watch the highlighted IC change.'
   },
   substitutes: {
     label:'Perfect Substitutes',
     fn:'\\(U(X,Y)=X+Y\\)',
     shape:'Straight parallel lines with slope \\(-1\\)',
     mrs:'Constant: \\(MRS=1\\) everywhere',
-    desc:'The consumer is always willing to trade one unit of X for one unit of Y, regardless of quantities held. The optimal bundle is a corner solution.'
+    desc:'The consumer substitutes X and Y at a constant one-for-one rate everywhere on the IC. Because the MRS is constant and equal to 1, the ICs are straight lines with slope -1. The optimal bundle is always a corner solution: spend everything on whichever good has a lower price per unit of utility.'
   },
   complements: {
     label:'Perfect Complements',
     fn:'\\(U(X,Y)=\\min(X,Y)\\)',
     shape:'L-shaped curves, kink on the 45\\(^\\circ\\) ray',
     mrs:'\\(0\\), \\(\\infty\\), or undefined at the kink',
-    desc:'Goods must be consumed in fixed proportions. Extra units of one good alone add zero utility. The consumer always chooses the bundle at the kink of the L.'
+    desc:'X and Y are consumed in fixed proportions, like left and right shoes. The utility function $U = \\min(X,Y)$ means extra units of one good, without a matching unit of the other, add nothing. The optimal bundle always lies at the kink of the L, on the 45-degree ray.'
   },
   neutral: {
     label:'Neutral Good (Y)',
     fn:'\\(U(X,Y)=X\\)',
-    shape:'Vertical lines — utility independent of \\(Y\\)',
+    shape:'Vertical lines, utility independent of \\(Y\\)',
     mrs:'Undefined: \\(Y\\) is completely irrelevant',
-    desc:'Utility depends only on X. Any change in Y leaves the consumer exactly indifferent. Only moving rightward — consuming more X — increases welfare.'
+    desc:'Utility depends only on X. Any change in Y leaves the consumer exactly indifferent. Only moving rightward: consuming more X — increases welfare.'
   },
   bad: {
     label:'Economic Bad (Y)',
     fn:'\\(U(X,Y)=X-Y\\)',
     shape:'Upward-sloping lines',
     mrs:'Negative: more Y requires compensation in X',
-    desc:'Good Y actively reduces utility. To remain on the same indifference curve as Y rises, the consumer must receive additional X as compensation, producing the upward slope.'
+    desc:'Y is a bad: more of it reduces utility. To stay on the same IC as Y increases, the consumer must be compensated with more X. This produces upward-sloping ICs. The consumer would pay to have Y removed if possible.'
   }
 };
 /* =============================================================================
@@ -1499,24 +1436,16 @@ function buildShiftBoard() {
     {fontSize:12,color:C.red,fixed:true,highlight:false,anchorX:'middle'});
   shiftObjects.push(t1,t2);
 
-  /* Pivot marker */
+  /* Pivot: just an intercept-movement arrow, no pivot dot */
   if (type.startsWith('px')) {
-    var piv=shiftBoard.create('point',[0,yi1],{
-      color:C.amber,size:7,fixed:true,highlight:false,
-      name:'Pivot',withLabel:true,label:{offset:[14,0],anchorX:'left',fontSize:11,color:C.amber}
-    });
     var arr=shiftBoard.create('arrow',[[xi1,-m*0.04],[xi2,-m*0.04]],
       {strokeColor:C.amber,strokeWidth:1.5,fixed:true});
-    shiftObjects.push(piv,arr);
+    shiftObjects.push(arr);
   }
   if (type.startsWith('py')) {
-    var piv2=shiftBoard.create('point',[xi1,0],{
-      color:C.amber,size:7,fixed:true,highlight:false,
-      name:'Pivot',withLabel:true,label:{offset:[0,-18],anchorY:'top',fontSize:11,color:C.amber}
-    });
     var arr2=shiftBoard.create('arrow',[[-m*0.04,yi1],[-m*0.04,yi2]],
       {strokeColor:C.amber,strokeWidth:1.5,fixed:true});
-    shiftObjects.push(piv2,arr2);
+    shiftObjects.push(arr2);
   }
 
   /* Sidebar */
@@ -1531,10 +1460,10 @@ function buildShiftBoard() {
     type.startsWith('py')?'X-intercept I/P\u2093':'Neither (parallel shift)';
   document.getElementById('shift-description').textContent=
     type.startsWith('income')?
-      'Both intercepts scale proportionally. The slope \u2212P\u2093/P\u1D67 is unchanged.':
+      'Both intercepts move proportionally since prices are unchanged. The slope -Px/Py is determined only by the price ratio and does not change.':
     type.startsWith('px')?
-      'The Y-intercept is anchored (P\u1D67 and I unchanged). The X-intercept moves. Slope changes.':
-      'The X-intercept is anchored (P\u2093 and I unchanged). The Y-intercept moves. Slope changes.';
+      'The Y-intercept I/Py is fixed since Py and I are unchanged. The X-intercept I/Px moves as Px changes. The line pivots around the Y-intercept and the slope -Px/Py changes.':
+      'The X-intercept I/Px is fixed since Px and I are unchanged. The Y-intercept I/Py moves as Py changes. The line pivots around the X-intercept and the slope -Px/Py changes.';
 
   shiftBoard.update();
 }
@@ -1705,7 +1634,7 @@ function buildBFBBoard() {
   var ptX0=mupBoard.create('point',[0,yI],{visible:false,fixed:true,showInfobox:false});
   var ptX1=mupBoard.create('point',[xI,0],{visible:false,fixed:true,showInfobox:false});
   bfbTrack=mupBoard.create('segment',[ptX0,ptX1],
-    {strokeColor:C.ink,strokeWidth:2.2,highlight:false});
+    {strokeColor:C.amber,strokeWidth:2.5,dash:3,highlight:false});
   /* ptX0, ptX1 are track endpoints — also managed via bfbTrack removal, not bfbObjects */
   /* Do NOT push bfbTrack into bfbObjects — it must persist as the glider's parent */
   bfbObjects.push(ptX0, ptX1); /* push endpoints so they get cleaned up */
@@ -1750,7 +1679,7 @@ function buildBFBBoard() {
     document.getElementById('bfb-mux-px').textContent=rx.toFixed(4);
     document.getElementById('bfb-muy-py').textContent=ry.toFixed(4);
     document.getElementById('bfb-verdict').textContent=eq
-      ? '✔ Ratios equal — at the optimum'
+      ? '✔ Ratios equal: at the optimum'
       : (rx>ry ? 'MUₓ/Pₓ > MUᵧ/Pᵧ' : 'MUᵧ/Pᵧ > MUₓ/Pₓ');
     document.getElementById('bfb-action').textContent=eq
       ? 'No reallocation needed'
@@ -1759,7 +1688,7 @@ function buildBFBBoard() {
     /* Hide Bundle label and Optimum dot when bundle is at optimum */
     var dist=Math.sqrt(Math.pow(gx-_xOpt,2)+Math.pow(gy-_yOpt,2));
     var atOpt = dist < _m*0.05;
-    if (glider&&glider.label) glider.label.setAttribute({visible: !atOpt});
+    /* Bundle label always visible — only Optimum dot hides when bundle is on top */
     if (optPt) optPt.setAttribute({visible: !atOpt});
   };
 
@@ -1781,7 +1710,7 @@ function buildBFBBoard() {
     var rx=MUx/_Px, ry=MUy/_Py;
     document.getElementById('bfb-mux-px').textContent=rx.toFixed(4);
     document.getElementById('bfb-muy-py').textContent=ry.toFixed(4);
-    document.getElementById('bfb-verdict').textContent='✔ Ratios equal — at the optimum';
+    document.getElementById('bfb-verdict').textContent='✔ Ratios equal: at the optimum';
     document.getElementById('bfb-action').textContent='No reallocation needed';
     document.getElementById('bfb-spendX-val').textContent=(_Px*gx).toFixed(0);
   })();
@@ -1818,8 +1747,8 @@ function buildCobbBoard() {
   cdBoard.setBoundingBox([-m*0.06,m*1.1,m*1.1,-m*0.06],false);
 
   var scales=[0.5,1.0,1.5];
-  var bCols=[C.blue3,C.ink,C.blue2];
-  var bW=[1.4,2.4,1.4];
+  var bCols=[C.blue3,C.amber,C.blue2];
+  var bW=[1.4,2.5,1.4];
 
   /* Three budget lines */
   scales.forEach(function(sc,idx){
@@ -1827,7 +1756,7 @@ function buildCobbBoard() {
     (function(Is2){
       cdObjects.push(cdBoard.create('functiongraph',
         [function(x){return(Is2-Px*x)/Py;},0,Is2/Px],
-        {strokeColor:bCols[idx],strokeWidth:bW[idx],dash:idx===1?0:2,highlight:false}));
+        {strokeColor:bCols[idx],strokeWidth:bW[idx],dash:idx===1?3:2,highlight:false}));
     })(Is);
   });
 
@@ -2061,7 +1990,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="week-tag">EC 224 · Week 2 · Intermediate Microeconomics</div>
     <h1>Indifference Curves, Budget Constraints<br>&amp; the Consumer Optimum</h1>
     <p class="intro">
-      Adjust the sliders and parameters in each module to see theory in motion. Each visualization includes the Python code behind it, hidden by default and available to explore.
+      Use the sliders and interactive graphs to build intuition for each concept. Drag the labeled points where indicated to explore how the economics changes.
     </p>
   </div>
 
@@ -2094,12 +2023,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="section-number">§ 2.1 – 2.4</span>
         <h2>Indifference Curves</h2>
         <p class="section-intro">
-          An indifference curve (IC) is a set of all bundles $(X, Y)$ giving a consumer the same utility. Their shape encodes everything about preferences, without ever asking the consumer to assign a dollar value to happiness.
+          An indifference curve (IC) shows all bundles $(X, Y)$ that give a consumer exactly the same utility. Geometrically, ICs are <em>level curves</em> of the utility function $U(X,Y)$: just as a topographic map shows lines of equal elevation, each IC traces a line of equal satisfaction. The shape of the IC encodes the entire preference structure.
         </p>
 
         <div class="callout key-idea">
           <div class="callout-label">Key Idea</div>
-          Well-behaved ICs are <strong>downward-sloping</strong> (both goods desirable), <strong>convex</strong> (preference for variety), and <strong>never cross</strong> (transitivity of preferences).
+          Well-behaved ICs are <strong>downward-sloping</strong> (both goods have positive marginal utility), <strong>convex toward the origin</strong> (diminishing marginal rate of substitution), and <strong>never intersect</strong> (a direct consequence of transitive preferences).
         </div>
 
         <!-- IC TYPES EXPLORER -->
@@ -2184,7 +2113,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="viz-header">
               <span class="viz-title">&#9658; Indifference Curve Map (full family)</span>
             </div>
-            <div class="viz-note">Five indifference curves for the selected preference type. Curves farther from the origin correspond to higher utility.</div>
+            <div class="viz-note">Five indifference curves for the selected preference type. Curves further from the origin represent higher utility levels. Notice how the shape changes completely across preference types.</div>
             <div style="display:grid;grid-template-columns:1fr 140px;gap:0;">
               <div id="jxg-ic-family" style="width:100%;height:340px;"></div>
               <div style="padding:1rem 0.8rem;border-left:1px solid var(--rule);display:flex;flex-direction:column;justify-content:center;">
@@ -2196,7 +2125,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="callout common-mistake" style="margin-top:1.5rem">
           <div class="callout-label">Common Mistake</div>
-          Indifference curves <strong>never cross</strong>. If they did, a consumer would be simultaneously indifferent between bundle A &amp; B and between B &amp; C, but prefer A to C, a contradiction of transitivity.
+          Indifference curves <strong>never intersect</strong>. Suppose two ICs crossed at bundle A. Then A lies on both curves, meaning the consumer is indifferent between bundles on either curve. But bundles on the outer IC represent strictly more utility, which contradicts the indifference. The formal culprit is transitivity of preferences.
         </div>
       </section>
 
@@ -2207,7 +2136,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="section-number">§ 2.5</span>
         <h2>The Budget Constraint</h2>
         <p class="section-intro">
-          The budget constraint $P_X \cdot X + P_Y \cdot Y = I$ is the boundary of what's affordable. Its slope $-P_X/P_Y$ is the opportunity cost of $X$ in terms of $Y$.
+          The budget constraint $P_X X + P_Y Y = I$ defines the boundary of the affordable set. Its slope $-P_X/P_Y$ is the relative price of $X$ in terms of $Y$: it tells you how many units of $Y$ you must give up to get one more unit of $X$.
         </p>
 
         <div class="math-block">
@@ -2239,7 +2168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="range" id="bc-Py" min="1" max="20" step="1" value="4" />
               </div>
             </div>
-            <div class="viz-note">The shaded region is the affordable set. Adjust the sliders to see how the budget line shifts.</div>
+            <div class="viz-note">The shaded triangle is the affordable set. Use the sliders to change income or prices and watch the intercepts move.</div>
             <div class="viz-two-col">
               <div class="viz-panel-left">
                 <div id="jxg-budget" style="width:100%;height:480px;"></div>
@@ -2350,7 +2279,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="section-number">§ 2.7</span>
         <h2>The Consumer's Best Choice</h2>
         <p class="section-intro">
-          The consumer's best affordable bundle satisfies two conditions simultaneously:
+          The consumer's optimal bundle satisfies two conditions at once. First, the bundle must lie on the budget line (all income is spent). Second, the indifference curve through that bundle must be tangent to the budget line. At the tangency, the slope of the IC equals the slope of the budget line:
         </p>
 
         <div class="math-block">
@@ -2427,7 +2356,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="section-number">§ 2.8</span>
         <h2>Marginal Utility per Dollar</h2>
         <p class="section-intro">
-          The tangency condition $P_X/P_Y = MU_X/MU_Y$ can be rearranged into an equivalent condition expressed in terms of utility per dollar spent:
+          The tangency condition $P_X/P_Y = MU_X/MU_Y$ can be rearranged to show the same optimality in a different form. Dividing both sides by prices gives the marginal utility per dollar condition:
         </p>
         <div class="math-block">
           <div class="math-label">Marginal Utility per Dollar Condition (rearranged tangency)</div>
@@ -2437,7 +2366,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="callout key-idea">
           <div class="callout-label">Key Idea</div>
-          If $MU_X/P_X > MU_Y/P_Y$, the consumer gets more utility per dollar from $X$. They should <strong>shift spending toward $X$</strong> until the ratios equalize. This principle applies everywhere resources are scarce, marketing budgets, hospital allocations, government programs.
+          If $MU_X/P_X > MU_Y/P_Y$, spending one less dollar on $Y$ and one more on $X$ raises utility. The consumer keeps reallocating until both ratios are equal. This equimarginal principle extends far beyond consumer theory: it governs optimal advertising budgets, hospital resource allocation, and government program spending.
         </div>
 
         <div class="viz-wrapper">
@@ -2485,7 +2414,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <hr class="divider-sm" />
               <div style="font-size:0.82rem;color:var(--ink-light);line-height:1.55" id="bfb-description">
-                Drag the orange bundle along the budget line. Watch the utility condition update — at the optimum, the indifference curve is tangent to the budget line and MUₓ/Pₓ = MUᵧ/Pᵧ.
+                Drag the orange <strong>Bundle</strong> point along the budget line. The sidebar updates the marginal utility per dollar for each good. At the optimum the two ratios are equal, and the indifference curve is tangent to the budget line.
               </div>
             </div>
           </div></div>
@@ -2498,7 +2427,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="section-number">§ 2.9</span>
         <h2>Cobb-Douglas Demand Functions</h2>
         <p class="section-intro">
-          For $U(X,Y) = X^\alpha Y^\beta$, the optimal demand functions have an elegant fixed-share property: the consumer always spends a constant fraction of income on each good.
+          For $U(X,Y) = X^\alpha Y^\beta$, the optimal demand functions take a clean closed form. A consumer with Cobb-Douglas preferences always spends a fixed fraction of income on each good, regardless of prices. The income shares $\alpha/(\alpha+\beta)$ and $\beta/(\alpha+\beta)$ are constant.
         </p>
 
         <div class="math-block">
