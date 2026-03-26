@@ -667,6 +667,8 @@ var C = {
 var icBoard3D, icBoard2D, icView3D;
 var icCurves2D=[], icGlider2D=null, icTangent2D=null;
 var icDropH=null, icDropV=null, icMRSText=null, icHighlightFn=null;
+/* Approach 5: pre-created curve set for cobb IC — no destroy/recreate = no flash */
+var icPreCurves=[], icPreCurIdx=-1;
 
 var IC_INFO = {
   cobb: {
@@ -706,13 +708,84 @@ var IC_INFO = {
   }
 };
 
+/* Pre-create 41 Cobb IC curves at u0 = 0.3, 0.4, ... 4.4 (step 0.1).
+   All invisible initially. Toggling visibility = zero JS object creation = zero flash. */
+function initICPreCurves(alpha) {
+  /* Clear any existing pre-curves */
+  icPreCurves.forEach(function(c){
+    try{icBoard2D.removeObject(c.mrs,false);}catch(e){}
+    try{icBoard2D.removeObject(c.dv,false);}catch(e){}
+    try{icBoard2D.removeObject(c.dh,false);}catch(e){}
+    try{icBoard2D.removeObject(c.tang,false);}catch(e){}
+    try{icBoard2D.removeObject(c.glider,false);}catch(e){}
+    try{icBoard2D.removeObject(c.curve,false);}catch(e){}
+  });
+  icPreCurves=[];
+  icPreCurIdx=-1;
+
+  var b=1-alpha;
+  /* Generate u0 values: 0.3 to 4.4 step 0.1 */
+  var uVals=[];
+  for (var v=0.3; v<=4.41; v=Math.round((v+0.1)*100)/100) uVals.push(v);
+
+  uVals.forEach(function(u0) {
+    var u=u0; /* capture */
+    var startX=safePos(u,0.3,11.0);
+    var startY=b>0?Math.pow(u/Math.pow(startX,alpha),1/b):startX;
+    if (!isFinite(startY)||startY>11||startY<0.1) startY=u;
+
+    var curve=icBoard2D.create('functiongraph',[function(x){
+      return x>0.05?Math.pow(u/Math.pow(x,alpha),1/b):NaN;
+    },0.05,13.2],{strokeColor:C.red,strokeWidth:3,visible:false,highlight:false});
+
+    var glider=icBoard2D.create('glider',[startX,startY,curve],{
+      name:'P',size:7,fillColor:C.amber,strokeColor:'#fff',strokeWidth:2,
+      withLabel:true,label:{offset:[10,4],fontSize:12,color:C.amber},
+      visible:false,showInfobox:false
+    });
+
+    var tang=icBoard2D.create('functiongraph',[function(x){
+      var gx=glider.X(), gy=glider.Y();
+      if (gx<=0.01||gy<=0.01) return NaN;
+      var a2=slVal('ic-alpha');
+      if (a2<=0||a2>=1) return NaN;
+      var slope=-(a2*gy)/((1-a2)*gx);
+      var y=gy+slope*(x-gx);
+      return (y>=0&&x>=0.01)?y:NaN;
+    },0.01,13.0],{strokeColor:C.amber,strokeWidth:2.5,dash:3,visible:false,highlight:false});
+
+    var dh=icBoard2D.create('segment',[
+      [0,function(){return Math.max(0,glider.Y());}],
+      [function(){return Math.max(0,glider.X());},function(){return Math.max(0,glider.Y());}]
+    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,visible:false,highlight:false,fixed:true});
+
+    var dv=icBoard2D.create('segment',[
+      [function(){return Math.max(0,glider.X());},0],
+      [function(){return Math.max(0,glider.X());},function(){return Math.max(0,glider.Y());}]
+    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,visible:false,highlight:false,fixed:true});
+
+    var mrs=icBoard2D.create('text',[
+      function(){return Math.min(glider.X()+0.4,10.5);},
+      function(){return Math.min(glider.Y()+0.5,11.5);},
+      function(){
+        var gx=safePos(glider.X(),0.2,11), gy=safePos(glider.Y(),0.2,11);
+        var a2=slVal('ic-alpha');
+        if (gx<=0.01||a2<=0||a2>=1) return '';
+        return 'MRS = '+(a2*gy/((1-a2)*gx)).toFixed(3);
+      }
+    ],{fontSize:13,color:C.amber,fixed:false,visible:false,highlight:false});
+
+    icPreCurves.push({u0:u, curve:curve, glider:glider, tang:tang, dh:dh, dv:dv, mrs:mrs});
+  });
+}
+
 function initICExplorer() {
   /* ── 3D board ── */
-  icBoard3D = mk3DBoard('jxg-ic-3d', [-10, 9, 10, -7]);
+  icBoard3D = mk3DBoard('jxg-ic-3d', [-14, 12, 14, -10]);
 
-  var box3 = [0.1, 6.5];
+  var box3 = [0.1, 5.8];
   icView3D = icBoard3D.create('view3d', [
-    [-7, -4], [14, 11.5], [box3, box3, [0, 5.5]]
+    [-6, -5], [12, 11], [box3, box3, [0, 5.5]]
   ], {
     xPlaneRear: {visible:false},
     yPlaneRear: {visible:false},
@@ -731,10 +804,10 @@ function initICExplorer() {
       var a=slVal('ic-alpha');
       var type=(document.querySelector('#ic-type-btns .type-btn.active')||{dataset:{type:'cobb'}}).dataset.type;
       if (type==='cobb')        return Math.pow(x,a)*Math.pow(y,1-a);
-      if (type==='substitutes') return x+y;
+      if (type==='substitutes') return (x+y)/2.0;
       if (type==='complements') return Math.min(x,y);
-      if (type==='neutral')     return x;
-      if (type==='bad')         return Math.max(0,x-y);
+      if (type==='neutral')     return x/1.3;
+      if (type==='bad')         return Math.max(0,x-y)/1.3;
       return Math.pow(x,a)*Math.pow(y,1-a);
     }, box3, box3
   ], {strokeColor:C.blue, strokeWidth:0.55, stepsU:32, stepsV:32});
@@ -770,18 +843,62 @@ function initICExplorer() {
     })(fi/numFill);
   }
 
-  /* IC curve at U₀ — the intersection of cutting plane with surface */
+  /* IC curve at U₀ — the intersection of cutting plane with surface (type-aware) */
   icView3D.create('curve3d', [function(t) {
     var a=slVal('ic-alpha'), b=1-a, u0=slVal('ic-u0');
-    if (u0<=0||a<=0||b<=0) return [NaN,NaN,NaN];
-    var y = t>0.05 ? Math.pow(u0/Math.pow(t,a), 1/b) : NaN;
+    if (u0<=0) return [NaN,NaN,NaN];
+    var activeBtn=document.querySelector('#ic-type-btns .type-btn.active');
+    var type=activeBtn?activeBtn.dataset.type:'cobb';
+    var y=NaN;
+    if (type==='cobb') {
+      if (a<=0||b<=0||t<=0.05) return [NaN,NaN,NaN];
+      y=Math.pow(u0/Math.pow(t,a),1/b);
+    } else if (type==='substitutes') {
+      /* scaled U=(X+Y)/2.5=u0 -> X+Y=u0*2.5 -> Y=u0*2.5-t */
+      y=u0*2.0-t;
+    } else if (type==='complements') {
+      /* scaled U=min(X,Y)/1.3=u0 -> kink at u0*1.3 */
+      var kink=u0;
+      if (t<kink-0.01||t>box3[1]) return [NaN,NaN,NaN];
+      y=kink;
+    } else if (type==='neutral') {
+      return [NaN,NaN,NaN];
+    } else if (type==='bad') {
+      /* scaled U=max(0,X-Y)/1.3=u0 -> X-Y=u0*1.3 -> Y=t-u0*1.3 */
+      y=t-u0*1.3;
+    }
     if (!isFinite(y)||y<box3[0]||y>box3[1]) return [NaN,NaN,NaN];
-    return [t, y, u0];
-  }, [box3[0]+0.05, box3[1]]
+    /* z = scaled surface value at (t,y) — matches the surface function above */
+    var z=NaN;
+    if (type==='cobb')        z=Math.pow(t,a)*Math.pow(y,1-a);
+    else if (type==='substitutes') z=(t+y)/2.0;
+    else if (type==='complements') z=Math.min(t,y);
+    else if (type==='bad')         z=Math.max(0,t-y)/1.3;
+    if (!isFinite(z)) z=u0;
+    return [t, y, z];
+  }, [box3[0]+0.02, box3[1]]
+  ], {strokeColor:C.red, strokeWidth:3});
+
+  /* Vertical arm of complements: X=u0, Y from u0 to box3[1]
+     Drawn as a second curve3d parameterised over Y */
+  icView3D.create('curve3d', [function(t) {
+    var u0=slVal('ic-u0');
+    if (u0<=0) return [NaN,NaN,NaN];
+    var activeBtn=document.querySelector('#ic-type-btns .type-btn.active');
+    var type=activeBtn?activeBtn.dataset.type:'cobb';
+    if (type!=='complements') return [NaN,NaN,NaN];
+    /* scaled: kink at u0*1.3; t parameterises Y; X fixed at kink */
+    var kink2=u0;
+    var x=kink2, y=t;
+    if (x<box3[0]||x>box3[1]||y<kink2||y>box3[1]) return [NaN,NaN,NaN];
+    return [x, y, Math.min(x,y)];
+  }, [0, box3[1]]
   ], {strokeColor:C.red, strokeWidth:3});
 
   /* ── 2D board ── */
-  icBoard2D = mkBoard('jxg-ic-2d', [-0.8, 12.5, 12.5, -0.8]);
+  icBoard2D = mkBoard('jxg-ic-2d', [-0.6, 13.5, 13.5, -0.6]);
+  /* Pre-create all cobb IC curves BEFORE drawing — approach 5, no flash */
+  initICPreCurves(slVal('ic-alpha'));
   drawIC2D('cobb', slVal('ic-alpha'));
   setICInfo('cobb');
 
@@ -790,7 +907,14 @@ function initICExplorer() {
     var v = parseFloat(this.value);
     document.getElementById('alpha-val').textContent = v.toFixed(2);
     var type=document.querySelector('#ic-type-btns .type-btn.active').dataset.type;
-    drawIC2D(type, v);
+    if (type==='cobb') {
+      /* Rebuild pre-curves with new alpha, then show correct u0 */
+      initICPreCurves(v);
+      var u0=slVal('ic-u0');
+      redrawIC2DAtU0('cobb', v, u0);
+    } else {
+      drawIC2D(type, v);
+    }
     icBoard3D.update();
   });
 
@@ -810,7 +934,7 @@ function initICExplorer() {
     btn.classList.add('active');
     var type=btn.dataset.type;
     document.getElementById('alpha-ctrl').style.display = type==='cobb'?'':'none';
-    document.getElementById('u0-ctrl').style.display    = type==='cobb'?'':'none';
+    /* u0-ctrl always visible: cutting plane applies to all preference types */
     drawIC2D(type, slVal('ic-alpha'));
     setICInfo(type);
     icBoard3D.update();
@@ -833,9 +957,12 @@ function setICInfo(type) {
 }
 
 function drawIC2D(type, alpha) {
-  /* Clear safely */
+  /* Clear safely — including any extra objects from previous redrawIC2DAtU0 calls */
   icCurves2D.forEach(function(o){try{icBoard2D.removeObject(o,false);}catch(e){}});
   icCurves2D=[];
+  if (!window.icExtraObjs) window.icExtraObjs=[];
+  window.icExtraObjs.forEach(function(o){try{icBoard2D.removeObject(o,false);}catch(e){}});
+  window.icExtraObjs=[];
   if (icGlider2D)   {try{icBoard2D.removeObject(icGlider2D,  false);}catch(e){} icGlider2D=null;}
   if (icTangent2D)  {try{icBoard2D.removeObject(icTangent2D, false);}catch(e){} icTangent2D=null;}
   if (icMRSText)    {try{icBoard2D.removeObject(icMRSText,   false);}catch(e){} icMRSText=null;}
@@ -852,13 +979,53 @@ function drawIC2D(type, alpha) {
 
 /* Draw the single IC at U₀ for any preference type, with glider for Cobb-Douglas */
 function redrawIC2DAtU0(type, alpha, u0) {
-  /* Remove old highlight objects */
+  /* For cobb: use pre-created curves (approach 5) — zero destroy/recreate, zero flash.
+     For other types: recreate segments/lines as before. */
+  if (type==='cobb') {
+    /* Find the closest pre-created curve index */
+    var uVals=icPreCurves.map(function(c){return c.u0;});
+    var best=0, bestD=999;
+    for (var i=0;i<uVals.length;i++){var d=Math.abs(uVals[i]-u0);if(d<bestD){bestD=d;best=i;}}
+    if (icBoard2D && icPreCurves.length>0) {
+      icBoard2D.suspendUpdate();
+      if (icPreCurIdx>=0 && icPreCurIdx<icPreCurves.length) {
+        var old=icPreCurves[icPreCurIdx];
+        old.curve.setAttribute({visible:false});
+        old.glider.setAttribute({visible:false});
+        old.tang.setAttribute({visible:false});
+        old.dh.setAttribute({visible:false});
+        old.dv.setAttribute({visible:false});
+        old.mrs.setAttribute({visible:false});
+      }
+      icPreCurIdx=best;
+      var cur=icPreCurves[best];
+      cur.curve.setAttribute({visible:true});
+      cur.glider.setAttribute({visible:true});
+      cur.tang.setAttribute({visible:true});
+      cur.dh.setAttribute({visible:true});
+      cur.dv.setAttribute({visible:true});
+      cur.mrs.setAttribute({visible:true});
+      /* Update global references for compatibility */
+      icHighlightFn=cur.curve;
+      icGlider2D=cur.glider;
+      icTangent2D=cur.tang;
+      icDropH=cur.dh;
+      icDropV=cur.dv;
+      icMRSText=cur.mrs;
+      icBoard2D.unsuspendUpdate();
+    }
+    /* U0 label */
+    var elU0=document.getElementById('ic-u0-display');
+    if (elU0) elU0.textContent='U₀ = '+u0.toFixed(2);
+    return; /* early return — no recreate needed */
+  }
+
+  /* Non-cobb types: clear and recreate as before */
   if (icHighlightFn){try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){} icHighlightFn=null;}
-  if (icGlider2D)   {try{icBoard2D.removeObject(icGlider2D,  false);}catch(e){} icGlider2D=null;}
-  if (icTangent2D)  {try{icBoard2D.removeObject(icTangent2D, false);}catch(e){} icTangent2D=null;}
-  if (icMRSText)    {try{icBoard2D.removeObject(icMRSText,   false);}catch(e){} icMRSText=null;}
-  if (icDropH)      {try{icBoard2D.removeObject(icDropH,     false);}catch(e){} icDropH=null;}
-  if (icDropV)      {try{icBoard2D.removeObject(icDropV,     false);}catch(e){} icDropV=null;}
+  /* Clear the extra objects array */
+  if (!window.icExtraObjs) window.icExtraObjs=[];
+  window.icExtraObjs.forEach(function(o){try{icBoard2D.removeObject(o,false);}catch(e){}});
+  window.icExtraObjs=[];
 
   if (u0<=0) return;
   var b=1-alpha;
@@ -867,83 +1034,170 @@ function redrawIC2DAtU0(type, alpha, u0) {
     if (b<=0) return;
     icHighlightFn=icBoard2D.create('functiongraph',[function(x){
       return x>0.05?Math.pow(u0/Math.pow(x,alpha),1/b):NaN;
-    }],{strokeColor:C.red,strokeWidth:3,highlight:false});
+    },0.05,13.2],{strokeColor:C.red,strokeWidth:3,highlight:false});
 
   } else if (type==='substitutes') {
-    /* U=X+Y -> IC is X+Y=u0, i.e. Y=u0-X */
-    icHighlightFn=icBoard2D.create('functiongraph',[function(x){return u0-x;}],
-      {strokeColor:C.red,strokeWidth:3,highlight:false});
+    /* Bounded segment from y-axis to x-axis: [0,u0] to [u0,0] */
+    var xEnd=Math.min(u0, 13.2), yEnd=Math.min(u0, 13.2);
+    icHighlightFn=icBoard2D.create('line',
+      [[-1, u0+1],[u0+1,-1]],
+      {strokeColor:C.red,strokeWidth:3,highlight:false,
+       straightFirst:false,straightLast:false});
+    /* Actually use segment for clean bounds */
+    try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){}
+    icHighlightFn=icBoard2D.create('segment',[[0,u0],[u0,0]],
+      {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
 
   } else if (type==='complements') {
-    /* U=min(X,Y) -> IC is the L-shape with kink at (u0,u0) */
-    if (u0<=11.5) {
-      var s1=icBoard2D.create('segment',[[u0,u0],[12,u0]],{strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
-      var s2=icBoard2D.create('segment',[[u0,u0],[u0,12]],{strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
-      var kk=icBoard2D.create('point',[u0,u0],{
-        size:6,color:C.red,fixed:true,highlight:false,withLabel:false
-      });
-      icCurves2D.push(s1,s2,kk);
+    if (u0>0&&u0<=11.5) {
+      var s1=icBoard2D.create('segment',[[u0,u0],[13,u0]],{strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
+      var s2=icBoard2D.create('segment',[[u0,u0],[u0,13]],{strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
+      var kk=icBoard2D.create('point',[u0,u0],{size:5,color:C.red,fixed:true,highlight:false,withLabel:false});
+      window.icExtraObjs.push(s1,s2,kk);
     }
 
   } else if (type==='neutral') {
-    /* U=X -> IC is vertical line X=u0 */
-    if (u0<=11.5) {
-      icHighlightFn=icBoard2D.create('segment',[[u0,0],[u0,12]],
-        {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
+    if (u0>0&&u0<=11.5) {
+      var vl=icBoard2D.create('segment',[[u0,0],[u0,13]],{strokeColor:C.red,strokeWidth:3,fixed:false,highlight:false});
+      window.icExtraObjs.push(vl);
     }
 
   } else if (type==='bad') {
-    /* U=X-Y -> IC is X-Y=u0, i.e. Y=X-u0 */
-    icHighlightFn=icBoard2D.create('functiongraph',[function(x){return x-u0;}],
+    icHighlightFn=icBoard2D.create('functiongraph',[function(x){return x-u0;},u0,13.2],
       {strokeColor:C.red,strokeWidth:3,highlight:false});
   }
 
-  /* U₀ label — top-right corner of the 2D board */
-  var uLbl=icBoard2D.create('text',[11.5,11.8,'U₀ = '+u0.toFixed(2)],
-    {fontSize:13,color:C.red,fixed:true,anchorX:'right',highlight:false});
-  icCurves2D.push(uLbl);
+  /* U0 label — written to HTML element to avoid JSXGraph render glitch */
+  var elU0=document.getElementById('ic-u0-display');
+  if (elU0) elU0.textContent='U₀ = '+u0.toFixed(2);
 
-  /* Cobb-Douglas only: glider + tangent + MRS readout */
-  if (type==='cobb'&&icHighlightFn) {
-    var startX=3.0;
-    var startY=u0>0&&b>0?Math.pow(u0/Math.pow(startX,alpha),1/b):0;
-    if (!isFinite(startY)||startY>11||startY<0.1) { startX=1.5; startY=Math.pow(u0/Math.pow(startX,alpha),1/b); }
-    if (!isFinite(startY)) return;
-
-    icGlider2D=icBoard2D.create('glider',[startX,startY,icHighlightFn],{
-      name:'P',size:7,
-      fillColor:C.amber,strokeColor:'#fff',strokeWidth:2,
-      withLabel:true,label:{offset:[10,4],fontSize:12,color:C.amber},
-      showInfobox:false
-    });
-    icTangent2D=icBoard2D.create('tangent',[icGlider2D],
-      {strokeColor:C.amber,strokeWidth:2,dash:2,highlight:false,withLabel:false});
-    icDropH=icBoard2D.create('segment',[
-      [0,function(){return icGlider2D?icGlider2D.Y():0;}],
-      [function(){return icGlider2D?icGlider2D.X():0;},function(){return icGlider2D?icGlider2D.Y():0;}]
-    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,highlight:false});
-    icDropV=icBoard2D.create('segment',[
-      [function(){return icGlider2D?icGlider2D.X():0;},0],
-      [function(){return icGlider2D?icGlider2D.X():0;},function(){return icGlider2D?icGlider2D.Y():0;}]
-    ],{strokeColor:'#ccc',strokeWidth:1,dash:2,highlight:false});
-    /* MRS label: floats slightly above/right of P */
-    icMRSText=icBoard2D.create('text',[
-      function(){return icGlider2D?Math.min(icGlider2D.X()+0.4,10.5):10;},
-      function(){return icGlider2D?Math.min(icGlider2D.Y()+0.5,11.5):11;},
-      function(){
-        if (!icGlider2D) return '';
-        var gx=safePos(icGlider2D.X(),0.2,11);
-        var gy=safePos(icGlider2D.Y(),0.2,11);
-        if (gx<=0||alpha<=0||alpha>=1) return '';
-        return 'MRS = '+(alpha*gy/((1-alpha)*gx)).toFixed(3);
-      }
-    ],{fontSize:13,color:C.amber,fixed:false,highlight:false});
-    icCurves2D.push(icGlider2D,icTangent2D,icMRSText,icDropH,icDropV);
-  }
+  /* cobb handled above via pre-created curve toggle */
 
   icBoard2D.update();
 }
 
+/* Draw the IC family============================================
+   WEEK 2 — Consumer Choice · Visualizations v4
+   Key principles:
+   - Interaction only where pedagogically meaningful
+   - No text on board that overlaps curves
+   - Axis names at END of axis
+   - Generous bounding boxes
+   ============================================================================= */
+JXG.Options.text.useMathJax = true;
+
+function safePos(x,lo,hi){return Math.max(lo,Math.min(hi,x));}
+function slVal(id){return parseFloat(document.getElementById(id).value);}
+
+/* mkBoard: axis NAMES placed at the far end of each axis via label offset trick.
+   JSXGraph places the axis name label at the end of the axis automatically
+   when you use the `name` attribute on the axis — the label offset just fine-tunes. */
+function mkBoard(id, bbox) {
+  return JXG.JSXGraph.initBoard(id, {
+    boundingbox: bbox,
+    axis: true,
+    showNavigation: false,
+    showCopyright: false,
+    pan:  {enabled:false},
+    zoom: {enabled:false},
+    defaultAxes: {
+      x: {
+        withLabel: true, name: 'X',
+        label: {
+          position: 'rt',       /* 'rt' = right tip of axis */
+          offset:   [0, -14],
+          anchorX:  'right',
+          fontSize: 13,
+          color:    '#555'
+        },
+        ticks: {strokeColor:'#e8e8e8', label:{fontSize:10, color:'#aaa'}}
+      },
+      y: {
+        withLabel: true, name: 'Y',
+        label: {
+          position: 'rt',       /* top tip of axis */
+          offset:   [-14, 0],
+          anchorX:  'right',
+          fontSize: 13,
+          color:    '#555'
+        },
+        ticks: {strokeColor:'#e8e8e8', label:{fontSize:10, color:'#aaa'}}
+      }
+    }
+  });
+}
+
+function mk3DBoard(id, bbox) {
+  return JXG.JSXGraph.initBoard(id, {
+    boundingbox: bbox,
+    axis: false,
+    showNavigation: false,
+    showCopyright: false,
+    pan:  {enabled:false},
+    zoom: {enabled:false}
+  });
+}
+
+var C = {
+  blue:  '#3d5a80',
+  blue2: '#6b8cae',
+  blue3: '#c5d9eb',
+  red:   '#c0392b',
+  amber: '#d4813a',
+  green: '#2e8b57',
+  ink:   '#1a1a2a'
+};
+
+/* =============================================================================
+   1. IC EXPLORER
+   3D: Cobb-Douglas surface with a semi-transparent horizontal cutting plane
+       that slides up/down. The red curve is the IC at that utility level.
+   2D: IC map with a glider P on the Cobb-Douglas curve showing live MRS.
+       For other types: static IC families, no glider (no crash).
+   ============================================================================= */
+var icBoard3D, icBoard2D, icView3D;
+var icCurves2D=[], icGlider2D=null, icTangent2D=null;
+var icDropH=null, icDropV=null, icMRSText=null, icHighlightFn=null;
+/* Approach 5: pre-created curve set for cobb IC — no destroy/recreate = no flash */
+var icPreCurves=[], icPreCurIdx=-1;
+
+var IC_INFO = {
+  cobb: {
+    label:'Cobb-Douglas',
+    fn:'\\(U(X,Y)=X^{\\alpha}Y^{1-\\alpha}\\)',
+    shape:'Smooth and convex (bowed toward origin)',
+    mrs:'Diminishing: \\(MRS=\\tfrac{\\alpha Y}{(1-\\alpha)X}\\)',
+    desc:'Drag point P along the highlighted curve — the tangent line and MRS value update live. Use the utility level slider to move the cutting plane on the 3D surface and watch the highlighted IC change.'
+  },
+  substitutes: {
+    label:'Perfect Substitutes',
+    fn:'\\(U(X,Y)=X+Y\\)',
+    shape:'Straight parallel lines with slope \\(-1\\)',
+    mrs:'Constant: \\(MRS=1\\) everywhere',
+    desc:'The consumer is always willing to trade one unit of X for one unit of Y, regardless of quantities held. The optimal bundle is a corner solution.'
+  },
+  complements: {
+    label:'Perfect Complements',
+    fn:'\\(U(X,Y)=\\min(X,Y)\\)',
+    shape:'L-shaped curves, kink on the 45\\(^\\circ\\) ray',
+    mrs:'\\(0\\), \\(\\infty\\), or undefined at the kink',
+    desc:'Goods must be consumed in fixed proportions. Extra units of one good alone add zero utility. The consumer always chooses the bundle at the kink of the L.'
+  },
+  neutral: {
+    label:'Neutral Good (Y)',
+    fn:'\\(U(X,Y)=X\\)',
+    shape:'Vertical lines — utility independent of \\(Y\\)',
+    mrs:'Undefined: \\(Y\\) is completely irrelevant',
+    desc:'Utility depends only on X. Any change in Y leaves the consumer exactly indifferent. Only moving rightward — consuming more X — increases welfare.'
+  },
+  bad: {
+    label:'Economic Bad (Y)',
+    fn:'\\(U(X,Y)=X-Y\\)',
+    shape:'Upward-sloping lines',
+    mrs:'Negative: more Y requires compensation in X',
+    desc:'Good Y actively reduces utility. To remain on the same indifference curve as Y rises, the consumer must receive additional X as compensation, producing the upward slope.'
+  }
+};
 /* =============================================================================
    1b. IC FAMILY MAP — shows 5 curves for the selected type (separate viz)
    This is the second board in §2.1, showing the full family.
@@ -951,7 +1205,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
 var icFamilyBoard=null, icFamilyObjects=[];
 
 function initICFamily() {
-  icFamilyBoard=mkBoard('jxg-ic-family',[-0.8,12.5,12.5,-0.8]);
+  icFamilyBoard=mkBoard('jxg-ic-family',[-0.6,13.5,13.5,-0.6]);
   drawICFamily('cobb', 0.5);
 
   document.getElementById('ic-alpha').addEventListener('input', function() {
@@ -970,78 +1224,90 @@ function drawICFamily(type, alpha) {
   icFamilyObjects.forEach(function(o){try{icFamilyBoard.removeObject(o,false);}catch(e){}});
   icFamilyObjects=[];
 
-  var levels=[0.7,1.4,2.4,3.8,5.8];
+  var levels=[0.5,1.0,2.0,3.5,5.0];
   var cols=['#c5d9eb','#9db5cc','#6b8cae',C.blue,'#1e3a5f'];
   var b=1-alpha;
 
   levels.forEach(function(k,idx){
-    var col=cols[idx], w=idx===2?2.5:1.4, c;
+    var col=cols[idx], w=2.2, c;
 
     if (type==='cobb') {
       (function(kk,bb){
         c=icFamilyBoard.create('functiongraph',[function(x){
           return x>0.05?Math.pow(kk/Math.pow(x,alpha),1/bb):NaN;
-        }],{strokeColor:col,strokeWidth:w,highlight:false});
+        },0.05,13.2],{strokeColor:col,strokeWidth:w,highlight:false});
       })(k,b);
 
     } else if (type==='substitutes') {
-      (function(kk){
-        c=icFamilyBoard.create('functiongraph',[function(x){return kk-x;}],
-          {strokeColor:col,strokeWidth:w,highlight:false});
-      })(k);
+      (function(kk,col2,w2){
+        /* Bounded segment from (0,kk) to (kk,0) */
+        var xe=Math.min(kk,13.2), ye=Math.min(kk,13.2);
+        c=icFamilyBoard.create('segment',[[0,ye],[xe,0]],
+          {strokeColor:col2,strokeWidth:w2,fixed:true,highlight:false});
+      })(k,col,w);
 
     } else if (type==='complements') {
       if (k<=11.5) {
-        var s1=icFamilyBoard.create('segment',[[k,k],[12,k]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
-        var s2=icFamilyBoard.create('segment',[[k,k],[k,12]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
+        var s1=icFamilyBoard.create('segment',[[k,k],[13,k]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
+        var s2=icFamilyBoard.create('segment',[[k,k],[k,13]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
         icFamilyObjects.push(s1,s2);
       }
       return;
 
     } else if (type==='neutral') {
       if (k<=11.5) {
-        c=icFamilyBoard.create('segment',[[k,0],[k,12]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
+        c=icFamilyBoard.create('segment',[[k,0],[k,13]],{strokeColor:col,strokeWidth:w,fixed:true,highlight:false});
       } else return;
 
     } else if (type==='bad') {
       (function(kk){
-        c=icFamilyBoard.create('functiongraph',[function(x){return x-kk;}],
+        c=icFamilyBoard.create('functiongraph',[function(x){return x-kk;},kk,13.2],
           {strokeColor:col,strokeWidth:w,highlight:false});
       })(k);
     }
     if(c) icFamilyObjects.push(c);
 
-    /* Label the middle curve */
-    if (idx===2) {
-      var lx,ly;
-      if (type==='cobb')        {lx=6.5;ly=b>0?Math.pow(k/Math.pow(lx,alpha),1/b)+0.25:0;}
-      else if (type==='substitutes'){lx=0.6;ly=k-0.6+0.4;}
-      else if (type==='neutral'){lx=k+0.25;ly=3;}
-      else if (type==='bad')    {lx=k+1.2;ly=0.5;}
-      else return;
-      if (lx&&ly>0&&ly<11.5) {
-        icFamilyObjects.push(icFamilyBoard.create('text',[lx,ly,'U₂'],
-          {fontSize:11,color:col,fixed:true,highlight:false}));
-      }
-    }
   });
 
-  /* Higher-U direction arrow */
-  icFamilyObjects.push(icFamilyBoard.create('text',[10.5,11.8,'↗ higher U'],
-    {fontSize:11,color:C.blue,fixed:true,anchorX:'right',highlight:false}));
+  /* Legend updated in HTML — no on-board labels */
+  updateFamilyLegend(type, alpha, levels, cols);
 
   icFamilyBoard.update();
+}
+
+function updateFamilyLegend(type, alpha, levels, cols) {
+  var el = document.getElementById('ic-family-legend');
+  if (!el) return;
+  var b = 1 - alpha;
+  var rows = levels.map(function(k, idx) {
+    var uLabel;
+    if (type === 'cobb')        uLabel = 'U = ' + k.toFixed(1);
+    else if (type === 'substitutes') uLabel = 'U = X+Y = ' + k.toFixed(1);
+    else if (type === 'complements') uLabel = 'U = min(X,Y) = ' + k.toFixed(1);
+    else if (type === 'neutral')     uLabel = 'U = X = ' + k.toFixed(1);
+    else if (type === 'bad')         uLabel = 'U = X−Y = ' + k.toFixed(1);
+    else uLabel = 'U = ' + k.toFixed(1);
+    var weight = idx === 2 ? '600' : '400';
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+      + '<div style="width:28px;height:3px;background:'+cols[idx]+';flex-shrink:0;'
+      + (idx===2?'height:4px;':'') + '"></div>'
+      + '<span style="font-size:0.8rem;color:#444;font-weight:'+weight+'">' + uLabel + '</span>'
+      + '</div>';
+  });
+  /* Reverse so highest utility is at top */
+  el.innerHTML = '<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:#aaa;margin-bottom:8px;">Utility levels</div>'
+    + rows.reverse().join('');
 }
 
 /* =============================================================================
    2. UTILITY SURFACE — standalone 3D, draggable floor point, level curve
    ============================================================================= */
 function initUtilitySurface() {
-  var board=mk3DBoard('jxg-surf3d',[-10,9,10,-7]);
-  var box=[0.1,6];
+  var board=mk3DBoard('jxg-surf3d',[-14,12,14,-10]);
+  var box=[0.1,5.8];
 
   var view=board.create('view3d',[
-    [-7,-4],[14,11.5],[box,box,[0,5]]
+    [-6,-5],[12,11],[box,box,[0,5.5]]
   ],{
     xPlaneRear:{visible:false},
     yPlaneRear:{visible:false},
@@ -1142,12 +1408,10 @@ function buildBudgetBoard() {
 
   /* Intercept markers — FIXED, no dragging */
   bcObjects.push(bcBoard.create('point',[xI,0],{
-    size:5,color:C.red,fixed:true,highlight:false,
-    name:xI.toFixed(1),withLabel:true,label:{offset:[0,-15],anchorX:'middle',fontSize:11}
+    size:5,color:C.red,fixed:true,highlight:false,withLabel:false
   }));
   bcObjects.push(bcBoard.create('point',[0,yI],{
-    size:5,color:C.red,fixed:true,highlight:false,
-    name:yI.toFixed(1),withLabel:true,label:{offset:[-9,0],anchorX:'right',fontSize:11}
+    size:5,color:C.red,fixed:true,highlight:false,withLabel:false
   }));
 
   /* Slope label — midpoint of the line, offset above-right so it clears the line */
@@ -1220,21 +1484,18 @@ function buildShiftBoard() {
     {strokeColor:C.red,strokeWidth:2.5,highlight:false});
   shiftObjects.push(l1,l2);
 
-  /* Labels — placed at 65% of X-range along each line to stay in middle of graph,
-     well clear of the axes and intercepts */
-  var frac=0.62;
+  /* Labels: place label ABOVE the higher line, BELOW the lower line at x=40% */
+  var frac=0.40;
   var lx1=xi1*frac, ly1=(I0-Px0*lx1)/Py0;
   var lx2=xi2*frac, ly2=(I2-Px2*lx2)/Py2;
-  /* Offset perpendicular to the line direction so the label doesn't sit on the line */
-  var slope1=-(Px0/Py0), slope2=-(Px2/Py2);
-  var len1=Math.sqrt(1+slope1*slope1), len2=Math.sqrt(1+slope2*slope2);
-  var offMag=m*0.055;
-  /* Perpendicular direction: (-slope/len, 1/len) rotated upward */
-  var t1=shiftBoard.create('text',
-    [lx1+(-slope1/len1)*(-offMag*0.3), ly1+(1/len1)*offMag*0.8,'B\u2080 (original)'],
+  var off=m*0.14; /* vertical offset magnitude — larger to clear the lines */
+  /* At x=frac, whichever line is higher gets label above, lower gets label below */
+  var off1, off2;
+  if (ly1>=ly2) { off1=off; off2=-off; }   /* l1 higher -> l1 label above, l2 below */
+  else           { off1=-off; off2=off; }   /* l2 higher -> l2 label above, l1 below */
+  var t1=shiftBoard.create('text',[lx1, ly1+off1, 'B₀ (original)'],
     {fontSize:12,color:C.blue,fixed:true,highlight:false,anchorX:'middle'});
-  var t2=shiftBoard.create('text',
-    [lx2+(-slope2/len2)*(-offMag*0.3), ly2+(1/len2)*offMag*0.8,'B\u2081 (new)'],
+  var t2=shiftBoard.create('text',[lx2, ly2+off2, 'B₁ (new)'],
     {fontSize:12,color:C.red,fixed:true,highlight:false,anchorX:'middle'});
   shiftObjects.push(t1,t2);
 
@@ -1242,7 +1503,7 @@ function buildShiftBoard() {
   if (type.startsWith('px')) {
     var piv=shiftBoard.create('point',[0,yi1],{
       color:C.amber,size:7,fixed:true,highlight:false,
-      name:'Pivot',withLabel:true,label:{offset:[8,4],fontSize:10,color:C.amber}
+      name:'Pivot',withLabel:true,label:{offset:[14,0],anchorX:'left',fontSize:11,color:C.amber}
     });
     var arr=shiftBoard.create('arrow',[[xi1,-m*0.04],[xi2,-m*0.04]],
       {strokeColor:C.amber,strokeWidth:1.5,fixed:true});
@@ -1251,7 +1512,7 @@ function buildShiftBoard() {
   if (type.startsWith('py')) {
     var piv2=shiftBoard.create('point',[xi1,0],{
       color:C.amber,size:7,fixed:true,highlight:false,
-      name:'Pivot',withLabel:true,label:{offset:[0,-14],fontSize:10,color:C.amber}
+      name:'Pivot',withLabel:true,label:{offset:[0,-18],anchorY:'top',fontSize:11,color:C.amber}
     });
     var arr2=shiftBoard.create('arrow',[[-m*0.04,yi1],[-m*0.04,yi2]],
       {strokeColor:C.amber,strokeWidth:1.5,fixed:true});
@@ -1351,26 +1612,30 @@ function buildOptimumBoard() {
     if(c) optObjects.push(c);
   });
 
-  /* Budget line */
-  optObjects.push(optBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
-    {strokeColor:C.ink,strokeWidth:2.4,highlight:false}));
-
-  /* Tangent (Cobb-Douglas) */
+  /* Budget line.
+     For Cobb-Douglas: draw as dashed amber (budget line = tangent at optimum).
+     Same style as the dashed budget lines in §2.9 which the user confirmed look correct. */
   if(type==='cobb'&&xs>0&&ys>0){
-    optObjects.push(optBoard.create('functiongraph',[function(x){return ys-(Px/Py)*(x-xs);}],
-      {strokeColor:C.amber,strokeWidth:1.8,dash:2,highlight:false}));
+    optObjects.push(optBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
+      {strokeColor:C.amber,strokeWidth:2.5,dash:3,highlight:false}));
+  } else {
+    optObjects.push(optBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
+      {strokeColor:C.ink,strokeWidth:2.4,highlight:false}));
   }
 
-  /* Drop lines + axis labels — placed BELOW negative margin */
+  /* Drop lines only: X and Y star go to sidebar, not on board */
   if(xs>0&&ys>0){
     optObjects.push(
       optBoard.create('segment',[[0,ys],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
-      optBoard.create('segment',[[xs,0],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
-      optBoard.create('text',[xs,-m*0.055,'X* = '+xs.toFixed(1)],
-        {fontSize:12,color:C.red,fixed:true,anchorX:'middle',highlight:false}),
-      optBoard.create('text',[-m*0.02,ys,'Y* = '+ys.toFixed(1)],
-        {fontSize:12,color:C.red,fixed:true,anchorX:'left',highlight:false})
+      optBoard.create('segment',[[xs,0],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false})
     );
+    /* Write values to sidebar result bar */
+    var elXs=document.getElementById('opt-x-star');
+    var elYs=document.getElementById('opt-y-star');
+    var elU =document.getElementById('opt-utility');
+    if(elXs) elXs.textContent=xs.toFixed(3);
+    if(elYs) elYs.textContent=ys.toFixed(3);
+    if(elU)  elU.textContent=uStar.toFixed(4);
   }
 
   /* Optimal point */
@@ -1392,13 +1657,7 @@ function buildOptimumBoard() {
 var mupBoard, bfbObjects=[];
 
 function initBFBBoard() {
-  /* We use a plain board without the standard axes — custom axes instead */
-  mupBoard=JXG.JSXGraph.initBoard('jxg-bfb',{
-    boundingbox:[-0.5,6,3.5,-0.5],
-    axis:false,
-    showNavigation:false, showCopyright:false,
-    pan:{enabled:false}, zoom:{enabled:false}
-  });
+  mupBoard=mkBoard('jxg-bfb',[-1.5,32,32,-1.5]);
   buildBFBBoard();
   ['bfb-spendX','bfb-Px','bfb-Py','bfb-alpha'].forEach(function(id){
     document.getElementById(id).addEventListener('input',function(){
@@ -1409,86 +1668,123 @@ function initBFBBoard() {
   });
 }
 
+var bfbGlider=null;
+var bfbTrack=null;
+
 function buildBFBBoard() {
+  /* Remove glider FIRST (child), then track (parent), then other objects */
+  if (bfbGlider) { try{mupBoard.removeObject(bfbGlider,false);}catch(e){} bfbGlider=null; }
+  if (bfbTrack)  { try{mupBoard.removeObject(bfbTrack, false);}catch(e){} bfbTrack=null;  }
   bfbObjects.forEach(function(o){try{mupBoard.removeObject(o,false);}catch(e){}});
   bfbObjects=[];
 
-  var I=100,spX=slVal('bfb-spendX'),Px=slVal('bfb-Px'),Py=slVal('bfb-Py'),a=slVal('bfb-alpha');
-  var b=1-a,X=Math.max(spX/Px,0.01),Y=Math.max((I-spX)/Py,0.01);
-  var MUx=a*Math.pow(X,a-1)*Math.pow(Y,b), MUy=b*Math.pow(X,a)*Math.pow(Y,b-1);
-  var bangX=MUx/Px, bangY=MUy/Py;
-  var mx=Math.max(bangX,bangY)*1.4;
-  if(mx<0.01) mx=0.01;
+  var I=100, Px=slVal('bfb-Px'), Py=slVal('bfb-Py'), a=slVal('bfb-alpha');
+  var b=1-a;
+  var xI=I/Px, yI=I/Py;
+  var m=Math.max(xI,yI)*1.45;
+  mupBoard.setBoundingBox([-m*0.06,m*1.1,m*1.1,-m*0.06],false);
 
-  mupBoard.setBoundingBox([-0.4, mx*1.2, 3.4, -mx*0.08], false);
+  /* Optimal bundle */
+  var xOpt=a*I/Px, yOpt=b*I/Py;
+  var uOpt=Math.pow(xOpt,a)*Math.pow(yOpt,b);
 
-  /* Y-axis */
-  bfbObjects.push(mupBoard.create('segment',[[0,-mx*0.06],[0,mx*1.15]],
-    {strokeColor:'#999',strokeWidth:1,fixed:true,highlight:false}));
-  /* Y-axis tick labels */
-  [0.25,0.5,0.75,1.0].forEach(function(frac){
-    var yv=mx*frac;
-    bfbObjects.push(mupBoard.create('text',[-0.08,yv,yv.toFixed(3)],
-      {fontSize:10,color:'#aaa',fixed:true,anchorX:'right',highlight:false}));
-    bfbObjects.push(mupBoard.create('segment',[[-0.04,yv],[0,yv]],
-      {strokeColor:'#ccc',strokeWidth:1,fixed:true,highlight:false}));
+  /* Three ICs: below, at, above optimum */
+  [uOpt*0.55, uOpt, uOpt*1.5].forEach(function(k,idx){
+    if(k<=0) return;
+    var col=[C.blue3,C.blue,C.blue3][idx];
+    var w=idx===1?2.5:1.4;
+    (function(kk){
+      bfbObjects.push(mupBoard.create('functiongraph',[function(x){
+        return x>0.05?Math.pow(kk/Math.pow(x,a),1/b):NaN;
+      },0.05,m*0.98],{strokeColor:col,strokeWidth:w,highlight:false}));
+    })(k);
   });
 
-  /* Bar for MU(X)/P_X — centred at x=0.7 */
-  var barW=0.55;
-  /* X bar */
-  var bx=mupBoard.create('polygon',
-    [[0.25,0],[0.25+barW,0],[0.25+barW,bangX],[0.25,bangX]],
-    {fillColor:C.red,fillOpacity:0.75,strokeWidth:0,
-     vertices:{visible:false},highlight:false,fixed:true});
-  /* Y bar */
-  var by=mupBoard.create('polygon',
-    [[1.6,0],[1.6+barW,0],[1.6+barW,bangY],[1.6,bangY]],
-    {fillColor:C.blue,fillOpacity:0.75,strokeWidth:0,
-     vertices:{visible:false},highlight:false,fixed:true});
-  bfbObjects.push(bx,by);
+  /* Budget line drawn as a regular segment — used as glider track.
+     Stored separately from bfbObjects so rebuild can remove it cleanly. */
+  var ptX0=mupBoard.create('point',[0,yI],{visible:false,fixed:true,showInfobox:false});
+  var ptX1=mupBoard.create('point',[xI,0],{visible:false,fixed:true,showInfobox:false});
+  bfbTrack=mupBoard.create('segment',[ptX0,ptX1],
+    {strokeColor:C.ink,strokeWidth:2.2,highlight:false});
+  /* ptX0, ptX1 are track endpoints — also managed via bfbTrack removal, not bfbObjects */
+  /* Do NOT push bfbTrack into bfbObjects — it must persist as the glider's parent */
+  bfbObjects.push(ptX0, ptX1); /* push endpoints so they get cleaned up */
 
-  /* Bar labels below x-axis */
-  bfbObjects.push(mupBoard.create('text',[0.525,-mx*0.07,'MU(X)/P\u2093'],
-    {fontSize:13,color:C.red,fixed:true,anchorX:'middle',highlight:false}));
-  bfbObjects.push(mupBoard.create('text',[1.925,-mx*0.07,'MU(Y)/P\u1D67'],
-    {fontSize:13,color:C.blue,fixed:true,anchorX:'middle',highlight:false}));
+  /* Capture locals for closure — frozen at build time */
+  var _Px=Px, _Py=Py, _a=a, _b=b, _I=I, _xOpt=xOpt, _yOpt=yOpt, _m=m;
 
-  /* Value labels AT TOP of each bar — offset upward slightly so no overlap */
-  var topOffX=mx*0.03;
-  bfbObjects.push(mupBoard.create('text',[0.525,bangX+topOffX*1.5,bangX.toFixed(4)],
-    {fontSize:12,color:C.red,fixed:true,anchorX:'middle',highlight:false}));
-  bfbObjects.push(mupBoard.create('text',[1.925,bangY+topOffX*1.5,bangY.toFixed(4)],
-    {fontSize:12,color:C.blue,fixed:true,anchorX:'middle',highlight:false}));
+  /* Glider on the segment — this CAN move along a segment */
+  var glider=mupBoard.create('glider',[_xOpt,_yOpt,bfbTrack],{
+    name:'Bundle',size:8,
+    fillColor:C.amber,strokeColor:'#fff',strokeWidth:2,
+    withLabel:true,label:{offset:[10,6],fontSize:12,color:C.amber},
+    showInfobox:false
+  });
+  bfbGlider=glider;
 
-  /* Equalisation horizontal line at the optimal shared value */
-  var bangOpt=(a*Math.pow(a,a-1)*Math.pow(b,b)/Px + b*Math.pow(a,a)*Math.pow(b,b-1)/Py)/2;
-  /* Simpler: optimal is when bangX=bangY, which occurs at x*=a*I/Px, y*=b*I/Py */
-  var xOpt=a*I/Px,yOpt=b*I/Py;
-  var bangOptVal=a*Math.pow(xOpt,a-1)*Math.pow(yOpt,b)/Px;
-  if(isFinite(bangOptVal)&&bangOptVal>0&&bangOptVal<mx*1.1) {
-    bfbObjects.push(mupBoard.create('segment',[[0.1,bangOptVal],[3.0,bangOptVal]],
-      {strokeColor:C.green,strokeWidth:1.5,dash:2,fixed:true,highlight:false}));
-    bfbObjects.push(mupBoard.create('text',[3.0,bangOptVal+topOffX*1.5,'optimum'],
-      {fontSize:11,color:C.green,fixed:true,anchorX:'right',highlight:false}));
-  }
+  /* Drop lines — reference local glider, not global bfbGlider */
+  bfbObjects.push(mupBoard.create('segment',[
+    [0,function(){return glider.Y();}],
+    [function(){return glider.X();},function(){return glider.Y();}]
+  ],{strokeColor:'#ddd',strokeWidth:1,dash:2,highlight:false}));
+  bfbObjects.push(mupBoard.create('segment',[
+    [function(){return glider.X();},0],
+    [function(){return glider.X();},function(){return glider.Y();}]
+  ],{strokeColor:'#ddd',strokeWidth:1,dash:2,highlight:false}));
 
-  /* Arrow indicating which direction to shift */
-  var tol=0.015;
-  var eq=Math.abs(bangX-bangY)<tol;
-  var msg=eq?'Ratios equal: at the optimal bundle':
-    bangX>bangY?'Reallocate: shift spending toward X\u2009\u2192':
-               'Reallocate: shift spending toward Y\u2009\u2192';
-  bfbObjects.push(mupBoard.create('text',[1.5,mx*1.12,msg],
-    {fontSize:13,color:eq?C.green:C.amber,fixed:true,anchorX:'middle',highlight:false}));
+  /* Optimum marker — hidden when bundle is at optimum */
+  var optPt=mupBoard.create('point',[_xOpt,_yOpt],{
+    color:C.red,size:6,fixed:true,highlight:false,
+    name:'Optimum',withLabel:true,label:{offset:[9,6],fontSize:11}
+  });
+  bfbObjects.push(optPt);
 
-  /* Sidebar */
-  document.getElementById('bfb-mux-px').textContent =bangX.toFixed(4);
-  document.getElementById('bfb-muy-py').textContent =bangY.toFixed(4);
-  document.getElementById('bfb-verdict').textContent=eq?'Ratios equal: optimal':
-    bangX>bangY?'MU(X)/P\u2093 > MU(Y)/P\u1D67':'MU(Y)/P\u1D67 > MU(X)/P\u2093';
-  document.getElementById('bfb-action').textContent =eq?'No reallocation needed':
-    bangX>bangY?'Shift spending toward X':'Shift spending toward Y';
+  /* Sidebar updater — defined as a named expression capturing locals */
+  var doUpdate=function(gx, gy) {
+    gx=Math.max(gx,0.01); gy=Math.max(gy,0.01);
+    var MUx=_a*Math.pow(gx,_a-1)*Math.pow(gy,_b);
+    var MUy=_b*Math.pow(gx,_a)*Math.pow(gy,_b-1);
+    var rx=MUx/_Px, ry=MUy/_Py;
+    var tol=0.04*Math.max(rx,ry,0.001);
+    var eq=Math.abs(rx-ry)<tol;
+    document.getElementById('bfb-mux-px').textContent=rx.toFixed(4);
+    document.getElementById('bfb-muy-py').textContent=ry.toFixed(4);
+    document.getElementById('bfb-verdict').textContent=eq
+      ? '✔ Ratios equal — at the optimum'
+      : (rx>ry ? 'MUₓ/Pₓ > MUᵧ/Pᵧ' : 'MUᵧ/Pᵧ > MUₓ/Pₓ');
+    document.getElementById('bfb-action').textContent=eq
+      ? 'No reallocation needed'
+      : (rx>ry ? 'Shift spending toward X' : 'Shift spending toward Y');
+    document.getElementById('bfb-spendX-val').textContent=(_Px*gx).toFixed(0);
+    /* Hide Bundle label and Optimum dot when bundle is at optimum */
+    var dist=Math.sqrt(Math.pow(gx-_xOpt,2)+Math.pow(gy-_yOpt,2));
+    var atOpt = dist < _m*0.05;
+    if (glider&&glider.label) glider.label.setAttribute({visible: !atOpt});
+    if (optPt) optPt.setAttribute({visible: !atOpt});
+  };
+
+  /* Drag handler uses LOCAL glider reference — immune to global bfbGlider=null */
+  glider.on('drag', function(){ doUpdate(glider.X(), glider.Y()); });
+
+  /* Init: show Bundle label, hide Optimum dot (bundle starts at optimum) */
+  /* Show Bundle label + hide optPt after board renders (setTimeout avoids timing issue) */
+  if (optPt) optPt.setAttribute({visible: false});
+  setTimeout(function(){
+    if (glider && glider.label) glider.label.setAttribute({visible: true});
+    mupBoard.update();
+  }, 50);
+  /* Update sidebar values without toggling label visibility */
+  (function(){
+    var gx=_xOpt, gy=_yOpt;
+    var MUx=_a*Math.pow(gx,_a-1)*Math.pow(gy,_b);
+    var MUy=_b*Math.pow(gx,_a)*Math.pow(gy,_b-1);
+    var rx=MUx/_Px, ry=MUy/_Py;
+    document.getElementById('bfb-mux-px').textContent=rx.toFixed(4);
+    document.getElementById('bfb-muy-py').textContent=ry.toFixed(4);
+    document.getElementById('bfb-verdict').textContent='✔ Ratios equal — at the optimum';
+    document.getElementById('bfb-action').textContent='No reallocation needed';
+    document.getElementById('bfb-spendX-val').textContent=(_Px*gx).toFixed(0);
+  })();
 
   mupBoard.update();
 }
@@ -1557,9 +1853,7 @@ function buildCobbBoard() {
   var lx=m*0.32, ly=expSlope*m*0.32;
   var len=Math.sqrt(1+expSlope*expSlope);
   var ox=-expSlope/len*m*0.05, oy=1/len*m*0.05;
-  var epLabelX=m*0.28, epLabelY=expSlope*m*0.28+m*0.06;
-  cdObjects.push(cdBoard.create('text',[epLabelX,epLabelY,'Expansion path'],
-    {fontSize:11,color:C.amber,fixed:true,highlight:false,anchorX:'middle'}));
+  /* Expansion path label removed from board — sidebar shows all info */
 
   /* Three optimal bundle points — NO text labels on the points themselves.
      Use the sidebar. Put tiny I= labels ABOVE/BELOW each point with enough offset. */
@@ -1572,21 +1866,15 @@ function buildCobbBoard() {
     var ptOff=idx===0?[-14,-14]:idx===1?[10,8]:[10,8];
     cdObjects.push(cdBoard.create('point',[xs3,ys3],{
       color:ptCol, size:idx===1?7:4, fixed:true, highlight:false,
-      name:'I='+Math.round(I*sc),
-      withLabel:true,
-      label:{offset:ptOff,fontSize:10,color:ptCol}
+      withLabel:false
     }));
   });
 
-  /* Drop lines from main optimum only */
+  /* Drop lines from main optimum: no axis text labels (they clip) */
   if(xS>0&&yS>0&&xS<m&&yS<m){
     cdObjects.push(
       cdBoard.create('segment',[[0,yS],[xS,yS]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
-      cdBoard.create('segment',[[xS,0],[xS,yS]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
-      cdBoard.create('text',[xS,-m*0.045,'X* = '+xS.toFixed(1)],
-        {fontSize:11,color:C.red,fixed:true,anchorX:'middle',highlight:false}),
-      cdBoard.create('text',[-m*0.025,yS,'Y* = '+yS.toFixed(1)],
-        {fontSize:11,color:C.red,fixed:true,anchorX:'left',highlight:false})
+      cdBoard.create('segment',[[xS,0],[xS,yS]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false})
     );
   }
 
@@ -1607,7 +1895,6 @@ function buildCobbBoard() {
 document.addEventListener('DOMContentLoaded', function() {
   initICExplorer();
   initICFamily();
-  initUtilitySurface();
   initBudgetBoard();
   initShiftBoard();
   initOptimumBoard();
@@ -1787,7 +2074,6 @@ document.addEventListener('DOMContentLoaded', function() {
       <nav>
         <a href="#sec-ic-intro">Indifference Curves</a>
         <a href="#sec-ic-types" class="sub">IC Types Explorer</a>
-        <a href="#sec-3d" class="sub">Utility Surface &amp; Level Curves</a>
         <a href="#sec-budget">Budget Constraint</a>
         <a href="#sec-budget-viz" class="sub">Interactive Budget Line</a>
         <a href="#sec-shifts" class="sub">Income &amp; Price Shifts</a>
@@ -1835,8 +2121,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
               </div>
               <div class="ctrl-group" id="u0-ctrl">
-                <label>Utility level <em>U</em>₀ (cutting plane height) <span class="ctrl-val" id="ic-u0-val">2.0</span></label>
-                <input type="range" id="ic-u0" min="0.3" max="5.5" step="0.1" value="2.0" />
+                <label>Utility level U&#8320; (cutting plane height) <span class="ctrl-val" id="ic-u0-val">2.0</span></label>
+                <input type="range" id="ic-u0" min="0.3" max="5.0" step="0.1" value="2.0" />
               </div>
               <div class="ctrl-group" id="alpha-ctrl">
                 <label>Alpha (α), Cobb-Douglas weight <span class="ctrl-val" id="alpha-val">0.5</span></label>
@@ -1852,12 +2138,15 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="viz-panel-left" style="display:grid;grid-template-rows:1fr 1fr;min-height:520px;">
                 <div>
                   <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">3D Utility Surface</div>
-                  <div id="jxg-ic-3d" style="width:100%;height:230px;"></div>
+                  <div id="jxg-ic-3d" style="width:100%;height:320px;"></div>
                 </div>
                 <div>
                   <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">Single IC at U₀ (drag P to see MRS)</div>
-                  <div id="jxg-ic-2d" style="width:100%;height:230px;"></div>
-                  <div id="ic-u-readout" style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#d4813a;padding:0.25rem 0.8rem;min-height:1.2rem;"></div>
+                  <div id="jxg-ic-2d" style="width:100%;height:320px;"></div>
+                  <div style="padding:0.3rem 0.8rem;">
+                    <div id="ic-u-readout" style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#d4813a;min-height:1.1rem;"></div>
+                  </div>
+                </div>
               </div>
               <div class="viz-panel-right">
                 <div class="stat-row">
@@ -1880,6 +2169,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div style="font-size:0.83rem;color:var(--ink-light);line-height:1.55" id="ic-description">
                   The consumer substitutes X for Y at a <em>decreasing rate</em>, convex ICs reflect the preference for variety. Moving to higher ICs (upper-right) means higher utility.
                 </div>
+                <hr class="divider-sm" style="margin-top:0.8rem"/>
+                <div style="margin-top:0.6rem;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:4px;">Current utility level</div>
+                  <div id="ic-u0-display" style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:#c0392b;font-weight:600;">U₀ = 2.00</div>
+                </div>
               </div>
             </div></div>
         </div>
@@ -1890,31 +2184,14 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="viz-header">
               <span class="viz-title">&#9658; Indifference Curve Map (full family)</span>
             </div>
-            <div class="viz-note">Five indifference curves for the selected preference type. Each curve represents a different utility level — curves farther from the origin correspond to higher utility.</div>
-            <div id="jxg-ic-family" style="width:100%;height:340px;"></div>
+            <div class="viz-note">Five indifference curves for the selected preference type. Curves farther from the origin correspond to higher utility.</div>
+            <div style="display:grid;grid-template-columns:1fr 140px;gap:0;">
+              <div id="jxg-ic-family" style="width:100%;height:340px;"></div>
+              <div style="padding:1rem 0.8rem;border-left:1px solid var(--rule);display:flex;flex-direction:column;justify-content:center;">
+                <div id="ic-family-legend" style="line-height:1.4;"></div>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <!-- 3D UTILITY SURFACE -->
-        <div id="sec-3d" style="scroll-margin-top:70px;margin-top:2rem">
-          <p style="margin-bottom:1rem;font-size:0.95rem;color:var(--ink-light)">
-            <strong>Deeper Intuition:</strong> Indifference curves are <em>level curves</em> of the utility function, exactly like contour lines on a topographic map. The utility surface $U(X,Y)$ rises as you move outward; each IC is a horizontal slice of that surface at a fixed height.
-          </p>
-          <div class="viz-wrapper">
-            <div class="viz-header">
-              <span class="viz-title">▸ Utility Surface &amp; Level Curves (3D)</span>
-            </div>
-            <div class="viz-controls">
-              <div class="ctrl-group">
-                <label>\(\alpha\) (Cobb-Douglas weight) <span class="ctrl-val" id="surf-alpha-val">0.5</span></label>
-                <input type="range" id="surf-alpha" min="0.1" max="0.9" step="0.05" value="0.5" />
-              </div>
-              <div class="ctrl-group" style="justify-content:flex-end">
-                <div id="surf-u-readout" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:#c0392b;"></div>
-              </div>
-            </div>
-            <div class="viz-note">Drag the orange floor point to any \((X,Y)\) position. The red curve is the indifference curve (level curve) at that utility level. Drag the 3D view itself to rotate.</div>
-            <div id="jxg-surf3d" style="width:100%;height:520px;"></div></div>
         </div>
 
         <div class="callout common-mistake" style="margin-top:1.5rem">
@@ -2165,11 +2442,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="viz-wrapper">
           <div class="viz-header">
-            <span class="viz-title">▸ Marginal Utility per Dollar Reallocation</span>
+            <span class="viz-title">▸ Tangency Explorer: Drag the Bundle</span>
           </div>
           <div class="viz-controls">
             <div class="ctrl-group">
-              <label>Dollars spent on X &nbsp;(\(P_X \cdot X\)) <span class="ctrl-val" id="bfb-spendX-val">50</span></label>
+              <label>Starting position: dollars on X <span class="ctrl-val" id="bfb-spendX-val">50</span></label>
               <input type="range" id="bfb-spendX" min="5" max="95" step="5" value="50" />
             </div>
             <div class="ctrl-group">
@@ -2208,7 +2485,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <hr class="divider-sm" />
               <div style="font-size:0.82rem;color:var(--ink-light);line-height:1.55" id="bfb-description">
-                Adjust spending on X to find where both ratios equalize. That is where the consumer's best bundle lies.
+                Drag the orange bundle along the budget line. Watch the utility condition update — at the optimum, the indifference curve is tangent to the budget line and MUₓ/Pₓ = MUᵧ/Pᵧ.
               </div>
             </div>
           </div></div>
