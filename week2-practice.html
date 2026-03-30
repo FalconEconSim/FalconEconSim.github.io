@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Week 2 — Practice Problems · EC224</title>
+  <title>Week 2: Practice Problems · EC224</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -152,7 +152,7 @@
       border-left: 3px solid var(--accent);
     }
     .step-card.verify { border-left-color: #16a34a; }
-    .step-num  { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; color: var(--accent); min-width: 18px; padding-top: 1px; }
+    .step-num  { font-family: var(--mono); font-size: 1.05rem; font-weight: 600; color: var(--accent); min-width: 22px; padding-top: 1px; }
     .step-card.verify .step-num { color: #16a34a; }
     .step-body { font-size: 0.83rem; color: var(--text); line-height: 1.7; }
     .step-title { font-weight: 600; font-size: 0.80rem; color: var(--accent); margin-bottom: 3px; }
@@ -239,10 +239,11 @@
   <div class="hero">
     <div class="week-ghost">02</div>
     <p class="week-label">Week 2 · Practice Problems</p>
-    <h1>Consumer Choice — Problem Generator</h1>
+    <h1>Consumer Choice: Problem Generator</h1>
     <p class="hero-instructor">Prof. Naveen Sunder</p>
     <div class="summary-notice">
-      <strong>How to use:&nbsp;</strong>A new randomised problem appears each time. Work through it on paper first, enter your answer below, then check it. <em>Show Solution</em> — available after your first attempt — reveals a full worked solution with graph and real-world intuition.
+      <strong>How to use:</strong> A new randomised problem appears each time. Work through it on paper first, enter your answer below, then check it.<br>
+      <em>Show Solution</em> (available after your first attempt) reveals a full worked solution with graph and real-world intuition.
     </div>
   </div>
 
@@ -324,9 +325,9 @@ const HINTS = {
 
 // ── Method blurbs ──────────────────────────────────────────────
 const METHOD = {
-  cobb_douglas:       '<strong>Approach — Interior solution:</strong> Smooth, strictly convex ICs → set \\(\\mathrm{MRS} = P_X/P_Y\\) and combine with the budget constraint.',
-  perfect_substitutes:'<strong>Approach — Corner solution:</strong> Straight-line ICs → compare \\(MU_X/P_X\\) vs \\(MU_Y/P_Y\\) and spend all income on the higher-value good.',
-  perfect_complements:'<strong>Approach — Kink solution:</strong> L-shaped ICs → the optimum is always at the kink. Use the fixed-proportions condition \\(X/a = Y/b\\).'
+  cobb_douglas:       '<strong>Approach: Interior solution.</strong> Smooth, strictly convex ICs: set \\(\\mathrm{MRS} = P_X/P_Y\\) and combine with the budget constraint.',
+  perfect_substitutes:'<strong>Approach: Corner solution.</strong> Straight-line ICs: compare \\(MU_X/P_X\\) vs \\(MU_Y/P_Y\\) and spend all income on the higher-value good.',
+  perfect_complements:'<strong>Approach: Kink solution.</strong> L-shaped ICs: the optimum is always at the kink. Use the fixed-proportions condition \\(X/a = Y/b\\).'
 };
 
 // ── Economic intuition ─────────────────────────────────────────
@@ -340,7 +341,7 @@ function intuition(prob, sol) {
       title: 'The Fixed Budget-Share Property',
       body: `Think of a student dividing a $${I} weekly budget between dining out&nbsp;(X) and groceries&nbsp;(Y).
              With \\(\\alpha=${fracTex(a)}\\) and \\(\\beta=${fracTex(1-a)}\\), they will <strong>always spend ${pct_x}% on X and ${pct_y}% on Y</strong>
-             — regardless of prices. Verify: \\(P_X X^* = ${Px}\\times${niceNum(xs)} = ${niceNum(Px*xs)}\\),
+             -- regardless of prices. Verify: \\(P_X X^* = ${Px}\\times${niceNum(xs)} = ${niceNum(Px*xs)}\\),
              which is exactly ${pct_x}% of \\(I=${I}\\).
              This <strong>constant budget-share</strong> result (\\(P_X X^* = \\alpha I\\) always) is why Cobb-Douglas preferences
              are the workhorse of macroeconomics: household survey data consistently shows remarkably stable
@@ -352,25 +353,25 @@ function intuition(prob, sol) {
     const winner = a/Px > b/Py ? 'X' : 'Y';
     return {
       title: 'Why the Cheapest Source Captures the Market',
-      body: `Imagine a commuter choosing between two fuel brands — Brand&nbsp;X at $${Px}/unit and Brand&nbsp;Y at $${Py}/unit —
+      body: `Imagine a commuter choosing between two fuel brands: Brand&nbsp;X at $${Px}/unit and Brand&nbsp;Y at $${Py}/unit.
              where both deliver identical performance. Since they're perfect substitutes, the only factor is
              <strong>utility per dollar</strong>: X gives \\(${a}/${Px} = ${bx}\\) utils per dollar; Y gives \\(${b}/${Py} = ${by}\\).
              ${winner} wins, so the consumer spends the <strong>entire budget on ${winner}</strong>.
              This corner-solution logic explains commodity pricing: when two goods are truly interchangeable,
-             even a tiny price difference shifts all demand to the cheaper option — until prices converge.`
+             even a tiny price difference shifts all demand to the cheaper option until prices converge.`
     };
   }
   // perfect_complements
   return {
-    title: 'Fixed Proportions — When More of One is Useless',
+    title: 'Fixed Proportions: When More of One is Useless',
     body: `Consider baking bread, where a recipe requires exactly ${a}&nbsp;cup${a>1?'s':''} of flour&nbsp;(X)
            for every ${b}&nbsp;egg${b>1?'s':''}&nbsp;(Y). Having 10 cups of flour and 2 eggs yields only
-           ${Math.floor(2/b)}&nbsp;batch${Math.floor(2/b)!==1?'es':''} — extra flour without matching eggs is worthless.
+           ${Math.floor(2/b)}&nbsp;batch${Math.floor(2/b)!==1?'es':''}: extra flour without matching eggs is worthless.
            The utility function \\(U=\\min\\!\\left(X/${a},\\,Y/${b}\\right)\\) captures this exactly.
            At the optimum, verify the kink condition: \\(X^*/${a} = ${niceNum(xs)}/${a} = ${niceNum(xs/a)}\\)
            and \\(Y^*/${b} = ${niceNum(ys)}/${b} = ${niceNum(ys/b)}\\) ✓.
            This fixed-proportions structure appears throughout economics: cars and tires, smartphones and chargers,
-           machines and operators — all consumed in set ratios where neither input alone adds value.`
+           machines and operators: all consumed in set ratios where neither input alone adds value.`
   };
 }
 
@@ -406,7 +407,7 @@ function tryGen(t) {
     if (Math.abs(a / Px - b / Py) < 0.08) return null;
     return { t, Px, Py, I, a, b };
 
-  } else { // perfect_complements — ensure integer answers via common factor
+  } else { // perfect_complements: ensure integer answers via common factor
     const a = randInt(1, 3), b = randInt(1, 3);
     const Px = randInt(2, 8), Py = randInt(2, 8);
     const s = randInt(4, 15);
@@ -489,7 +490,7 @@ function checkAnswer() {
   const fb = document.getElementById('feedback');
 
   if (xv === null || yv === null) {
-    fb.innerHTML = `<div class="fb-error">Could not parse your answer — use formats like <code>10</code>, <code>5.5</code>, or <code>25/2</code>.</div>`;
+    fb.innerHTML = `<div class="fb-error">Could not parse your answer. Use formats like <code>10</code>, <code>5.5</code>, or <code>25/2</code>.</div>`;
     return;
   }
 
@@ -505,7 +506,7 @@ function checkAnswer() {
   } else {
     const hints = HINTS[currentProb.t];
     const hi = Math.min(attempts - 1, hints.length - 1);
-    fb.innerHTML = `<div class="fb-wrong">Not quite — try again.</div>
+    fb.innerHTML = `<div class="fb-wrong">Not quite. Try again.</div>
       <div class="fb-hint"><strong>Hint ${attempts > 1 ? '(stronger)' : ''}:</strong> ${hints[hi]}</div>`;
   }
   if (window.MathJax) MathJax.typesetPromise([fb]);
@@ -628,92 +629,64 @@ function drawGraph(prob, sol) {
 
   const b = solBoard;
   const IC_OPT   = '#1a56db';
-  const IC_FAINT = '#c7d9fd';
   const BUDGET   = '#1a1a1a';
   const OPT_PT   = '#e05252';
-  const TANGENT  = '#d4813a';
   const FEASIBLE = '#eff4ff';
 
   // Feasible region
   b.create('polygon', [[0,0],[xi,0],[0,yi]], {
     fillColor: FEASIBLE, fillOpacity: 0.45,
-    strokeWidth: 0, vertices: { visible: false }
+    strokeWidth: 0, vertices: { visible: false, fixed: true },
+    fixed: true
   });
 
-  // Budget line
-  b.create('segment', [[0, yi], [xi, 0]], { strokeColor: BUDGET, strokeWidth: 2.5 });
+  // Budget line - solid black, not draggable
+  b.create('segment', [[0, yi], [xi, 0]], {
+    strokeColor: BUDGET, strokeWidth: 2.5, fixed: true
+  });
 
   // Intercept labels
-  b.create('text', [xi, -ymax * 0.055, niceNum(xi)], { fontSize: 10, color: BUDGET, anchorX: 'middle' });
-  b.create('text', [-xmax * 0.07, yi, niceNum(yi)],  { fontSize: 10, color: BUDGET, anchorX: 'right', anchorY: 'middle' });
+  b.create('text', [xi, -ymax * 0.055, niceNum(xi)], { fontSize: 10, color: BUDGET, anchorX: 'middle', fixed: true });
+  b.create('text', [-xmax * 0.07, yi, niceNum(yi)],  { fontSize: 10, color: BUDGET, anchorX: 'right', anchorY: 'middle', fixed: true });
 
-  // Axis endpoint labels
-  b.create('text', [xmax * 0.97, -ymax * 0.055, 'X'], { fontSize: 13, color: '#1a1a1a' });
-  b.create('text', [-xmax * 0.055, ymax * 0.97, 'Y'], { fontSize: 13, color: '#1a1a1a' });
+  // Optimal indifference curve only (no faint extras, no dotted lines)
+  if (t === 'cobb_douglas') {
+    const a = prob.a, bv = prob.b;
+    const ustar = (xs > 0 && ys > 0) ? Math.pow(xs, a) * Math.pow(ys, bv) : 1;
+    b.create('functiongraph', [
+      x => x > 0.01 ? Math.pow(ustar / Math.pow(x, a), 1 / bv) : NaN,
+      0.01, xmax
+    ], { strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true });
 
-  // Three indifference curves
-  const MULTS = [0.55, 0.78, 1.0];
-  MULTS.forEach((m, idx) => {
-    const lw   = idx === 2 ? 2.2 : 1.4;
-    const col  = idx === 2 ? IC_OPT : IC_FAINT;
-    const dash = idx === 2 ? 0 : 2;
-
-    if (t === 'cobb_douglas') {
-      const a = prob.a, bv = prob.b;
-      const ustar = (xs > 0 && ys > 0) ? Math.pow(xs, a) * Math.pow(ys, bv) : 1;
-      const u = ustar * m;
-      b.create('functiongraph', [
-        x => x > 0.01 ? Math.pow(u / Math.pow(x, a), 1 / bv) : NaN,
-        0.01, xmax
-      ], { strokeColor: col, strokeWidth: lw, dash });
-
-    } else if (t === 'perfect_substitutes') {
-      const a = prob.a, bv = prob.b;
-      const ustar = a * xs + bv * ys;
-      const u = ustar * m;
-      b.create('functiongraph', [
-        x => (u - a * x) / bv,
-        0, u / a + xmax * 0.05
-      ], { strokeColor: col, strokeWidth: lw, dash });
-
-    } else { // perfect_complements
-      const a = prob.a, bv = prob.b;
-      const ustar = Math.min(xs / a, ys / bv);
-      const u = ustar * m;
-      const xk = a * u, yk = bv * u;
-      if (xk <= xmax * 1.05 && yk <= ymax * 1.05) {
-        b.create('segment', [[xk, yk], [xk, ymax * 1.1]],    { strokeColor: col, strokeWidth: lw, dash });
-        b.create('segment', [[xk, yk], [xmax * 1.1, yk]],    { strokeColor: col, strokeWidth: lw, dash });
-      }
-    }
-  });
-
-  // Cobb-Douglas tangent line at optimum
-  if (t === 'cobb_douglas' && xs > 0 && ys > 0) {
-    const slope = -Px / Py;
-    const dx = xmax * 0.13;
-    b.create('segment', [
-      [Math.max(0.01, xs - dx), ys + slope * (-dx)],
-      [Math.min(xmax, xs + dx), ys + slope * dx]
-    ], { strokeColor: TANGENT, strokeWidth: 1.8, dash: 2 });
-  }
-
-  // Fixed-proportions ray for perfect complements
-  if (t === 'perfect_complements' && prob.a > 0 && prob.b > 0) {
-    b.create('segment', [[0, 0], [xmax, xmax * prob.b / prob.a]], {
-      strokeColor: '#9aa3b2', strokeWidth: 1.2, dash: 2
+  } else if (t === 'perfect_substitutes') {
+    const a = prob.a, bv = prob.b;
+    const ustar = a * xs + bv * ys;
+    // Clamp to x>=0, y>=0
+    const xStart = 0;
+    const xEnd   = Math.min(ustar / a, xmax);
+    const yAtX0  = ustar / bv;
+    const xAtY0  = ustar / a;
+    const p1x = Math.max(0, Math.min(xEnd, xmax));
+    const p1y = Math.max(0, (ustar - a * p1x) / bv);
+    const p2x = 0;
+    const p2y = Math.min(ustar / bv, ymax);
+    b.create('segment', [[p2x, p2y], [Math.min(xAtY0, xmax), 0]], {
+      strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true
     });
+
+  } else { // perfect_complements: only the optimal L, no others
+    const a = prob.a, bv = prob.b;
+    const ustar = Math.min(xs / a, ys / bv);
+    const xk = a * ustar, yk = bv * ustar;
+    // Vertical arm bounded at y >= yk, x = xk
+    b.create('segment', [[xk, yk], [xk, ymax * 1.05]], { strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true });
+    // Horizontal arm bounded at x >= xk, y = yk
+    b.create('segment', [[xk, yk], [xmax * 1.05, yk]], { strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true });
   }
 
-  // Drop lines to axes
-  if (xs > 0 && ys > 0) {
-    b.create('segment', [[0, ys], [xs, ys]], { strokeColor: '#ddd', strokeWidth: 1, dash: 2 });
-    b.create('segment', [[xs, 0], [xs, ys]], { strokeColor: '#ddd', strokeWidth: 1, dash: 2 });
-  }
-
-  // Optimal point
+  // Optimal point - fixed (not draggable)
   b.create('point', [xs, ys], {
-    size: 5, strokeColor: OPT_PT, fillColor: OPT_PT,
+    size: 5, strokeColor: OPT_PT, fillColor: OPT_PT, fixed: true,
     name: `(${niceNum(xs)}, ${niceNum(ys)})`,
     label: { fontSize: 11, color: OPT_PT, offset: [8, 8] }
   });
