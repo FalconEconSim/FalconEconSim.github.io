@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EC224 — Intermediate Microeconomics</title>
+  <title>EC224: Intermediate Microeconomics</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,7 +20,7 @@
     <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
   </a>
   <div class="top-bar-divider"></div>
-  <span class="top-bar-course">EC224 — Intermediate Microeconomics</span>
+  <span class="top-bar-course">EC224: Intermediate Microeconomics</span>
   <button class="left-nav-toggle" onclick="openLN()" style="margin-left:auto">&#9776;&nbsp; Weeks</button>
 </div>
 
@@ -55,7 +55,7 @@
       <span>12 Weeks</span>
     </div>
     <p class="course-description">
-      A rigorous treatment of consumer theory, producer theory, market structure, and welfare economics — with emphasis on analytical reasoning, graphical intuition, and real-world application.
+      A rigorous treatment of consumer theory, producer theory, market structure, and welfare economics, with emphasis on analytical reasoning, graphical intuition, and real-world application.
     </p>
     <div class="how-to-use">
       <strong>How to use this site.</strong> Each week's page contains a structured summary of the chapter, key equations, practice questions at three difficulty levels, and curated video resources. Download the Lecture Notes PDF on each page for the full treatment. Use the Homework button to access graded problem sets.
@@ -74,7 +74,7 @@
   <div class="week-grid">
 
     <!-- ── Unit 1: Consumer Theory ── -->
-    <div class="grid-section-label">Unit 1 — Consumer Theory</div>
+    <div class="grid-section-label">Unit 1: Consumer Theory</div>
 
     <a class="week-card" href="week1.html" aria-label="Week 1: Foundations">
       <div class="wc-top">
@@ -131,7 +131,7 @@
     </div>
 
     <!-- ── Unit 2: Producer Theory ── -->
-    <div class="grid-section-label">Unit 2 — Producer Theory</div>
+    <div class="grid-section-label">Unit 2: Producer Theory</div>
 
     <div class="week-card upcoming" aria-label="Week 5: coming soon">
       <div class="wc-top">
@@ -173,7 +173,7 @@
     </div>
 
     <!-- ── Unit 3: Market Structure ── -->
-    <div class="grid-section-label">Unit 3 — Market Structure</div>
+    <div class="grid-section-label">Unit 3: Market Structure</div>
 
     <div class="week-card upcoming" aria-label="Week 8: coming soon">
       <div class="wc-top">
@@ -213,7 +213,7 @@
     </div>
 
     <!-- ── Unit 4: Welfare & Extensions ── -->
-    <div class="grid-section-label">Unit 4 — Welfare &amp; Extensions</div>
+    <div class="grid-section-label">Unit 4: Welfare &amp; Extensions</div>
 
     <div class="week-card upcoming" aria-label="Week 11: coming soon">
       <div class="wc-top">
@@ -256,6 +256,27 @@
 <script>
   function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
   function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+  // Top-bar shadow on scroll
+  window.addEventListener('scroll', () => {
+    document.querySelector('.top-bar').classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  // Fade-up on scroll for week cards
+  document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.week-card:not(.upcoming)');
+    cards.forEach(el => el.classList.add('fade-up'));
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    cards.forEach(el => io.observe(el));
+
+    // Animate progress bar
+    setTimeout(() => {
+      const fill = document.querySelector('.progress-fill');
+      if (fill) { const w = fill.style.width || '16.7%'; fill.style.width = '0'; setTimeout(() => fill.style.width = w, 50); }
+    }, 200);
+  });
 </script>
 </body>
 </html>
