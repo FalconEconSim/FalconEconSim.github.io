@@ -2083,14 +2083,14 @@ function buildCobbBoard() {
    BOOT
    ============================================================================= */
 document.addEventListener('DOMContentLoaded', function() {
-  initICExplorer();
-  initBudgetBoard();
-  initShiftBoard();
-  initOptimumBoard();
-  initBFBBoard();
-  initMRSSlider();
-  initICCross();
-  initCornerExplorer();
+  try { initICExplorer();     } catch(e) { console.error('initICExplorer', e); }
+  try { initBudgetBoard();    } catch(e) { console.error('initBudgetBoard', e); }
+  try { initShiftBoard();     } catch(e) { console.error('initShiftBoard', e); }
+  try { initOptimumBoard();   } catch(e) { console.error('initOptimumBoard', e); }
+  try { initBFBBoard();       } catch(e) { console.error('initBFBBoard', e); }
+  try { initMRSSlider();      } catch(e) { console.error('initMRSSlider', e); }
+  try { initICCross();        } catch(e) { console.error('initICCross', e); }
+  try { initCornerExplorer(); } catch(e) { console.error('initCornerExplorer', e); }
 });
 </script>
 
@@ -2150,9 +2150,6 @@ function buildMRSSlider() {
     var mrs = (a * gy) / (b * gx);
     var slope = -mrs;
     var y = gy + slope * (x - gx);
-    /* Color based on MRS magnitude */
-    var color = mrs > 3 ? '#c0392b' : mrs > 1 ? '#d4813a' : '#2e8b57';
-    tangent.setAttribute({ strokeColor: color });
     return y >= -1 ? y : NaN;
   }, 0.01, 16], { strokeColor: '#d4813a', strokeWidth: 2, dash: 2, highlight: false });
   mrsObjects.push(tangent);
@@ -2213,6 +2210,7 @@ function buildMRSSlider() {
   };
   mrsBoard.on('update', updateFn);
   mrsCleanup = function(){ mrsBoard.off('update', updateFn); };
+  mrsBoard.update();
 }
 
 
