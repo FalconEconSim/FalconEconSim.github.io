@@ -864,10 +864,20 @@ function initICExplorer() {
     btn.classList.add('active');
     var type=btn.dataset.type;
     document.getElementById('alpha-ctrl').style.display = type==='cobb'?'':'none';
-    /* u0-ctrl always visible: cutting plane applies to all preference types */
-    drawIC2D(type, slVal('ic-alpha'));
-    setICInfo(type);
-    icBoard3D.update();
+    /* Animated crossfade between preference types */
+    var canvas2d = document.getElementById('jxg-ic-2d');
+    var canvas3d = document.getElementById('jxg-ic-3d');
+    canvas2d.style.transition = 'opacity 0.28s ease';
+    canvas3d.style.transition = 'opacity 0.28s ease';
+    canvas2d.style.opacity = '0';
+    canvas3d.style.opacity = '0';
+    setTimeout(function() {
+      drawIC2D(type, slVal('ic-alpha'));
+      setICInfo(type);
+      icBoard3D.update();
+      canvas2d.style.opacity = '1';
+      canvas3d.style.opacity = '1';
+    }, 180);
   });
 }
 
@@ -1696,30 +1706,41 @@ function buildOptimumBoard() {
     if(elXs) elXs.textContent=xs.toFixed(3);
     if(elYs) elYs.textContent=ys.toFixed(3);
     if(elU)  elU.textContent=uStar.toFixed(4);
-    /* Live derivation panel */
+    /* Live derivation panel - stores steps for Show Steps reveal */
     var dp=document.getElementById('opt-deriv-panel');
     if(dp){
-      var dStr='';
+      var steps=[];
       if(type==='cobb'){
-        var sX2=(a*100).toFixed(0), sY2=((1-a)*100).toFixed(0);
-        dStr='<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 1 - Tangency: MRS = Pₓ/Pᵧ</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">&alpha;Y/((1-&alpha;)X) = '+Px.toFixed(1)+'/'+Py.toFixed(1)+'</div></div>'
-          +'<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 2 - Budget: PₓX + PᵧY = I</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">'+Px.toFixed(1)+'X + '+Py.toFixed(1)+'Y = '+I.toFixed(0)+'</div></div>'
-          +'<div><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 3 - Solve → fixed spending shares</span><div style="background:#fff0f0;border-left:3px solid #c0392b;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;color:#c0392b;font-weight:600;">X* = &alpha;I/Pₓ = '+xs.toFixed(3)+'<br>Y* = (1-&alpha;)I/Pᵧ = '+ys.toFixed(3)+'<br><span style="color:#555;font-weight:400">U* = X*<sup>&alpha;</sup>·Y*<sup>1-&alpha;</sup> = </span>'+uStar.toFixed(4)+'</div></div>';
+        steps=[
+          {label:'Step 1 - Tangency: MRS = Px/Py', body:'&alpha;Y / ((1-&alpha;)X) = Px/Py<br>This is the tangency condition: the slope of the IC equals the slope of the budget line.'},
+          {label:'Step 2 - Substitute Y from budget', body:'From budget: Y = (I - Px&middot;X) / Py<br>Substitute into tangency: &alpha; &middot; (I - Px&middot;X) / ((1-&alpha;)&middot;Py&middot;X) = Px/Py'},
+          {label:'Step 3 - Solve for X*', body:'Simplify: &alpha;&middot;I = Px&middot;X&middot;(&alpha; + (1-&alpha;)) = Px&middot;X<br><strong style="color:#c0392b">X* = &alpha;&middot;I / Px = '+xs.toFixed(3)+'</strong>'},
+          {label:'Step 4 - Solve for Y*', body:'Y* = (1-&alpha;)&middot;I / Py = '+ys.toFixed(3)+'<br>Budget check: Px&middot;'+xs.toFixed(2)+' + Py&middot;'+ys.toFixed(2)+' = I ✓', final:true}
+        ];
       } else if(type==='complements'){
-        dStr='<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 1 - Kink condition</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">X* = Y* (on 45° ray)</div></div>'
-          +'<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 2 - Substitute into budget</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">('+Px.toFixed(1)+'+'+Py.toFixed(1)+')X* = '+I.toFixed(0)+'</div></div>'
-          +'<div><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 3 - Solve</span><div style="background:#fff0f0;border-left:3px solid #c0392b;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;color:#c0392b;font-weight:600;">X* = Y* = I/(Pₓ+Pᵧ) = '+xs.toFixed(3)+'</div></div>';
+        steps=[
+          {label:'Step 1 - Kink condition', body:'At the kink of the L-shape, both arms are exhausted: X* = Y* (the 45° ray for min(X,Y))'},
+          {label:'Step 2 - Substitute into budget', body:'Pₓ&middot;X* + Pᵧ&middot;X* = I<br>('+Px.toFixed(1)+' + '+Py.toFixed(1)+')&middot;X* = '+I.toFixed(0)},
+          {label:'Step 3 - Solve', body:'<strong style="color:#c0392b">X* = Y* = I/(Px+Py) = '+xs.toFixed(3)+'</strong><br>Budget check: '+Px.toFixed(1)+'('+xs.toFixed(2)+') + '+Py.toFixed(1)+'('+ys.toFixed(2)+') = I ✓', final:true}
+        ];
       } else if(type==='substitutes'){
-        var betterGood=Px/1<Py/1?'X (lower price)':'Y (lower price)';
-        dStr='<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 1 - Compare MU/P</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">MUₓ/Pₓ = 1/'+Px.toFixed(1)+'<br>MUᵧ/Pᵧ = 1/'+Py.toFixed(1)+'</div></div>'
-          +'<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 2 - Corner solution</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">Buy only '+betterGood+'</div></div>'
-          +'<div><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 3 - Solve</span><div style="background:#fff0f0;border-left:3px solid #c0392b;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;color:#c0392b;font-weight:600;">X* = '+xs.toFixed(3)+'<br>Y* = '+ys.toFixed(3)+'</div></div>';
+        var bx=(1/Px).toFixed(3), by=(1/Py).toFixed(3);
+        var winner=Px<Py?'X (lower price)':'Y (lower price)';
+        steps=[
+          {label:'Step 1 - Compare bang-for-buck', body:'MUx/Px = 1/'+Px.toFixed(1)+' = '+bx+'<br>MUy/Py = 1/'+Py.toFixed(1)+' = '+by+'<br>'+winner+' gives more utility per dollar.'},
+          {label:'Step 2 - Corner solution rule', body:'Perfect substitutes: spend <em>all</em> income on the higher-value good. The optimal IC just touches one axis.'},
+          {label:'Step 3 - Solve', body:'<strong style="color:#c0392b">X* = '+xs.toFixed(3)+'<br>Y* = '+ys.toFixed(3)+'</strong>', final:true}
+        ];
       } else if(type==='ql'){
-        dStr='<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 1 - Tangency: 1/X = Pₓ/Pᵧ</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">X* = Pᵧ/Pₓ = '+xs.toFixed(3)+'</div></div>'
-          +'<div style="margin-bottom:0.6rem;"><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 2 - Remaining income on Y</span><div style="background:#f0f4fb;border-left:3px solid #3d5a80;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;">Y* = (I - PₓX*)/Pᵧ = '+ys.toFixed(3)+'</div></div>'
-          +'<div><span style="font-family:monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;">Step 3 - U* = ln(X*) + Y*</span><div style="background:#fff0f0;border-left:3px solid #c0392b;padding:5px 10px;margin-top:4px;font-family:monospace;font-size:0.88rem;color:#c0392b;font-weight:600;">U* = '+uStar.toFixed(4)+'</div></div>';
+        steps=[
+          {label:'Step 1 - Tangency: MUx/Px = MUy/Py', body:'MUx = 1/X, MUy = 1<br>Tangency: 1/(Px&middot;X) = 1/Py<br><strong style="color:#c0392b">X* = Py/Px = '+xs.toFixed(3)+'</strong>'},
+          {label:'Step 2 - Remaining income on Y', body:'Budget: Px&middot;X* + Py&middot;Y* = I<br>Y* = (I - Px&middot;X*) / Py = '+ys.toFixed(3)},
+          {label:'Step 3 - U* = ln(X*) + Y*', body:'<strong style="color:#c0392b">U* = ln('+xs.toFixed(3)+') + '+ys.toFixed(3)+' = '+uStar.toFixed(4)+'</strong>', final:true}
+        ];
       }
-      dp.innerHTML=dStr;
+      window._optSteps = steps;
+      window._optStepsVisible = typeof window._optStepsVisible !== 'undefined' ? window._optStepsVisible : false;
+      renderOptDerivPanel();
     }
   }
 
@@ -1731,6 +1752,41 @@ function buildOptimumBoard() {
   }));
 
   optBoard.update();
+}
+
+/* Step-by-step derivation panel for Fig 2.5 */
+function renderOptDerivPanel() {
+  var dp = document.getElementById('opt-deriv-panel');
+  var btn = document.getElementById('opt-steps-toggle');
+  if (!dp) return;
+  var steps = window._optSteps || [];
+  var showAll = window._optStepsVisible;
+
+  /* Always show the final answer row */
+  var finalStep = steps[steps.length - 1] || {};
+  var finalHTML = '<div style="background:#fff0f0;border-left:3px solid #c0392b;padding:6px 10px;border-radius:0 4px 4px 0;font-family:monospace;font-size:0.88rem;">'
+    + (finalStep.body || '') + '</div>';
+
+  if (!showAll || steps.length === 0) {
+    dp.innerHTML = '<div style="font-family:var(--mono);font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#888;margin-bottom:4px;">'+(finalStep.label||'Result')+'</div>' + finalHTML;
+    if (btn) { btn.textContent = 'Show Steps'; btn.style.background = 'var(--accent-lt)'; btn.style.color = 'var(--accent)'; }
+  } else {
+    var html = '';
+    steps.forEach(function(s, i) {
+      var isFinal = s.final;
+      html += '<div style="margin-bottom:0.55rem;animation:opt-step-in 0.25s ease both;animation-delay:'+(i*0.08)+'s">'
+        + '<div style="font-family:var(--mono);font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+(isFinal?'#c0392b':'#888')+';">' + s.label + '</div>'
+        + '<div style="background:'+(isFinal?'#fff0f0':'#f0f4fb')+';border-left:3px solid '+(isFinal?'#c0392b':'#3d5a80')+';padding:5px 10px;margin-top:3px;border-radius:0 4px 4px 0;font-family:monospace;font-size:0.85rem;">' + s.body + '</div>'
+        + '</div>';
+    });
+    dp.innerHTML = html;
+    if (btn) { btn.textContent = 'Hide Steps'; btn.style.background = '#fff0f0'; btn.style.color = '#c0392b'; }
+  }
+}
+
+function toggleOptSteps() {
+  window._optStepsVisible = !window._optStepsVisible;
+  renderOptDerivPanel();
 }
 
 /* =============================================================================
@@ -2034,7 +2090,357 @@ document.addEventListener('DOMContentLoaded', function() {
   initOptimumBoard();
   initBFBBoard();
   initCobbBoard();
+  initMRSSlider();
+  initICCross();
+  initCornerExplorer();
 });
+</script>
+
+<script>
+/* =============================================================================
+   7. MRS INTUITION SLIDER
+   Single Cobb-Douglas IC with draggable point P, tangent, DeltaX/DeltaY triangle
+   ============================================================================= */
+var mrsBoard = null;
+var mrsObjects = [];
+
+function initMRSSlider() {
+  mrsBoard = mkBoard('jxg-mrs', [-0.8, 18, 18, -0.8]);
+  buildMRSSlider();
+  ['mrs-alpha','mrs-u0'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', function(){
+      document.getElementById(id+'-val').textContent = parseFloat(this.value).toFixed(id==='mrs-alpha'?2:1);
+      buildMRSSlider();
+    });
+  });
+}
+
+function buildMRSSlider() {
+  if (!mrsBoard) return;
+  mrsObjects.forEach(function(o){try{mrsBoard.removeObject(o,false);}catch(e){}});
+  mrsObjects = [];
+
+  var a = parseFloat(document.getElementById('mrs-alpha').value);
+  var u0 = parseFloat(document.getElementById('mrs-u0').value);
+  var b = 1 - a;
+
+  /* IC curve */
+  var ic = mrsBoard.create('functiongraph', [function(x) {
+    return x > 0.1 ? Math.pow(u0 / Math.pow(x, a), 1/b) : NaN;
+  }, 0.1, 16], { strokeColor: '#3d5a80', strokeWidth: 2.5, highlight: false });
+  mrsObjects.push(ic);
+
+  /* Draggable glider on IC */
+  var px0 = u0 > 0 ? Math.pow(u0, 1) * 0.5 + 1 : 4;
+  px0 = Math.max(0.5, Math.min(14, px0));
+  var py0 = Math.pow(u0 / Math.pow(px0, a), 1/b);
+
+  var glider = mrsBoard.create('glider', [px0, py0, ic], {
+    name: 'P', size: 7,
+    fillColor: '#d4813a', strokeColor: '#fff', strokeWidth: 2,
+    withLabel: true, label: { fontSize: 11, color: '#d4813a', offset: [6, 8] },
+    showInfobox: false
+  });
+  mrsObjects.push(glider);
+
+  /* Tangent line */
+  var tangent = mrsBoard.create('functiongraph', [function(x) {
+    var gx = glider.X(), gy = glider.Y();
+    if (gx <= 0.05 || gy <= 0.05) return NaN;
+    var mrs = (a * gy) / (b * gx);
+    var slope = -mrs;
+    var y = gy + slope * (x - gx);
+    /* Color based on MRS magnitude */
+    var color = mrs > 3 ? '#c0392b' : mrs > 1 ? '#d4813a' : '#2e8b57';
+    tangent.setAttribute({ strokeColor: color });
+    return y >= -1 ? y : NaN;
+  }, 0.01, 16], { strokeColor: '#d4813a', strokeWidth: 2, dash: 2, highlight: false });
+  mrsObjects.push(tangent);
+
+  /* DeltaX/DeltaY triangle */
+  var triDx = 1.5;
+  var triPts = [
+    mrsBoard.create('point', [function(){return glider.X();}, function(){return glider.Y();}], {visible:false, fixed:false, showInfobox:false}),
+    mrsBoard.create('point', [function(){return glider.X()+triDx;}, function(){return glider.Y();}], {visible:false, fixed:false, showInfobox:false}),
+    mrsBoard.create('point', [function(){
+      var gx=glider.X(), gy=glider.Y();
+      return gx > 0.05 && gy > 0.05 ? Math.pow(u0/Math.pow(gx+triDx,a),1/b) : gy;
+    }, function(){
+      var gx=glider.X(), gy=glider.Y();
+      return gx > 0.05 && gy > 0.05 ? Math.pow(u0/Math.pow(gx+triDx,a),1/b) : gy;
+    }], {visible:false, fixed:false, showInfobox:false})
+  ];
+  triPts.forEach(function(p){mrsObjects.push(p);});
+
+  /* Horizontal leg (DeltaX) */
+  var legH = mrsBoard.create('segment', [triPts[0], triPts[1]], {
+    strokeColor: '#2e8b57', strokeWidth: 2, highlight: false, fixed: true
+  });
+  mrsObjects.push(legH);
+  /* Vertical leg (DeltaY) */
+  var legV = mrsBoard.create('segment', [triPts[1], triPts[2]], {
+    strokeColor: '#c0392b', strokeWidth: 2, highlight: false, fixed: true
+  });
+  mrsObjects.push(legV);
+
+  /* Drop lines */
+  var dh = mrsBoard.create('segment', [[0, function(){return glider.Y();}],[function(){return glider.X();},function(){return glider.Y();}]],
+    {strokeColor:'#ddd',strokeWidth:1,dash:2,highlight:false,fixed:true});
+  var dv = mrsBoard.create('segment', [[function(){return glider.X();},0],[function(){return glider.X();},function(){return glider.Y();}]],
+    {strokeColor:'#ddd',strokeWidth:1,dash:2,highlight:false,fixed:true});
+  mrsObjects.push(dh, dv);
+
+  /* Live panel update on board update */
+  var updateFn = function() {
+    var gx = glider.X(), gy = glider.Y();
+    if (gx <= 0 || gy <= 0) return;
+    var mrs = (a * gy) / (b * gx);
+    var slope = -mrs;
+    var elPt = document.getElementById('mrs-pt-display');
+    var elMRS = document.getElementById('mrs-val-display');
+    var elSlope = document.getElementById('mrs-slope-display');
+    var elBar = document.getElementById('mrs-bar-fill');
+    if (elPt) elPt.textContent = '(' + gx.toFixed(2) + ', ' + gy.toFixed(2) + ')';
+    if (elMRS) elMRS.textContent = mrs.toFixed(3);
+    if (elSlope) elSlope.textContent = slope.toFixed(3);
+    /* Bar: MRS relative to max (at x=0.5) */
+    var mrsMax = (a * Math.pow(u0/Math.pow(0.5,a), 1/b)) / (b * 0.5);
+    var pct = Math.min(100, Math.max(3, (mrs / Math.max(mrsMax,1)) * 100));
+    if (elBar) elBar.style.width = pct + '%';
+    /* Tangent color update */
+    var col = mrs > 3 ? '#c0392b' : mrs > 1 ? '#d4813a' : '#2e8b57';
+    tangent.setAttribute({ strokeColor: col });
+  };
+  mrsBoard.on('update', updateFn);
+  mrsObjects.push({ __cleanup: function(){ mrsBoard.off('update', updateFn); } });
+}
+
+
+/* =============================================================================
+   8. WHY ICs CANNOT CROSS
+   ============================================================================= */
+var crossBoard = null, crossObjects = [];
+
+function initICCross() {
+  crossBoard = mkBoard('jxg-iccross', [-0.8, 16, 16, -0.8]);
+  buildICCross();
+  document.getElementById('iccross-u2').addEventListener('input', function() {
+    buildICCross();
+  });
+}
+
+function buildICCross() {
+  if (!crossBoard) return;
+  crossObjects.forEach(function(o){try{crossBoard.removeObject(o,false);}catch(e){}});
+  crossObjects = [];
+
+  var u1 = 7;  /* Outer IC fixed at U=7 */
+  var u2 = parseFloat(document.getElementById('iccross-u2').value);
+  var a = 0.5, b = 0.5;
+
+  /* Outer IC (blue, fixed) */
+  var ic1 = crossBoard.create('functiongraph', [function(x){
+    return x > 0.1 ? Math.pow(u1/Math.pow(x,a),1/b) : NaN;
+  }, 0.1, 14], { strokeColor: '#3d5a80', strokeWidth: 3, highlight: false });
+  crossObjects.push(ic1);
+  var lbl1 = crossBoard.create('text', [12.5, Math.pow(u1/Math.pow(12.5,a),1/b)+0.4, 'IC₂ (U=7)'],
+    {fontSize:11, color:'#3d5a80', fixed:true, highlight:false});
+  crossObjects.push(lbl1);
+
+  /* Inner IC (amber, moveable) */
+  var ic2 = crossBoard.create('functiongraph', [function(x){
+    return x > 0.1 ? Math.pow(u2/Math.pow(x,a),1/b) : NaN;
+  }, 0.1, 14], { strokeColor: '#d4813a', strokeWidth: 3, highlight: false });
+  crossObjects.push(ic2);
+  var lbl2 = crossBoard.create('text', [12.5, Math.pow(u2/Math.pow(12.5,a),1/b)+0.4, function(){return 'IC₁ (U='+parseFloat(document.getElementById('iccross-u2').value).toFixed(1)+')';}],
+    {fontSize:11, color:'#d4813a', fixed:true, highlight:false});
+  crossObjects.push(lbl2);
+
+  /* Check for crossing: ICs cross when u2 > u1 (ic2 above ic1) at some x */
+  var crossed = u2 >= u1;
+
+  if (crossed) {
+    /* ICs are equal or above: highlight contradiction */
+    var xcross = 5;
+    var ycross = Math.pow(u1/Math.pow(xcross,a),1/b);
+
+    /* Point A at crossing zone */
+    var ptA = crossBoard.create('point', [xcross, ycross], {
+      name:'A', size:6, fillColor:'#c0392b', strokeColor:'#fff', strokeWidth:2,
+      fixed:true, withLabel:true, label:{fontSize:11,color:'#c0392b',offset:[5,5]}
+    });
+    crossObjects.push(ptA);
+
+    /* Point B on outer IC */
+    var bx = 9;
+    var ptB = crossBoard.create('point', [bx, Math.pow(u1/Math.pow(bx,a),1/b)], {
+      name:'B', size:6, fillColor:'#3d5a80', strokeColor:'#fff', strokeWidth:2,
+      fixed:true, withLabel:true, label:{fontSize:11,color:'#3d5a80',offset:[5,5]}
+    });
+    crossObjects.push(ptB);
+
+    /* Point C on inner IC */
+    var cx = 3;
+    var ptC = crossBoard.create('point', [cx, Math.pow(u2/Math.pow(cx,a),1/b)], {
+      name:'C', size:6, fillColor:'#d4813a', strokeColor:'#fff', strokeWidth:2,
+      fixed:true, withLabel:true, label:{fontSize:11,color:'#d4813a',offset:[5,5]}
+    });
+    crossObjects.push(ptC);
+
+    /* Status panel */
+    var statusEl = document.getElementById('iccross-status');
+    if (statusEl) {
+      statusEl.innerHTML = '<strong style="color:#c0392b">Contradiction!</strong><br>'
+        + 'A is on both ICs: A ~ B (same IC₂) and A ~ C (same IC₁).<br>'
+        + 'By transitivity: B ~ C. But B has more of both goods than C.<br>'
+        + 'More of a good always raises utility. This is impossible.';
+      statusEl.className = 'contradiction-flash';
+      statusEl.style.background = '#fff0f0';
+      statusEl.style.borderColor = '#c0392b';
+      statusEl.style.color = '#7f1d1d';
+      setTimeout(function(){ statusEl.className=''; }, 1000);
+    }
+  } else {
+    var statusEl = document.getElementById('iccross-status');
+    if (statusEl) {
+      statusEl.innerHTML = 'The curves are separated. IC₂ (outer) represents higher utility. Slide right to make them cross and trigger the contradiction.';
+      statusEl.style.background = 'var(--off-white)';
+      statusEl.style.borderColor = 'var(--rule)';
+      statusEl.style.color = 'inherit';
+    }
+  }
+
+  crossBoard.update();
+}
+
+
+/* =============================================================================
+   9. CORNER SOLUTION EXPLORER
+   ============================================================================= */
+var cornerBoard = null, cornerObjects = [];
+var prevCornerOpt = null;
+
+function initCornerExplorer() {
+  cornerBoard = mkBoard('jxg-corner', [-1.5, 32, 32, -1.5]);
+  buildCornerExplorer();
+  ['corner-px','corner-a','corner-b'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', function(){
+      document.getElementById(id+'-val').textContent = parseFloat(this.value).toFixed(id==='corner-px'?1:0);
+      buildCornerExplorer();
+    });
+  });
+}
+
+function buildCornerExplorer() {
+  if (!cornerBoard) return;
+  cornerObjects.forEach(function(o){try{cornerBoard.removeObject(o,false);}catch(e){}});
+  cornerObjects = [];
+
+  var I = 80;
+  var Px = parseFloat(document.getElementById('corner-px').value);
+  var Py = 4;
+  var a  = parseFloat(document.getElementById('corner-a').value);
+  var b  = parseFloat(document.getElementById('corner-b').value);
+
+  var xi = I / Px, yi = I / Py;
+  var m = Math.max(xi, yi) * 1.35;
+  cornerBoard.setBoundingBox([-m*0.06, m*1.1, m*1.1, -m*0.06], false);
+
+  /* Budget line */
+  var bl = cornerBoard.create('segment', [[0, yi],[xi, 0]], {
+    strokeColor: '#1a1a1a', strokeWidth: 2.5, fixed: true, highlight: false
+  });
+  cornerObjects.push(bl);
+
+  /* Feasible region */
+  var poly = cornerBoard.create('polygon', [[0,0],[xi,0],[0,yi]], {
+    fillColor:'#eff4ff', fillOpacity:0.4, strokeWidth:0,
+    vertices:{visible:false, fixed:true}, fixed:true
+  });
+  cornerObjects.push(poly);
+
+  /* Several IC lines (perfect substitutes: aX + bY = U) */
+  var uLevels = [a*xi*0.3, a*xi*0.55, a*xi*0.8, a*xi];
+  uLevels.forEach(function(u, i) {
+    if (u <= 0) return;
+    var x0 = 0, y0 = u / b;
+    var x1 = u / a, y1 = 0;
+    x1 = Math.min(x1, m * 1.1);
+    y0 = Math.min(y0, m * 1.1);
+    var seg = cornerBoard.create('segment', [[x0, y0],[x1, y1]], {
+      strokeColor: '#a8c4e8', strokeWidth: i === uLevels.length-1 ? 2 : 1.2,
+      highlight: false, fixed: true, dash: i === uLevels.length-1 ? 0 : 0
+    });
+    cornerObjects.push(seg);
+  });
+
+  /* Determine optimal bundle */
+  var bfbX = a / Px, bfbY = b / Py;
+  var atKnife = Math.abs(bfbX - bfbY) < 0.001;
+  var xStar, yStar, optDescr;
+
+  if (atKnife) {
+    xStar = xi / 2; yStar = yi / 2;
+    optDescr = 'Knife-edge: entire budget line is optimal (MUx/Px = MUy/Py). Any point on the line maximises utility.';
+  } else if (bfbX > bfbY) {
+    xStar = xi; yStar = 0;
+    optDescr = 'X wins (MUx/Px > MUy/Py). Spend all income on X.';
+  } else {
+    xStar = 0; yStar = yi;
+    optDescr = 'Y wins (MUy/Py > MUx/Px). Spend all income on Y.';
+  }
+
+  /* Highlight the optimal IC */
+  var uOpt = a * xStar + b * yStar;
+  if (uOpt > 0) {
+    var x0o = 0, y0o = uOpt/b, x1o = uOpt/a, y1o = 0;
+    x1o = Math.min(x1o, m*1.1); y0o = Math.min(y0o, m*1.1);
+    var optIC = cornerBoard.create('segment', [[x0o, y0o],[x1o, y1o]], {
+      strokeColor: '#3d5a80', strokeWidth: 3, highlight: false, fixed: true
+    });
+    cornerObjects.push(optIC);
+  }
+
+  /* Optimal point with animated position */
+  if (atKnife) {
+    /* Highlight entire budget line in green */
+    var hlBL = cornerBoard.create('segment', [[0, yi],[xi, 0]], {
+      strokeColor: '#2e8b57', strokeWidth: 5, highlight: false, fixed: true, opacity: 0.5
+    });
+    cornerObjects.push(hlBL);
+  } else {
+    var optPt = cornerBoard.create('point', [xStar, yStar], {
+      size: 7, fillColor: '#c0392b', strokeColor: '#fff', strokeWidth: 2.5,
+      fixed: true, highlight: false,
+      name: '('+xStar.toFixed(1)+', '+yStar.toFixed(1)+')',
+      withLabel: true, label: { fontSize: 11, color: '#c0392b', offset: [8, 8] }
+    });
+    cornerObjects.push(optPt);
+  }
+
+  /* Update side panel */
+  var elBfbx = document.getElementById('corner-bfbx');
+  var elBfby = document.getElementById('corner-bfby');
+  var elMRS  = document.getElementById('corner-mrs');
+  var elOpt  = document.getElementById('corner-opt');
+  var elVerd = document.getElementById('corner-verdict');
+  if (elBfbx) elBfbx.textContent = bfbX.toFixed(3);
+  if (elBfby) elBfby.textContent = bfbY.toFixed(3);
+  if (elMRS)  elMRS.textContent  = (a/b).toFixed(3);
+  if (elOpt)  elOpt.textContent  = atKnife ? 'Any point on budget line' : '('+xStar.toFixed(1)+', '+yStar.toFixed(1)+')';
+  if (elVerd) {
+    var isX = bfbX > bfbY, isY = bfbY > bfbX;
+    elVerd.innerHTML = atKnife
+      ? '<strong style="color:#2e8b57">Knife-edge case:</strong> Px/Py = MRS exactly. The consumer is indifferent across the entire budget line.'
+      : (isX
+        ? '<strong style="color:#c0392b">X dominates:</strong> MUx/Px = '+bfbX.toFixed(3)+' &gt; MUy/Py = '+bfbY.toFixed(3)+'.<br>Spend all $'+I+' on X.'
+        : '<strong style="color:#3d5a80">Y dominates:</strong> MUy/Py = '+bfbY.toFixed(3)+' &gt; MUx/Px = '+bfbX.toFixed(3)+'.<br>Spend all $'+I+' on Y.');
+    elVerd.style.background = atKnife ? '#f0fdf4' : (isX ? '#fff0f0' : '#eff4ff');
+    elVerd.style.borderColor = atKnife ? '#16a34a' : (isX ? '#c0392b' : '#3d5a80');
+  }
+
+  cornerBoard.update();
+}
 </script>
 
 
@@ -2355,6 +2761,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* MRS label anti-flicker */
 .jxg-mrs-label { fill: #d4813a !important; }
+
+/* Step-by-step derivation animation */
+@keyframes opt-step-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* IC canvas fade transition */
+#jxg-ic-2d, #jxg-ic-3d { transition: opacity 0.28s ease; }
+
+/* New viz wrappers - contradiction flash */
+@keyframes flash-red {
+  0%   { background: #fff0f0; }
+  30%  { background: #fca5a5; }
+  70%  { background: #fca5a5; }
+  100% { background: #fff0f0; }
+}
+.contradiction-flash { animation: flash-red 0.9s ease; }
 </style>
 </head>
 <body>
@@ -2413,12 +2837,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <aside class="viz-toc">
       <div class="viz-toc-title">This Week</div>
       <nav>
-        <a href="#sec-ic-intro"><span class="nav-num">2.1–2.4</span>Indifference Curves</a>
-        <a href="#sec-budget"><span class="nav-num">2.5</span>Budget Constraint</a>
-        <a href="#sec-shifts"><span class="nav-num">2.6</span>Shifts &amp; Pivots</a>
-        <a href="#sec-optimum"><span class="nav-num">2.7</span>Consumer Optimum</a>
-        <a href="#sec-mupd"><span class="nav-num">2.8</span>MU per Dollar</a>
-        <a href="#sec-cobb"><span class="nav-num">2.9</span>Cobb-Douglas</a>
+        <a href="#sec-ic-intro"><span class="nav-num">§1</span>Indifference Curves</a>
+        <a href="#sec-budget"><span class="nav-num">§2</span>Budget Constraint</a>
+        <a href="#sec-shifts"><span class="nav-num">§3</span>Shifts &amp; Pivots</a>
+        <a href="#sec-optimum"><span class="nav-num">§4</span>Consumer Optimum</a>
+        <a href="#sec-mupd"><span class="nav-num">§5</span>MU per Dollar</a>
+        <a href="#sec-cobb"><span class="nav-num">§6</span>Cobb-Douglas</a>
+        <a href="#sec-mrs-slider"><span class="nav-num">§7</span>MRS Intuition</a>
+        <a href="#sec-ic-cross"><span class="nav-num">§8</span>ICs Cannot Cross</a>
+        <a href="#sec-corner"><span class="nav-num">§9</span>Corner Solutions</a>
       </nav>
     </aside>
 
@@ -2530,22 +2957,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
               </div>
             </div></div>
-        </div>
-
-        <!-- IC FAMILY MAP - separate viz showing the full family of ICs -->
-        <div style="margin-top:1.5rem">
-          <div class="viz-wrapper">
-            <div class="viz-header fig-header-row" onclick="toggleFig(this.closest('.viz-wrapper'))">
-              <span class="fig-num-badge">Fig 2.2</span><span class="viz-title">&#9658; Indifference Curve Map (full family)</span><span class="fig-chevron">▾</span>
-            </div>
-            <div class="viz-note">Five indifference curves for the selected preference type. Curves further from the origin represent higher utility levels. Notice how the shape changes completely across preference types.</div>
-            <div style="display:grid;grid-template-columns:1fr 200px;gap:0;">
-              <div id="jxg-ic-family" style="width:100%;aspect-ratio:1/1;"></div>
-              <div style="padding:1rem 1rem 1rem 0.9rem;border-left:1px solid var(--rule);display:flex;flex-direction:column;justify-content:center;overflow:hidden;">
-                <div id="ic-family-legend" style="line-height:1.4;"></div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="lo-callout" style="margin-top:1.2rem">
@@ -2839,7 +3250,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="jxg-optimum" style="width:100%;aspect-ratio:1/1;"></div>
               </div>
               <div class="viz-panel-right" style="justify-content:flex-start;gap:0.7rem;">
-                <div style="font-family:var(--mono);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);border-bottom:1px solid var(--rule);padding-bottom:0.4rem;margin-bottom:0.2rem;">Live Derivation</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:0.4rem;margin-bottom:0.2rem;">
+                  <span style="font-family:var(--mono);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);">Live Derivation</span>
+                  <button id="opt-steps-toggle" onclick="toggleOptSteps()" style="font-family:var(--mono);font-size:0.62rem;border:1px solid var(--rule);background:var(--accent-lt);color:var(--accent);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all 0.15s;" title="Show the full algebraic derivation step by step">Show Steps</button>
+                </div>
                 <div id="opt-deriv-panel" style="font-size:0.84rem;line-height:1.65;color:var(--ink-light);">
                   <!-- updated by buildOptimumBoard() -->
                 </div>
@@ -2984,87 +3398,182 @@ document.addEventListener('DOMContentLoaded', function() {
           When economists report that "households spend roughly 30% of income on housing regardless of income level," they're observing Cobb-Douglas behaviour. The spending <em>share</em> $\alpha/(\alpha+\beta)$ is constant, independent of prices or income.
         </div>
 
+        <div class="lo-callout" style="margin-top:1.5rem">
+          <span class="lo-label">Economic Intuition - The Income Expansion Path &amp; Engel’s Law</span>
+          For Cobb-Douglas preferences the <strong>income expansion path</strong> is always a straight ray through the origin: as income doubles, both X* and Y* exactly double and the bundle moves proportionally outward. This is what economists call <strong>homotheticity</strong>. The fixed spending-share property ($\alpha/(\alpha+\beta)$ on X, always) is its signature: no matter how rich or poor the consumer, the fraction of income allocated to each good stays constant. When a government macro-model assumes that households spend a fixed share of income on food regardless of income level, they are embedding Cobb-Douglas preferences.
+        </div>
+
+        </section>
+
+      <!-- ══════════════════════════════════════════════════
+           SECTION 7: MRS INTUITION SLIDER
+           ══════════════════════════════════════════════════ -->
+      <section class="section-block" id="sec-mrs-slider">
+        <div class="section-header-row" onclick="toggleSection(this.closest('.section-block'))">
+          <div style="flex:1">
+            <span class="section-number">§ New</span>
+            <h2>MRS Intuition: Watch It Fall Along the Curve</h2>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+        <p class="section-intro">
+          The MRS is the slope of the indifference curve at any point. For a Cobb-Douglas consumer, MRS falls as you move right along the curve (diminishing MRS). Drag the orange point to see the tangent, the local trade-off triangle, and the live MRS value update in real time.
+        </p>
         <div class="viz-wrapper">
           <div class="viz-header fig-header-row" onclick="toggleFig(this.closest('.viz-wrapper'))">
-            <span class="fig-num-badge">Fig 2.7</span><span class="viz-title">▸ Cobb-Douglas Demand, Spending Shares</span><span class="fig-chevron">▾</span>
+            <span class="fig-num-badge">Fig 2.8</span><span class="viz-title">▸ MRS Intuition Slider</span><span class="fig-chevron">▾</span>
           </div>
           <div class="viz-controls">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;width:100%">
-              <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Income share on X = α/(α+β). Higher α means more income always goes to X at any price or income level; this is the Cobb-Douglas fixed spending-share property. Watch X* rise and Y* stay proportionally the same.">i</span> \(\alpha\)<span class="ctrl-val" id="cd-alpha-val">0.50</span></label>
-                <input type="range" id="cd-alpha" min="0.1" max="0.9" step="0.05" value="0.5" title="α: income share on X = α/(α+β). Higher α → more X consumed." />
-              </div>
-              <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Income share on Y = β/(α+β). Higher β means more income always goes to Y. The expansion path (purple dashed) traces optimal bundles as income rises; always a straight ray through the origin.">i</span> \(\beta\)<span class="ctrl-val" id="cd-beta-val">0.50</span></label>
-                <input type="range" id="cd-beta" min="0.1" max="0.9" step="0.05" value="0.5" title="β: income share on Y = β/(α+β). Higher β → more Y consumed." />
-              </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" data-tip="Alpha controls the tilt of the indifference curve. Higher alpha makes ICs steeper, meaning MRS is higher at any given X.">i</span> &alpha; (preference for X) <span class="ctrl-val" id="mrs-alpha-val">0.5</span></label>
+              <input type="range" id="mrs-alpha" min="0.1" max="0.9" step="0.05" value="0.5" />
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;width:100%">
-              <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher Px reduces X* = [α/(α+β)] · I/Px. But the spending share α/(α+β) on X stays constant, the consumer buys less X but dedicates the same income fraction to it. This is what makes Cobb-Douglas so tractable empirically.">i</span> \(P_X\)<span class="ctrl-val" id="cd-Px-val">5</span></label>
-                <input type="range" id="cd-Px" min="1" max="20" step="1" value="5" title="Px: X price. Higher Px reduces X-intercept. Cobb-Douglas spending share on X stays constant!" />
-              </div>
-              <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher Py reduces Y* = [β/(α+β)] · I/Py. Spending share on Y stays at β/(α+β) regardless. This constant-share result is why macro models often use Cobb-Douglas: households’ budget allocations remain stable even as prices change.">i</span> \(P_Y\)<span class="ctrl-val" id="cd-Py-val">4</span></label>
-                <input type="range" id="cd-Py" min="1" max="20" step="1" value="4" title="Py: Y price. Higher Py reduces Y-intercept. Spending share on Y stays constant!" />
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;width:100%">
-              <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Three budget lines show 0.5I, I, and 1.5I. Watch all three optimal points move along the income expansion path, a straight ray through the origin. Doubling income exactly doubles X* and Y*. This property is called homotheticity.">i</span> Income \(I\)<span class="ctrl-val" id="cd-I-val">100</span></label>
-                <input type="range" id="cd-I" min="20" max="300" step="5" value="100" title="I: higher income shifts all three budget lines outward proportionally. X* and Y* scale with I." />
-              </div>
-              <div style="display:flex;align-items:flex-end;padding-bottom:0.15rem;">
-                <div style="font-size:0.78rem;color:var(--faint);line-height:1.4">Three budget lines shown: 0.5<em>I</em>, <em>I</em>, and 1.5<em>I</em></div>
-              </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" data-tip="Sets the utility level of the indifference curve you are exploring.">i</span> Utility level U&nbsp;<span class="ctrl-val" id="mrs-u0-val">5.0</span></label>
+              <input type="range" id="mrs-u0" min="1" max="10" step="0.5" value="5" />
             </div>
           </div>
           <div class="viz-two-col">
             <div class="viz-panel-left">
-              <div id="jxg-cobb" style="width:100%;aspect-ratio:1/1;"></div>
+              <div id="jxg-mrs" style="width:100%;aspect-ratio:1/1;"></div>
             </div>
-            <div class="viz-panel-right">
-              <div id="cd-legend" style="margin-bottom:0.8rem">
-                <div style="font-family:var(--mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:6px;">Legend</div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#6b8cae"></div><span style="font-size:0.79rem">Budget (0.5<em>I</em>)</span></div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:4px;background:#d4813a"></div><span style="font-size:0.79rem">Budget (<em>I</em>) - main</span></div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#2e8b57"></div><span style="font-size:0.79rem">Budget (1.5<em>I</em>)</span></div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:2px;background:#6b52a8;border-top:2px dashed #6b52a8"></div><span style="font-size:0.79rem">Expansion path</span></div>
+            <div class="viz-panel-right" style="gap:0.9rem;">
+              <div class="stat-row">
+                <span class="stat-label">Point P on IC</span>
+                <span class="stat-val accent" id="mrs-pt-display">(x, y)</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">MRS at P = MUx/MUy</span>
+                <span class="stat-val red" id="mrs-val-display">-</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Tangent slope (= -MRS)</span>
+                <span class="stat-val" id="mrs-slope-display">-</span>
               </div>
               <hr class="divider-sm"/>
-              <div class="stat-row">
-                <span class="stat-label">Income share on X, α/(α+β)</span>
-                <span class="stat-val accent" id="cd-share-x">50.0%</span>
+              <div style="font-size:0.82rem;color:var(--ink-light);line-height:1.6;background:#f8f9fb;border-radius:6px;padding:0.7rem 0.85rem;border:1px solid var(--rule);">
+                <div style="font-family:var(--mono);font-size:0.61rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:5px;">What the triangle shows</div>
+                As you drag P right, the tangent flattens. The green triangle shows the local &Delta;X and &Delta;Y at P: how many units of Y the consumer gives up for one more X. MRS = &Delta;Y/&Delta;X at that point. <strong>Diminishing MRS</strong> means this ratio shrinks as X grows.
               </div>
-              <div class="stat-row">
-                <span class="stat-label">Income share on Y, β/(α+β)</span>
-                <span class="stat-val accent" id="cd-share-y">50.0%</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">X* (optimal X)</span>
-                <span class="stat-val green" id="cd-x-star">10.00</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Y* (optimal Y)</span>
-                <span class="stat-val green" id="cd-y-star">12.50</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Spending on X</span>
-                <span class="stat-val" id="cd-spend-x">$50.00</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Spending on Y</span>
-                <span class="stat-val" id="cd-spend-y">$50.00</span>
+              <div id="mrs-steepness-bar" style="margin-top:0.3rem;">
+                <div style="font-family:var(--mono);font-size:0.61rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:4px;">MRS relative to optimum</div>
+                <div style="height:8px;background:#e4e4e4;border-radius:99px;overflow:hidden;">
+                  <div id="mrs-bar-fill" style="height:100%;background:#d4813a;border-radius:99px;transition:width 0.2s ease;width:50%;"></div>
+                </div>
               </div>
             </div>
-          </div></div>
-
-        <div class="lo-callout" style="margin-top:1.5rem">
-          <span class="lo-label">Economic Intuition - The Income Expansion Path &amp; Engel's Law</span>
-          The purple dashed line in Fig 2.7 is the <strong>income expansion path</strong> - it traces all the optimal bundles as income grows from 0.5I to I to 1.5I. For Cobb-Douglas preferences, this path is always a straight ray through the origin: as income doubles, both X* and Y* exactly double and the bundle moves proportionally outward. This is what economists call <strong>homotheticity</strong>. The fixed spending-share property ($\alpha/(\alpha+\beta)$ on X, always) is its signature: no matter how rich or poor the consumer, the fraction of income allocated to each good stays constant. When a government macro-model assumes that households spend a fixed share of income on food regardless of income level, they are embedding Cobb-Douglas preferences. Verify this with the slider: raise Income from 100 to 200 - X* and Y* both double, spending shares stay identical.
+          </div>
         </div>
+        </div>
+      </section>
 
-        </section>
+      <!-- ══════════════════════════════════════════════════
+           SECTION 8: WHY ICs CANNOT CROSS
+           ══════════════════════════════════════════════════ -->
+      <section class="section-block" id="sec-ic-cross">
+        <div class="section-header-row" onclick="toggleSection(this.closest('.section-block'))">
+          <div style="flex:1">
+            <span class="section-number">§ New</span>
+            <h2>Why Indifference Curves Cannot Cross</h2>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+        <p class="section-intro">
+          Indifference curves <em>never</em> intersect. If they did, the transitivity of preferences would be violated. Drag the inner IC upward until the two curves cross, then watch the logical contradiction appear.
+        </p>
+        <div class="viz-wrapper">
+          <div class="viz-header fig-header-row" onclick="toggleFig(this.closest('.viz-wrapper'))">
+            <span class="fig-num-badge">Fig 2.9</span><span class="viz-title">▸ Why ICs Cannot Cross</span><span class="fig-chevron">▾</span>
+          </div>
+          <div class="viz-controls">
+            <div class="ctrl-group" style="flex:1">
+              <label>Drag the inner IC upward to try to make them cross</label>
+              <input type="range" id="iccross-u2" min="2" max="9" step="0.1" value="3" />
+              <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-top:2px;"><span>Inner IC low</span><span>Move up to cross</span></div>
+            </div>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel-left">
+              <div id="jxg-iccross" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+            <div class="viz-panel-right" style="gap:0.75rem;">
+              <div id="iccross-status" style="padding:0.75rem 0.9rem;border-radius:8px;font-size:0.85rem;line-height:1.6;border:1px solid var(--rule);background:var(--off-white);transition:background 0.3s,border-color 0.3s;">
+                Drag the slider right to move the inner IC. When the two curves intersect, a logical contradiction will appear here.
+              </div>
+              <div style="font-size:0.82rem;color:var(--ink-light);line-height:1.6;background:#f8f9fb;border-radius:6px;padding:0.7rem 0.85rem;border:1px solid var(--rule);">
+                <div style="font-family:var(--mono);font-size:0.61rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:5px;">The Contradiction</div>
+                If IC<sub>1</sub> and IC<sub>2</sub> cross at point A: bundle B on IC<sub>2</sub> satisfies A ~ B (same utility as A). Bundle C on IC<sub>1</sub> satisfies A ~ C. By transitivity, B ~ C. But B has <em>strictly more</em> of both goods than C, which is impossible under monotone preferences.
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════
+           SECTION 9: CORNER SOLUTION EXPLORER
+           ══════════════════════════════════════════════════ -->
+      <section class="section-block" id="sec-corner">
+        <div class="section-header-row" onclick="toggleSection(this.closest('.section-block'))">
+          <div style="flex:1">
+            <span class="section-number">§ New</span>
+            <h2>Corner Solution Explorer: Perfect Substitutes</h2>
+          </div>
+          <span class="section-chevron">▾</span>
+        </div>
+        <div class="section-body">
+        <p class="section-intro">
+          With perfect substitutes, the optimal bundle jumps from one axis to the other as the price ratio crosses the MRS threshold. Adjust P<sub>x</sub> and watch the optimal bundle animate from one corner to the other. The knife-edge case where the entire budget line is optimal is highlighted.
+        </p>
+        <div class="viz-wrapper">
+          <div class="viz-header fig-header-row" onclick="toggleFig(this.closest('.viz-wrapper'))">
+            <span class="fig-num-badge">Fig 2.10</span><span class="viz-title">▸ Corner Solution Explorer</span><span class="fig-chevron">▾</span>
+          </div>
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label><span class="tip-icon" data-tip="As Px rises, the budget line pivots inward. When Px/Py crosses the MRS threshold (a/b), the consumer flips from buying all X to buying all Y. The threshold is where they are indifferent.">i</span> Price of X (P<sub>x</sub>) <span class="ctrl-val" id="corner-px-val">4</span></label>
+              <input type="range" id="corner-px" min="1" max="12" step="0.5" value="4" />
+            </div>
+            <div class="ctrl-group">
+              <label>MU<sub>x</sub> = a &nbsp;<span class="ctrl-val" id="corner-a-val">3</span></label>
+              <input type="range" id="corner-a" min="1" max="6" step="1" value="3" />
+            </div>
+            <div class="ctrl-group">
+              <label>MU<sub>y</sub> = b &nbsp;<span class="ctrl-val" id="corner-b-val">3</span></label>
+              <input type="range" id="corner-b" min="1" max="6" step="1" value="3" />
+            </div>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel-left">
+              <div id="jxg-corner" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+            <div class="viz-panel-right" style="gap:0.75rem;">
+              <div class="stat-row">
+                <span class="stat-label">MUx/Px (bang per $ on X)</span>
+                <span class="stat-val green" id="corner-bfbx">-</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">MUy/Py (bang per $ on Y)</span>
+                <span class="stat-val green" id="corner-bfby">-</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">MRS threshold (a/b)</span>
+                <span class="stat-val" id="corner-mrs">-</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Optimal bundle</span>
+                <span class="stat-val red" id="corner-opt">-</span>
+              </div>
+              <div id="corner-verdict" style="padding:0.65rem 0.9rem;border-radius:8px;font-size:0.84rem;line-height:1.55;border:1px solid var(--rule);background:var(--off-white);margin-top:0.2rem;transition:all 0.3s;">
+                Adjust Px to see the bundle switch corners.
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
 
     </main>
   </div>
