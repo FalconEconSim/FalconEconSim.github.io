@@ -2084,12 +2084,10 @@ function buildCobbBoard() {
    ============================================================================= */
 document.addEventListener('DOMContentLoaded', function() {
   initICExplorer();
-  initICFamily();
   initBudgetBoard();
   initShiftBoard();
   initOptimumBoard();
   initBFBBoard();
-  initCobbBoard();
   initMRSSlider();
   initICCross();
   initCornerExplorer();
@@ -2103,6 +2101,7 @@ document.addEventListener('DOMContentLoaded', function() {
    ============================================================================= */
 var mrsBoard = null;
 var mrsObjects = [];
+var mrsCleanup = null;
 
 function initMRSSlider() {
   mrsBoard = mkBoard('jxg-mrs', [-0.8, 18, 18, -0.8]);
@@ -2117,6 +2116,7 @@ function initMRSSlider() {
 
 function buildMRSSlider() {
   if (!mrsBoard) return;
+  if (mrsCleanup) { mrsCleanup(); mrsCleanup = null; }
   mrsObjects.forEach(function(o){try{mrsBoard.removeObject(o,false);}catch(e){}});
   mrsObjects = [];
 
@@ -2212,7 +2212,7 @@ function buildMRSSlider() {
     tangent.setAttribute({ strokeColor: col });
   };
   mrsBoard.on('update', updateFn);
-  mrsObjects.push({ __cleanup: function(){ mrsBoard.off('update', updateFn); } });
+  mrsCleanup = function(){ mrsBoard.off('update', updateFn); };
 }
 
 
@@ -2858,7 +2858,7 @@ function buildCornerExplorer() {
       <section class="section-block" id="sec-ic-intro">
         <div class="section-header-row" onclick="toggleSection(this.closest('.section-block'))">
           <div style="flex:1">
-            <span class="section-number">§ 2.1 – 2.4</span>
+            <span class="section-number">§ 2.1-2.4</span>
             <h2>Indifference Curves</h2>
           </div>
           <span class="section-chevron">▾</span>
@@ -2961,7 +2961,7 @@ function buildCornerExplorer() {
 
         <div class="lo-callout" style="margin-top:1.2rem">
           <span class="lo-label">Economic Intuition - Why IC Shape Drives Market Strategy</span>
-          The shape of indifference curves has direct business implications. When two goods are <strong>perfect substitutes</strong> (straight-line ICs), consumers buy only the cheapest option - this is exactly the threat private-label brands pose to name brands. Procter &amp; Gamble invests in advertising to shift consumers <em>away</em> from linear ICs toward convex ones, creating a preference for the brand itself. <strong>Perfect complements</strong> (L-shaped ICs) underlie the razor-and-blade business model: Gillette prices handles near cost and charges a premium on blades because both must be used in fixed proportions. Apple's iPhone–App Store ecosystem follows the same logic. <strong>Economic bads</strong> (upward-sloping ICs) are central to environmental policy: a longer commute is a bad, so workers require higher wages as compensation - the wage premium reflects the upward slope of their IC over (income, commute time).
+          The shape of indifference curves has direct business implications. When two goods are <strong>perfect substitutes</strong> (straight-line ICs), consumers buy only the cheapest option - this is exactly the threat private-label brands pose to name brands. Procter &amp; Gamble invests in advertising to shift consumers <em>away</em> from linear ICs toward convex ones, creating a preference for the brand itself. <strong>Perfect complements</strong> (L-shaped ICs) underlie the razor-and-blade business model: Gillette prices handles near cost and charges a premium on blades because both must be used in fixed proportions. Apple's iPhone/App Store ecosystem follows the same logic. <strong>Economic bads</strong> (upward-sloping ICs) are central to environmental policy: a longer commute is a bad, so workers require higher wages as compensation - the wage premium reflects the upward slope of their IC over (income, commute time).
         </div>
 
         <div class="callout common-mistake" style="margin-top:1.5rem">
