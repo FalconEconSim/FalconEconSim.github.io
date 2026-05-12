@@ -2159,26 +2159,43 @@ function buildMRSSlider() {
   var triPts = [
     mrsBoard.create('point', [function(){return glider.X();}, function(){return glider.Y();}], {visible:false, fixed:false, showInfobox:false}),
     mrsBoard.create('point', [function(){return glider.X()+triDx;}, function(){return glider.Y();}], {visible:false, fixed:false, showInfobox:false}),
-    mrsBoard.create('point', [function(){
-      var gx=glider.X(), gy=glider.Y();
-      return gx > 0.05 && gy > 0.05 ? Math.pow(u0/Math.pow(gx+triDx,a),1/b) : gy;
-    }, function(){
-      var gx=glider.X(), gy=glider.Y();
-      return gx > 0.05 && gy > 0.05 ? Math.pow(u0/Math.pow(gx+triDx,a),1/b) : gy;
-    }], {visible:false, fixed:false, showInfobox:false})
+    mrsBoard.create('point', [
+      function(){var gx=glider.X(), gy=glider.Y(); return gx > 0.05 && gy > 0.05 ? gx+triDx : gx;},
+      function(){var gx=glider.X(), gy=glider.Y(); return gx > 0.05 && gy > 0.05 ? Math.pow(u0/Math.pow(gx+triDx,a),1/b) : gy;}
+    ], {visible:false, fixed:false, showInfobox:false})
   ];
   triPts.forEach(function(p){mrsObjects.push(p);});
 
-  /* Horizontal leg (DeltaX) */
+  /* Horizontal leg (DeltaX = triDx) */
   var legH = mrsBoard.create('segment', [triPts[0], triPts[1]], {
-    strokeColor: '#2e8b57', strokeWidth: 2, highlight: false, fixed: true
+    strokeColor: '#2e8b57', strokeWidth: 2.5, highlight: false, fixed: true
   });
   mrsObjects.push(legH);
-  /* Vertical leg (DeltaY) */
+  /* Vertical leg (DeltaY = drop along IC) */
   var legV = mrsBoard.create('segment', [triPts[1], triPts[2]], {
-    strokeColor: '#c0392b', strokeWidth: 2, highlight: false, fixed: true
+    strokeColor: '#c0392b', strokeWidth: 2.5, highlight: false, fixed: true
   });
   mrsObjects.push(legV);
+
+  /* ΔX label on horizontal leg */
+  var lblDx = mrsBoard.create('text', [
+    function(){return glider.X() + triDx/2;},
+    function(){return glider.Y() - 0.7;},
+    'ΔX'
+  ], {fontSize:10, color:'#2e8b57', fixed:false, highlight:false, anchorX:'middle'});
+  mrsObjects.push(lblDx);
+
+  /* ΔY label on vertical leg */
+  var lblDy = mrsBoard.create('text', [
+    function(){return glider.X() + triDx + 0.35;},
+    function(){
+      var gx=glider.X(), gy=glider.Y();
+      var y2 = gx>0.05 && gy>0.05 ? Math.pow(u0/Math.pow(gx+triDx,a),1/b) : gy;
+      return (gy + y2) / 2;
+    },
+    'ΔY'
+  ], {fontSize:10, color:'#c0392b', fixed:false, highlight:false, anchorX:'left'});
+  mrsObjects.push(lblDy);
 
   /* Drop lines */
   var dh = mrsBoard.create('segment', [[0, function(){return glider.Y();}],[function(){return glider.X();},function(){return glider.Y();}]],
@@ -2200,10 +2217,12 @@ function buildMRSSlider() {
     if (elPt) elPt.textContent = '(' + gx.toFixed(2) + ', ' + gy.toFixed(2) + ')';
     if (elMRS) elMRS.textContent = mrs.toFixed(3);
     if (elSlope) elSlope.textContent = slope.toFixed(3);
-    /* Bar: MRS relative to max (at x=0.5) */
-    var mrsMax = (a * Math.pow(u0/Math.pow(0.5,a), 1/b)) / (b * 0.5);
-    var pct = Math.min(100, Math.max(3, (mrs / Math.max(mrsMax,1)) * 100));
-    if (elBar) elBar.style.width = pct + '%';
+    /* Bar: log scale from MRS~0.15 (flat) to MRS~15 (steep) */
+    var logMRS = Math.log(Math.max(0.05, mrs));
+    var logLow = Math.log(0.15), logHigh = Math.log(15);
+    var pct = Math.min(97, Math.max(3, ((logMRS - logLow) / (logHigh - logLow)) * 100));
+    var barColor = mrs > 3 ? '#c0392b' : mrs > 1 ? '#d4813a' : '#2e8b57';
+    if (elBar) { elBar.style.width = pct + '%'; elBar.style.background = barColor; }
     /* Tangent color update */
     var col = mrs > 3 ? '#c0392b' : mrs > 1 ? '#d4813a' : '#2e8b57';
     tangent.setAttribute({ strokeColor: col });
@@ -3455,7 +3474,7 @@ function buildCornerExplorer() {
                 As you drag P right, the tangent flattens. The green triangle shows the local &Delta;X and &Delta;Y at P: how many units of Y the consumer gives up for one more X. MRS = &Delta;Y/&Delta;X at that point. <strong>Diminishing MRS</strong> means this ratio shrinks as X grows.
               </div>
               <div id="mrs-steepness-bar" style="margin-top:0.3rem;">
-                <div style="font-family:var(--mono);font-size:0.61rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:4px;">MRS relative to optimum</div>
+                <div style="font-family:var(--mono);font-size:0.61rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:4px;">MRS magnitude (flat left, steep right)</div>
                 <div style="height:8px;background:#e4e4e4;border-radius:99px;overflow:hidden;">
                   <div id="mrs-bar-fill" style="height:100%;background:#d4813a;border-radius:99px;transition:width 0.2s ease;width:50%;"></div>
                 </div>

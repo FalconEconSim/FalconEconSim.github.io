@@ -8,6 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: { typeset: false }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
   <style>
     body { background: #f4f7fb; }
 
@@ -142,6 +150,19 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* Card zone slide transitions */
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit {
+      from { opacity: 1; transform: translateX(0) scale(1); }
+      to   { opacity: 0; transform: translateX(-52px) scale(0.97); }
+    }
+    @keyframes fc-zone-enter {
+      from { opacity: 0; transform: translateX(52px) scale(0.97); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+
     /* Summary screen */
     .fc-summary {
       background: #fff; border: 1px solid #E2EAF4;
@@ -230,30 +251,70 @@
 
 <script>
 /* ============================================================
-   EC224 Week 2 Flashcards - converted from JSX to vanilla JS
+   EC224 Week 2 Flashcards
    ============================================================ */
 
 const CARDS = [
-  { id:1,  type:"Def",   q:"What is a budget constraint, and what does it represent geometrically?",                                    a:"All combinations of goods a consumer can afford given income I and prices Px, Py. Geometrically: a straight line with x-intercept I/Px, y-intercept I/Py, and slope -Px/Py. Points on or inside the line are feasible." },
-  { id:2,  type:"Def",   q:"What does the slope of the budget line equal, and what does it mean economically?",                         a:"Slope = -Px/Py. The market's rate of exchange: how many units of Y you must give up to buy one more unit of X. This is the opportunity cost of X in terms of Y." },
-  { id:3,  type:"Def",   q:"What is an indifference curve, and what property guarantees they never cross?",                             a:"A curve showing all bundles yielding the same utility. They never cross because preferences are transitive and monotone. If two curves crossed, a single bundle would imply two different utility levels, a contradiction." },
-  { id:4,  type:"Def",   q:"Define the Marginal Rate of Substitution. How is it related to marginal utilities?",                        a:"MRS = the rate at which a consumer willingly trades Y for one more X, holding utility constant. MRS = MUx/MUy. It equals the absolute slope of the indifference curve at any bundle." },
-  { id:5,  type:"Def",   q:"What is the consumer optimum? State it in both graphical and algebraic terms.",                             a:"The affordable bundle maximising utility. Graphically: the highest indifference curve tangent to the budget line. Algebraically: MRS = Px/Py and Px*x + Py*y = I both hold simultaneously." },
-  { id:6,  type:"Def",   q:"What distinguishes a corner solution from an interior solution?",                                           a:"An interior solution has x*>0 and y*>0 with tangency condition MRS=Px/Py. A corner solution has x*=0 or y*=0. The consumer spends all income on one good (e.g. perfect substitutes when MRS is not equal to Px/Py at any interior point)." },
-  { id:7,  type:"T/F",   q:"A steeper indifference curve implies a higher MRS.",                                                        a:"True. MRS equals the absolute slope of the indifference curve. Steeper = larger MRS. The consumer requires more Y to compensate for losing one unit of X, reflecting stronger preference for X at that bundle." },
-  { id:8,  type:"T/F",   q:"If income doubles and both prices double, the budget set is unchanged.",                                    a:"True. The budget set is Px*x + Py*y <= I. Multiplying I, Px, and Py by the same constant leaves intercepts I/Px and I/Py unchanged. Only relative prices and real income matter." },
-  { id:9,  type:"T/F",   q:"Two indifference curves for the same consumer can intersect if the consumer is indifferent between the bundles.", a:"False. If they crossed, the intersection bundle would lie on both curves, implying two different utility levels simultaneously, violating transitive, consistent preferences." },
-  { id:10, type:"T/F",   q:"At the consumer optimum, the consumer has exhausted all gains from trade with the market.",                 a:"True. At MRS=Px/Py, subjective valuation equals the market's exchange rate. No reallocation of spending can increase utility. All mutually beneficial trades have been made." },
-  { id:11, type:"T/F",   q:"For perfect complements, the MRS is defined everywhere along the indifference curve.",                     a:"False. Perfect complement curves are L-shaped. At the kink (vertex) MRS is undefined. Along vertical/horizontal segments the slope is 0 or infinity." },
-  { id:12, type:"T/F",   q:"A rise in Px rotates the budget line inward along the x-axis only, leaving the y-intercept unchanged.",   a:"True. The y-intercept I/Py is unaffected by a change in Px. The x-intercept I/Px falls as Px rises. The line pivots inward around the y-intercept, becoming steeper." },
-  { id:13, type:"Eq",    q:"At the consumer optimum, MRS = ___",                                                                       a:"MRS = Px/Py\n\nThe tangency condition. Consumer's willingness to trade must equal the market's rate of exchange. If MRS > Px/Py, the consumer values X more than the market and should buy more X." },
-  { id:14, type:"Eq",    q:"For U = x^a * y^b (Cobb-Douglas), the optimal share of income spent on x is ___",                         a:"Spending on x* = a/(a+b) * I\n\nA fixed fraction a/(a+b) of income is always spent on X, regardless of prices. Demand for X is independent of Py." },
-  { id:15, type:"Eq",    q:"The budget constraint can be written as ___ = I",                                                          a:"Px * x + Py * y = I\n\nSpending on X plus Y exhausts income. Points below the line leave income unspent, which is suboptimal under monotone preferences." },
-  { id:16, type:"Eq",    q:"MRS = MUx/MUy. For U = xy, compute MRS at bundle (2, 4).",                                               a:"MUx = y = 4,  MUy = x = 2\nMRS = 4/2 = 2\n\nAt (2,4) the consumer trades 2 units of Y for 1 more X. If Px/Py < 2, they should buy more X." },
-  { id:17, type:"Eq",    q:"For perfect substitutes U = ax + by, what is the optimum when Px/Py < a/b?",                             a:"Corner solution: x* = I/Px,  y* = 0\n\nX is cheap relative to how much the consumer values it. Every dollar buys more utility via X, so spend all income on X. MRS = a/b > Px/Py at every interior point." },
-  { id:18, type:"Graph", q:"A bundle lies strictly below the budget line. Is it feasible? Is it optimal? Why or why not?",             a:"Feasible: Yes, since Px*x + Py*y < I.\nOptimal: No. Under monotone preferences there always exists a bundle on the budget line with more of at least one good. Leaving income unspent cannot be optimal." },
-  { id:19, type:"Graph", q:"The budget line cuts through an indifference curve (not tangent). Can the consumer do better?",            a:"Yes. When the line crosses the curve, part of the budget line lies above it, reaching a higher indifference curve. The consumer moves along the budget line to higher utility. Only at tangency is no improvement possible." },
-  { id:20, type:"Graph", q:"How does the optimal bundle shift when Px falls, for a Cobb-Douglas consumer? Which curve moves?",        a:"Budget line rotates outward (y-intercept fixed; x-intercept rises). Indifference curve map is fixed. New optimum is on a higher curve. x* = aI/[(a+b)Px] rises; y* = bI/[(a+b)Py] unchanged." },
+  { id:1,  type:"Def",
+    q:"What is a budget constraint, and what does it represent geometrically?",
+    a:"All combinations of goods a consumer can afford given income \\(I\\) and prices \\(P_X, P_Y\\). Geometrically: a straight line with x-intercept \\(I/P_X\\), y-intercept \\(I/P_Y\\), and slope \\(-P_X/P_Y\\). Points on or inside the line are feasible." },
+  { id:2,  type:"Def",
+    q:"What does the slope of the budget line equal, and what does it mean economically?",
+    a:"Slope \\(= -P_X/P_Y\\). The market's rate of exchange: how many units of Y you must give up to buy one more unit of X. This is the opportunity cost of X in terms of Y." },
+  { id:3,  type:"Def",
+    q:"What is an indifference curve, and what property guarantees they never cross?",
+    a:"A curve showing all bundles yielding the same utility. They never cross because preferences are transitive and monotone. If two curves crossed, a single bundle would imply two different utility levels, a contradiction." },
+  { id:4,  type:"Def",
+    q:"Define the Marginal Rate of Substitution. How is it related to marginal utilities?",
+    a:"MRS = the rate at which a consumer willingly trades Y for one more X, holding utility constant. \\(\\text{MRS} = MU_X / MU_Y\\). It equals the absolute slope of the indifference curve at any bundle." },
+  { id:5,  type:"Def",
+    q:"What is the consumer optimum? State it in both graphical and algebraic terms.",
+    a:"The affordable bundle maximising utility. Graphically: the highest indifference curve tangent to the budget line. Algebraically: \\(\\text{MRS} = P_X/P_Y\\) and \\(P_X x + P_Y y = I\\) both hold simultaneously." },
+  { id:6,  type:"Def",
+    q:"What distinguishes a corner solution from an interior solution?",
+    a:"An interior solution has \\(x^*>0\\) and \\(y^*>0\\) with tangency condition \\(\\text{MRS}=P_X/P_Y\\). A corner solution has \\(x^*=0\\) or \\(y^*=0\\). The consumer spends all income on one good (e.g. perfect substitutes when MRS does not equal \\(P_X/P_Y\\) at any interior point)." },
+  { id:7,  type:"T/F",
+    q:"A steeper indifference curve implies a higher MRS.",
+    a:"True. MRS equals the absolute slope of the indifference curve. Steeper = larger MRS. The consumer requires more Y to compensate for losing one unit of X, reflecting stronger preference for X at that bundle." },
+  { id:8,  type:"T/F",
+    q:"If income doubles and both prices double, the budget set is unchanged.",
+    a:"True. The budget set is \\(P_X x + P_Y y \\leq I\\). Multiplying \\(I\\), \\(P_X\\), and \\(P_Y\\) by the same constant leaves intercepts \\(I/P_X\\) and \\(I/P_Y\\) unchanged. Only relative prices and real income matter." },
+  { id:9,  type:"T/F",
+    q:"Two indifference curves for the same consumer can intersect if the consumer is indifferent between the bundles.",
+    a:"False. If they crossed, the intersection bundle would lie on both curves, implying two different utility levels simultaneously, violating transitive, consistent preferences." },
+  { id:10, type:"T/F",
+    q:"At the consumer optimum, the consumer has exhausted all gains from trade with the market.",
+    a:"True. At \\(\\text{MRS}=P_X/P_Y\\), subjective valuation equals the market's exchange rate. No reallocation of spending can increase utility. All mutually beneficial trades have been made." },
+  { id:11, type:"T/F",
+    q:"For perfect complements, the MRS is defined everywhere along the indifference curve.",
+    a:"False. Perfect complement curves are L-shaped. At the kink (vertex) MRS is undefined. Along vertical/horizontal segments the slope is 0 or infinity." },
+  { id:12, type:"T/F",
+    q:"A rise in \\(P_X\\) rotates the budget line inward along the x-axis only, leaving the y-intercept unchanged.",
+    a:"True. The y-intercept \\(I/P_Y\\) is unaffected by a change in \\(P_X\\). The x-intercept \\(I/P_X\\) falls as \\(P_X\\) rises. The line pivots inward around the y-intercept, becoming steeper." },
+  { id:13, type:"Eq",
+    q:"At the consumer optimum, MRS = ___",
+    a:"\\(\\text{MRS} = P_X / P_Y\\)\n\nThe tangency condition. Consumer's willingness to trade must equal the market's rate of exchange. If \\(\\text{MRS} > P_X/P_Y\\), the consumer values X more than the market and should buy more X." },
+  { id:14, type:"Eq",
+    q:"For \\(U = X^\\alpha Y^\\beta\\) (Cobb-Douglas), the optimal share of income spent on X is ___",
+    a:"\\(P_X x^* = \\dfrac{\\alpha}{\\alpha+\\beta} \\cdot I\\)\n\nA fixed fraction \\(\\alpha/(\\alpha+\\beta)\\) of income is always spent on X, regardless of prices. Demand for X is independent of \\(P_Y\\)." },
+  { id:15, type:"Eq",
+    q:"The budget constraint can be written as ___ = I",
+    a:"\\(P_X \\cdot x + P_Y \\cdot y = I\\)\n\nSpending on X plus Y exhausts income. Points below the line leave income unspent, which is suboptimal under monotone preferences." },
+  { id:16, type:"Eq",
+    q:"\\(\\text{MRS} = MU_X/MU_Y\\). For \\(U = xy\\), compute MRS at bundle (2, 4).",
+    a:"\\(MU_X = y = 4,\\quad MU_Y = x = 2\\)\n\\(\\text{MRS} = 4/2 = 2\\)\n\nAt (2, 4) the consumer trades 2 units of Y for 1 more X. If \\(P_X/P_Y < 2\\), they should buy more X." },
+  { id:17, type:"Eq",
+    q:"For perfect substitutes \\(U = aX + bY\\), what is the optimum when \\(P_X/P_Y < a/b\\)?",
+    a:"Corner solution: \\(x^* = I/P_X,\\; y^* = 0\\)\n\nX is cheap relative to how much the consumer values it. Every dollar buys more utility via X, so spend all income on X. \\(\\text{MRS} = a/b > P_X/P_Y\\) at every interior point." },
+  { id:18, type:"Graph",
+    q:"A bundle lies strictly below the budget line. Is it feasible? Is it optimal? Why or why not?",
+    a:"Feasible: Yes, since \\(P_X x + P_Y y < I\\).\nOptimal: No. Under monotone preferences there always exists a bundle on the budget line with more of at least one good. Leaving income unspent cannot be optimal." },
+  { id:19, type:"Graph",
+    q:"The budget line cuts through an indifference curve (not tangent). Can the consumer do better?",
+    a:"Yes. When the line crosses the curve, part of the budget line lies above it, reaching a higher indifference curve. The consumer moves along the budget line to higher utility. Only at tangency is no improvement possible." },
+  { id:20, type:"Graph",
+    q:"How does the optimal bundle shift when \\(P_X\\) falls, for a Cobb-Douglas consumer? Which curve moves?",
+    a:"Budget line rotates outward (y-intercept fixed; x-intercept rises). Indifference curve map is fixed. New optimum is on a higher curve. \\(x^* = \\alpha I/[(\\alpha+\\beta)P_X]\\) rises; \\(y^*\\) unchanged." },
 ];
 
 const TS = {
@@ -294,37 +355,18 @@ function total()  { return got() + almost() + missed(); }
 
 const root = document.getElementById('fc-root');
 
-function render() {
-  if (state.done) { renderDone(); return; }
-  renderCard();
-}
+// ─── RENDER HELPERS ──────────────────────────────────────────────────────────
 
-function renderCard() {
-  const c = card();
-  if (!c) return;
-  const ts = TS[c.type] || TS.Def;
-  const p = pct();
-  const g = got(), a = almost(), m = missed();
-  const hdrRight = state.streak >= 2
+function hdrRightHTML() {
+  return state.streak >= 2
     ? `<div style="display:flex;align-items:center;gap:8px"><span class="fc-streak">🔥 ${state.streak}</span><span class="fc-ctr">${state.idx+1} / ${state.deck.length}</span></div>`
     : `<span class="fc-ctr">${state.idx+1} / ${state.deck.length}</span>`;
+}
 
-  root.innerHTML = `
-    <div class="fc-hdr">
-      <span class="fc-title">EC224 · Week 2</span>
-      ${hdrRight}
-    </div>
-
-    <div class="fc-prog"><div class="fc-prog-fill" style="width:${p}%"></div></div>
-
-    <div class="fc-filters">
-      ${TYPES.map(t => `<button class="fc-ftag${state.filter===t?' active':''}" data-filter="${t}">${t==="All"?"All types":(TS[t]?.label||t)}</button>`).join('')}
-    </div>
-
-    <span class="fc-badge" style="background:${ts.bg};color:${ts.color}">${ts.label}</span>
-
+function cardZoneHTML(c, ts) {
+  return `
     <div class="fc-scene">
-      <div class="fc-card-inner${state.flipped?' flipped':''}" id="fc-inner" style="position:relative">
+      <div class="fc-card-inner" id="fc-inner" style="position:relative">
         <div class="fc-front" id="fc-front-el">
           <div class="fc-q">${c.q}</div>
           <div class="fc-hint">tap to flip &nbsp;<span class="fc-kbd">space</span></div>
@@ -334,25 +376,147 @@ function renderCard() {
           <div class="fc-a">${c.a}</div>
         </div>
       </div>
-    </div>
+    </div>`;
+}
 
-    ${state.flipped ? `
-    <div class="fc-reveal">
-      <div class="fc-rate-label">How did you do? &nbsp;<span class="fc-kbd">1</span><span class="fc-kbd">2</span><span class="fc-kbd">3</span></div>
-      <div class="fc-rate-row">
-        ${[["got","#3B6D11","#EAF3DE","1"],["almost","#854F0B","#FAEEDA","2"],["missed","#993C1D","#FAECE7","3"]].map(([key,color,bg,k]) => `
-          <button class="fc-rbtn" style="border-color:${bg};color:${color}" data-rate="${key}">
-            <span style="font-size:15px">${RSYM[key]}</span>
-            ${RLABEL[key]}
-            <span class="kh"><span class="fc-kbd">${k}</span></span>
-          </button>`).join('')}
-      </div>
-    </div>` : ''}
+function revealBtnsHTML() {
+  return `<div class="fc-reveal">
+    <div class="fc-rate-label">How did you do? &nbsp;<span class="fc-kbd">1</span><span class="fc-kbd">2</span><span class="fc-kbd">3</span></div>
+    <div class="fc-rate-row">
+      ${[["got","#3B6D11","#EAF3DE","1"],["almost","#854F0B","#FAEEDA","2"],["missed","#993C1D","#FAECE7","3"]].map(([key,color,bg,k]) => `
+        <button class="fc-rbtn" style="border-color:${bg};color:${color}" data-rate="${key}">
+          <span style="font-size:15px">${RSYM[key]}</span>
+          ${RLABEL[key]}
+          <span class="kh"><span class="fc-kbd">${k}</span></span>
+        </button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function attachCardHandlers() {
+  const fe = document.getElementById('fc-front-el');
+  if (fe) fe.addEventListener('click', flipCard);
+  root.querySelectorAll('.fc-rbtn').forEach(btn => btn.addEventListener('click', () => rate(btn.dataset.rate)));
+}
+
+// ─── FULL RENDER (first render, filter change, restart) ──────────────────────
+
+function render() {
+  if (state.done) { renderDone(); return; }
+  renderCard();
+}
+
+function renderCard() {
+  const c = card();
+  if (!c) return;
+  const ts = TS[c.type] || TS.Def;
+
+  root.innerHTML = `
+    <div class="fc-hdr">
+      <span class="fc-title">EC224 · Week 2</span>
+      ${hdrRightHTML()}
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${pct()}%"></div></div>
+    <div class="fc-filters">
+      ${TYPES.map(t => `<button class="fc-ftag${state.filter===t?' active':''}" data-filter="${t}">${t==="All"?"All types":(TS[t]?.label||t)}</button>`).join('')}
+    </div>
+    <span class="fc-badge" style="background:${ts.bg};color:${ts.color}">${ts.label}</span>
+    <div id="fc-card-zone">
+      ${cardZoneHTML(c, ts)}
+    </div>
   `;
 
-  document.getElementById('fc-front-el').addEventListener('click', flipCard);
   root.querySelectorAll('.fc-ftag').forEach(btn => btn.addEventListener('click', () => applyFilter(btn.dataset.filter)));
-  root.querySelectorAll('.fc-rbtn').forEach(btn => btn.addEventListener('click', () => rate(btn.dataset.rate)));
+  attachCardHandlers();
+  if (window.MathJax) MathJax.typesetPromise([root]);
+}
+
+// ─── FLIP (CSS class toggle, no DOM rebuild) ──────────────────────────────────
+
+function flipCard() {
+  if (state.flipped) return;
+  state.flipped = true;
+
+  const inner = document.getElementById('fc-inner');
+  const zone  = document.getElementById('fc-card-zone');
+  if (inner && zone) {
+    inner.classList.add('flipped');
+    // Inject rating buttons after the flip animation completes (380ms transition)
+    setTimeout(function() {
+      if (zone.querySelector('.fc-reveal')) return;
+      const div = document.createElement('div');
+      div.innerHTML = revealBtnsHTML();
+      const reveal = div.firstElementChild;
+      zone.appendChild(reveal);
+      reveal.querySelectorAll('.fc-rbtn').forEach(btn => btn.addEventListener('click', () => rate(btn.dataset.rate)));
+    }, 320);
+    return;
+  }
+  // Fallback: full re-render
+  render();
+}
+
+// ─── RATE (slide-out current, slide-in next) ──────────────────────────────────
+
+function rate(key) {
+  const c = card();
+  if (!c) return;
+  state.ratings = { ...state.ratings, [c.id]: key };
+  const newStreak = key === "got" ? state.streak + 1 : 0;
+  state.streak = newStreak;
+  if (newStreak > state.bestStreak) state.bestStreak = newStreak;
+
+  // Determine next state upfront (before animation)
+  const next = state.idx + 1;
+  let nextDeck = state.deck, nextIdx = next, willDone = false;
+  if (next >= state.deck.length) {
+    const retry = state.deck.filter(cc => state.ratings[cc.id] !== "got");
+    if (!retry.length) { willDone = true; }
+    else { nextDeck = shuffle(retry); nextIdx = 0; }
+  }
+
+  const zone = document.getElementById('fc-card-zone');
+  if (!zone) {
+    // No animated zone: instant update
+    if (willDone) { state.done = true; render(); return; }
+    state.deck = nextDeck; state.idx = nextIdx; state.flipped = false;
+    render(); return;
+  }
+
+  zone.classList.add('fc-zone-exit');
+
+  zone.addEventListener('animationend', function onExit() {
+    zone.removeEventListener('animationend', onExit);
+    zone.classList.remove('fc-zone-exit');
+
+    if (willDone) { state.done = true; render(); return; }
+
+    state.deck = nextDeck;
+    state.idx = nextIdx;
+    state.flipped = false;
+
+    // Update static parts without rebuilding root
+    const hdrEl = root.querySelector('.fc-hdr');
+    if (hdrEl) hdrEl.innerHTML = `<span class="fc-title">EC224 · Week 2</span>${hdrRightHTML()}`;
+    const pf = root.querySelector('.fc-prog-fill');
+    if (pf) pf.style.width = pct() + '%';
+
+    // Swap badge
+    const c2 = card(), ts2 = TS[c2.type] || TS.Def;
+    const badge = root.querySelector('.fc-badge');
+    if (badge) { badge.style.background = ts2.bg; badge.style.color = ts2.color; badge.textContent = ts2.label; }
+
+    // Swap card content and slide in
+    zone.innerHTML = cardZoneHTML(c2, ts2);
+    zone.classList.add('fc-zone-enter');
+    zone.addEventListener('animationend', function onEnter() {
+      zone.removeEventListener('animationend', onEnter);
+      zone.classList.remove('fc-zone-enter');
+    }, { once: true });
+
+    attachCardHandlers();
+    if (window.MathJax) MathJax.typesetPromise([zone]);
+  }, { once: true });
 }
 
 function renderDone() {
@@ -398,36 +562,12 @@ function renderDone() {
   document.getElementById('btn-restart')?.addEventListener('click', () => restart(false));
 }
 
-function flipCard() {
-  if (state.flipped) return;
-  state.flipped = true;
-  render();
-}
-
 function applyFilter(f) {
   state.filter = f;
   const src = f === "All" ? CARDS : CARDS.filter(c => c.type === f);
   state.deck = shuffle(src);
   state.idx = 0; state.flipped = false;
   state.ratings = {}; state.done = false; state.streak = 0; state.bestStreak = 0;
-  render();
-}
-
-function rate(key) {
-  const c = card();
-  if (!c) return;
-  state.ratings = { ...state.ratings, [c.id]: key };
-  const newStreak = key === "got" ? state.streak + 1 : 0;
-  state.streak = newStreak;
-  if (newStreak > state.bestStreak) state.bestStreak = newStreak;
-  const next = state.idx + 1;
-  if (next >= state.deck.length) {
-    const retry = state.deck.filter(cc => state.ratings[cc.id] !== "got");
-    if (!retry.length) { state.done = true; render(); return; }
-    state.deck = shuffle(retry); state.idx = 0; state.flipped = false;
-  } else {
-    state.idx = next; state.flipped = false;
-  }
   render();
 }
 

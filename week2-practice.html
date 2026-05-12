@@ -553,7 +553,11 @@ function renderProblem() {
         <span class="db-chevron">▾</span>
       </div>
       <div class="db-body" id="db-body-content" style="display:none;">
-        <div class="db-steps" id="db-steps-list"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
+          <span style="font-size:0.76rem;color:var(--muted);">Try placing the intercepts and optimal bundle on your own first.</span>
+          <button id="db-hints-btn" onclick="toggleDBHints()" style="font-family:var(--font);font-size:0.74rem;font-weight:500;padding:0.22rem 0.7rem;border-radius:6px;border:1px solid var(--accent-mid);background:var(--accent-light);color:var(--accent);cursor:pointer;white-space:nowrap;">Show hints</button>
+        </div>
+        <div class="db-steps" id="db-steps-list" style="display:none;"></div>
         <div class="db-canvas-wrap">
           <div id="jxg-builder" style="width:100%;aspect-ratio:1/1;min-height:300px;max-height:420px;"></div>
         </div>
@@ -779,6 +783,15 @@ let dbStep  = 0;   /* 0=place x-intercept, 1=place y-intercept, 2=find optimum, 
 let dbXIntPt = null, dbYIntPt = null, dbOptPt = null;
 let dbBudgetLine = null, dbBudgetPoly = null, dbICLine = null;
 let dbOpened = false;
+
+function toggleDBHints() {
+  const steps = document.getElementById('db-steps-list');
+  const btn   = document.getElementById('db-hints-btn');
+  if (!steps || !btn) return;
+  const showing = steps.style.display !== 'none';
+  steps.style.display = showing ? 'none' : 'flex';
+  btn.textContent = showing ? 'Show hints' : 'Hide hints';
+}
 
 function toggleDiagramBuilder(headerEl) {
   const body = document.getElementById('db-body-content');
