@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 3: Interactive Visualizations · EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
+      svg: { fontCache:'global' },
+      startup: { typeset:false }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    :root {
+      --bg:#f7f7f7; --bg-card:#fff; --ink:#1a1a1a; --ink-light:#6b6b6b;
+      --faint:#9aa3b2; --accent:#1a56db; --accent-lt:#eff4ff;
+      --rule:#e4e4e4; --green:#2e8b57; --red:#c0392b; --amber:#d4813a; --purple:#6b52a8;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased; }
+
+    .topnav {
+      position:sticky; top:0; z-index:100;
+      background:rgba(250,249,247,0.96);
+      backdrop-filter:blur(8px);
+      border-bottom:1px solid var(--rule);
+      height:52px; display:flex; align-items:center;
+    }
+    .topnav-inner {
+      max-width:1520px; width:100%; margin:0 auto; padding:0 1.5rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    }
+    .nav-left { display:flex; align-items:center; gap:0.75rem; }
+    .nav-course { font-family:var(--mono); font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); }
+    .nav-sep { color:var(--rule); font-size:0.9rem; }
+    .nav-week { font-family:var(--mono); font-size:0.7rem; color:var(--accent); letter-spacing:0.08em; }
+    .nav-title { font-size:0.85rem; color:var(--ink-light); font-style:italic; }
+    .nav-home { font-size:0.82rem; color:var(--accent); text-decoration:none; }
+    .nav-home:hover { text-decoration:underline; }
+    .nav-ln-btn {
+      font-family:var(--font); font-size:0.78rem; font-weight:500;
+      padding:0.3rem 0.8rem; border:1px solid var(--rule); border-radius:6px;
+      background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s;
+    }
+    .nav-ln-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+
+    .week-hero { padding:3rem 2rem 2.5rem; max-width:1100px; margin:0 auto; border-bottom:1px solid var(--rule); }
+    .week-tag { font-family:var(--mono); font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:0.6rem; }
+    .week-hero h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:700; line-height:1.18; color:var(--ink); margin-bottom:0.6rem; }
+    .week-hero .intro { font-size:1rem; color:var(--ink-light); max-width:660px; }
+
+    .page-layout { display:grid; grid-template-columns:220px 1fr; max-width:1520px; margin:0 auto; align-items:start; }
+    .viz-toc {
+      position:sticky; top:52px; height:calc(100vh - 52px);
+      overflow-y:auto; border-right:1px solid var(--rule); padding:1.75rem 1.1rem;
+    }
+    .viz-toc-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--faint); margin-bottom:0.8rem; padding-bottom:0.4rem; border-bottom:1px solid var(--rule); }
+    .viz-toc nav a { display:block; font-size:0.82rem; color:var(--ink-light); padding:0.32rem 0.55rem; border-radius:3px; border-left:2px solid transparent; transition:all 0.15s; margin-bottom:0.08rem; text-decoration:none; }
+    .viz-toc nav a:hover, .viz-toc nav a.active { background:var(--accent-lt); border-left-color:var(--accent); color:var(--accent); }
+
+    .main-content { padding:2.5rem 2.5rem 5rem; min-width:0; }
+    .section-block { margin-bottom:4.5rem; scroll-margin-top:70px; }
+    .section-block h2 { font-size:1.85rem; font-weight:700; color:var(--ink); margin-bottom:0.35rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent-lt); }
+    .section-intro { font-size:0.97rem; color:var(--ink-light); margin-bottom:1.5rem; max-width:680px; }
+    .section-number { font-family:var(--mono); font-size:0.78rem; color:var(--accent); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:0.25rem; }
+
+    .viz-wrapper { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin:1.5rem 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+    .viz-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.1rem; background:#f4f6fa; border-bottom:1px solid var(--rule); cursor:pointer; user-select:none; }
+    .fig-num-badge { font-family:var(--mono); font-size:0.67rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; background:var(--accent-lt); color:var(--accent); border:1px solid rgba(26,86,219,0.2); border-radius:20px; padding:2px 8px; flex-shrink:0; }
+    .viz-title { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--accent); margin-left:0.75rem; flex:1; }
+    .fig-chevron { color:var(--faint); font-size:0.85rem; transition:transform 0.2s; }
+    .viz-wrapper.collapsed .fig-chevron { transform:rotate(-90deg); }
+    .viz-wrapper.collapsed .viz-body { display:none; }
+    .viz-body { padding:1.4rem; }
+
+    .viz-controls { display:flex; flex-wrap:wrap; gap:1.2rem; align-items:flex-end; margin-bottom:1.2rem; padding:0.9rem 1.1rem; background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; }
+    .ctrl-group { display:flex; flex-direction:column; gap:0.28rem; min-width:130px; }
+    .ctrl-group label { font-family:var(--mono); font-size:0.73rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); display:flex; align-items:center; gap:4px; }
+    .ctrl-val { font-family:var(--mono); font-size:0.9rem; color:var(--accent); font-weight:600; }
+    input[type="range"] { -webkit-appearance:none; width:100%; height:4px; background:var(--accent-lt); border-radius:2px; outline:none; cursor:pointer; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.18); }
+
+    .viz-two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .viz-panel { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+    .viz-panel-label { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); padding:0.5rem 0.8rem; background:#f8f9fb; border-bottom:1px solid var(--rule); }
+
+    .jxgbox { background:#fff !important; border:none !important; border-radius:0 !important; }
+
+    .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; padding:0.8rem; }
+    .stat-box { background:#f8f9fb; border:1px solid var(--rule); border-radius:5px; padding:0.55rem 0.75rem; }
+    .stat-label { font-family:var(--mono); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--faint); margin-bottom:2px; }
+    .stat-val { font-family:var(--mono); font-size:0.95rem; font-weight:600; color:var(--ink); }
+
+    .scoreboard { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.9rem 1rem; margin-top:0.75rem; }
+    .sb-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); margin-bottom:0.55rem; }
+    .sb-row { display:flex; justify-content:space-between; align-items:center; padding:0.32rem 0; border-bottom:1px solid var(--rule); font-size:0.85rem; }
+    .sb-row:last-child { border-bottom:none; font-weight:600; }
+    .sb-row .sb-lbl { color:var(--ink-light); }
+    .sb-row .sb-num { font-family:var(--mono); font-weight:600; }
+
+    .info-card { background:var(--accent-lt); border-left:4px solid var(--accent); border-radius:0 4px 4px 0; padding:0.9rem 1.1rem; margin:1rem 0; font-size:0.9rem; color:var(--ink-light); }
+    .info-card strong { color:var(--accent); }
+    .callout { border-radius:4px; padding:0.85rem 1.05rem; margin:0.9rem 0; font-size:0.9rem; line-height:1.65; }
+    .callout.key-idea { background:#e8f4fd; border-left:4px solid #2196F3; }
+    .callout.common-mistake { background:#fff3e0; border-left:4px solid #f57c00; }
+
+    /* Quiz viz */
+    .quiz-scenario { background:var(--bg-card); border:1px solid var(--rule); border-radius:8px; padding:1.1rem 1.3rem; margin-bottom:1rem; font-size:0.97rem; font-weight:500; color:var(--ink); }
+    .quiz-btns { display:flex; gap:0.6rem; margin-bottom:0.9rem; }
+    .quiz-btn {
+      flex:1; padding:0.6rem 0.9rem; font-family:var(--font); font-size:0.85rem; font-weight:600;
+      border:1px solid var(--rule); border-radius:8px; cursor:pointer; transition:all 0.15s; background:var(--bg-card); color:var(--ink);
+    }
+    .quiz-btn:hover { border-color:var(--accent); background:var(--accent-lt); color:var(--accent); }
+    .quiz-btn.correct  { background:#dcfce7; border-color:#4ade80; color:#166534; }
+    .quiz-btn.incorrect { background:#fee2e2; border-color:#fc8181; color:#991b1b; }
+    .quiz-btn.revealed { background:var(--accent-lt); border-color:var(--accent); color:var(--accent); }
+    .quiz-feedback { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.75rem 1rem; font-size:0.86rem; color:var(--ink-light); line-height:1.65; margin-bottom:0.75rem; }
+    .quiz-score { font-family:var(--mono); font-size:0.82rem; color:var(--muted); margin-bottom:0.5rem; }
+    .quiz-next { font-family:var(--font); font-size:0.82rem; font-weight:500; padding:0.35rem 1rem; border:1px solid var(--accent); border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; transition:opacity 0.15s; }
+    .quiz-next:hover { opacity:0.85; }
+
+    /* Toggle switch */
+    .toggle-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.8rem; }
+    .toggle-label { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); }
+    .toggle-switch { display:flex; background:#f0f3f8; border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+    .toggle-opt {
+      padding:0.32rem 0.9rem; font-family:var(--font); font-size:0.8rem; font-weight:500;
+      cursor:pointer; transition:all 0.15s; color:var(--ink-light); border:none; background:transparent;
+    }
+    .toggle-opt.active { background:var(--accent); color:#fff; }
+
+    /* Expandable */
+    .expand-box { border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin-top:0.75rem; }
+    .expand-header { display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:#f8f9fb; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--ink); user-select:none; }
+    .expand-body { padding:0.85rem 1rem; font-size:0.87rem; color:var(--ink-light); line-height:1.7; display:none; }
+    .expand-body.open { display:block; }
+
+    @media (max-width:900px) {
+      .page-layout { grid-template-columns:1fr; }
+      .viz-toc { display:none; }
+      .main-content { padding:1.5rem 1.2rem 4rem; }
+    }
+    @media (max-width:620px) {
+      .viz-two-col { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left nav -->
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published active"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 4</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 5</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 7</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<!-- Top nav -->
+<div class="topnav">
+  <div class="topnav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="nav-home">EC224</a>
+      <span class="nav-sep">›</span>
+      <a href="week3.html" class="nav-home">Week 3</a>
+      <span class="nav-sep">›</span>
+      <span class="nav-week">Visualizations</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <span class="nav-title" style="display:none;" id="nav-section-title"></span>
+      <button class="nav-ln-btn" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hero -->
+<div class="week-hero">
+  <p class="week-tag">EC224 · Week 3 · Interactive Visualizations</p>
+  <h1>Demand Curves &amp; Comparative Statics</h1>
+  <p class="intro">Six interactive diagrams mapping the full Week 3 syllabus: derive a demand curve from first principles, decompose price changes into substitution and income effects, explore income shifts, drill shift-vs-movement, map cross-price effects, and visualise the Giffen paradox.</p>
+</div>
+
+<div class="page-layout">
+
+  <!-- Sidebar TOC -->
+  <aside class="viz-toc">
+    <div class="viz-toc-title">Figures</div>
+    <nav id="toc-nav">
+      <a href="#sec-demand"   class="toc-link">Fig 3.1 · Demand Derivation</a>
+      <a href="#sec-slutsky"  class="toc-link">Fig 3.2 · Slutsky Decomposition</a>
+      <a href="#sec-income"   class="toc-link">Fig 3.3 · Income Effects</a>
+      <a href="#sec-drill"    class="toc-link">Fig 3.4 · Shift vs. Movement</a>
+      <a href="#sec-cross"    class="toc-link">Fig 3.5 · Cross-Price Explorer</a>
+      <a href="#sec-giffen"   class="toc-link">Fig 3.6 · Giffen Good</a>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content" id="main">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 1 · Two-Panel Demand Derivation
+         ═══════════════════════════════════════════════════════ -->
+    <section class="section-block" id="sec-demand">
+      <span class="section-number">Fig 3.1 · LO2 &amp; LO3</span>
+      <h2>Two-Panel Demand Derivation</h2>
+      <p class="section-intro">Watch the demand curve emerge in real time. As the price of X changes, the budget line pivots and the optimal bundle shifts — each new point traces the demand curve in the right panel.</p>
+
+      <div class="viz-wrapper" id="vw-demand">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-demand')">
+          <span class="fig-num-badge">Fig 3.1</span>
+          <span class="viz-title">▸ Two-Panel Demand Derivation</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label>P<sub>X</sub> = <span class="ctrl-val" id="v1-px-val">$3.00</span></label>
+              <input type="range" id="v1-px" min="1" max="6" step="0.25" value="3" />
+            </div>
+            <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
+              Fixed: <strong>I = $60</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong> &nbsp;·&nbsp; <strong>U = X<sup>½</sup>Y<sup>½</sup></strong>
+            </div>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">IC / Budget Constraint</div>
+              <div id="jxg-v1-left" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+            <div class="viz-panel">
+              <div class="viz-panel-label">Demand Curve (P<sub>X</sub> vs X)</div>
+              <div id="jxg-v1-right" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+          </div>
+          <div class="stat-grid" style="margin-top:0.8rem;">
+            <div class="stat-box"><div class="stat-label">Budget line X-intercept</div><div class="stat-val" id="v1-xi">I/P<sub>X</sub> = 20.00</div></div>
+            <div class="stat-box"><div class="stat-label">Optimal bundle</div><div class="stat-val" id="v1-opt">(X*, Y*) = (10.00, 10.00)</div></div>
+            <div class="stat-box"><div class="stat-label">MRS at optimum</div><div class="stat-val" id="v1-mrs">Y*/X* = 1.00</div></div>
+            <div class="stat-box"><div class="stat-label">Price ratio P<sub>X</sub>/P<sub>Y</sub></div><div class="stat-val" id="v1-pr">P<sub>X</sub>/P<sub>Y</sub> = 1.00</div></div>
+          </div>
+          <div class="callout key-idea" style="margin-top:1rem;">
+            <strong>Key:</strong> Points A (P<sub>X</sub>=$1, X*=30), B (P<sub>X</sub>=$2, X*=15), C (P<sub>X</sub>=$3, X*=10) match the textbook Fig 3 exactly. Y* stays fixed at 10 for all P<sub>X</sub> because \\(Y^* = I/(2P_Y) = 60/6 = 10\\) is independent of P<sub>X</sub>.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 2 · Slutsky Decomposition
+         ═══════════════════════════════════════════════════════ -->
+    <section class="section-block" id="sec-slutsky">
+      <span class="section-number">Fig 3.2 · LO6</span>
+      <h2>Slutsky Decomposition Explorer</h2>
+      <p class="section-intro">Any price change can be split into a substitution effect (SE) — moving along the original IC at new prices — and an income effect (IE) — shifting between ICs due to changed real income. Use the slider to vary the new price and watch the decomposition update live.</p>
+
+      <div class="viz-wrapper" id="vw-slutsky">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-slutsky')">
+          <span class="fig-num-badge">Fig 3.2</span>
+          <span class="viz-title">▸ Slutsky Decomposition Explorer</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label>New P<sub>X</sub> = <span class="ctrl-val" id="v2-px-val">$1.50</span></label>
+              <input type="range" id="v2-px" min="0.5" max="6" step="0.25" value="1.5" />
+            </div>
+            <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
+              Fixed original: <strong>P<sub>X</sub> = $3</strong> &nbsp;·&nbsp; <strong>I = $60</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Three budget lines · Two ICs</div>
+              <div id="jxg-v2" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+            <div>
+              <div class="scoreboard">
+                <div class="sb-title">Slutsky Scoreboard</div>
+                <div class="sb-row"><span class="sb-lbl">Bundle A (original)</span><span class="sb-num" id="v2-a">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Bundle C (compensated)</span><span class="sb-num" id="v2-c">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Bundle B (new)</span><span class="sb-num" id="v2-b">–</span></div>
+                <div class="sb-row" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--rule);">
+                  <span class="sb-lbl" style="color:var(--purple);">SE = X<sub>C</sub> – X<sub>A</sub></span>
+                  <span class="sb-num" style="color:var(--purple);" id="v2-se">–</span>
+                </div>
+                <div class="sb-row">
+                  <span class="sb-lbl" style="color:var(--red);">IE = X<sub>B</sub> – X<sub>C</sub></span>
+                  <span class="sb-num" style="color:var(--red);" id="v2-ie">–</span>
+                </div>
+                <div class="sb-row">
+                  <span class="sb-lbl">Total Effect</span>
+                  <span class="sb-num" id="v2-te">–</span>
+                </div>
+                <div class="sb-row" style="background:var(--accent-lt);border-radius:4px;padding:0.4rem 0.5rem;margin-top:0.4rem;">
+                  <span class="sb-lbl" style="color:var(--accent);">Good type</span>
+                  <span class="sb-num" style="color:var(--accent);" id="v2-type">–</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="callout common-mistake" style="margin-top:1rem;">
+            <strong>Remember:</strong> The compensated budget line has the <em>new</em> slope (–P<sub>X,new</sub>/P<sub>Y</sub>) but provides just enough income to maintain the original utility U<sub>A</sub>. Point C is its tangency with the original IC. SE is always negative for own-price increases.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 3 · Income Effects & Demand Shifts
+         ═══════════════════════════════════════════════════════ -->
+    <section class="section-block" id="sec-income">
+      <span class="section-number">Fig 3.3 · LO4 &amp; LO5</span>
+      <h2>Income Effects &amp; Demand Shifts</h2>
+      <p class="section-intro">A change in income shifts the entire demand curve. Toggle between a normal good (rising income shifts demand rightward) and an inferior good (rising income shifts demand leftward), and watch the income expansion path trace out.</p>
+
+      <div class="viz-wrapper" id="vw-income">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-income')">
+          <span class="fig-num-badge">Fig 3.3</span>
+          <span class="viz-title">▸ Income Effects &amp; Demand Shifts</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label>Income I = <span class="ctrl-val" id="v3-i-val">$80</span></label>
+              <input type="range" id="v3-income" min="40" max="120" step="4" value="80" />
+            </div>
+            <div class="toggle-row" style="margin:0;">
+              <span class="toggle-label">Good type:</span>
+              <div class="toggle-switch">
+                <button class="toggle-opt active" id="v3-normal-btn" onclick="v3SetType('normal')">Normal Good</button>
+                <button class="toggle-opt" id="v3-inferior-btn" onclick="v3SetType('inferior')">Inferior Good</button>
+              </div>
+            </div>
+            <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
+              Fixed: <strong>P<sub>X</sub> = $2</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
+            </div>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">IC / Budget Constraint + Expansion Path</div>
+              <div id="jxg-v3-left" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+            <div class="viz-panel">
+              <div class="viz-panel-label">Demand Curve Shift (at P<sub>X</sub> = $2)</div>
+              <div id="jxg-v3-right" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+          </div>
+          <div class="stat-grid" style="margin-top:0.8rem;">
+            <div class="stat-box"><div class="stat-label">X* (optimal)</div><div class="stat-val" id="v3-xstar">–</div></div>
+            <div class="stat-box"><div class="stat-label">Y* (optimal)</div><div class="stat-val" id="v3-ystar">–</div></div>
+            <div class="stat-box"><div class="stat-label">∂X*/∂I (sign)</div><div class="stat-val" id="v3-dxi">–</div></div>
+            <div class="stat-box"><div class="stat-label">Demand shift direction</div><div class="stat-val" id="v3-shift">–</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 4 · Shift vs. Movement Drill
+         ═══════════════════════════════════════════════════════ -->
+    <section class="section-block" id="sec-drill">
+      <span class="section-number">Fig 3.4 · LO2, LO3 &amp; LO4</span>
+      <h2>Shift vs. Movement Drill</h2>
+      <p class="section-intro">Exam-prep quiz: for each scenario, decide whether it causes a movement along the demand curve or a shift of the entire curve. Track your score across rounds.</p>
+
+      <div class="viz-wrapper" id="vw-drill">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-drill')">
+          <span class="fig-num-badge">Fig 3.4</span>
+          <span class="viz-title">▸ Shift vs. Movement Drill</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div id="drill-root"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 5 · Cross-Price & Demand Function Explorer
+         ═══════════════════════════════════════════════════════ -->
+    <section class="section-block" id="sec-cross">
+      <span class="section-number">Fig 3.5 · LO1 &amp; LO4</span>
+      <h2>Cross-Price &amp; Demand Function Explorer</h2>
+      <p class="section-intro">Adjust own price, the other good's price, and income. See how X* and Y* update instantly from the demand function formula. Toggle between substitutes and complements to see how P<sub>Y</sub> shifts the demand curve for X.</p>
+
+      <div class="viz-wrapper" id="vw-cross">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-cross')">
+          <span class="fig-num-badge">Fig 3.5</span>
+          <span class="viz-title">▸ Cross-Price &amp; Demand Function Explorer</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label>P<sub>X</sub> = <span class="ctrl-val" id="v5-px-val">$4.00</span></label>
+              <input type="range" id="v5-px" min="1" max="8" step="0.5" value="4" />
+            </div>
+            <div class="ctrl-group">
+              <label>P<sub>Y</sub> = <span class="ctrl-val" id="v5-py-val">$4.00</span></label>
+              <input type="range" id="v5-py" min="1" max="8" step="0.5" value="4" />
+            </div>
+            <div class="ctrl-group">
+              <label>I = <span class="ctrl-val" id="v5-i-val">$100</span></label>
+              <input type="range" id="v5-income" min="40" max="150" step="5" value="100" />
+            </div>
+            <div class="toggle-row" style="margin:0;">
+              <span class="toggle-label">Relationship:</span>
+              <div class="toggle-switch">
+                <button class="toggle-opt active" id="v5-sub-btn" onclick="v5SetRel('sub')">Substitutes</button>
+                <button class="toggle-opt" id="v5-comp-btn" onclick="v5SetRel('comp')">Complements</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+              <div style="background:#f8f9fb;border:1px solid var(--rule);border-radius:6px;padding:1rem 1.2rem;font-size:0.88rem;line-height:1.8;">
+                <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin-bottom:0.5rem;">Live Demand Function</div>
+                <div id="v5-formula" style="font-size:0.9rem;line-height:2;"></div>
+              </div>
+              <div class="stat-grid" style="margin-top:0.6rem;">
+                <div class="stat-box"><div class="stat-label">X* =</div><div class="stat-val" id="v5-xstar">–</div></div>
+                <div class="stat-box"><div class="stat-label">Y* =</div><div class="stat-val" id="v5-ystar">–</div></div>
+                <div class="stat-box"><div class="stat-label">P<sub>X</sub>·X* (expenditure)</div><div class="stat-val" id="v5-expx">–</div></div>
+                <div class="stat-box"><div class="stat-label">Curve effect of P<sub>Y</sub></div><div class="stat-val" id="v5-pyeff">–</div></div>
+              </div>
+            </div>
+            <div class="viz-panel">
+              <div class="viz-panel-label">Demand Curve for X (own price effect)</div>
+              <div id="jxg-v5" style="width:100%;aspect-ratio:1/1;"></div>
+            </div>
+          </div>
+          <div class="callout key-idea" style="margin-top:1rem;">
+            <strong>Key distinction:</strong> Moving the P<sub>X</sub> slider causes a <em>movement along</em> the demand curve (the current point slides). Moving P<sub>Y</sub> or I <em>shifts</em> the entire curve.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 6 · Giffen Good Visualizer
+         ═══════════════════════════════════════════════════════ -->
+    <section class="section-block" id="sec-giffen">
+      <span class="section-number">Fig 3.6 · LO5 &amp; LO6</span>
+      <h2>Giffen Good Visualizer</h2>
+      <p class="section-intro">In a Giffen good, the income effect (IE) is positive and larger in magnitude than the substitution effect (SE), so demand rises when price rises. This requires a strongly inferior good that occupies a large budget share.</p>
+
+      <div class="viz-wrapper" id="vw-giffen">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-giffen')">
+          <span class="fig-num-badge">Fig 3.6</span>
+          <span class="viz-title">▸ Giffen Good Visualizer</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label>P<sub>X</sub> (new) = <span class="ctrl-val" id="v6-px-val">$3.00</span></label>
+              <input type="range" id="v6-px" min="2" max="5" step="0.25" value="3" />
+            </div>
+            <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
+              Original P<sub>X</sub> = $2 &nbsp;·&nbsp; I = $80 &nbsp;·&nbsp; P<sub>Y</sub> = $5 &nbsp;·&nbsp; <em>Strongly inferior staple good</em>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
+            <div>
+              <div style="display:grid;grid-template-rows:auto auto;gap:0.5rem;">
+                <div class="viz-panel">
+                  <div class="viz-panel-label">Slutsky Decomposition (Giffen case)</div>
+                  <div id="jxg-v6-top" style="width:100%;aspect-ratio:4/3;"></div>
+                </div>
+                <div class="viz-panel">
+                  <div class="viz-panel-label">Upward-Sloping Demand Curve</div>
+                  <div id="jxg-v6-bottom" style="width:100%;aspect-ratio:3/1;max-height:140px;"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard">
+                <div class="sb-title">Giffen Scoreboard</div>
+                <div class="sb-row"><span class="sb-lbl">Bundle A (P<sub>X</sub>=$2)</span><span class="sb-num" id="v6-a">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Bundle C (compensated)</span><span class="sb-num" id="v6-c">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Bundle B (new price)</span><span class="sb-num" id="v6-b">–</span></div>
+                <div class="sb-row" style="color:var(--purple);margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--rule);">
+                  <span class="sb-lbl">SE (A→C)</span><span class="sb-num" id="v6-se">–</span>
+                </div>
+                <div class="sb-row" style="color:var(--red);">
+                  <span class="sb-lbl">IE (C→B)</span><span class="sb-num" id="v6-ie">–</span>
+                </div>
+                <div class="sb-row">
+                  <span class="sb-lbl">Total Effect</span><span class="sb-num" id="v6-te">–</span>
+                </div>
+                <div id="v6-verdict" style="margin-top:0.5rem;padding:0.4rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;text-align:center;"></div>
+              </div>
+              <div class="expand-box" style="margin-top:0.75rem;">
+                <div class="expand-header" onclick="toggleExpand(this)">Why is this rare? <span>▸</span></div>
+                <div class="expand-body">
+                  Two conditions must hold simultaneously:<br><br>
+                  <strong>1. Strong inferiority:</strong> The income effect on X must be positive (when real income falls, more X is demanded). This means X must be an inferior good.<br><br>
+                  <strong>2. Large budget share:</strong> X must account for a large fraction of total spending, so a price change has a big income effect.<br><br>
+                  In modern economies, no single good satisfies both conditions. Historical candidates include potatoes during famine conditions, where they were both inferior and essential.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Tooltip -->
+<div id="tip-global" style="position:fixed;display:none;background:#1a1a1a;color:#fff;font-size:0.75rem;padding:5px 9px;border-radius:5px;pointer-events:none;z-index:9999;max-width:220px;line-height:1.5;"></div>
+
+<script>
+/* ============================================================
+   Shared utilities
+   ============================================================ */
+function nn(n, d) {
+  if (d !== undefined) return n.toFixed(d);
+  if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+  return (Math.round(n*100)/100).toFixed(2);
+}
+function toggleViz(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+function toggleExpand(hdr) {
+  const body = hdr.nextElementSibling;
+  body.classList.toggle('open');
+  hdr.querySelector('span').textContent = body.classList.contains('open') ? '▾' : '▸';
+}
+
+/* ── TOC active highlight on scroll ── */
+document.addEventListener('DOMContentLoaded', () => {
+  const sections = document.querySelectorAll('.section-block');
+  const links    = document.querySelectorAll('.toc-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => io.observe(s));
+});
+
+function freeB(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } return null; }
+
+/* ============================================================
+   VIZ 1: Two-Panel Demand Derivation
+   ============================================================ */
+let v1b1 = null, v1b2 = null;
+let v1Px = 3;
+
+const V1_I = 60, V1_Py = 3, V1_alpha = 0.5;
+
+function initViz1() {
+  v1b1 = freeB(v1b1); v1b2 = freeB(v1b2);
+
+  v1b1 = JXG.JSXGraph.initBoard('jxg-v1-left', {
+    boundingbox: [-2, 26, 40, -1.8],
+    axis:true, showNavigation:false, showCopyright:false,
+    pan:{enabled:false}, zoom:{enabled:false},
+    defaultAxes:{ x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}, y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}} }
+  });
+
+  v1b2 = JXG.JSXGraph.initBoard('jxg-v1-right', {
+    boundingbox: [-2, 7, 40, -0.5],
+    axis:true, showNavigation:false, showCopyright:false,
+    pan:{enabled:false}, zoom:{enabled:false},
+    defaultAxes:{ x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}, y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}} }
+  });
+
+  const b1 = v1b1, b2 = v1b2;
+
+  // Axis labels
+  b1.create('text',[38,-0.7,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b1.create('text',[-1.5,25,'Y'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b2.create('text',[38,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+
+  // Static demand curve in right panel: P = (I*alpha)/X = 30/X
+  b2.create('functiongraph',[x => x > 0.2 ? (V1_I*V1_alpha)/x : NaN, 0.2, 40],
+    {strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
+
+  // Named points A (Px=1, X*=30), B (Px=2, X*=15), C (Px=3, X*=10)
+  const named = [{px:1,x:30,y:10,n:'A'},{px:2,x:15,y:10,n:'B'},{px:3,x:10,y:10,n:'C'}];
+  named.forEach(p => {
+    b1.create('point',[p.x,p.y],{size:5,fillColor:'#2e8b57',strokeColor:'#fff',strokeWidth:2,fixed:true,
+      name:p.n,withLabel:true,label:{fontSize:11,color:'#2e8b57',offset:[5,8]}});
+    b2.create('point',[p.x,p.px],{size:5,fillColor:'#2e8b57',strokeColor:'#fff',strokeWidth:2,fixed:true,
+      name:`${p.n}'`,withLabel:true,label:{fontSize:11,color:'#2e8b57',offset:[5,4]}});
+  });
+
+  // Dynamic elements: budget line (segment endpoint at x=I/Px)
+  const blP0 = b1.create('point',[0,V1_I/V1_Py],{visible:false,fixed:true});
+  const blP1 = b1.create('point',[() => V1_I/v1Px, 0],{visible:false});
+  b1.create('segment',[blP0,blP1],{strokeColor:'#1a1a1a',strokeWidth:2.5});
+
+  // IC (dynamic - we redraw it)
+  let v1IC = null;
+  function drawV1IC() {
+    if (v1IC) { try { b1.removeObject(v1IC); } catch(e){} }
+    const xs = V1_alpha * V1_I / v1Px;
+    const ys = (1-V1_alpha) * V1_I / V1_Py;
+    const u2 = Math.pow(xs,V1_alpha) * Math.pow(ys,1-V1_alpha);
+    const u2sq = u2 * u2;
+    v1IC = b1.create('functiongraph',[
+      x => x > 0.08 ? u2sq / x : NaN, 0.08, 42
+    ],{strokeColor:'#1a56db',strokeWidth:2.2,fixed:true});
+  }
+
+  // Dynamic optimal point
+  const optPt = b1.create('point',[() => V1_alpha*V1_I/v1Px, () => (1-V1_alpha)*V1_I/V1_Py],
+    {size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:false,
+     name:'Optimum',withLabel:true,label:{fontSize:10,color:'#e05252',offset:[7,7]}});
+
+  // Dynamic demand point in right panel
+  const demPt = b2.create('point',[() => V1_alpha*V1_I/v1Px, () => v1Px],
+    {size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:false,
+     name:'●',withLabel:false});
+
+  drawV1IC();
+  updateV1Stats();
+
+  document.getElementById('v1-px').addEventListener('input', function() {
+    v1Px = parseFloat(this.value);
+    document.getElementById('v1-px-val').textContent = `$${v1Px.toFixed(2)}`;
+    drawV1IC();
+    b1.update(); b2.update();
+    updateV1Stats();
+  });
+
+  if (window.MathJax) MathJax.typesetPromise([document.getElementById('sec-demand')]);
+}
+
+function updateV1Stats() {
+  const xs = V1_alpha * V1_I / v1Px;
+  const ys = (1-V1_alpha) * V1_I / V1_Py;
+  document.getElementById('v1-xi').textContent  = `I/PX = ${nn(V1_I/v1Px)}`;
+  document.getElementById('v1-opt').textContent = `(${nn(xs)}, ${nn(ys)})`;
+  document.getElementById('v1-mrs').textContent = `Y*/X* = ${nn(ys/xs)}`;
+  document.getElementById('v1-pr').textContent  = `PX/PY = ${nn(v1Px/V1_Py)}`;
+}
+
+/* ============================================================
+   VIZ 2: Slutsky Decomposition
+   ============================================================ */
+let v2b = null;
+let v2PxNew = 1.5;
+const V2_I = 60, V2_Py = 3, V2_PxOld = 3;
+
+function initViz2() {
+  v2b = freeB(v2b);
+  v2PxNew = parseFloat(document.getElementById('v2-px').value);
+  drawV2();
+  document.getElementById('v2-px').addEventListener('input', function() {
+    v2PxNew = parseFloat(this.value);
+    document.getElementById('v2-px-val').textContent = `$${v2PxNew.toFixed(2)}`;
+    drawV2();
+  });
+}
+
+function computeV2() {
+  const {I,Py,PxOld} = {I:V2_I,Py:V2_Py,PxOld:V2_PxOld};
+  const PxNew = v2PxNew;
+  const XA = I/(2*PxOld), YA = I/(2*Py);
+  const XB = I/(2*PxNew), YB = I/(2*Py);
+  const XC = XA * Math.sqrt(PxOld/PxNew);
+  const YC = XC * PxNew / Py;
+  return {XA,YA,XB,YB,XC,YC,SE:XC-XA,IE:XB-XC,TE:XB-XA};
+}
+
+function drawV2() {
+  v2b = freeB(v2b);
+  const d = computeV2();
+  const {I,Py,PxOld} = {I:V2_I,Py:V2_Py,PxOld:V2_PxOld};
+  const PxNew = v2PxNew;
+
+  const xiA    = I/PxOld, xiB = I/PxNew;
+  const yi     = I/Py;
+  const xiComp = d.XA + d.YA*Py/PxNew;
+  const xmax   = Math.max(xiA,xiB,xiComp)*1.25;
+  const ymax   = Math.max(yi,d.YC,d.YA)*1.45;
+
+  v2b = JXG.JSXGraph.initBoard('jxg-v2',{
+    boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.06],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
+  const b = v2b;
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:11,color:'#9aa3b2',fixed:true});
+
+  // Budget lines
+  b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
+  b.create('text',[xiA*0.35,yi*0.8,'Original'],{fontSize:9,color:'#3d5a80',fixed:true});
+
+  const yCompInt = d.YA + xiComp*PxNew/Py;
+  b.create('segment',[[0,yCompInt],[xiComp,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
+  b.create('text',[xiComp*0.08,yCompInt*0.78,'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
+
+  b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
+  b.create('text',[xiB*0.5,yi*0.6,'New'],{fontSize:9,color:'#c0392b',fixed:true});
+
+  // ICs
+  const alpha = 0.5;
+  const uA = Math.pow(d.XA,alpha)*Math.pow(d.YA,1-alpha);
+  b.create('functiongraph',[x=>x>0.05?Math.pow(uA*uA/x,1):NaN,0.05,xmax],
+    {strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
+  const uB = Math.pow(d.XB,alpha)*Math.pow(d.YB,1-alpha);
+  b.create('functiongraph',[x=>x>0.05?Math.pow(uB*uB/x,1):NaN,0.05,xmax],
+    {strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+
+  // Points A, C, B
+  [{x:d.XA,y:d.YA,n:'A',c:'#3d5a80'},{x:d.XC,y:d.YC,n:'C',c:'#6b52a8'},{x:d.XB,y:d.YB,n:'B',c:'#c0392b'}]
+    .forEach(p => b.create('point',[p.x,p.y],{size:7,fillColor:p.c,strokeColor:'#fff',strokeWidth:2,fixed:true,
+      name:p.n,withLabel:true,label:{fontSize:12,color:p.c,offset:[7,7]}}));
+
+  // SE/IE brackets on X axis
+  const yBr = -ymax*0.03;
+  b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2.5,fixed:true});
+  b.create('text',[(d.XA+d.XC)/2,yBr*2.5,'SE'],{fontSize:9,color:'#6b52a8',fixed:true});
+  b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
+  b.create('text',[(d.XC+d.XB)/2,yBr*2.5,'IE'],{fontSize:9,color:'#c0392b',fixed:true});
+
+  // Scoreboard
+  document.getElementById('v2-a').textContent = `(${nn(d.XA)}, ${nn(d.YA)})`;
+  document.getElementById('v2-c').textContent = `(${nn(d.XC)}, ${nn(d.YC)})`;
+  document.getElementById('v2-b').textContent = `(${nn(d.XB)}, ${nn(d.YB)})`;
+  document.getElementById('v2-se').textContent = `${d.SE >= 0 ? '+' : ''}${nn(d.SE)}`;
+  document.getElementById('v2-ie').textContent = `${d.IE >= 0 ? '+' : ''}${nn(d.IE)}`;
+  document.getElementById('v2-te').textContent = `${d.TE >= 0 ? '+' : ''}${nn(d.TE)}`;
+  const isNorm = (d.IE < 0) === (d.TE < 0);
+  document.getElementById('v2-type').textContent = isNorm ? 'Normal Good' : 'Inferior Good';
+}
+
+/* ============================================================
+   VIZ 3: Income Effects & Demand Shifts
+   ============================================================ */
+let v3b1 = null, v3b2 = null;
+let v3Income = 80, v3Type = 'normal';
+const V3_Px = 2, V3_Py = 3;
+
+function v3Xstar(I) {
+  if (v3Type === 'normal') return 0.5 * I / V3_Px;
+  return 20 - 0.05 * I;
+}
+function v3Ystar(I) {
+  if (v3Type === 'normal') return 0.5 * I / V3_Py;
+  return (I - V3_Px * v3Xstar(I)) / V3_Py;
+}
+function v3SetType(t) {
+  v3Type = t;
+  document.getElementById('v3-normal-btn').classList.toggle('active', t==='normal');
+  document.getElementById('v3-inferior-btn').classList.toggle('active', t==='inferior');
+  initViz3();
+}
+
+function initViz3() {
+  v3b1 = freeB(v3b1); v3b2 = freeB(v3b2);
+  v3Income = parseFloat(document.getElementById('v3-income').value);
+
+  const xmax = 35, ymax = 30;
+  v3b1 = JXG.JSXGraph.initBoard('jxg-v3-left',{
+    boundingbox:[-2,ymax,xmax,-2],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
+  v3b2 = JXG.JSXGraph.initBoard('jxg-v3-right',{
+    boundingbox:[-2,7,xmax,-0.4],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
+
+  const b1 = v3b1, b2 = v3b2;
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+
+  // Draw expansion path (static dashed line)
+  if (v3Type === 'normal') {
+    // Ray from origin slope = (V3_Px/V3_Py) = 2/3
+    b1.create('line',[[0,0],[1,V3_Px/V3_Py]],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true,
+      point1:{visible:false},point2:{visible:false}});
+    b1.create('text',[xmax*0.6,xmax*0.6*(V3_Px/V3_Py)*0.75,'Income Expansion Path'],{fontSize:9,color:'#6b52a8',fixed:true});
+  } else {
+    // Backward-bending: X decreases as I rises
+    const pathPts = [];
+    for (let i = 40; i <= 120; i += 5) { pathPts.push([v3Xstar(i), v3Ystar(i)]); }
+    const pathX = pathPts.map(p=>p[0]);
+    const pathY = pathPts.map(p=>p[1]);
+    b1.create('curve',[pathX,pathY],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true});
+    b1.create('text',[v3Xstar(60)+0.5,v3Ystar(60)+1,'IEP (inferior)'],{fontSize:9,color:'#6b52a8',fixed:true});
+  }
+
+  let v3IC = null, v3BL = null, v3Pt = null;
+  let v3D1 = null, v3D2 = null, v3RefPt = null;
+
+  function redrawV3() {
+    const I = v3Income;
+    const xs = v3Xstar(I), ys = v3Ystar(I);
+    const xi = I / V3_Px, yi = I / V3_Py;
+
+    if (v3BL) { try{b1.removeObject(v3BL);}catch(e){} }
+    v3BL = b1.create('segment',[[0,yi],[xi,0]],{strokeColor:'#1a1a1a',strokeWidth:2.5,fixed:true});
+
+    if (v3IC) { try{b1.removeObject(v3IC);}catch(e){} }
+    if (v3Type === 'normal') {
+      const u2 = xs * ys;
+      v3IC = b1.create('functiongraph',[x => x>0.05 ? u2/x : NaN, 0.05, xmax],
+        {strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+    } else {
+      // For inferior: draw a convex IC approximation through (xs, ys) with slope = -Px/Py
+      const slope = -V3_Px/V3_Py;
+      const k = ys - slope * xs;
+      v3IC = b1.create('functiongraph',[
+        x => x>0.05 ? k + slope*x + 0.5*(x-xs)*(x-xs)*0.05 : NaN, 0.05, xmax
+      ],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+    }
+
+    if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
+    v3Pt = b1.create('point',[xs,ys],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:10,color:'#e05252',offset:[7,7]}});
+
+    // Right panel: draw demand curve at current I
+    if (v3D1) { try{b2.removeObject(v3D1);}catch(e){} }
+    if (v3D2) { try{b2.removeObject(v3D2);}catch(e){} }
+    if (v3RefPt) { try{b2.removeObject(v3RefPt);}catch(e){} }
+
+    if (v3Type === 'normal') {
+      // X* = 0.5*I/Px => P = 0.5*I/X
+      const half = 0.5*I;
+      v3D1 = b2.create('functiongraph',[x=>x>0.1?half/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
+      // Reference line at Px=2: X* = 0.5*I/2
+      b2.create('segment',[[xs,0],[xs,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
+      v3RefPt = b2.create('point',[xs,V3_Px],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
+        name:'●',withLabel:false});
+    } else {
+      // Inferior: X* = 20 - 0.05*I at each Px => shifted demand function (conceptual linear)
+      // At Px=2: X* = 20 - 0.05*I; treat other prices as X* = (20-0.05*I) * (2/Px) * adjustment
+      const xRef = v3Xstar(I);
+      v3D1 = b2.create('functiongraph',[x=>x>0.1?(V3_Px*xRef)/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
+      b2.create('segment',[[xRef,0],[xRef,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
+      v3RefPt = b2.create('point',[xRef,V3_Px],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'●',withLabel:false});
+    }
+
+    document.getElementById('v3-xstar').textContent  = nn(xs);
+    document.getElementById('v3-ystar').textContent  = nn(ys);
+    const dxdi = v3Type === 'normal' ? '+0.25 (> 0)' : '-0.05 (< 0)';
+    document.getElementById('v3-dxi').textContent    = dxdi;
+    const dir = v3Type === 'normal' ? 'Rightward (demand up)' : 'Leftward (demand down)';
+    document.getElementById('v3-shift').textContent  = dir;
+  }
+
+  redrawV3();
+
+  document.getElementById('v3-income').addEventListener('input', function() {
+    v3Income = parseFloat(this.value);
+    document.getElementById('v3-i-val').textContent = `$${v3Income}`;
+    redrawV3();
+  });
+}
+
+/* ============================================================
+   VIZ 4: Shift vs. Movement Drill
+   ============================================================ */
+const SCENARIOS = [
+  { text:'P<sub>X</sub> rises from $3 to $5.', answer:'movement', explanation:'A change in the good\'s own price causes a movement along the demand curve — the consumer slides to a new point on the existing curve.' },
+  { text:'Consumer income increases by 25%.', answer:'shift', explanation:'Income changes shift the entire demand curve — at every price, demand changes. For a normal good, demand shifts rightward.' },
+  { text:'The price of a complement good falls.', answer:'shift', explanation:'A complement\'s price change shifts the demand curve. Cheaper complements increase demand for X, shifting the curve right.' },
+  { text:'Consumer tastes shift toward good X.', answer:'shift', explanation:'Preference changes shift the demand curve. Stronger tastes for X mean more is demanded at every price — a rightward shift.' },
+  { text:'P<sub>X</sub> falls from $4 to $2.', answer:'movement', explanation:'A change in own price causes a movement along the existing demand curve — quantity demanded increases, but the curve itself does not shift.' },
+  { text:'The price of a substitute good rises.', answer:'shift', explanation:'When a substitute becomes more expensive, consumers switch to X — demand for X increases at every price, shifting the curve rightward.' },
+  { text:'Consumer income falls by 30%.', answer:'shift', explanation:'Lower income shifts the demand curve. For a normal good, demand shifts leftward (less demanded at every price).' },
+  { text:'The government imposes a $2 per-unit tax on good X.', answer:'shift', explanation:'A per-unit tax is equivalent to a price increase for the consumer — this causes a movement along the curve, not a shift. (The demand curve itself is unchanged.)' },
+  { text:'New scientific study shows X has major health benefits.', answer:'shift', explanation:'Improved perceptions of X shift demand rightward — at every price, consumers now demand more of X.' },
+  { text:'P<sub>X</sub> rises from $2 to $6.', answer:'movement', explanation:'Own-price change: movement along the demand curve. Quantity demanded falls as you move up the curve.' },
+  { text:'The price of a complement good rises.', answer:'shift', explanation:'Costlier complement → demand for X falls → leftward shift of the demand curve.' },
+  { text:'Number of buyers in the market doubles.', answer:'shift', explanation:'More buyers means more total demand at every price — a rightward shift of the market demand curve.' }
+];
+
+let drillIdx = 0, drillScore = 0, drillTotal = 0, drillOrder = [], drillAnswered = false;
+
+let v4b = null;
+function initViz4() {
+  v4b = freeB(v4b);
+  v4b = JXG.JSXGraph.initBoard('jxg-drill', {
+    boundingbox:[-2,7,35,-0.4],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
+  const b = v4b;
+  b.create('text',[33,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  // Static demand curve for reference
+  b.create('functiongraph',[x=>x>0.1?60/x:NaN,0.1,35],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
+  // Current point (starts at mid)
+  b.create('point',[15, 4],{size:7,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
+    name:'current',withLabel:false});
+}
+
+function drillNewRound() {
+  if (drillOrder.length === 0) { drillOrder = SCENARIOS.map((_,i)=>i).sort(()=>Math.random()-0.5); }
+  drillIdx = drillOrder.shift();
+  drillAnswered = false;
+
+  const sc = SCENARIOS[drillIdx];
+  const root = document.getElementById('drill-root');
+  root.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div>
+        <div class="quiz-score" id="drill-score">Score: ${drillScore} / ${drillTotal}</div>
+        <div class="quiz-scenario">${sc.text}</div>
+        <div class="quiz-btns">
+          <button class="quiz-btn" id="drill-btn-m" onclick="drillAnswer('movement')">Movement Along</button>
+          <button class="quiz-btn" id="drill-btn-s" onclick="drillAnswer('shift')">Shift of Curve</button>
+        </div>
+        <div id="drill-feedback" class="quiz-feedback" style="display:none;"></div>
+        <button class="quiz-next" id="drill-next" onclick="drillNewRound()" style="display:none;">Next scenario →</button>
+      </div>
+      <div class="viz-panel" style="overflow:hidden;">
+        <div class="viz-panel-label">Reference diagram</div>
+        <div id="jxg-drill" style="width:100%;aspect-ratio:4/3;max-height:240px;"></div>
+      </div>
+    </div>`;
+
+  if (window.MathJax) MathJax.typesetPromise([root]);
+  initViz4();
+}
+
+function drillAnswer(ans) {
+  if (drillAnswered) return;
+  drillAnswered = true;
+  drillTotal++;
+
+  const sc = SCENARIOS[drillIdx];
+  const correct = ans === sc.answer;
+  if (correct) drillScore++;
+
+  document.getElementById('drill-score').textContent = `Score: ${drillScore} / ${drillTotal}`;
+
+  const btnM = document.getElementById('drill-btn-m');
+  const btnS = document.getElementById('drill-btn-s');
+  const fb   = document.getElementById('drill-feedback');
+  const next = document.getElementById('drill-next');
+
+  if (ans === 'movement') {
+    btnM.classList.add(correct ? 'correct' : 'incorrect');
+    btnS.classList.add(sc.answer === 'shift' ? 'revealed' : '');
+  } else {
+    btnS.classList.add(correct ? 'correct' : 'incorrect');
+    btnM.classList.add(sc.answer === 'movement' ? 'revealed' : '');
+  }
+
+  fb.style.display = 'block';
+  fb.innerHTML = `${correct ? '✅ <strong>Correct!</strong>' : `❌ <strong>Incorrect.</strong> The answer is <em>${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}</em>.`} ${sc.explanation}`;
+  next.style.display = 'inline-block';
+
+  // Animate diagram
+  animateDrill(sc.answer);
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+function animateDrill(type) {
+  if (!v4b) return;
+  v4b.suspendUpdate();
+  v4b.removeAllObjects();
+  const b = v4b;
+  b.create('text',[33,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+
+  if (type === 'movement') {
+    b.create('functiongraph',[x=>x>0.1?60/x:NaN,0.1,35],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
+    b.create('point',[5, 12],{size:6,fillColor:'#9aa3b2',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'old',withLabel:true,label:{fontSize:10,color:'#9aa3b2',offset:[5,5]}});
+    b.create('point',[15, 4],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'new',withLabel:true,label:{fontSize:10,color:'#e05252',offset:[5,5]}});
+    b.create('text',[10,5.5,'Movement along'],{fontSize:10,color:'#3d5a80',fixed:true});
+  } else {
+    b.create('functiongraph',[x=>x>0.1?60/x:NaN,0.1,35],{strokeColor:'#9aa3b2',strokeWidth:1.5,dash:2,fixed:true});
+    b.create('functiongraph',[x=>x>0.1?90/x:NaN,0.1,35],{strokeColor:'#2e8b57',strokeWidth:2.5,fixed:true});
+    b.create('text',[8,8,'New demand →'],{fontSize:10,color:'#2e8b57',fixed:true});
+    b.create('text',[5,5,'Old demand'],{fontSize:9,color:'#9aa3b2',fixed:true});
+  }
+  b.unsuspendUpdate();
+}
+
+/* ============================================================
+   VIZ 5: Cross-Price & Demand Function Explorer
+   ============================================================ */
+let v5b = null, v5IC = null;
+let v5Px = 4, v5Py = 4, v5I = 100, v5Rel = 'sub';
+const V5_alpha = 0.5;
+
+function v5SetRel(r) {
+  v5Rel = r;
+  document.getElementById('v5-sub-btn').classList.toggle('active', r==='sub');
+  document.getElementById('v5-comp-btn').classList.toggle('active', r==='comp');
+  redrawV5();
+}
+
+function initViz5() {
+  v5b = freeB(v5b);
+  v5b = JXG.JSXGraph.initBoard('jxg-v5',{
+    boundingbox:[-2,7,80,-0.4],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
+  const b = v5b;
+  b.create('text',[76,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+
+  redrawV5();
+
+  ['v5-px','v5-py','v5-income'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      v5Px = parseFloat(document.getElementById('v5-px').value);
+      v5Py = parseFloat(document.getElementById('v5-py').value);
+      v5I  = parseFloat(document.getElementById('v5-income').value);
+      document.getElementById('v5-px-val').textContent = `$${v5Px.toFixed(2)}`;
+      document.getElementById('v5-py-val').textContent = `$${v5Py.toFixed(2)}`;
+      document.getElementById('v5-i-val').textContent  = `$${v5I}`;
+      redrawV5();
+    });
+  });
+}
+
+function redrawV5() {
+  if (!v5b) return;
+  if (v5IC) { try { v5b.removeAllObjects(); } catch(e){} }
+
+  const b = v5b;
+  b.create('text',[76,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+
+  const Xs = V5_alpha * v5I / v5Px;
+  const Ys = (1-V5_alpha) * v5I / v5Py;
+
+  // Cross-price adjustment
+  const pyBase = 4;
+  const k = v5Rel === 'sub' ? 0.4 * (v5Py - pyBase) : -0.4 * (v5Py - pyBase);
+
+  // Demand curve: P = (V5_alpha * v5I + k*P) / X — simplify: X(P) = (v5I/2 + k*v5I/(2*v5Py)) / P
+  const adjI = v5I/2 + k * v5I / (2 * v5Py);
+  const safAdj = Math.max(adjI, 5);
+
+  b.create('functiongraph',[x => x>0.1 ? safAdj/x : NaN, 0.1, 80],
+    {strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
+
+  // Current point
+  const curX = safAdj / v5Px;
+  b.create('point',[curX,v5Px],{size:7,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
+    name:`(${Xs.toFixed(1)},${v5Px})`,withLabel:true,label:{fontSize:10,color:'#e05252',offset:[7,5]}});
+
+  v5IC = b;
+
+  // Update displays
+  const fmla = `X* = αI/P<sub>X</sub> = (0.5 × ${v5I}) / ${v5Px} = <strong>${Xs.toFixed(2)}</strong><br>` +
+               `Y* = (1-α)I/P<sub>Y</sub> = (0.5 × ${v5I}) / ${v5Py} = <strong>${Ys.toFixed(2)}</strong><br>` +
+               `P<sub>X</sub> · X* = ${(v5Px * Xs).toFixed(1)} (50% of income)<br>` +
+               `P<sub>Y</sub> · Y* = ${(v5Py * Ys).toFixed(1)} (50% of income)`;
+  document.getElementById('v5-formula').innerHTML = fmla;
+  document.getElementById('v5-xstar').textContent = Xs.toFixed(2);
+  document.getElementById('v5-ystar').textContent = Ys.toFixed(2);
+  document.getElementById('v5-expx').textContent  = `$${(v5Px*Xs).toFixed(2)}`;
+  const effText = v5Rel === 'sub'
+    ? (v5Py > pyBase ? 'Rightward (substitutes)' : v5Py < pyBase ? 'Leftward (substitutes)' : 'No shift (Py at base)')
+    : (v5Py > pyBase ? 'Leftward (complements)' : v5Py < pyBase ? 'Rightward (complements)' : 'No shift (Py at base)');
+  document.getElementById('v5-pyeff').textContent = effText;
+}
+
+/* ============================================================
+   VIZ 6: Giffen Good Visualizer
+   ============================================================ */
+let v6bTop = null, v6bBot = null;
+let v6PxNew = 3;
+const V6_I = 80, V6_Py = 5, V6_PxOld = 2;
+
+// Giffen parametric model:
+// Bundle A: at Px_old=2, I=80, Py=5: X_A=8, Y_A=12.8
+// Bundle B at PxNew: X_B = 8 + 2*(PxNew-2) [Giffen: X rises with Px]
+// Budget check: Y_B = (80 - PxNew*X_B)/5
+// X_C = X_A * sqrt(Px_old/PxNew): compensated via Slutsky
+// Y_C on compensated BL: Y_C = Y_A + (X_A - X_C)*PxNew/Py
+
+function computeV6() {
+  const {I,Py,PxOld} = {I:V6_I,Py:V6_Py,PxOld:V6_PxOld};
+  const PxNew = v6PxNew;
+  const XA = 8, YA = (I - PxOld*XA)/Py; // = 12.8
+  const XB = XA + 2*(PxNew - PxOld);
+  const YB = (I - PxNew*XB)/Py;
+  const XC = XA * Math.sqrt(PxOld/PxNew);
+  const YC = YA + (XA - XC)*PxNew/Py;
+  const SE = XC - XA;
+  const IE = XB - XC;
+  const TE = XB - XA;
+  return {XA,YA,XB,YB,XC,YC,SE,IE,TE,PxNew};
+}
+
+function drawV6() {
+  v6bTop = freeB(v6bTop); v6bBot = freeB(v6bBot);
+  const d = computeV6();
+  const {I,Py,PxOld} = {I:V6_I,Py:V6_Py,PxOld:V6_PxOld};
+  const PxNew = d.PxNew;
+
+  const xiA = I/PxOld, xiB = I/PxNew;
+  const yi = I/Py;
+  const xiComp = d.XA + d.YA*Py/PxNew;
+  const xmax = Math.max(xiA,d.XB+2)*1.2;
+  const ymax = Math.max(yi,d.YC,d.YA)*1.4;
+
+  // Top board: IC/budget diagram
+  v6bTop = JXG.JSXGraph.initBoard('jxg-v6-top',{
+    boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.06],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
+  const b = v6bTop;
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:11,color:'#9aa3b2',fixed:true});
+
+  // Budget lines
+  b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
+  b.create('text',[xiA*0.25,yi*0.85,'Original (P₀)'],{fontSize:9,color:'#3d5a80',fixed:true});
+
+  const yCompInt = d.YA + xiComp*PxNew/Py;
+  b.create('segment',[[0,yCompInt],[xiComp,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
+  b.create('text',[0.5,yCompInt*0.8,'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
+
+  b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
+  b.create('text',[xiB*0.5,yi*0.65,'New (P₁)'],{fontSize:9,color:'#c0392b',fixed:true});
+
+  // ICs: draw as function graphs (approximate convex ICs)
+  // IC_1 through A (tangent slope -PxOld/Py = -0.4)
+  // Using y = k/x^0.25 parameterised to pass through A=(8,12.8) with slope -0.4
+  const k1 = d.YA * Math.pow(d.XA, 0.25); // = 12.8 * 8^0.25 ≈ 21.53
+  b.create('functiongraph',[x=>x>0.1?k1/Math.pow(x,0.25):NaN,0.1,xmax],
+    {strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
+
+  // IC_2 through B (different curvature for Giffen demo)
+  // Use a slightly shifted IC below IC_1
+  const k2 = d.YB * Math.pow(d.XB, 0.25);
+  b.create('functiongraph',[x=>x>0.1?k2/Math.pow(x,0.25):NaN,0.1,xmax],
+    {strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+
+  // IC labels
+  b.create('text',[xmax*0.85,k1/Math.pow(xmax*0.85,0.25)+0.5,'U₁'],{fontSize:10,color:'#3d5a80',fixed:true});
+  b.create('text',[xmax*0.85,k2/Math.pow(xmax*0.85,0.25)+0.5,'U₂'],{fontSize:10,color:'#c0392b',fixed:true});
+
+  // Points
+  [{x:d.XA,y:d.YA,n:'A',c:'#3d5a80'},{x:d.XC,y:d.YC,n:'C',c:'#6b52a8'},{x:d.XB,y:d.YB,n:'B',c:'#c0392b'}]
+    .forEach(p => b.create('point',[p.x,p.y],{size:7,fillColor:p.c,strokeColor:'#fff',strokeWidth:2,fixed:true,
+      name:p.n,withLabel:true,label:{fontSize:12,color:p.c,offset:[7,7]}}));
+
+  // X-axis brackets for SE and IE
+  const yBr = -ymax*0.03;
+  if (Math.abs(d.SE) > 0.1) {
+    b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2.5,fixed:true});
+    b.create('text',[(d.XA+d.XC)/2,yBr*2.8,'SE←'],{fontSize:9,color:'#6b52a8',fixed:true});
+  }
+  if (Math.abs(d.IE) > 0.1) {
+    b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
+    b.create('text',[(d.XC+d.XB)/2,yBr*2.8,'IE→'],{fontSize:9,color:'#c0392b',fixed:true});
+  }
+
+  // Bottom board: upward-sloping demand curve
+  v6bBot = JXG.JSXGraph.initBoard('jxg-v6-bottom',{
+    boundingbox:[-1,6.5,20,-0.3],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
+  const b2 = v6bBot;
+  b2.create('text',[18.5,-0.2,'X'],{fontSize:10,color:'#9aa3b2',fixed:true});
+  b2.create('text',[-0.8,6,'P'],{fontSize:10,color:'#9aa3b2',fixed:true});
+
+  // Upward-sloping demand: X_B = 8 + 2*(Px - 2) => Px = (X-8)/2 + 2 = X/2 - 2
+  // But only for Px >= 2
+  b2.create('functiongraph',[x => (x-8)/2 + 2, 8, 18],
+    {strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
+  b2.create('text',[10,3,'Upward-sloping demand (Giffen)'],{fontSize:9,color:'#c0392b',fixed:true});
+  // Current point
+  b2.create('point',[d.XB,PxNew],{size:6,fillColor:'#c0392b',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'●',withLabel:false});
+
+  // Update scoreboard
+  document.getElementById('v6-a').textContent = `(${nn(d.XA)}, ${nn(d.YA)})`;
+  document.getElementById('v6-c').textContent = `(${nn(d.XC)}, ${nn(d.YC)})`;
+  document.getElementById('v6-b').textContent = `(${nn(d.XB)}, ${nn(d.YB)})`;
+  document.getElementById('v6-se').textContent = `${nn(d.SE)} (←, negative)`;
+  document.getElementById('v6-ie').textContent = `${nn(d.IE)} (→, positive)`;
+  document.getElementById('v6-te').textContent = `${nn(d.TE)} ${d.TE > 0 ? '> 0 (Giffen!)' : '< 0'}`;
+
+  const vEl = document.getElementById('v6-verdict');
+  if (d.TE > 0) {
+    vEl.style.background = '#fee2e2'; vEl.style.color = '#991b1b';
+    vEl.textContent = `|IE| > |SE| → Giffen Good`;
+  } else {
+    vEl.style.background = '#dcfce7'; vEl.style.color = '#166534';
+    vEl.textContent = `|SE| > |IE| → Normal behaviour`;
+  }
+}
+
+function initViz6() {
+  v6PxNew = parseFloat(document.getElementById('v6-px').value);
+  drawV6();
+  document.getElementById('v6-px').addEventListener('input', function() {
+    v6PxNew = parseFloat(this.value);
+    document.getElementById('v6-px-val').textContent = `$${v6PxNew.toFixed(2)}`;
+    drawV6();
+  });
+}
+
+/* ============================================================
+   Boot all visualizations
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  initViz1();
+  initViz2();
+  initViz3();
+  drillNewRound();
+  initViz5();
+  initViz6();
+
+  if (window.MathJax) MathJax.typesetPromise([document.body]);
+});
+
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+</script>
+</body>
+</html>

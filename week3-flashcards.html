@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 3: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: { typeset: false }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+    body { background: #f4f7fb; }
+
+    .fc-wrap {
+      max-width: 640px; margin: 0 auto;
+      padding: 1.75rem 1rem 3rem;
+      display: flex; flex-direction: column; gap: 1.25rem;
+    }
+    .fc-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .fc-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; color: #0077C8; }
+    .fc-ctr { font-size: 13px; color: #999; font-weight: 500; }
+    .fc-streak {
+      font-size: 12px; font-weight: 500; color: #854F0B;
+      background: #FAEEDA; padding: 3px 10px; border-radius: 99px;
+    }
+    .fc-prog { width: 100%; height: 4px; background: #E8EFF8; border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: #0077C8; border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag {
+      border: 1px solid #E2EAF4; border-radius: 99px;
+      padding: 4px 12px; font-size: 12px; font-weight: 500;
+      cursor: pointer; background: #fff; color: #666;
+      transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    }
+    .fc-ftag.active { background: #0077C8; color: #fff; border-color: #0077C8; }
+    .fc-badge {
+      display: inline-flex; font-size: 12px; font-weight: 500;
+      padding: 4px 12px; border-radius: 99px; width: fit-content;
+    }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner {
+      position: relative; transform-style: preserve-3d;
+      transition: transform 0.38s cubic-bezier(.4,0,.2,1);
+    }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back {
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      background: #fff; border: 1px solid #E2EAF4;
+      border-radius: 20px; padding: 1.75rem;
+      min-height: 220px; display: flex; flex-direction: column;
+    }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: #CBD8EC; }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.5; color: #111; flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: 0.88rem; color: #666; font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid #EEF3FA; margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: 0.88rem; line-height: 1.75; color: #333; white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: 12px; color: #BCC8D8; text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: #F0F4FA; border: 1px solid #DDE6F0; border-radius: 4px; padding: 0 5px; font-size: 10px; color: #888; }
+    .fc-rate-label { font-size: 12px; color: #BCC8D8; text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn {
+      border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: 13px; font-weight: 500;
+      cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: #fff; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s, transform 0.1s;
+    }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: 10px; opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary {
+      background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 2rem;
+      display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center;
+    }
+    .fc-sum-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: #0077C8; }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: 1.5rem; font-weight: 500; }
+    .fc-stat-l { font-size: 11px; font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: #F0F4FA; border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary {
+      flex: 1; background: #0077C8; color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1rem;
+      font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s;
+    }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline {
+      flex: 1; background: #fff; color: #0077C8; border: 1px solid #CBD8EC; border-radius: 12px; padding: 0.7rem 1rem;
+      font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    }
+    .fc-btn-outline:hover { background: #EFF6FF; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published active"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 4</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 5</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 7</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="week3.html">Week 3</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Flashcards</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<div class="fc-wrap" id="fc-root"></div>
+
+<script>
+/* ============================================================
+   EC224 Week 3 Flashcards
+   ============================================================ */
+
+const CARDS = [
+  { type:'Def', q:'What is a consumer\'s demand function?',
+    a:'A demand function expresses the quantity demanded of a good as a function of its own price, prices of other goods, and income:\n\n\\(X^* = f(P_X, P_Y, I)\\)\n\nIt is derived by solving the utility-maximisation problem for every possible price-income combination.' },
+
+  { type:'Def', q:'State the Law of Demand.',
+    a:'The Law of Demand states that, holding income and other prices constant, the quantity demanded of a good falls when its own price rises:\n\n\\(\\frac{\\partial X^*}{\\partial P_X} < 0\\)\n\nThis holds for normal goods and most inferior goods. The exception is the Giffen good.' },
+
+  { type:'Concept', q:'How is a demand curve derived from the IC/budget constraint diagram?',
+    a:'Vary \\(P_X\\) while holding \\(I\\) and \\(P_Y\\) fixed. At each price:\n1. The budget line pivots around the fixed Y-intercept \\(I/P_Y\\).\n2. Find the new optimal bundle \\((X^*, Y^*)\\).\n3. Plot \\((X^*, P_X)\\) in a separate panel.\n\nConnecting these points traces the demand curve. This is the price-consumption curve projected onto the price-quantity plane.' },
+
+  { type:'Formula', q:'For Cobb-Douglas \\(U=X^\\alpha Y^\\beta\\), what is the demand for X?',
+    a:'\\[X^* = \\frac{\\alpha}{\\alpha+\\beta}\\cdot\\frac{I}{P_X}\\]\n\nFor \\(\\alpha + \\beta = 1\\): \\(X^* = \\alpha I / P_X\\).\n\nThe consumer always spends fraction \\(\\alpha\\) of income on X, regardless of prices. This is the constant-budget-share property.' },
+
+  { type:'Def', q:'What is a normal good?',
+    a:'A normal good is one whose demand increases when income rises, holding prices fixed:\n\n\\(\\frac{\\partial X^*}{\\partial I} > 0\\)\n\nMost goods are normal. Cobb-Douglas always yields normal goods. The income expansion path slopes upward for normal goods.' },
+
+  { type:'Def', q:'What is an inferior good?',
+    a:'An inferior good is one whose demand decreases when income rises:\n\n\\(\\frac{\\partial X^*}{\\partial I} < 0\\)\n\nClassic examples: bus rides (as income rises, people switch to cars), instant noodles, generic staples. The income expansion path bends backward for inferior goods.' },
+
+  { type:'Def', q:'What is the substitution effect (SE)?',
+    a:'The substitution effect measures the change in quantity demanded due purely to the change in relative prices, holding utility constant (moving along the same IC).\n\nIt is always negative for own-price changes: when \\(P_X\\) rises, SE causes less X to be consumed.\n\n\\(\\text{SE} = X_C - X_A < 0\\) when \\(P_X \\uparrow\\)' },
+
+  { type:'Def', q:'What is the income effect (IE)?',
+    a:'The income effect measures the change in quantity demanded due to the change in real purchasing power, holding relative prices constant (shifting between ICs).\n\nFor normal goods, IE reinforces SE (both negative when \\(P_X\\) rises).\nFor inferior goods, IE is positive (partially offsets SE).\n\n\\(\\text{IE} = X_B - X_C\\)' },
+
+  { type:'Formula', q:'State the Slutsky decomposition.',
+    a:'Any total price effect can be decomposed as:\n\n\\[\\underbrace{X_B - X_A}_{\\text{Total Effect}} = \\underbrace{(X_C - X_A)}_{\\text{SE}} + \\underbrace{(X_B - X_C)}_{\\text{IE}}\\]\n\nWhere A = original bundle, C = compensated bundle (on original IC at new prices), B = new bundle.\n\nFor Cobb-Douglas: \\(X_C = X_A\\sqrt{P_{X,old}/P_{X,new}}\\)' },
+
+  { type:'TF', q:'True or False: For a normal good, when \\(P_X\\) rises, both SE and IE are negative.',
+    a:'TRUE.\n\nWhen \\(P_X\\) rises:\n- SE < 0: Consumer substitutes away from the now-more-expensive X.\n- IE < 0: Rising \\(P_X\\) reduces real purchasing power; for a normal good, lower real income means less X demanded.\n\nBoth effects reduce \\(X^*\\), so the demand curve slopes downward steeply.' },
+
+  { type:'TF', q:'True or False: For an inferior good, when \\(P_X\\) rises, SE and IE have opposite signs.',
+    a:'TRUE.\n\nWhen \\(P_X\\) rises:\n- SE < 0 (always): Consumer substitutes away from X.\n- IE > 0: Lower real income leads to MORE X demanded (since X is inferior).\n\nThe net effect depends on which dominates. Usually |SE| > |IE|, so demand still falls. If |IE| > |SE|, you get a Giffen good.' },
+
+  { type:'Def', q:'What is a Giffen good?',
+    a:'A Giffen good is an inferior good for which demand RISES when its price rises:\n\n\\(\\frac{\\partial X^*}{\\partial P_X} > 0\\)\n\nThis requires:\n1. X must be a strongly inferior good (large negative IE).\n2. X must occupy a large share of the budget.\n\nThe income effect dominates the substitution effect in magnitude. Giffen goods are theoretically possible but extremely rare in practice.' },
+
+  { type:'Concept', q:'What is the income expansion path (IEP)?',
+    a:'The income expansion path traces the locus of optimal bundles as income varies (with prices held fixed).\n\n- Normal goods: IEP slopes upward and to the right (ray from origin for Cobb-Douglas).\n- Inferior goods: IEP bends backward (demand for the inferior good eventually decreases as income rises).\n\nThe IEP is the income analog of the price-consumption curve.' },
+
+  { type:'Concept', q:'What is the price-consumption curve (PCC)?',
+    a:'The price-consumption curve traces the locus of optimal bundles as \\(P_X\\) varies (with income and \\(P_Y\\) fixed).\n\nFor Cobb-Douglas \\(U=X^{0.5}Y^{0.5}\\):\n- \\(Y^* = I/(2P_Y)\\) is constant as \\(P_X\\) changes.\n- So the PCC is a horizontal line at \\(Y^* = I/(2P_Y)\\).\n\nProjecting the PCC onto the \\((X, P_X)\\) plane gives the demand curve.' },
+
+  { type:'Concept', q:'What is the compensated (Hicksian) demand?',
+    a:'Compensated demand \\(X_C\\) is the quantity demanded when the consumer is given just enough income to maintain original utility \\(U^*\\) at the new prices.\n\nFor Cobb-Douglas with \\(\\alpha=0.5\\):\n\\[X_C = X_A \\cdot \\sqrt{\\frac{P_{X,old}}{P_{X,new}}}\\]\n\nThe compensated budget line has the new price slope but is tangent to the original IC at point C.' },
+
+  { type:'Concept', q:'Difference: shift of demand curve vs. movement along it?',
+    a:'Movement along the demand curve: caused by a change in the GOOD\'S OWN PRICE \\(P_X\\). The consumer moves from one point to another on the same demand curve.\n\nShift of the demand curve: caused by a change in ANYTHING ELSE\n- Income \\(I\\) changes\n- Price of another good \\(P_Y\\) changes\n- Tastes change\n- Number of buyers changes\n\nA rightward shift = increase in demand at every price.' },
+
+  { type:'Def', q:'What are substitute goods?',
+    a:'Goods X and Y are substitutes if consuming more of Y reduces the marginal utility of X, making the consumer more willing to switch.\n\nEquivalently: \\(\\frac{\\partial X^*}{\\partial P_Y} > 0\\)\n\nWhen the price of Y rises, demand for X increases (consumers switch to X). Examples: Coke and Pepsi, butter and margarine, bus and taxi.' },
+
+  { type:'Def', q:'What are complement goods?',
+    a:'Goods X and Y are complements if they are consumed together, so consuming more of Y increases the marginal utility of X.\n\nEquivalently: \\(\\frac{\\partial X^*}{\\partial P_Y} < 0\\)\n\nWhen the price of Y rises, demand for X falls. Examples: coffee and creamer, cars and gasoline, smartphones and apps.' },
+
+  { type:'Concept', q:'Why are Giffen goods so rare in practice?',
+    a:'Two conditions must hold simultaneously:\n\n1. The good must be strongly inferior (large \\(\\partial X^*/\\partial I < 0\\)).\n2. The good must occupy a very large share of the budget (so the income effect is large in absolute terms).\n\nIn wealthy economies, no single good consumes most of the budget. Historical candidates: potatoes during the Irish Famine, low-quality staples in subsistence economies. Even then, empirical confirmation is difficult.' },
+
+  { type:'Formula', q:'For Cobb-Douglas \\(U=X^{0.5}Y^{0.5}\\), what is the optimal demand and Slutsky decomposition formula?',
+    a:'Optimal: \\(X^* = \\frac{I}{2P_X}\\), \\(Y^* = \\frac{I}{2P_Y}\\)\n\nAfter a price change from \\(P_0\\) to \\(P_1\\):\n\\[X_A = \\frac{I}{2P_0},\\quad X_B = \\frac{I}{2P_1},\\quad X_C = \\frac{I}{2P_0}\\cdot\\sqrt{\\frac{P_0}{P_1}}\\]\n\n\\[\\text{SE} = X_C - X_A = \\frac{I}{2\\sqrt{P_0 P_1}} - \\frac{I}{2P_0}\\]\n\nSE and IE are both negative when \\(P_1 > P_0\\) (normal good).' }
+];
+
+/* ── State ── */
+let allCards = [...CARDS];
+let deck     = [];
+let idx      = 0;
+let flipped  = false;
+let scores   = { easy:0, ok:0, hard:0 };
+let streak   = 0;
+let filter   = 'All';
+
+/* ── Utilities ── */
+function shuffle(arr) { for (let i = arr.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+function typeColor(t) {
+  const m = { Def:'#E8F0FE', Concept:'#E8FFF3', Formula:'#FFF8E8', TF:'#FFF0F8' };
+  const c = { Def:'#1a56db', Concept:'#2e8b57', Formula:'#d4813a', TF:'#8b2ec5' };
+  return { bg: m[t]||'#f4f7fb', fg: c[t]||'#555' };
+}
+
+/* ── Build deck ── */
+function buildDeck() {
+  deck = filter === 'All' ? shuffle([...allCards]) : shuffle(allCards.filter(c => c.type === filter));
+  idx = 0; flipped = false; scores = { easy:0, ok:0, hard:0 }; streak = 0;
+  render();
+}
+
+/* ── Render ── */
+function render() {
+  const root = document.getElementById('fc-root');
+  if (idx >= deck.length) { renderSummary(); return; }
+  const card = deck[idx];
+  const pct  = Math.round(idx / deck.length * 100);
+  const tc   = typeColor(card.type);
+
+  root.innerHTML = `
+    <div class="fc-hdr">
+      <span class="fc-title">EC224 · Week 3</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="fc-ctr">${idx+1} / ${deck.length}</span>
+        <span class="fc-streak">🔥 ${streak}</span>
+      </div>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${pct}%"></div></div>
+
+    <div class="fc-filters">
+      ${['All','Def','Concept','Formula','TF'].map(f =>
+        `<button class="fc-ftag${f===filter?' active':''}" onclick="setFilter('${f}')">${f==='All'?'All types':f}</button>`
+      ).join('')}
+    </div>
+
+    <span class="fc-badge" style="background:${tc.bg};color:${tc.fg}">${card.type}</span>
+
+    <div id="fc-card-zone">
+      <div class="fc-scene">
+        <div class="fc-card-inner" id="fc-inner">
+          <div class="fc-front" onclick="flipCard()">
+            <div class="fc-q">${card.q}</div>
+            <div class="fc-hint">tap to flip &nbsp;<span class="fc-kbd">space</span></div>
+          </div>
+          <div class="fc-back">
+            <div class="fc-q-sm">${card.q}</div>
+            <div class="fc-a">${card.a}</div>
+          </div>
+        </div>
+      </div>
+      <div id="fc-rate-area"></div>
+    </div>`;
+
+  if (window.MathJax) MathJax.typesetPromise([root]).catch(()=>{});
+}
+
+function flipCard() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('fc-inner').classList.add('flipped');
+  setTimeout(() => {
+    const ra = document.getElementById('fc-rate-area');
+    if (!ra) return;
+    ra.innerHTML = `
+      <div class="fc-reveal" style="margin-top:1rem;">
+        <div class="fc-rate-label">How well did you know this?</div>
+        <div class="fc-rate-row">
+          <button class="fc-rbtn" style="color:#c0392b;border-color:#fca5a5;background:#fff5f5" onclick="rate('hard')">
+            Still learning<div class="kh">1</div>
+          </button>
+          <button class="fc-rbtn" style="color:#d4813a;border-color:#fcd34d;background:#fffbeb" onclick="rate('ok')">
+            Getting there<div class="kh">2</div>
+          </button>
+          <button class="fc-rbtn" style="color:#2e8b57;border-color:#4ade80;background:#f0fdf4" onclick="rate('easy')">
+            Got it!<div class="kh">3</div>
+          </button>
+        </div>
+      </div>`;
+    if (window.MathJax) MathJax.typesetPromise([ra]).catch(()=>{});
+  }, 380);
+}
+
+function rate(r) {
+  scores[r]++;
+  if (r === 'easy') streak++; else streak = 0;
+  const zone = document.getElementById('fc-card-zone');
+  if (zone) {
+    zone.classList.add('fc-zone-exit');
+    setTimeout(() => { idx++; flipped = false; render(); }, 180);
+  }
+}
+
+function setFilter(f) { filter = f; buildDeck(); }
+
+function renderSummary() {
+  const root = document.getElementById('fc-root');
+  const total = scores.easy + scores.ok + scores.hard;
+  root.innerHTML = `
+    <div class="fc-summary">
+      <div class="fc-sum-title">Deck complete!</div>
+      <p style="color:#666;font-size:0.9rem;">You reviewed all ${total} cards in the ${filter==='All'?'full':'filtered'} deck.</p>
+      <div class="fc-stat-row">
+        <div class="fc-stat" style="background:#f0fdf4">
+          <span class="fc-stat-n" style="color:#16a34a">${scores.easy}</span>
+          <span class="fc-stat-l" style="color:#16a34a">Got it!</span>
+        </div>
+        <div class="fc-stat" style="background:#fffbeb">
+          <span class="fc-stat-n" style="color:#d4813a">${scores.ok}</span>
+          <span class="fc-stat-l" style="color:#d4813a">Getting there</span>
+        </div>
+        <div class="fc-stat" style="background:#fff5f5">
+          <span class="fc-stat-n" style="color:#c0392b">${scores.hard}</span>
+          <span class="fc-stat-l" style="color:#c0392b">Still learning</span>
+        </div>
+      </div>
+      <div class="fc-bar-track">
+        <div class="fc-bar-seg" style="background:#4ade80;width:${total?Math.round(scores.easy/total*100):0}%"></div>
+        <div class="fc-bar-seg" style="background:#fcd34d;width:${total?Math.round(scores.ok/total*100):0}%"></div>
+        <div class="fc-bar-seg" style="background:#f87171;width:${total?Math.round(scores.hard/total*100):0}%"></div>
+      </div>
+      <div class="fc-btn-row">
+        <button class="fc-btn-primary" onclick="buildDeck()">Restart deck</button>
+        <button class="fc-btn-outline" onclick="location.href='week3.html'">Back to Week 3</button>
+      </div>
+    </div>`;
+}
+
+/* ── Keyboard support ── */
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' && !flipped) { e.preventDefault(); flipCard(); }
+  if (e.key === '1' && flipped) rate('hard');
+  if (e.key === '2' && flipped) rate('ok');
+  if (e.key === '3' && flipped) rate('easy');
+});
+
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+buildDeck();
+</script>
+</body>
+</html>

@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 3: Practice Problems · EC224</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: { typeset: false }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    .prob-card {
+      background: var(--white); border: 1px solid var(--rule);
+      border-radius: 10px; padding: 1.4rem 1.6rem; margin: 1.4rem 0 1rem;
+    }
+    .prob-type-badge {
+      display: inline-block; font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      background: var(--accent-light); color: var(--accent);
+      border: 1px solid var(--accent-mid); border-radius: 20px;
+      padding: 2px 10px; margin-bottom: 0.75rem;
+    }
+    .prob-statement { font-size: 0.97rem; color: var(--text); line-height: 1.75; margin-bottom: 0.9rem; }
+    .method-hint {
+      background: var(--off-white); border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0; padding: 0.65rem 0.9rem;
+      font-size: 0.85rem; color: var(--muted); line-height: 1.55;
+    }
+    .method-hint strong { color: var(--text); }
+
+    .answer-section { margin: 1rem 0 0.5rem; }
+    .answer-section-label {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem;
+    }
+    .answer-row { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .ans-label { font-family: var(--mono); font-size: 0.88rem; font-weight: 500; color: var(--text); min-width: 48px; }
+    .ans-input {
+      font-family: var(--mono); font-size: 0.9rem; width: 100px; padding: 0.32rem 0.65rem;
+      border: 1px solid var(--rule); border-radius: 6px; background: var(--white); color: var(--text);
+      outline: none; transition: border-color 0.15s;
+    }
+    .ans-input:focus { border-color: var(--accent); }
+
+    .btn-row { display: flex; gap: 0.45rem; flex-wrap: wrap; align-items: center; margin: 0.5rem 0 0.7rem; }
+    .pp-btn {
+      font-family: var(--font); font-size: 0.81rem; font-weight: 500;
+      padding: 0.38rem 0.9rem; border-radius: 6px; cursor: pointer;
+      transition: all 0.15s; border: 1px solid transparent;
+    }
+    .btn-check  { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-check:hover  { background: #1446be; }
+    .btn-sol    { background: var(--off-white); color: var(--text); border-color: var(--rule); }
+    .btn-sol:hover    { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+    .btn-new    { background: var(--off-white); color: var(--muted); border-color: var(--rule); }
+    .btn-new:hover    { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .attempts-tag {
+      font-family: var(--mono); font-size: 0.73rem; color: var(--muted);
+      padding: 0.2rem 0.55rem; background: var(--off-white);
+      border: 1px solid var(--rule); border-radius: 20px;
+    }
+
+    .feedback-area { margin: 0.4rem 0 0.2rem; }
+    .fb-ok { background: #dcfce7; border: 1px solid #4ade80; border-radius: 7px; padding: 0.65rem 1rem; font-size: 0.87rem; color: #166534; line-height: 1.6; }
+    .fb-wrong { background: #fffbeb; border: 1px solid #d97706; border-radius: 7px; padding: 0.65rem 1rem; font-size: 0.87rem; color: #92400e; }
+    .fb-hint { margin-top: 0.5rem; padding: 0.6rem 0.9rem; background: var(--off-white); border: 1px solid var(--rule); border-radius: 7px; font-size: 0.84rem; color: var(--muted); line-height: 1.6; }
+    .fb-hint strong { color: var(--accent); }
+    .fb-error { background: #fee2e2; border: 1px solid #fc8181; border-radius: 7px; padding: 0.65rem 1rem; font-size: 0.87rem; color: #991b1b; }
+    .fb-partial { background: #fffbeb; border: 1px solid #d97706; border-radius: 7px; padding: 0.65rem 1rem; font-size: 0.87rem; color: #92400e; line-height: 1.6; }
+
+    .solution-wrapper { margin: 1.4rem 0 0; animation: pp-fadein 0.3s ease; }
+    @keyframes pp-fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .sol-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.7rem; }
+    .solution-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: var(--white); }
+    .sol-graph { border-right: 1px solid var(--rule); }
+    .sol-steps { padding: 1.2rem 1.1rem; overflow-y: auto; max-height: 480px; }
+    .step-card {
+      display: flex; gap: 0.7rem; align-items: flex-start;
+      padding: 0.72rem 0.85rem; border-radius: 7px; margin-bottom: 0.55rem;
+      background: var(--off-white); border-left: 3px solid var(--accent);
+    }
+    .step-card.verify { border-left-color: #16a34a; }
+    .step-num { font-family: var(--mono); font-size: 1.25rem; font-weight: 600; color: var(--accent); min-width: 24px; }
+    .step-card.verify .step-num { color: #16a34a; }
+    .step-body { font-size: 0.83rem; color: var(--text); line-height: 1.7; }
+    .step-title { font-weight: 600; font-size: 0.80rem; color: var(--accent); margin-bottom: 3px; }
+    .step-card.verify .step-title { color: #16a34a; }
+    .ans-box { background: #dcfce7; border-radius: 7px; padding: 0.55rem 0.85rem; margin-top: 0.5rem; font-size: 0.9rem; color: #166534; font-weight: 600; }
+
+    .intuition-box {
+      margin-top: 1.1rem; background: var(--accent-light);
+      border: 1px solid var(--accent-mid); border-left: 4px solid var(--accent);
+      border-radius: 0 8px 8px 0; padding: 1rem 1.2rem;
+    }
+    .intuition-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.45rem; }
+    .intuition-title { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+    .intuition-body { font-size: 0.87rem; color: var(--muted); line-height: 1.7; }
+    .intuition-body strong { color: var(--text); }
+
+    /* Problem type toggle */
+    .type-selector { display: flex; gap: 0.5rem; margin: 1.5rem 0 0.5rem; flex-wrap: wrap; }
+    .type-btn {
+      font-family: var(--font); font-size: 0.82rem; font-weight: 500;
+      padding: 0.4rem 1rem; border-radius: 7px; border: 1px solid var(--rule);
+      background: var(--off-white); color: var(--muted); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .type-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .type-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+    @media (max-width: 660px) {
+      .solution-grid { grid-template-columns: 1fr; }
+      .sol-graph { border-right: none; border-bottom: 1px solid var(--rule); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published active"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 4</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 5</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 7</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="top-bar" role="banner">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="week3.html">Week 3</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Practice Problems</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main class="main">
+
+  <div class="hero">
+    <div class="week-ghost">03</div>
+    <p class="week-label">Week 3 · Practice Problems</p>
+    <h1>Demand &amp; Slutsky: Problem Generator</h1>
+    <p class="hero-instructor">Prof. Naveen Sunder</p>
+    <div class="summary-notice">
+      Choose a problem type, then work through it on paper first. Enter your answers and check them, or reveal the full worked solution after your first attempt.
+    </div>
+  </div>
+
+  <div class="type-selector">
+    <button class="type-btn active" id="tbtn-demand" onclick="switchType('demand')">Problem 1: Demand Curve Derivation</button>
+    <button class="type-btn" id="tbtn-slutsky" onclick="switchType('slutsky')">Problem 2: Slutsky Decomposition</button>
+  </div>
+
+  <div id="prob-container"></div>
+  <div id="sol-container"></div>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-left">
+      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
+      &nbsp;·&nbsp; EC224 Intermediate Microeconomics
+      &nbsp;·&nbsp; <a href="week3.html">← Back to Week 3</a>
+    </div>
+    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
+  </footer>
+
+</main>
+
+<script>
+/* ============================================================
+   EC224 · Week 3 Practice Problem Generator
+   ============================================================ */
+
+let problemType = 'demand';
+let currentProb = null;
+let currentSol  = null;
+let solBoard    = null;
+let solBoard2   = null;
+let attempts    = 0;
+
+/* ── Utilities ── */
+function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function niceNum(n, decimals) {
+  if (decimals !== undefined) return n.toFixed(decimals);
+  if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+  const r = Math.round(n * 100) / 100;
+  if (Math.abs(r - Math.round(r)) < 1e-6) return String(Math.round(r));
+  return r.toFixed(2);
+}
+function parseAnswer(s) {
+  if (!s || !s.trim()) return null;
+  const t = s.trim().replace(/,/g,'');
+  const frac = t.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+  if (frac) return parseInt(frac[1]) / parseInt(frac[2]);
+  const n = parseFloat(t);
+  return isNaN(n) ? null : n;
+}
+function near(a, b, tol) { return Math.abs(a - b) <= tol; }
+function freeBoard(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } return null; }
+
+/* ================================================================
+   PROBLEM TYPE 1: DEMAND CURVE DERIVATION
+   ================================================================ */
+
+function genDemandProblem() {
+  const I    = randFrom([60, 80, 100, 120]);
+  const Py   = randFrom([2, 3, 4]);
+  const alpha = 0.5;
+  // Pick 3 distinct Px values from the set
+  const allPx = [1, 2, 3, 4, 6];
+  const shuffled = allPx.sort(() => Math.random() - 0.5).slice(0, 3).sort((a,b) => a-b);
+  return { type:'demand', I, Py, alpha, pxArr: shuffled };
+}
+
+function solveDemand(prob) {
+  const { I, Py, alpha, pxArr } = prob;
+  return pxArr.map(Px => ({
+    Px,
+    Xstar: alpha * I / Px,
+    Ystar: (1 - alpha) * I / Py
+  }));
+}
+
+function renderDemandProblem() {
+  const { I, Py, alpha, pxArr } = currentProb;
+  const sols = currentSol;
+
+  const rows = pxArr.map((Px, i) => `
+    <div class="answer-row">
+      <span class="ans-label">\\(P_X=${Px}\\):</span>
+      <span class="ans-label" style="min-width:28px;">\\(X^*=\\)</span>
+      <input class="ans-input" id="ans-x${i}" type="text" placeholder="e.g. ${sols[i].Xstar % 1 === 0 ? sols[i].Xstar : '?'}" autocomplete="off" />
+    </div>`).join('');
+
+  document.getElementById('prob-container').innerHTML = `
+    <div class="prob-card">
+      <span class="prob-type-badge">Demand Curve Derivation</span>
+      <div class="prob-statement">
+        A consumer has income \\(I = ${I}\\) and faces \\(P_Y = ${Py}\\).<br>
+        Their utility is \\(U(X,Y) = X^{1/2}Y^{1/2}\\) (Cobb-Douglas, \\(\\alpha = 0.5\\)).<br><br>
+        <strong>(a)</strong> For each price below, compute the optimal \\(X^*\\) using \\(X^* = \\tfrac{I}{2P_X}\\).<br>
+        <strong>(b)</strong> These three \\((X^*, P_X)\\) pairs trace out the demand curve.
+      </div>
+      <div class="method-hint"><strong>Approach:</strong> With \\(\\alpha=\\beta=0.5\\), the Cobb-Douglas shortcut gives \\(X^* = I/(2P_X)\\) directly. Compute at each price, then verify \\(P_X X^* + P_Y Y^* = I\\).</div>
+    </div>
+    <div class="answer-section">
+      <div class="answer-section-label">Your Answers</div>
+      ${rows}
+      <div class="btn-row">
+        <button class="pp-btn btn-check" onclick="checkDemandAnswer()">✓ Check Answers</button>
+        <button class="pp-btn btn-sol"   onclick="showDemandSolution()">Show Solution</button>
+        <button class="pp-btn btn-new"   onclick="newProblem()">↻ New Problem</button>
+        <span class="attempts-tag" id="att-lbl">Attempts: 0</span>
+      </div>
+      <div class="feedback-area" id="feedback"></div>
+    </div>`;
+
+  document.getElementById('sol-container').innerHTML = '';
+  if (window.MathJax) MathJax.typesetPromise([document.getElementById('prob-container')]);
+  setTimeout(() => { const el = document.getElementById('ans-x0'); if (el) el.focus(); }, 120);
+}
+
+function checkDemandAnswer() {
+  const sols = currentSol;
+  const fb = document.getElementById('feedback');
+  const answers = sols.map((s, i) => parseAnswer((document.getElementById(`ans-x${i}`) || {}).value || ''));
+
+  if (answers.some(a => a === null)) {
+    fb.innerHTML = `<div class="fb-error">Could not parse one or more answers. Use formats like <code>15</code> or <code>30</code>.</div>`;
+    return;
+  }
+  attempts++;
+  document.getElementById('att-lbl').textContent = `Attempts: ${attempts}`;
+
+  let allCorrect = true;
+  let resultLines = [];
+  sols.forEach((s, i) => {
+    const tol = Math.max(0.05, s.Xstar * 0.01);
+    const ok = near(answers[i], s.Xstar, tol);
+    if (!ok) allCorrect = false;
+    resultLines.push(`\\(P_X=${s.Px}\\): ${ok ? '✅' : '❌'} your answer ${niceNum(answers[i])}, correct ${niceNum(s.Xstar)}`);
+  });
+
+  if (allCorrect) {
+    fb.innerHTML = `<div class="fb-ok">✅ <strong>All correct!</strong> The three demand points are:<br>${resultLines.join('<br>')}<br>These lie on the demand curve \\(X^* = ${currentProb.I/(2)}\\!/P_X\\).</div>`;
+  } else {
+    const hint = attempts === 1
+      ? `Recall \\(X^* = \\tfrac{I}{2P_X} = \\tfrac{${currentProb.I}}{2P_X}\\). Substitute each price value directly.`
+      : `Correct answers: ${sols.map(s => `\\(P_X=${s.Px}: X^*=${niceNum(s.Xstar)}\\)`).join(', ')}.`;
+    fb.innerHTML = `<div class="fb-partial">${resultLines.join('<br>')}</div><div class="fb-hint"><strong>Hint:</strong> ${hint}</div>`;
+  }
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+function showDemandSolution() {
+  if (attempts === 0) {
+    const fb = document.getElementById('feedback');
+    fb.innerHTML = `<div class="fb-error">Please attempt the problem at least once before viewing the solution.</div>`;
+    if (window.MathJax) MathJax.typesetPromise([fb]);
+    return;
+  }
+  const { I, Py, alpha, pxArr } = currentProb;
+  const sols = currentSol;
+
+  const stepsHtml = sols.map((s, i) => `
+    <div class="step-card">
+      <div class="step-num">P=${s.Px}</div>
+      <div class="step-body">
+        <div class="step-title">At \\(P_X = ${s.Px}\\)</div>
+        Budget line: \\(${s.Px}X + ${Py}Y = ${I}\\)<br>
+        \\(X^* = \\tfrac{${I}}{2 \\times ${s.Px}} = ${niceNum(s.Xstar)}\\)<br>
+        \\(Y^* = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(s.Ystar)}\\)<br>
+        Check: \\(${s.Px}(${niceNum(s.Xstar)}) + ${Py}(${niceNum(s.Ystar)}) = ${niceNum(s.Px*s.Xstar + Py*s.Ystar)} = ${I}\\) ✓
+      </div>
+    </div>`).join('');
+
+  const demandEq = `X^* = \\dfrac{${I/2}}{P_X}`;
+
+  document.getElementById('sol-container').innerHTML = `
+    <div class="solution-wrapper">
+      <div class="sol-label">Full Solution</div>
+      <div class="solution-grid">
+        <div class="sol-graph" style="display:grid;grid-template-rows:1fr 1fr;gap:0;">
+          <div id="jxg-demand-left"  style="width:100%;aspect-ratio:1/1;min-height:220px;"></div>
+          <div style="height:1px;background:var(--rule);"></div>
+          <div id="jxg-demand-right" style="width:100%;aspect-ratio:1/1;min-height:220px;"></div>
+        </div>
+        <div class="sol-steps">
+          <div class="step-card">
+            <div class="step-num">①</div>
+            <div class="step-body">
+              <div class="step-title">General Formula</div>
+              \\(X^* = \\alpha \\tfrac{I}{P_X} = \\tfrac{${I}}{2P_X}\\) &nbsp;·&nbsp; \\(Y^* = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(I/(2*Py))}\\) (fixed)
+            </div>
+          </div>
+          ${stepsHtml}
+          <div class="step-card verify">
+            <div class="step-num">↗</div>
+            <div class="step-body">
+              <div class="step-title">Demand Curve</div>
+              \\[${demandEq}\\]
+              As \\(P_X\\) doubles, \\(X^*\\) halves. Law of Demand holds.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="intuition-box">
+        <div class="intuition-label">Economic Intuition</div>
+        <div class="intuition-title">From Optimisation to the Demand Curve</div>
+        <div class="intuition-body">
+          Each point on the demand curve is the solution to a full utility-maximisation problem at a different price.
+          With Cobb-Douglas preferences, the consumer <strong>always spends exactly 50% of income on X</strong>
+          (since \\(\\alpha=0.5\\)): \\(P_X X^* = 0.5 \\times ${I} = ${I/2}\\) at every price.
+          This is why the demand curve is a rectangular hyperbola \\(X^* = ${I/2}/P_X\\),
+          and why the area under the demand curve (total expenditure on X) is constant.
+        </div>
+      </div>
+    </div>`;
+
+  const sc = document.getElementById('sol-container');
+  if (window.MathJax) {
+    MathJax.typesetPromise([sc]).then(() => { drawDemandGraph(currentProb, currentSol); sc.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
+  } else {
+    drawDemandGraph(currentProb, currentSol);
+    sc.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+}
+
+function drawDemandGraph(prob, sols) {
+  solBoard  = freeBoard(solBoard);
+  solBoard2 = freeBoard(solBoard2);
+
+  const { I, Py, pxArr } = prob;
+  const alpha = 0.5;
+  const Ystar_fixed = alpha * I / Py;
+
+  // Left panel: IC/budget diagram at highest Px (clearest picture)
+  // Show 3 budget lines and the 3 optimal points
+  const maxPx  = Math.max(...pxArr);
+  const minPx  = Math.min(...pxArr);
+  const xiMax  = I / minPx;
+  const yi     = I / Py;
+  const xmax   = xiMax * 1.25;
+  const ymax   = yi * 1.4;
+
+  solBoard = JXG.JSXGraph.initBoard('jxg-demand-left', {
+    boundingbox: [-xmax*0.08, ymax, xmax, -ymax*0.06],
+    axis: true, showNavigation: false, showCopyright: false,
+    pan: { enabled: false }, zoom: { enabled: false },
+    defaultAxes: {
+      x: { withLabel: false, ticks: { strokeColor:'#e4e4e4', label:{ fontSize:9, color:'#9aa3b2' } } },
+      y: { withLabel: false, ticks: { strokeColor:'#e4e4e4', label:{ fontSize:9, color:'#9aa3b2' } } }
+    }
+  });
+  const b1 = solBoard;
+  const colors = ['#3d5a80','#5b8db8','#8ab4d4'];
+
+  b1.create('text', [xmax*0.88, -ymax*0.04, 'X'], { fontSize:11, color:'#9aa3b2', fixed:true });
+  b1.create('text', [-xmax*0.06, ymax*0.96, 'Y'], { fontSize:11, color:'#9aa3b2', fixed:true });
+
+  sols.forEach((s, i) => {
+    const xi = I / s.Px;
+    b1.create('segment', [[0, yi], [xi, 0]], { strokeColor: colors[i], strokeWidth: i===0?2.5:1.8, dash: i===0?0:2, fixed:true });
+    const ustar = Math.pow(s.Xstar, alpha) * Math.pow(s.Ystar, 1-alpha);
+    b1.create('functiongraph', [
+      x => x > 0.05 ? Math.pow(ustar / Math.pow(x, alpha), 1/(1-alpha)) : NaN, 0.05, xmax
+    ], { strokeColor: colors[i], strokeWidth: 1.8, dash: i===0?0:1, fixed:true });
+    b1.create('point', [s.Xstar, s.Ystar], {
+      size:5, fillColor:'#e05252', strokeColor:'#fff', strokeWidth:2, fixed:true,
+      name:`${String.fromCharCode(65+i)}`, withLabel:true,
+      label:{ fontSize:10, color:'#e05252', offset:[6,6] }
+    });
+  });
+
+  b1.create('text', [xmax*0.1, ymax*0.9, 'IC/Budget (3 prices)'], { fontSize:10, color:'#9aa3b2', fixed:true });
+
+  // Right panel: demand curve
+  const dmaxX = I / minPx * 1.25;
+  const dmaxP = maxPx * 1.4;
+  solBoard2 = JXG.JSXGraph.initBoard('jxg-demand-right', {
+    boundingbox: [-dmaxX*0.08, dmaxP, dmaxX, -dmaxP*0.06],
+    axis: true, showNavigation: false, showCopyright: false,
+    pan: { enabled: false }, zoom: { enabled: false },
+    defaultAxes: {
+      x: { withLabel: false, ticks: { strokeColor:'#e4e4e4', label:{ fontSize:9, color:'#9aa3b2' } } },
+      y: { withLabel: false, ticks: { strokeColor:'#e4e4e4', label:{ fontSize:9, color:'#9aa3b2' } } }
+    }
+  });
+  const b2 = solBoard2;
+  b2.create('text', [dmaxX*0.88, -dmaxP*0.04, 'X'], { fontSize:11, color:'#9aa3b2', fixed:true });
+  b2.create('text', [-dmaxX*0.06, dmaxP*0.96, 'P'], { fontSize:11, color:'#9aa3b2', fixed:true });
+
+  // Demand curve: X = I/(2P) → P = I/(2X)
+  b2.create('functiongraph', [
+    x => x > 0.5 ? (I/2) / x : NaN, 0.5, dmaxX
+  ], { strokeColor: '#1a56db', strokeWidth: 2.5, fixed: true });
+
+  sols.forEach((s, i) => {
+    b2.create('point', [s.Xstar, s.Px], {
+      size:6, fillColor:'#e05252', strokeColor:'#fff', strokeWidth:2, fixed:true,
+      name:`${String.fromCharCode(65+i)}'`, withLabel:true,
+      label:{ fontSize:10, color:'#e05252', offset:[6,4] }
+    });
+  });
+  b2.create('text', [dmaxX*0.1, dmaxP*0.9, 'Demand curve'], { fontSize:10, color:'#9aa3b2', fixed:true });
+}
+
+/* ================================================================
+   PROBLEM TYPE 2: SLUTSKY DECOMPOSITION
+   ================================================================ */
+
+const SLUTSKY_PAIRS = [
+  [4, 2],   // Px falls: 4 -> 2
+  [6, 3],   // Px falls: 6 -> 3
+  [4, 1],   // Px falls: 4 -> 1
+  [2, 4],   // Px rises: 2 -> 4
+  [3, 6],   // Px rises: 3 -> 6
+];
+
+function genSlutskyProblem() {
+  const I       = randFrom([60, 80, 120]);
+  const Py      = randFrom([2, 3, 4]);
+  const [Px_old, Px_new] = randFrom(SLUTSKY_PAIRS);
+  return { type:'slutsky', I, Py, Px_old, Px_new };
+}
+
+function solveSlusky(prob) {
+  const { I, Py, Px_old, Px_new } = prob;
+  const XA = I / (2 * Px_old);
+  const YA = I / (2 * Py);
+  const XB = I / (2 * Px_new);
+  const YB = I / (2 * Py);
+  const XC = XA * Math.sqrt(Px_old / Px_new);
+  const YC = XC * Px_new / Py;
+  const SE = XC - XA;
+  const IE = XB - XC;
+  const TE = XB - XA;
+  return { XA, YA, XB, YB, XC, YC, SE, IE, TE };
+}
+
+function renderSlutskyProblem() {
+  const { I, Py, Px_old, Px_new } = currentProb;
+  const s = currentSol;
+  const direction = Px_new < Px_old ? 'falls' : 'rises';
+
+  document.getElementById('prob-container').innerHTML = `
+    <div class="prob-card">
+      <span class="prob-type-badge">Slutsky Decomposition</span>
+      <div class="prob-statement">
+        A consumer has income \\(I = ${I}\\), \\(P_Y = ${Py}\\), and \\(U(X,Y) = X^{1/2}Y^{1/2}\\).<br>
+        The price of X ${direction} from \\(P_X = ${Px_old}\\) to \\(P_X = ${Px_new}\\).<br><br>
+        <strong>(a)</strong> Find bundle A (original optimum at \\(P_X=${Px_old}\\)).<br>
+        <strong>(b)</strong> Find bundle B (new optimum at \\(P_X=${Px_new}\\)).<br>
+        <strong>(c)</strong> Find compensated bundle C using \\(X_C = X_A\\sqrt{P_{X,old}/P_{X,new}}\\), \\(Y_C = X_C \\cdot P_{X,new}/P_Y\\).<br>
+        <strong>(d)</strong> Compute \\(\\mathrm{SE} = X_C - X_A\\) and \\(\\mathrm{IE} = X_B - X_C\\). Verify \\(\\mathrm{SE}+\\mathrm{IE}=X_B-X_A\\).
+      </div>
+      <div class="method-hint"><strong>Approach:</strong> Use \\(X^* = I/(2P_X)\\) and \\(Y^* = I/(2P_Y)\\) for Cobb-Douglas with \\(\\alpha=0.5\\). The compensated bundle C lies on the original IC at new prices (compensated budget line is tangent to U\\(_A\\) with slope \\(-P_{X,new}/P_Y\\)).</div>
+    </div>
+    <div class="answer-section">
+      <div class="answer-section-label">Your Answers</div>
+      <div class="answer-row">
+        <span class="ans-label">\\(X_A =\\)</span><input class="ans-input" id="ans-xa" type="text" autocomplete="off" />
+        <span class="ans-label">\\(Y_A =\\)</span><input class="ans-input" id="ans-ya" type="text" autocomplete="off" />
+      </div>
+      <div class="answer-row">
+        <span class="ans-label">\\(X_B =\\)</span><input class="ans-input" id="ans-xb" type="text" autocomplete="off" />
+        <span class="ans-label">\\(Y_B =\\)</span><input class="ans-input" id="ans-yb" type="text" autocomplete="off" />
+      </div>
+      <div class="answer-row">
+        <span class="ans-label">\\(X_C =\\)</span><input class="ans-input" id="ans-xc" type="text" autocomplete="off" />
+        <span class="ans-label">\\(Y_C =\\)</span><input class="ans-input" id="ans-yc" type="text" autocomplete="off" />
+      </div>
+      <div class="answer-row">
+        <span class="ans-label">SE =</span><input class="ans-input" id="ans-se" type="text" autocomplete="off" />
+        <span class="ans-label">IE =</span><input class="ans-input" id="ans-ie" type="text" autocomplete="off" />
+      </div>
+      <div class="btn-row">
+        <button class="pp-btn btn-check"  onclick="checkSlutskyAnswer()">✓ Check Answers</button>
+        <button class="pp-btn btn-sol"    onclick="showSlutskySolution()">Show Solution</button>
+        <button class="pp-btn btn-new"    onclick="newProblem()">↻ New Problem</button>
+        <span class="attempts-tag" id="att-lbl">Attempts: 0</span>
+      </div>
+      <div class="feedback-area" id="feedback"></div>
+    </div>`;
+
+  document.getElementById('sol-container').innerHTML = '';
+  if (window.MathJax) MathJax.typesetPromise([document.getElementById('prob-container')]);
+  setTimeout(() => { const el = document.getElementById('ans-xa'); if (el) el.focus(); }, 120);
+}
+
+function checkSlutskyAnswer() {
+  const s = currentSol;
+  const fb = document.getElementById('feedback');
+  const ids = ['xa','ya','xb','yb','xc','yc','se','ie'];
+  const vals = ids.map(id => parseAnswer((document.getElementById(`ans-${id}`) || {}).value || ''));
+
+  if (vals.some(v => v === null)) {
+    fb.innerHTML = `<div class="fb-error">Could not parse one or more answers. Use decimal numbers like 7.5 or fractions like 15/2.</div>`;
+    return;
+  }
+  attempts++;
+  document.getElementById('att-lbl').textContent = `Attempts: ${attempts}`;
+
+  const targets = [s.XA, s.YA, s.XB, s.YB, s.XC, s.YC, s.SE, s.IE];
+  const labels  = ['X_A','Y_A','X_B','Y_B','X_C','Y_C','SE','IE'];
+  const tol = 0.05;
+  let lines = [], allOk = true;
+  targets.forEach((t, i) => {
+    const ok = near(vals[i], t, Math.max(tol, Math.abs(t) * 0.01));
+    if (!ok) allOk = false;
+    lines.push(`\\(${labels[i]}\\): ${ok ? '✅' : '❌'} (yours ${niceNum(vals[i])}, correct ${niceNum(t)})`);
+  });
+
+  if (allOk) {
+    const dir = s.TE > 0 ? 'increases' : 'decreases';
+    fb.innerHTML = `<div class="fb-ok">✅ <strong>All correct!</strong> Decomposition verified: \\(\\mathrm{SE}+\\mathrm{IE}=${niceNum(s.SE)}+(${niceNum(s.IE)})=${niceNum(s.TE)}=X_B-X_A\\) ✓<br>X is a <strong>normal good</strong> (IE has the same sign as TE).</div>`;
+  } else {
+    const hint = attempts === 1
+      ? `Recall: \\(X^* = I/(2P_X)\\). For bundle A: \\(X_A = ${currentProb.I}/(2 \\times ${currentProb.Px_old})\\). Then \\(X_C = X_A\\sqrt{${currentProb.Px_old}/${currentProb.Px_new}}\\).`
+      : `Correct answers: A=(${niceNum(s.XA)},${niceNum(s.YA)}), B=(${niceNum(s.XB)},${niceNum(s.YB)}), C=(${niceNum(s.XC)},${niceNum(s.YC)}), SE=${niceNum(s.SE)}, IE=${niceNum(s.IE)}.`;
+    fb.innerHTML = `<div class="fb-partial">${lines.join('<br>')}</div><div class="fb-hint"><strong>Hint:</strong> ${hint}</div>`;
+  }
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+function showSlutskySolution() {
+  if (attempts === 0) {
+    const fb = document.getElementById('feedback');
+    fb.innerHTML = `<div class="fb-error">Please attempt the problem at least once before viewing the solution.</div>`;
+    if (window.MathJax) MathJax.typesetPromise([fb]);
+    return;
+  }
+  const { I, Py, Px_old, Px_new } = currentProb;
+  const s = currentSol;
+  const isNormal = s.IE < 0 === s.TE < 0;
+
+  document.getElementById('sol-container').innerHTML = `
+    <div class="solution-wrapper">
+      <div class="sol-label">Full Solution</div>
+      <div class="solution-grid">
+        <div class="sol-graph">
+          <div id="jxg-slutsky" style="width:100%;aspect-ratio:1/1;min-height:300px;"></div>
+        </div>
+        <div class="sol-steps">
+          <div class="step-card">
+            <div class="step-num">①</div>
+            <div class="step-body">
+              <div class="step-title">Bundle A (original, \\(P_X=${Px_old}\\))</div>
+              \\(X_A = \\tfrac{${I}}{2 \\times ${Px_old}} = ${niceNum(s.XA)}\\)<br>
+              \\(Y_A = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(s.YA)}\\)<br>
+              Check: \\(${Px_old}(${niceNum(s.XA)})+${Py}(${niceNum(s.YA)})=${niceNum(Px_old*s.XA+Py*s.YA)}=${I}\\) ✓
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">②</div>
+            <div class="step-body">
+              <div class="step-title">Bundle B (new, \\(P_X=${Px_new}\\))</div>
+              \\(X_B = \\tfrac{${I}}{2 \\times ${Px_new}} = ${niceNum(s.XB)}\\)<br>
+              \\(Y_B = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(s.YB)}\\) (unchanged)<br>
+              Check: \\(${Px_new}(${niceNum(s.XB)})+${Py}(${niceNum(s.YB)})=${niceNum(Px_new*s.XB+Py*s.YB)}=${I}\\) ✓
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">③</div>
+            <div class="step-body">
+              <div class="step-title">Compensated Bundle C</div>
+              \\(X_C = X_A\\sqrt{\\tfrac{P_{old}}{P_{new}}} = ${niceNum(s.XA)}\\sqrt{\\tfrac{${Px_old}}{${Px_new}}} = ${niceNum(s.XC)}\\)<br>
+              \\(Y_C = X_C \\cdot \\tfrac{P_{X,new}}{P_Y} = ${niceNum(s.XC)} \\cdot \\tfrac{${Px_new}}{${Py}} = ${niceNum(s.YC)}\\)
+            </div>
+          </div>
+          <div class="step-card verify">
+            <div class="step-num">④</div>
+            <div class="step-body">
+              <div class="step-title">Decomposition</div>
+              \\(\\mathrm{SE} = X_C - X_A = ${niceNum(s.XC)} - ${niceNum(s.XA)} = ${niceNum(s.SE)}\\)<br>
+              \\(\\mathrm{IE} = X_B - X_C = ${niceNum(s.XB)} - ${niceNum(s.XC)} = ${niceNum(s.IE)}\\)<br>
+              \\(\\mathrm{TE} = ${niceNum(s.SE)} + (${niceNum(s.IE)}) = ${niceNum(s.TE)}\\) ✓<br>
+              <strong>Normal good</strong>: SE and IE reinforce each other.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="intuition-box">
+        <div class="intuition-label">Economic Intuition</div>
+        <div class="intuition-title">Why Both Effects Reinforce for a Normal Good</div>
+        <div class="intuition-body">
+          When \\(P_X\\) ${Px_new < Px_old ? 'falls' : 'rises'} from ${Px_old} to ${Px_new}, two forces act on \\(X^*\\):<br><br>
+          <strong>Substitution effect (${niceNum(s.SE)}):</strong> Holding utility constant, the consumer ${Px_new < Px_old ? 'substitutes toward' : 'substitutes away from'} X because it is now relatively ${Px_new < Px_old ? 'cheaper' : 'more expensive'}. C is the point on the original IC tangent to the new relative price.<br><br>
+          <strong>Income effect (${niceNum(s.IE)}):</strong> The price change alters real purchasing power. Since X is a normal good, ${Px_new < Px_old ? 'higher real income pushes demand for X further up.' : 'lower real income reduces demand for X further.'}<br><br>
+          Total: \\(\\Delta X^* = ${niceNum(s.TE)}\\) units. Cobb-Douglas always yields a normal good.
+        </div>
+      </div>
+    </div>`;
+
+  const sc = document.getElementById('sol-container');
+  if (window.MathJax) {
+    MathJax.typesetPromise([sc]).then(() => { drawSlutskyGraph(currentProb, currentSol); sc.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
+  } else {
+    drawSlutskyGraph(currentProb, currentSol);
+    sc.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+}
+
+function drawSlutskyGraph(prob, s) {
+  solBoard = freeBoard(solBoard);
+  const { I, Py, Px_old, Px_new } = prob;
+
+  const allX = [s.XA, s.XB, s.XC, I/Px_old, I/Px_new];
+  const allY = [s.YA, s.YB, s.YC, I/Py];
+  const xmax = Math.max(...allX) * 1.3;
+  const ymax = Math.max(...allY) * 1.4;
+
+  solBoard = JXG.JSXGraph.initBoard('jxg-slutsky', {
+    boundingbox: [-xmax*0.08, ymax, xmax, -ymax*0.06],
+    axis: true, showNavigation: false, showCopyright: false,
+    pan: { enabled: false }, zoom: { enabled: false },
+    defaultAxes: {
+      x: { withLabel: false, ticks: { strokeColor:'#e4e4e4', label:{ fontSize:9, color:'#9aa3b2' } } },
+      y: { withLabel: false, ticks: { strokeColor:'#e4e4e4', label:{ fontSize:9, color:'#9aa3b2' } } }
+    }
+  });
+  const b = solBoard;
+  b.create('text', [xmax*0.88, -ymax*0.04, 'X'], { fontSize:11, color:'#9aa3b2', fixed:true });
+  b.create('text', [-xmax*0.06, ymax*0.96, 'Y'], { fontSize:11, color:'#9aa3b2', fixed:true });
+
+  const yi = I / Py;
+  const xiA = I / Px_old;
+  const xiB = I / Px_new;
+
+  // Compensated budget line: passes through A with slope -Px_new/Py
+  // Eqn: y = YA - (Px_new/Py)*(x - XA)
+  // x-int: y=0 → x = XA + YA*Py/Px_new
+  const xiComp = s.XA + s.YA * Py / Px_new;
+
+  // Blue: original budget line
+  b.create('segment', [[0, yi], [xiA, 0]], { strokeColor:'#3d5a80', strokeWidth:2.5, fixed:true });
+  b.create('text', [xiA*0.4, yi*0.75, 'Original (P₀)'], { fontSize:9, color:'#3d5a80', fixed:true });
+
+  // Dashed: compensated
+  b.create('segment', [[0, s.YA + xiComp*Px_new/Py], [xiComp, 0]], { strokeColor:'#6b52a8', strokeWidth:2, dash:2, fixed:true });
+  b.create('text', [xiComp*0.15, (s.YA + xiComp*Px_new/Py)*0.85, 'Compensated'], { fontSize:9, color:'#6b52a8', fixed:true });
+
+  // Red: new budget line
+  b.create('segment', [[0, yi], [xiB, 0]], { strokeColor:'#c0392b', strokeWidth:2.5, fixed:true });
+  b.create('text', [xiB*0.5, yi*0.6, 'New (P₁)'], { fontSize:9, color:'#c0392b', fixed:true });
+
+  // IC through A and C (U1)
+  const alpha = 0.5;
+  const uA = Math.pow(s.XA, alpha) * Math.pow(s.YA, 1-alpha);
+  b.create('functiongraph', [
+    x => x > 0.05 ? Math.pow(uA / Math.pow(x,alpha), 1/(1-alpha)) : NaN, 0.05, xmax
+  ], { strokeColor:'#3d5a80', strokeWidth:1.8, fixed:true });
+
+  // IC through B (U2)
+  const uB = Math.pow(s.XB, alpha) * Math.pow(s.YB, 1-alpha);
+  b.create('functiongraph', [
+    x => x > 0.05 ? Math.pow(uB / Math.pow(x,alpha), 1/(1-alpha)) : NaN, 0.05, xmax
+  ], { strokeColor:'#c0392b', strokeWidth:1.8, fixed:true });
+
+  // Points A, C, B
+  const pts = [
+    { x:s.XA, y:s.YA, name:'A', color:'#3d5a80' },
+    { x:s.XC, y:s.YC, name:'C', color:'#6b52a8' },
+    { x:s.XB, y:s.YB, name:'B', color:'#c0392b' }
+  ];
+  pts.forEach(p => {
+    b.create('point', [p.x, p.y], {
+      size:6, fillColor:p.color, strokeColor:'#fff', strokeWidth:2, fixed:true,
+      name:p.name, withLabel:true, label:{ fontSize:11, color:p.color, offset:[7,7] }
+    });
+  });
+
+  // SE bracket on X axis
+  const yLine = -ymax * 0.03;
+  b.create('segment', [[s.XA, yLine],[s.XC, yLine]], { strokeColor:'#6b52a8', strokeWidth:2, fixed:true });
+  b.create('text', [(s.XA+s.XC)/2, yLine*2.5, 'SE'], { fontSize:9, color:'#6b52a8', fixed:true });
+  b.create('segment', [[s.XC, yLine],[s.XB, yLine]], { strokeColor:'#c0392b', strokeWidth:2, fixed:true });
+  b.create('text', [(s.XC+s.XB)/2, yLine*2.5, 'IE'], { fontSize:9, color:'#c0392b', fixed:true });
+}
+
+/* ================================================================
+   ROUTING & BOOT
+   ================================================================ */
+
+function switchType(t) {
+  problemType = t;
+  document.getElementById('tbtn-demand').classList.toggle('active', t==='demand');
+  document.getElementById('tbtn-slutsky').classList.toggle('active', t==='slutsky');
+  newProblem();
+}
+
+function newProblem() {
+  solBoard  = freeBoard(solBoard);
+  solBoard2 = freeBoard(solBoard2);
+  attempts  = 0;
+  if (problemType === 'demand') {
+    currentProb = genDemandProblem();
+    currentSol  = solveDemand(currentProb);
+    renderDemandProblem();
+  } else {
+    currentProb = genSlutskyProblem();
+    currentSol  = solveSlusky(currentProb);
+    renderSlutskyProblem();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', newProblem);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const ae = document.activeElement;
+    if (ae && ae.classList.contains('ans-input')) {
+      if (problemType === 'demand') checkDemandAnswer();
+      else checkSlutskyAnswer();
+    }
+  }
+});
+
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+</script>
+</body>
+</html>
