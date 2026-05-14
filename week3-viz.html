@@ -723,7 +723,7 @@ function drawV2() {
   b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
   b.create('text',[xiA*0.35,yi*0.8,'Original'],{fontSize:9,color:'#3d5a80',fixed:true});
 
-  const yCompInt = d.YA + xiComp*PxNew/Py;
+  const yCompInt = d.YA + d.XA*PxNew/Py;
   b.create('segment',[[0,yCompInt],[xiComp,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
   b.create('text',[xiComp*0.08,yCompInt*0.78,'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
 
@@ -865,7 +865,7 @@ function initViz3() {
       const half = 0.5*I;
       v3D1 = b2.create('functiongraph',[x=>x>0.1?half/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
       // Reference line at Px=2: X* = 0.5*I/2
-      b2.create('segment',[[xs,0],[xs,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
+      v3D2 = b2.create('segment',[[xs,0],[xs,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
       v3RefPt = b2.create('point',[xs,V3_Px],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
         name:'●',withLabel:false});
     } else {
@@ -873,7 +873,7 @@ function initViz3() {
       // At Px=2: X* = 20 - 0.05*I; treat other prices as X* = (20-0.05*I) * (2/Px) * adjustment
       const xRef = v3Xstar(I);
       v3D1 = b2.create('functiongraph',[x=>x>0.1?(V3_Px*xRef)/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
-      b2.create('segment',[[xRef,0],[xRef,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
+      v3D2 = b2.create('segment',[[xRef,0],[xRef,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
       v3RefPt = b2.create('point',[xRef,V3_Px],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'●',withLabel:false});
     }
 
@@ -997,9 +997,14 @@ function drillAnswer(ans) {
 }
 
 function animateDrill(type) {
-  if (!v4b) return;
-  v4b.suspendUpdate();
-  v4b.removeAllObjects();
+  v4b = freeB(v4b);
+  v4b = JXG.JSXGraph.initBoard('jxg-drill',{
+    boundingbox:[-2,7,35,-0.4],
+    axis:true,showNavigation:false,showCopyright:false,
+    pan:{enabled:false},zoom:{enabled:false},
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+  });
   const b = v4b;
   b.create('text',[33,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
   b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
@@ -1015,13 +1020,12 @@ function animateDrill(type) {
     b.create('text',[8,8,'New demand →'],{fontSize:10,color:'#2e8b57',fixed:true});
     b.create('text',[5,5,'Old demand'],{fontSize:9,color:'#9aa3b2',fixed:true});
   }
-  b.unsuspendUpdate();
 }
 
 /* ============================================================
    VIZ 5: Cross-Price & Demand Function Explorer
    ============================================================ */
-let v5b = null, v5IC = null;
+let v5b = null, v5Curve = null, v5Pt = null;
 let v5Px = 4, v5Py = 4, v5I = 100, v5Rel = 'sub';
 const V5_alpha = 0.5;
 
@@ -1034,6 +1038,7 @@ function v5SetRel(r) {
 
 function initViz5() {
   v5b = freeB(v5b);
+  v5Curve = null; v5Pt = null;
   v5b = JXG.JSXGraph.initBoard('jxg-v5',{
     boundingbox:[-2,7,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
@@ -1062,11 +1067,10 @@ function initViz5() {
 
 function redrawV5() {
   if (!v5b) return;
-  if (v5IC) { try { v5b.removeAllObjects(); } catch(e){} }
+  if (v5Curve) { try { v5b.removeObject(v5Curve); } catch(e){} v5Curve = null; }
+  if (v5Pt)    { try { v5b.removeObject(v5Pt);    } catch(e){} v5Pt = null; }
 
   const b = v5b;
-  b.create('text',[76,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
 
   const Xs = V5_alpha * v5I / v5Px;
   const Ys = (1-V5_alpha) * v5I / v5Py;
@@ -1079,15 +1083,13 @@ function redrawV5() {
   const adjI = v5I/2 + k * v5I / (2 * v5Py);
   const safAdj = Math.max(adjI, 5);
 
-  b.create('functiongraph',[x => x>0.1 ? safAdj/x : NaN, 0.1, 80],
+  v5Curve = b.create('functiongraph',[x => x>0.1 ? safAdj/x : NaN, 0.1, 80],
     {strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
 
   // Current point
   const curX = safAdj / v5Px;
-  b.create('point',[curX,v5Px],{size:7,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
+  v5Pt = b.create('point',[curX,v5Px],{size:7,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
     name:`(${Xs.toFixed(1)},${v5Px})`,withLabel:true,label:{fontSize:10,color:'#e05252',offset:[7,5]}});
-
-  v5IC = b;
 
   // Update displays
   const fmla = `X* = αI/P<sub>X</sub> = (0.5 × ${v5I}) / ${v5Px} = <strong>${Xs.toFixed(2)}</strong><br>` +
@@ -1160,7 +1162,7 @@ function drawV6() {
   b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
   b.create('text',[xiA*0.25,yi*0.85,'Original (P₀)'],{fontSize:9,color:'#3d5a80',fixed:true});
 
-  const yCompInt = d.YA + xiComp*PxNew/Py;
+  const yCompInt = d.YA + d.XA*PxNew/Py;
   b.create('segment',[[0,yCompInt],[xiComp,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
   b.create('text',[0.5,yCompInt*0.8,'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
 
