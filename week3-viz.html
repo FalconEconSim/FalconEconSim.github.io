@@ -14,10 +14,15 @@
     window.MathJax = {
       tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
       svg: { fontCache:'global' },
-      startup: { typeset:false }
+      startup: {
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
     };
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
 
   <style>
     :root {
@@ -973,7 +978,7 @@ function drillNewRound() {
       <button class="quiz-next" id="drill-next" onclick="drillNewRound()" style="display:none;">Next scenario →</button>
     </div>`;
 
-  if (window.MathJax) MathJax.typesetPromise([root]);
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([root]);
 }
 
 function drillAnswer(ans) {
@@ -1004,7 +1009,7 @@ function drillAnswer(ans) {
   fb.innerHTML = `${correct ? '✅ <strong>Correct!</strong>' : `❌ <strong>Incorrect.</strong> The answer is <em>${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}</em>.`} ${sc.explanation}`;
   next.style.display = 'inline-block';
 
-  if (window.MathJax) MathJax.typesetPromise([fb]);
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([fb]);
 }
 
 /* ============================================================
@@ -1101,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   drillNewRound();
   initViz5();
 
-  if (window.MathJax) MathJax.typesetPromise([document.body]);
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([document.body]);
 });
 
 function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }

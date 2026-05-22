@@ -156,7 +156,7 @@
     </div>
     <p class="fig-intro">
       The demand curve is shaded as a continuous gradient: <strong style="color:#c0392b">red</strong> at the top (elastic,
-      |e|&gt;1), <strong>white</strong> at the midpoint (unit elastic, |e|=1), and <strong style="color:#1a56db">blue</strong>
+      |e|&gt;1), <strong style="color:#e6a817">amber</strong> at the midpoint (unit elastic, |e|=1), and <strong style="color:#1a56db">blue</strong>
       at the bottom (inelastic, |e|&lt;1). Drag the yellow dot to any point and read off its exact elasticity.
       Use the sliders to reshape the demand curve.
     </p>
@@ -410,8 +410,9 @@ function lerpColor(c1, c2, t) {
 function eColor(ed) {
   const e = Math.abs(ed);
   if (!isFinite(e) || e > 10) return '#c0392b';
-  if (e >= 1) return lerpColor('#f5f5f5', '#c0392b', Math.min((e-1)/2, 1));
-  return lerpColor('#1a56db', '#f5f5f5', e);
+  // neutral at unit-elastic = amber (#e6a817) — visible against white background
+  if (e >= 1) return lerpColor('#e6a817', '#c0392b', Math.min((e-1)/2, 1));
+  return lerpColor('#1a56db', '#e6a817', e);
 }
 
 function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {

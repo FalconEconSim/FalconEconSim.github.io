@@ -15,10 +15,15 @@
     window.MathJax = {
       tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
       svg: { fontCache: 'global' },
-      startup: { typeset: false }
+      startup: {
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
     };
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
 
   <style>
     /* ── Problem card ── */
