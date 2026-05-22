@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 4: Practice Problems - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() { MathJax.startup.defaultReady(); MathJax.typesetPromise([document.body]).catch(()=>{}); }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+
+  <style>
+    .prac-wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+    .prac-hero { padding: 2.2rem 0 1.5rem; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; }
+    .prac-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+    .prac-title { font-size: 1.75rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+    .prac-sub { font-size: 0.88rem; color: var(--muted); }
+
+    .prob-card { background: var(--white); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
+    .prob-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.2rem; background: var(--off-white); border-bottom: 1px solid var(--rule); }
+    .prob-type-badge { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 4px; }
+    .prob-num { font-size: 0.8rem; color: var(--muted); margin-left: auto; }
+
+    .prob-body { padding: 1.4rem 1.4rem 1rem; }
+    .prob-given { font-family: var(--mono); font-size: 0.83rem; background: #f8fafc; border: 1px solid var(--rule); border-radius: 6px; padding: 0.5rem 0.85rem; margin-bottom: 1rem; color: var(--text); }
+    .prob-q { font-size: 1rem; color: var(--text); line-height: 1.65; margin-bottom: 1.1rem; }
+
+    .prob-input-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .prob-input { font-family: var(--mono); font-size: 0.95rem; border: 1.5px solid var(--rule); border-radius: 8px; padding: 0.45rem 0.75rem; width: 130px; outline: none; transition: border-color 0.15s; }
+    .prob-input:focus { border-color: var(--accent); }
+    .prob-input.correct { border-color: #27ae60; background: #f0fdf4; }
+    .prob-input.wrong   { border-color: #e74c3c; background: #fff5f5; }
+
+    .prob-btn { font-family: var(--mono); font-size: 0.78rem; font-weight: 600; padding: 0.48rem 1rem; border-radius: 8px; cursor: pointer; border: 1.5px solid; transition: all 0.15s; letter-spacing: 0.04em; }
+    .prob-btn-check { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .prob-btn-check:hover { opacity: 0.88; }
+    .prob-btn-reveal { background: #fff; color: var(--muted); border-color: var(--rule); }
+    .prob-btn-reveal:hover { border-color: var(--accent); color: var(--accent); }
+
+    .prob-feedback { font-size: 0.875rem; padding: 0.45rem 0; color: var(--muted); min-height: 1.4rem; }
+    .prob-feedback.ok  { color: #27ae60; font-weight: 600; }
+    .prob-feedback.err { color: #e74c3c; }
+
+    .prob-solution { display: none; background: var(--off-white); border-top: 1px solid var(--rule); padding: 1.2rem 1.4rem; font-size: 0.875rem; line-height: 1.75; color: var(--text); }
+    .prob-solution.visible { display: block; }
+    .sol-step { margin-bottom: 0.55rem; }
+    .sol-step:last-child { margin-bottom: 0; }
+    .sol-label { font-family: var(--mono); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); display: block; margin-bottom: 0.15rem; }
+    .sol-verdict { display: inline-block; margin-top: 0.7rem; font-size: 0.82rem; font-weight: 600; padding: 4px 12px; border-radius: 6px; }
+    .sol-verdict.elastic   { background: #fdecea; color: #c0392b; }
+    .sol-verdict.inelastic { background: #e8f0fe; color: #1a56db; }
+    .sol-verdict.unit      { background: #edf7ed; color: #27ae60; }
+
+    .new-prob-row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-top: 0.6rem; }
+    .new-prob-btn { font-family: var(--mono); font-size: 0.78rem; font-weight: 600; padding: 0.55rem 1.3rem; border-radius: 8px; cursor: pointer; border: 1.5px solid var(--accent); background: #fff; color: var(--accent); letter-spacing: 0.04em; transition: background 0.15s; }
+    .new-prob-btn:hover { background: var(--accent-light); }
+    .type-filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .type-tag { font-size: 0.76rem; font-weight: 500; padding: 4px 12px; border-radius: 99px; border: 1px solid var(--rule); cursor: pointer; background: #fff; color: var(--muted); transition: all 0.15s; }
+    .type-tag.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .attempt-badge { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published active"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 5</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 7</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="week4.html">Week 4</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Practice Problems</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main>
+<div class="prac-wrap">
+
+  <div class="prac-hero">
+    <p class="prac-label">Week 4 · Practice Problems</p>
+    <h1 class="prac-title">Elasticity &amp; Consumer Welfare</h1>
+    <p class="prac-sub">Randomly generated problems. Enter your answer, check it, then reveal the full worked solution.</p>
+  </div>
+
+  <div class="type-filter-row" id="type-filter-row">
+    <button class="type-tag active" data-type="all">All types</button>
+    <button class="type-tag" data-type="point">Point elasticity</button>
+    <button class="type-tag" data-type="arc">Arc elasticity</button>
+    <button class="type-tag" data-type="tr">Total revenue</button>
+    <button class="type-tag" data-type="cs">Consumer surplus</button>
+  </div>
+
+  <div id="prob-container"></div>
+
+  <div class="new-prob-row">
+    <button class="new-prob-btn" onclick="newProblem()">New problem →</button>
+    <span class="attempt-badge" id="attempt-badge"></span>
+  </div>
+
+</div>
+</main>
+
+<script>
+let currentProb = null;
+let currentSol  = null;
+let attempts    = 0;
+let totalDone   = 0;
+let activeType  = 'all';
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rnd(lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; }
+function fmt(x, dp=2) { return parseFloat(x.toFixed(dp)).toString(); }
+function nice(x) { return Math.abs(x - Math.round(x)) < 0.001 ? Math.round(x).toString() : x.toFixed(2); }
+
+// ── Problem generators ─────────────────────────────────────────────────────
+
+function genPoint() {
+  const b = pick([1, 2, 3, 4]);
+  const Pmax = pick([20, 25, 30, 40, 50]);
+  const a = b * Pmax;
+  const fracs = [0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8];
+  const frac = pick(fracs);
+  const P = Math.round(Pmax * frac);
+  const Q = a - b * P;
+  const ed = -b * P / Q;
+  const edRound = parseFloat(ed.toFixed(3));
+  const region = Math.abs(ed) > 1.001 ? 'elastic' : Math.abs(ed) < 0.999 ? 'inelastic' : 'unit';
+  const regionLabel = region === 'elastic' ? 'Elastic' : region === 'inelastic' ? 'Inelastic' : 'Unit elastic';
+  const trEffect = ed < -1 ? 'falls' : ed > -1 ? 'rises' : 'unchanged';
+
+  return {
+    type: 'point',
+    given: `Q = ${a} − ${b}P`,
+    question: `The demand function is \\(Q = ${a} - ${b}P\\). Compute the price elasticity of demand at \\(P = ${P}\\). Round to three decimal places.`,
+    answerKey: edRound,
+    tolerance: 0.005,
+    inputLabel: 'e_d =',
+    solution: {
+      a, b, P, Q, ed: edRound, region, regionLabel, trEffect,
+      steps: [
+        { label: 'Find Q at P', math: `Q = ${a} - ${b}(${P}) = ${Q}` },
+        { label: 'Apply point formula', math: `e_d = \\frac{\\Delta Q}{\\Delta P}\\cdot\\frac{P}{Q} = -${b}\\cdot\\frac{${P}}{${Q}} = ${edRound}` },
+        { label: 'Classify', math: `|e_d| = ${Math.abs(edRound).toFixed(3)} \\implies \\text{${regionLabel}}` },
+        { label: 'TR prediction', math: `\\text{Price} \\uparrow \\implies TR \\textbf{ ${trEffect}} \\text{ (${region} demand)}` },
+      ]
+    }
+  };
+}
+
+function genArc() {
+  const b = pick([1, 2, 3]);
+  const Pmax = pick([30, 40, 50, 60]);
+  const a = b * Pmax;
+  const P1 = Math.round(Pmax * pick([0.2, 0.3, 0.4]));
+  const P2 = Math.round(Pmax * pick([0.6, 0.7, 0.8]));
+  const Q1 = a - b * P1;
+  const Q2 = a - b * P2;
+  const Pmid = (P1 + P2) / 2;
+  const Qmid = (Q1 + Q2) / 2;
+  const ed = ((Q2 - Q1) / (P2 - P1)) * (Pmid / Qmid);
+  const edRound = parseFloat(ed.toFixed(3));
+
+  return {
+    type: 'arc',
+    given: `P₁ = ${P1}, Q₁ = ${Q1}; P₂ = ${P2}, Q₂ = ${Q2}`,
+    question: `Two points on a demand curve are \\((P_1, Q_1) = (${P1}, ${Q1})\\) and \\((P_2, Q_2) = (${P2}, ${Q2})\\). Compute the arc (midpoint) elasticity between these two points. Round to three decimal places.`,
+    answerKey: edRound,
+    tolerance: 0.005,
+    inputLabel: 'e_arc =',
+    solution: {
+      P1, Q1, P2, Q2, Pmid, Qmid, ed: edRound,
+      steps: [
+        { label: 'Midpoint price', math: `\\bar{P} = \\frac{${P1}+${P2}}{2} = ${Pmid}` },
+        { label: 'Midpoint quantity', math: `\\bar{Q} = \\frac{${Q1}+${Q2}}{2} = ${Qmid}` },
+        { label: 'Apply midpoint formula', math: `e_{arc} = \\frac{${Q2-Q1}/${Qmid}}{${P2-P1}/${Pmid}} = \\frac{${fmt((Q2-Q1)/Qmid)}}{${fmt((P2-P1)/Pmid)}} = ${edRound}` },
+        { label: 'Note', math: `\\text{This equals the point elasticity at }\\bar{P}=${Pmid}\\text{ for a linear demand.}` },
+      ]
+    }
+  };
+}
+
+function genTR() {
+  const b = pick([1, 2, 3, 4]);
+  const Pmax = pick([20, 30, 40, 50]);
+  const a = b * Pmax;
+  const Pmid = Pmax / 2;
+  const scenarios = [
+    { P: Math.round(Pmid * 0.5), direction: 'rises', change: 'from inelastic region' },
+    { P: Math.round(Pmid * 1.5), direction: 'falls', change: 'from elastic region' },
+  ];
+  const sc = pick(scenarios);
+  const P = sc.P;
+  const Q = a - b * P;
+  const ed = -b * P / Q;
+  const edRound = parseFloat(ed.toFixed(3));
+  const newP = Math.round(P * 1.1);
+  const newQ = Math.max(0, a - b * newP);
+  const TR0 = P * Q;
+  const TR1 = newP * newQ;
+  const trChange = TR1 > TR0 ? 'rises' : TR1 < TR0 ? 'falls' : 'unchanged';
+  const trDiff = TR1 - TR0;
+
+  return {
+    type: 'tr',
+    given: `Q = ${a} − ${b}P, current price P = ${P}`,
+    question: `The demand function is \\(Q = ${a} - ${b}P\\) and the current price is \\(P = ${P}\\). The firm considers raising price by 10% (to \\(P' = ${newP}\\)). What happens to total revenue? By how much does TR change? (Enter the change in TR, negative if it falls.)`,
+    answerKey: trDiff,
+    tolerance: 0.5,
+    inputLabel: 'ΔTR =',
+    solution: {
+      a, b, P, Q, ed: edRound, TR0, newP, newQ, TR1, trDiff, trChange,
+      steps: [
+        { label: 'Current TR', math: `TR_0 = ${P} \\times ${Q} = ${TR0}` },
+        { label: 'Point elasticity at P', math: `e_d = -${b}\\cdot\\frac{${P}}{${Q}} = ${edRound} \\implies \\text{${Math.abs(edRound)>1?'Elastic':'Inelastic'}}` },
+        { label: 'New price and quantity', math: `P' = ${newP},\\quad Q' = ${a}-${b}(${newP}) = ${newQ}` },
+        { label: 'New TR and change', math: `TR_1 = ${newP}\\times${newQ} = ${TR1},\\quad \\Delta TR = ${trDiff > 0 ? '+' : ''}${trDiff}` },
+        { label: 'Verdict', math: `\\text{Since demand is ${Math.abs(edRound)>1?'elastic (price effect < quantity effect)':'inelastic (price effect > quantity effect)'}, TR ${trChange}.}` },
+      ]
+    }
+  };
+}
+
+function genCS() {
+  const b = pick([1, 2, 3]);
+  const Pmax = pick([20, 30, 40, 50]);
+  const a = b * Pmax;
+  const P = Math.round(Pmax * pick([0.3, 0.4, 0.5, 0.6, 0.7]));
+  const Q = a - b * P;
+  const CS = 0.5 * Q * (Pmax - P);
+  const CSround = parseFloat(CS.toFixed(1));
+
+  return {
+    type: 'cs',
+    given: `Q = ${a} − ${b}P, market price P* = ${P}`,
+    question: `The demand function is \\(Q = ${a} - ${b}P\\) and the market price is \\(P^* = ${P}\\). Calculate consumer surplus. (Round to one decimal place if needed.)`,
+    answerKey: CSround,
+    tolerance: 0.5,
+    inputLabel: 'CS =',
+    solution: {
+      a, b, P, Q, Pmax, CS: CSround,
+      steps: [
+        { label: 'Choke price (set Q=0)', math: `0 = ${a} - ${b}P \\implies P_{\\max} = ${Pmax}` },
+        { label: 'Quantity at P*', math: `Q^* = ${a} - ${b}(${P}) = ${Q}` },
+        { label: 'Area of CS triangle', math: `CS = \\tfrac{1}{2}\\times Q^*\\times (P_{\\max}-P^*) = \\tfrac{1}{2}\\times${Q}\\times(${Pmax}-${P}) = ${CSround}` },
+        { label: 'Interpretation', math: `\\text{Consumers gain \\$${CSround} of surplus — they collectively value these ${Q} units at \\$${CSround} more than they pay.}` },
+      ]
+    }
+  };
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+
+function generateProblem() {
+  const choices = {
+    all:   [genPoint, genArc, genTR, genCS],
+    point: [genPoint],
+    arc:   [genArc],
+    tr:    [genTR],
+    cs:    [genCS],
+  };
+  return pick(choices[activeType] || choices.all)();
+}
+
+function renderProblem() {
+  const p = currentProb;
+  const s = currentSol;
+  attempts = 0;
+
+  const typeColors = {
+    point: { bg:'#E6F1FB', color:'#185FA5', label:'Point Elasticity' },
+    arc:   { bg:'#EAF3DE', color:'#3B6D11', label:'Arc Elasticity' },
+    tr:    { bg:'#FAEEDA', color:'#854F0B', label:'Total Revenue' },
+    cs:    { bg:'#FAECE7', color:'#993C1D', label:'Consumer Surplus' },
+  };
+  const tc = typeColors[p.type];
+
+  document.getElementById('prob-container').innerHTML = `
+    <div class="prob-card" id="prob-card">
+      <div class="prob-header">
+        <span class="prob-type-badge" style="background:${tc.bg};color:${tc.color}">${tc.label}</span>
+        <span class="prob-num">Problem #${totalDone + 1}</span>
+      </div>
+      <div class="prob-body">
+        <div class="prob-given">${p.given}</div>
+        <div class="prob-q" id="prob-q">${p.question}</div>
+        <div class="prob-input-row">
+          <span style="font-family:var(--mono);font-size:0.85rem;color:var(--muted)">${p.inputLabel}</span>
+          <input class="prob-input" type="number" step="any" id="prob-answer" placeholder="your answer" />
+          <button class="prob-btn prob-btn-check" onclick="checkAnswer()">Check</button>
+          <button class="prob-btn prob-btn-reveal" onclick="revealSolution()">Show solution</button>
+        </div>
+        <div class="prob-feedback" id="prob-feedback"></div>
+      </div>
+      <div class="prob-solution" id="prob-solution">
+        <div style="font-weight:600;margin-bottom:0.8rem;color:var(--text)">Full worked solution</div>
+        ${s.steps.map(st => `
+          <div class="sol-step">
+            <span class="sol-label">${st.label}</span>
+            <span>\\(${st.math}\\)</span>
+          </div>`).join('')}
+        ${p.type === 'point' ? `<div class="sol-verdict ${s.region}">${s.regionLabel} · TR ${s.trEffect} when price rises</div>` : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('prob-answer').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([document.getElementById('prob-container')]).catch(()=>{});
+  }
+}
+
+function checkAnswer() {
+  const inp = document.getElementById('prob-answer');
+  const fb  = document.getElementById('prob-feedback');
+  const val = parseFloat(inp.value);
+  if (isNaN(val)) { fb.textContent = 'Please enter a number.'; fb.className = 'prob-feedback'; return; }
+  attempts++;
+  const diff = Math.abs(val - currentProb.answerKey);
+  if (diff <= currentProb.tolerance) {
+    inp.classList.add('correct'); inp.classList.remove('wrong');
+    fb.textContent = '✓ Correct!';
+    fb.className = 'prob-feedback ok';
+    revealSolution();
+    totalDone++;
+    updateBadge();
+  } else {
+    inp.classList.add('wrong'); inp.classList.remove('correct');
+    fb.textContent = attempts >= 2 ? `✗ The answer is ${currentProb.answerKey}. See solution below.` : '✗ Not quite — try again.';
+    fb.className = 'prob-feedback err';
+    if (attempts >= 2) { revealSolution(); totalDone++; updateBadge(); }
+  }
+}
+
+function revealSolution() {
+  const sol = document.getElementById('prob-solution');
+  if (sol) {
+    sol.classList.add('visible');
+    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([sol]).catch(()=>{});
+  }
+}
+
+function newProblem() {
+  currentProb = generateProblem();
+  currentSol  = currentProb.solution;
+  renderProblem();
+}
+
+function updateBadge() {
+  document.getElementById('attempt-badge').textContent = totalDone > 0 ? `${totalDone} problem${totalDone>1?'s':''} completed` : '';
+}
+
+// ── Filter buttons ─────────────────────────────────────────────────────────
+document.getElementById('type-filter-row').addEventListener('click', e => {
+  const btn = e.target.closest('.type-tag');
+  if (!btn) return;
+  activeType = btn.dataset.type;
+  document.querySelectorAll('.type-tag').forEach(b => b.classList.toggle('active', b === btn));
+  newProblem();
+});
+
+document.addEventListener('DOMContentLoaded', newProblem);
+
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+</script>
+</body>
+</html>

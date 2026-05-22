@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en-US">
 <head>
   <meta charset="UTF-8" />
@@ -12,7 +12,13 @@
     window.MathJax = {
       tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
       svg: { fontCache: 'global' },
-      startup: { typeset: false }
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
@@ -116,7 +122,7 @@
     <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
     <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
     <li class="left-nav-item published active"><a href="week3.html">Week 3</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 5</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 6</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 7</a></li>
@@ -281,7 +287,7 @@ function render() {
       <div id="fc-rate-area"></div>
     </div>`;
 
-  if (window.MathJax) MathJax.typesetPromise([root]).catch(()=>{});
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([root]).catch(()=>{});
 }
 
 function flipCard() {
@@ -306,7 +312,7 @@ function flipCard() {
           </button>
         </div>
       </div>`;
-    if (window.MathJax) MathJax.typesetPromise([ra]).catch(()=>{});
+    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([ra]).catch(()=>{});
   }, 380);
 }
 
