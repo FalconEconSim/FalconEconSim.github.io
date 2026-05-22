@@ -234,26 +234,16 @@
           <span class="fig-chevron">▾</span>
         </div>
         <div class="viz-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:0.9rem;">
-            <div class="viz-panel">
-              <div class="viz-panel-label">IC / Budget Constraint</div>
-              <canvas id="cv1-left" style="width:100%;display:block;"></canvas>
-            </div>
-            <div class="viz-panel">
-              <div class="viz-panel-label">Demand Curve (P<sub>X</sub> vs X)</div>
-              <canvas id="cv1-right" style="width:100%;display:block;"></canvas>
-            </div>
-          </div>
-          <!-- Animation controls -->
-          <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;padding:0.7rem 0.9rem;background:#f8f9fb;border:1px solid var(--rule);border-radius:6px;margin-bottom:0.9rem;">
-            <button onclick="v1CtrlReset()" style="font-family:var(--font);font-size:0.78rem;padding:0.3rem 0.8rem;border:1px solid var(--rule);background:var(--bg-card);border-radius:5px;cursor:pointer;">↺ Reset</button>
-            <button onclick="v1CtrlStep(-1)" id="v1-prev" style="font-family:var(--font);font-size:0.78rem;padding:0.3rem 0.8rem;border:1px solid var(--rule);background:var(--bg-card);border-radius:5px;cursor:pointer;">◀ Prev</button>
-            <button onclick="v1CtrlPlay()" id="v1-play-btn" style="font-family:var(--font);font-size:0.85rem;font-weight:600;padding:0.3rem 1.1rem;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:5px;cursor:pointer;">▶ Play</button>
-            <button onclick="v1CtrlStep(1)" id="v1-next" style="font-family:var(--font);font-size:0.78rem;padding:0.3rem 0.8rem;border:1px solid var(--rule);background:var(--bg-card);border-radius:5px;cursor:pointer;">Next ▶</button>
-            <span id="v1-status" style="font-family:var(--mono);font-size:0.76rem;color:var(--ink-light);margin-left:0.3rem;">— Press Play or step through —</span>
+          <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.9rem;line-height:0;">
+            <video controls playsinline preload="metadata"
+              style="width:100%;display:block;border-radius:10px;"
+              poster="">
+              <source src="assets/demand-derivation.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
           </div>
           <div class="callout key-idea">
-            <strong>Key insight:</strong> The dashed vertical line drops from the optimal bundle straight down to the X-axis on the left — then the same X-quantity appears as the horizontal position of the demand point on the right. Budget line pivots; IC tangency moves; the demand curve is just a record of those tangencies. Note: Y* = I/(2P<sub>Y</sub>) = 60/6 = 10 stays fixed for all prices because with Cobb-Douglas utility, Y* doesn't depend on P<sub>X</sub>.
+            <strong>Key insight:</strong> As P<sub>X</sub> falls, the budget line pivots outward. The optimal bundle moves along a new indifference curve, demanding more X. Each (P<sub>X</sub>, X*) pair is plotted on the right panel — connecting them traces the demand curve. Note that Y* = 10 stays fixed for all prices because with Cobb-Douglas utility, Y* = (1−α)I/P<sub>Y</sub> does not depend on P<sub>X</sub>.
           </div>
         </div>
       </div>
@@ -942,34 +932,27 @@ const SCENARIOS = [
   { text:'P<sub>X</sub> falls from $4 to $2.', answer:'movement', explanation:'A change in own price causes a movement along the existing demand curve — quantity demanded increases, but the curve itself does not shift.' },
   { text:'The price of a substitute good rises.', answer:'shift', explanation:'When a substitute becomes more expensive, consumers switch to X — demand for X increases at every price, shifting the curve rightward.' },
   { text:'Consumer income falls by 30%.', answer:'shift', explanation:'Lower income shifts the demand curve. For a normal good, demand shifts leftward (less demanded at every price).' },
-  { text:'The government imposes a $2 per-unit tax on good X.', answer:'shift', explanation:'A per-unit tax is equivalent to a price increase for the consumer — this causes a movement along the curve, not a shift. (The demand curve itself is unchanged.)' },
+  { text:'The government imposes a $2 per-unit tax on good X.', answer:'movement', explanation:'A per-unit tax raises the effective price of X for the consumer — this causes a movement along the existing demand curve, not a shift.' },
   { text:'New scientific study shows X has major health benefits.', answer:'shift', explanation:'Improved perceptions of X shift demand rightward — at every price, consumers now demand more of X.' },
   { text:'P<sub>X</sub> rises from $2 to $6.', answer:'movement', explanation:'Own-price change: movement along the demand curve. Quantity demanded falls as you move up the curve.' },
   { text:'The price of a complement good rises.', answer:'shift', explanation:'Costlier complement → demand for X falls → leftward shift of the demand curve.' },
-  { text:'Number of buyers in the market doubles.', answer:'shift', explanation:'More buyers means more total demand at every price — a rightward shift of the market demand curve.' }
+  { text:'Number of buyers in the market doubles.', answer:'shift', explanation:'More buyers means more total demand at every price — a rightward shift of the market demand curve.' },
+  { text:'A government subsidy reduces P<sub>X</sub> by $1 per unit.', answer:'movement', explanation:'A subsidy that lowers the effective price of X causes movement along the demand curve — the own price changed, so quantity adjusts along the existing curve.' },
+  { text:'Consumers expect P<sub>X</sub> to rise sharply next month.', answer:'shift', explanation:'Expectations of future price increases cause consumers to buy more today — shifting demand for X rightward right now.' },
+  { text:'A new advertising campaign makes X more fashionable.', answer:'shift', explanation:'Advertising shifts tastes and preferences — more demand for X at every price, shifting the curve rightward.' },
+  { text:'P<sub>X</sub> falls from $10 to $6.', answer:'movement', explanation:'Only the own price of X changed. The consumer moves down along the existing demand curve to a higher quantity.' },
+  { text:'The price of a substitute good falls sharply.', answer:'shift', explanation:'When a substitute becomes cheaper, consumers switch away from X — demand for X decreases at every price, shifting the curve leftward.' },
+  { text:'A recession reduces household incomes by 15%.', answer:'shift', explanation:'For a normal good, lower income shifts demand leftward — less demanded at every price.' },
+  { text:'P<sub>X</sub> is unchanged but P<sub>Y</sub> doubles (Y is a complement).', answer:'shift', explanation:'P<sub>Y</sub> is NOT the own price of X. A change in the price of a complement shifts the demand curve for X leftward.' },
+  { text:'Population in the market grows by 10%.', answer:'shift', explanation:'More potential buyers shifts market demand rightward — at every price, total quantity demanded is higher.' },
+  { text:'P<sub>X</sub> rises from $5 to $5.50.', answer:'movement', explanation:'Even a small change in own price causes a movement along the demand curve — quantity falls slightly, but the curve itself does not shift.' },
+  { text:'A social media trend makes X less desirable.', answer:'shift', explanation:'Changing tastes shift demand. If X becomes less desirable, demand shifts leftward at every price.' },
+  { text:'A competing substitute good is pulled from shelves.', answer:'shift', explanation:'Removing a substitute reduces the alternatives available — consumers demand more X at every price, shifting the curve rightward.' },
+  { text:'P<sub>X</sub> falls from $8 to $3.', answer:'movement', explanation:'Own-price change: movement along the demand curve. As price falls, quantity demanded rises along the existing curve.' },
+  { text:'Consumer credit becomes easier to obtain.', answer:'shift', explanation:'Easier credit effectively raises purchasing power (like an income increase) — demand shifts rightward for normal goods.' },
 ];
 
 let drillIdx = 0, drillScore = 0, drillTotal = 0, drillOrder = [], drillAnswered = false;
-
-let v4b = null;
-function initViz4() {
-  v4b = freeB(v4b);
-  v4b = JXG.JSXGraph.initBoard('jxg-drill', {
-    boundingbox:[-2,7,35,-0.4],
-    axis:true,showNavigation:false,showCopyright:false,
-    pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
-  });
-  const b = v4b;
-  b.create('text',[33,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  // Static demand curve for reference
-  b.create('functiongraph',[x=>x>0.1?60/x:NaN,0.1,35],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
-  // Current point (starts at mid)
-  b.create('point',[15, 4],{size:7,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
-    name:'current',withLabel:false});
-}
 
 function drillNewRound() {
   if (drillOrder.length === 0) { drillOrder = SCENARIOS.map((_,i)=>i).sort(()=>Math.random()-0.5); }
@@ -979,25 +962,18 @@ function drillNewRound() {
   const sc = SCENARIOS[drillIdx];
   const root = document.getElementById('drill-root');
   root.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-      <div>
-        <div class="quiz-score" id="drill-score">Score: ${drillScore} / ${drillTotal}</div>
-        <div class="quiz-scenario">${sc.text}</div>
-        <div class="quiz-btns">
-          <button class="quiz-btn" id="drill-btn-m" onclick="drillAnswer('movement')">Movement Along</button>
-          <button class="quiz-btn" id="drill-btn-s" onclick="drillAnswer('shift')">Shift of Curve</button>
-        </div>
-        <div id="drill-feedback" class="quiz-feedback" style="display:none;"></div>
-        <button class="quiz-next" id="drill-next" onclick="drillNewRound()" style="display:none;">Next scenario →</button>
+    <div>
+      <div class="quiz-score" id="drill-score">Score: ${drillScore} / ${drillTotal}</div>
+      <div class="quiz-scenario">${sc.text}</div>
+      <div class="quiz-btns">
+        <button class="quiz-btn" id="drill-btn-m" onclick="drillAnswer('movement')">Movement Along</button>
+        <button class="quiz-btn" id="drill-btn-s" onclick="drillAnswer('shift')">Shift of Curve</button>
       </div>
-      <div class="viz-panel" style="overflow:hidden;">
-        <div class="viz-panel-label">Reference diagram</div>
-        <div id="jxg-drill" style="width:100%;aspect-ratio:4/3;max-height:240px;"></div>
-      </div>
+      <div id="drill-feedback" class="quiz-feedback" style="display:none;"></div>
+      <button class="quiz-next" id="drill-next" onclick="drillNewRound()" style="display:none;">Next scenario →</button>
     </div>`;
 
   if (window.MathJax) MathJax.typesetPromise([root]);
-  initViz4();
 }
 
 function drillAnswer(ans) {
@@ -1028,35 +1004,7 @@ function drillAnswer(ans) {
   fb.innerHTML = `${correct ? '✅ <strong>Correct!</strong>' : `❌ <strong>Incorrect.</strong> The answer is <em>${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}</em>.`} ${sc.explanation}`;
   next.style.display = 'inline-block';
 
-  // Animate diagram
-  animateDrill(sc.answer);
   if (window.MathJax) MathJax.typesetPromise([fb]);
-}
-
-function animateDrill(type) {
-  v4b = freeB(v4b);
-  v4b = JXG.JSXGraph.initBoard('jxg-drill',{
-    boundingbox:[-2,7,35,-0.4],
-    axis:true,showNavigation:false,showCopyright:false,
-    pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
-  });
-  const b = v4b;
-  b.create('text',[33,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
-
-  if (type === 'movement') {
-    b.create('functiongraph',[x=>x>0.1?60/x:NaN,0.1,35],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
-    b.create('point',[5, 12],{size:6,fillColor:'#9aa3b2',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'old',withLabel:true,label:{fontSize:10,color:'#9aa3b2',offset:[5,5]}});
-    b.create('point',[15, 4],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'new',withLabel:true,label:{fontSize:10,color:'#e05252',offset:[5,5]}});
-    b.create('text',[10,5.5,'Movement along'],{fontSize:10,color:'#3d5a80',fixed:true});
-  } else {
-    b.create('functiongraph',[x=>x>0.1?60/x:NaN,0.1,35],{strokeColor:'#9aa3b2',strokeWidth:1.5,dash:2,fixed:true});
-    b.create('functiongraph',[x=>x>0.1?90/x:NaN,0.1,35],{strokeColor:'#2e8b57',strokeWidth:2.5,fixed:true});
-    b.create('text',[8,8,'New demand →'],{fontSize:10,color:'#2e8b57',fixed:true});
-    b.create('text',[5,5,'Old demand'],{fontSize:9,color:'#9aa3b2',fixed:true});
-  }
 }
 
 /* ============================================================

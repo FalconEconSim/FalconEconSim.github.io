@@ -548,16 +548,19 @@ function v1Draw() {
     dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
     dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
     ctx.fillStyle = '#333'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('A', cx1, cy1+4);
-    ctx.fillText('B', cx2, cy2+4);
+    const ptOff = Math.abs(cy1-cy2) < 24 ? 14 : 4;
+    ctx.fillText('A', cx1, cy1 < cy2 ? cy1-ptOff+4 : cy1+ptOff+4);
+    ctx.fillText('B', cx2, cy2 < cy1 ? cy2-ptOff+4 : cy2+ptOff+4);
     return;
   }
 
   dot(ctx, cx1, cy1, 9, color, '#fff');
   dot(ctx, cx2, cy2, 9, color, '#fff');
   ctx.fillStyle = '#333'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('A', cx1, cy1+4);
-  ctx.fillText('B', cx2, cy2+4);
+  // offset labels away from each other when points are close
+  const lblOff = Math.abs(cy1-cy2) < 24 ? 14 : 4;
+  ctx.fillText('A', cx1, cy1 < cy2 ? cy1-lblOff+4 : cy1+lblOff+4);
+  ctx.fillText('B', cx2, cy2 < cy1 ? cy2-lblOff+4 : cy2+lblOff+4);
 
   // line between
   ctx.beginPath();
@@ -771,48 +774,30 @@ function v3Draw() {
   const [qx,qy0]=toC(Q,0,W,H,xR3,yR3);
   const [qbx,qby0]=toC(Qb,0,W,H,xR3,yR3);
 
-  if (P !== Pb) {
-    const gain = (P-Pb)*Q;   // green strip: existing buyers paying more
-    const loss = Pb*(Qb-Q);  // red strip: quantity lost
-
-    if (P > Pb) {
-      // base TR = main rect (blue)
-      ctx.fillStyle='rgba(26,86,219,0.12)';
-      ctx.fillRect(nx, ny, qx-nx, oy-ny);
-
-      // green: price gain strip (right of new Q, between old P and new P)
-      ctx.fillStyle='rgba(39,174,96,0.35)';
-      ctx.fillRect(qx, ny, qbx-qx > 0 ? 0 : 0, oy-by);
-      // green strip: (0..Q) × (Pb..P)
-      ctx.fillStyle='rgba(39,174,96,0.35)';
-      ctx.fillRect(nx, ny, qx-nx, by-ny);
-
-      // red: quantity loss strip (Q..Qb) × (0..Pb)
-      ctx.fillStyle='rgba(231,76,60,0.35)';
-      ctx.fillRect(nx, by, qx-nx < 0 ? 0 : qbx-nx-(qx-nx), oy-by);
-    } else {
-      // price fell — swap colors
-      ctx.fillStyle='rgba(26,86,219,0.12)';
-      ctx.fillRect(qbx, by, nx-qbx, oy-by);
-
-      // green strip: quantity gain (Qb..Q) × (0..P)
-      ctx.fillStyle='rgba(39,174,96,0.35)';
-      ctx.fillRect(qbx, ny, qx-qbx, oy-ny);
-
-      // red: price loss (0..Qb) × (P..Pb)
-      ctx.fillStyle='rgba(231,76,60,0.35)';
-      ctx.fillRect(nx0[0]||0, ny, qbx-(nx0[0]||0), by-ny);
-      ctx.fillStyle='rgba(231,76,60,0.35)';
-      const [zbx]=toC(0,0,W,H,xR3,yR3);
-      ctx.fillRect(zbx, ny, qbx-zbx, by-ny);
-    }
+  if (P > Pb) {
+    // Blue: full new TR rectangle (0..Q) × (0..P)
+    ctx.fillStyle='rgba(26,86,219,0.12)';
+    ctx.fillRect(ML, ny, nx-ML, oy-ny);
+    // Green: price gain strip (0..Q) × (Pb..P)
+    ctx.fillStyle='rgba(39,174,96,0.35)';
+    ctx.fillRect(ML, ny, nx-ML, by-ny);   // by > ny since Pb < P
+    // Red: quantity loss strip (Q..Qb) × (0..Pb)
+    ctx.fillStyle='rgba(231,76,60,0.35)';
+    ctx.fillRect(nx, by, bx-nx, oy-by);
+  } else if (P < Pb) {
+    // Blue: full new TR rectangle (0..Q) × (0..P)
+    ctx.fillStyle='rgba(26,86,219,0.12)';
+    ctx.fillRect(ML, ny, nx-ML, oy-ny);
+    // Green: quantity gain strip (Qb..Q) × (0..P)
+    ctx.fillStyle='rgba(39,174,96,0.35)';
+    ctx.fillRect(bx, ny, nx-bx, oy-ny);   // nx > bx since Q > Qb
+    // Red: price loss strip (0..Qb) × (P..Pb)
+    ctx.fillStyle='rgba(231,76,60,0.35)';
+    ctx.fillRect(ML, by, bx-ML, ny-by);   // ny > by since P < Pb
   } else {
-    // base rectangle only
+    // Base rectangle only
     ctx.fillStyle='rgba(26,86,219,0.18)';
-    ctx.fillRect(bx, by, ox-bx < 0 ? ox-bx : 0, oy-by);
-    ctx.fillStyle='rgba(26,86,219,0.18)';
-    const [zbx2]=toC(0,0,W,H,xR3,yR3);
-    ctx.fillRect(zbx2, by, bx-zbx2, oy-by);
+    ctx.fillRect(ML, by, bx-ML, oy-by);
   }
 
   // dashed reference lines
@@ -884,43 +869,52 @@ function v4Draw() {
 
   ctx.clearRect(0,0,W,H);
 
-  // bar chart area
-  const barW=80, barMaxH=H-MT-MB-20;
+  // bar chart area — centre the zero line so negative bars have space
+  const barW=80;
   const cx=W/2;
-  const base=MT+barMaxH;
+  const chartTop=MT+4;
+  const chartBot=H-MB-22;           // leave room for x-axis labels
+  const midY=Math.round((chartTop+chartBot)/2);
+  const halfH=midY-chartTop-2;      // max bar height in either direction (100% = halfH px)
 
-  // background grid
+  // background grid (±100%, ±50%, 0%)
   ctx.strokeStyle='#eee'; ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=base-barMaxH*i/4;
+  for(let i=-4;i<=4;i++){
+    const y=midY-halfH*i/4;
     ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(W-MR,y); ctx.stroke();
-    ctx.fillStyle='#bbb'; ctx.font='10px DM Mono,monospace'; ctx.textAlign='right';
-    ctx.fillText((i*25)+'%',ML-4,y+4);
+    if(i%2===0){
+      ctx.fillStyle='#bbb'; ctx.font='10px DM Mono,monospace'; ctx.textAlign='right';
+      ctx.fillText((i*25>0?'+':'')+i*25+'%',ML-4,y+4);
+    }
   }
   ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(cx,base-barMaxH); ctx.lineTo(cx,base); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,chartTop); ctx.lineTo(cx,chartBot); ctx.stroke();
+
+  // clamp bars to available space (handles large elasticities cleanly)
+  const pH=Math.min(Math.abs(pChange)/100*halfH, halfH);
+  const tH=Math.min(Math.abs(trChange)/100*halfH, halfH);
 
   // P bar (left)
-  const pH=Math.abs(pChange)/100*barMaxH;
   ctx.fillStyle = pChange>=0 ? 'rgba(231,76,60,0.8)' : 'rgba(39,174,96,0.8)';
-  ctx.fillRect(cx-barW*1.6, pChange>=0 ? base-pH : base, barW, pH);
-  ctx.fillStyle='#333'; ctx.font='bold 12px DM Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('%ΔP', cx-barW*1.1, base+18);
+  ctx.fillRect(cx-barW*1.6, pChange>=0 ? midY-pH : midY, barW, pH);
+  ctx.fillStyle='#333'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('%ΔP', cx-barW*1.1, chartBot+14);
   ctx.fillStyle=pChange>=0?'#e74c3c':'#27ae60';
-  ctx.fillText((pChange>=0?'+':'')+pChange.toFixed(0)+'%', cx-barW*1.1, pChange>=0?base-pH-6:base+pH+18);
+  const pLblY=pChange>=0 ? midY-pH-6 : midY+pH+14;
+  ctx.fillText((pChange>=0?'+':'')+pChange.toFixed(0)+'%', cx-barW*1.1, Math.max(chartTop+12,Math.min(chartBot+14,pLblY)));
 
   // TR bar (right)
-  const tH=Math.abs(trChange)/100*barMaxH;
   ctx.fillStyle = trChange>=0 ? 'rgba(39,174,96,0.8)' : 'rgba(231,76,60,0.8)';
-  ctx.fillRect(cx+barW*0.6, trChange>=0 ? base-tH : base, barW, tH);
+  ctx.fillRect(cx+barW*0.6, trChange>=0 ? midY-tH : midY, barW, tH);
   ctx.fillStyle='#333'; ctx.textAlign='center';
-  ctx.fillText('%ΔTR', cx+barW*1.1, base+18);
+  ctx.fillText('%ΔTR', cx+barW*1.1, chartBot+14);
   ctx.fillStyle=trChange>=0?'#27ae60':'#e74c3c';
-  ctx.fillText((trChange>=0?'+':'')+trChange.toFixed(1)+'%', cx+barW*1.1, trChange>=0?base-tH-6:base+tH+18);
+  const tLblY=trChange>=0 ? midY-tH-6 : midY+tH+14;
+  ctx.fillText((trChange>=0?'+':'')+trChange.toFixed(1)+'%', cx+barW*1.1, Math.max(chartTop+12,Math.min(chartBot+14,tLblY)));
 
   // zero line
   ctx.strokeStyle='#999'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(ML,base); ctx.lineTo(W-MR,base); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ML,midY); ctx.lineTo(W-MR,midY); ctx.stroke();
 
   // elasticity badge
   ctx.fillStyle=eColor(ind.e); ctx.font='bold 13px DM Mono,monospace'; ctx.textAlign='left';
@@ -1077,9 +1071,7 @@ function v6Draw() {
   if (Pn > P) {
     // rectangle (red): (0..Qn) × (P..Pn)
     ctx.fillStyle='rgba(231,76,60,0.3)';
-    ctx.fillRect(px0[0]||ML, py0n, qnx-(px0[0]||ML), py0-py0n);
-    const [zerox]=toC(0,0,W,H,xR6,yR6);
-    ctx.fillRect(zerox, py0n, qnx-zerox, py0-py0n);
+    ctx.fillRect(ML, py0n, qnx-ML, py0-py0n);
 
     // exit triangle (orange): Qn..Q, P..Pn
     ctx.beginPath();
@@ -1254,7 +1246,7 @@ function v8Draw() {
     const Pchoke=a/b;
     ctx.beginPath();
     ctx.strokeStyle=v8consumers[i].color;
-    ctx.lineWidth=1.5; ctx.globalAlpha=0.45;
+    ctx.lineWidth=1.5; ctx.globalAlpha=0.65;
     const [x0,y0]=toC(0,Math.min(Pchoke,yR8[1]),W,H,xR8,yR8);
     const [x1,y1]=toC(a,0,W,H,xR8,yR8);
     ctx.moveTo(x0,y0); ctx.lineTo(x1,y1);
@@ -1278,7 +1270,8 @@ function v8Draw() {
   });
   ctx.stroke();
 
-  // kink markers
+  // kink markers — collect then draw labels with overlap avoidance
+  const kinks=[];
   for(let i=0;i<3;i++){
     if(!v8consumers[i].active) continue;
     const a=v8A(i), b=v8consumers[i].b;
@@ -1286,10 +1279,18 @@ function v8Draw() {
     if(Pk<=Pmax){
       const Qk=v8Qm(Pk);
       const [kx,ky]=toC(Qk,Pk,W,H,xR8,yR8);
-      dot(ctx,kx,ky,6,v8consumers[i].color,'#fff');
-      ctx.fillStyle=v8consumers[i].color; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-      ctx.fillText(`P=$${Pk.toFixed(0)} kink`,kx+8,ky);
+      kinks.push({kx,ky,color:v8consumers[i].color,label:`P=$${Pk.toFixed(0)} kink`});
     }
+  }
+  // sort by canvas y (top to bottom) then space labels 14px apart minimum
+  kinks.sort((a,b)=>a.ky-b.ky);
+  let lastLblY=-999;
+  for(const k of kinks){
+    dot(ctx,k.kx,k.ky,6,k.color,'#fff');
+    ctx.fillStyle=k.color; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+    const lblY=Math.max(k.ky, lastLblY+14);
+    ctx.fillText(k.label, k.kx+8, lblY);
+    lastLblY=lblY;
   }
 
   // label market demand
