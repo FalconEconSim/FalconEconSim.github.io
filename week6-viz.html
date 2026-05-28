@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 6: Interactive Visualizations - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
+    .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
+    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; }
+    .viz-instructor { font-size:0.9rem; color:var(--muted); }
+    .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
+    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
+    .toc ol { margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:0.28rem; }
+    .toc li { font-size:0.855rem; color:var(--muted); }
+    .toc a { color:var(--accent); text-decoration:none; }
+    .toc a:hover { text-decoration:underline; }
+    .fig-section { border-top:2px solid var(--rule); padding-top:2.5rem; margin-top:3rem; }
+    .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
+    .fig-label { font-family:var(--mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
+    .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
+    .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
+    .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
+    canvas { display:block; width:100%; cursor:default; }
+    .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
+    .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
+    .viz-slider-label { font-family:var(--mono); font-size:0.75rem; color:var(--muted); white-space:nowrap; }
+    .viz-slider { width:130px; accent-color:var(--accent); }
+    .viz-slider-val { font-family:var(--mono); font-size:0.82rem; color:var(--accent); min-width:36px; }
+    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
+    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
+    .viz-readout { background:var(--off-white); border:1px solid var(--rule); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
+    .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
+    .readout-col { flex:1; min-width:110px; }
+    .readout-label { font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
+    .readout-val { font-size:1.05rem; font-weight:600; color:var(--accent); font-family:var(--mono); }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+    .panel-label { font-family:var(--mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0.4rem 0.6rem; background:var(--off-white); border-bottom:1px solid var(--rule); }
+    .hub-footer { border-top:1px solid var(--rule); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
+    .hub-footer-left { font-size:0.82rem; color:var(--muted); }
+    .hub-footer-left a { color:var(--muted); text-decoration:none; }
+    .hub-footer-left a:hover { color:var(--accent); }
+    .footer-logo { height:22px; opacity:0.5; }
+    @media(max-width:580px){ .two-col { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published active"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><span>Week 7</span></li>
+    <li class="left-nav-item upcoming"><span>Week 8</span></li>
+    <li class="left-nav-item upcoming"><span>Week 9</span></li>
+    <li class="left-nav-item upcoming"><span>Week 10</span></li>
+    <li class="left-nav-item upcoming"><span>Week 11</span></li>
+    <li class="left-nav-item upcoming"><span>Week 12</span></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="week6.html">Week 6</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Visualizations</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main class="main" style="max-width:800px;">
+
+  <div class="viz-hero">
+    <div class="viz-ghost">06</div>
+    <p class="viz-week-label">Week 6 · Interactive Visualizations</p>
+    <h1 class="viz-title">Cost Theory</h1>
+    <p class="viz-instructor">Prof. Naveen Sunder</p>
+    <nav class="toc">
+      <div class="toc-title">Seven Figures</div>
+      <ol>
+        <li><a href="#sec-6-1">Fig 6.1: Cost Minimisation Sandbox</a></li>
+        <li><a href="#sec-6-2">Fig 6.2: Two-Panel Cost Derivation</a></li>
+        <li><a href="#sec-6-4">Fig 6.4: Bang-for-the-Buck Reallocation Engine</a></li>
+        <li><a href="#sec-6-5">Fig 6.5: SR vs LR Cost Curves</a></li>
+        <li><a href="#sec-6-6">Fig 6.6: LRAC Envelope Builder</a></li>
+        <li><a href="#sec-6-8">Fig 6.8: Minimum Wage Automation Simulator</a></li>
+        <li><a href="#sec-6-10">Fig 6.10: Efficient Scale Finder</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- ═══ FIG 6.1 - COST MINIMISATION SANDBOX ═══ -->
+  <section class="fig-section" id="sec-6-1">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 6.1</span>
+      <span class="fig-title">Cost Minimisation Sandbox</span>
+    </div>
+    <p class="fig-intro">
+      Set the wage w, capital rental rate v, and target output q. The isoquant and isocost family appear. Drag the bundle and watch MRTS vs w/v update in real time. The bundle turns green when you hit the tangency condition MRTS = w/v.
+    </p>
+    <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Wage w:</span>
+        <input type="range" class="viz-slider" id="v61-w" min="1" max="10" step="0.5" value="4" oninput="v61Update()">
+        <span class="viz-slider-val" id="v61-w-val">4</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Rental rate v:</span>
+        <input type="range" class="viz-slider" id="v61-v" min="1" max="10" step="0.5" value="4" oninput="v61Update()">
+        <span class="viz-slider-val" id="v61-v-val">4</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Output q:</span>
+        <input type="range" class="viz-slider" id="v61-q" min="1" max="6" step="0.5" value="3" oninput="v61Update()">
+        <span class="viz-slider-val" id="v61-q-val">3</span>
+      </div>
+      <button class="viz-btn" onclick="v61ShowOptimal()">Show Optimal</button>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs61" height="280"></canvas></div>
+    <div class="viz-readout" id="v61-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 6.2 - TWO-PANEL COST DERIVATION ═══ -->
+  <section class="fig-section" id="sec-6-2">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 6.2</span>
+      <span class="fig-title">Two-Panel Cost Derivation</span>
+    </div>
+    <p class="fig-intro">
+      Left panel: isoquant map with the expanding isocost sweeping across output levels. Right panel: TC(q) curve building itself point by point. Step through output levels to watch each cost-minimising bundle map to a TC value.
+    </p>
+    <div class="two-col">
+      <div class="cvs-wrap">
+        <div class="panel-label">Isoquant map + isocost</div>
+        <canvas id="cvs62a" height="260"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Total Cost curve TC(q)</div>
+        <canvas id="cvs62b" height="260"></canvas>
+      </div>
+    </div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" onclick="v62CtrlPlay()">&#9654; Play</button>
+      <button class="viz-btn" onclick="v62CtrlStep(-1)">&#8592; Prev</button>
+      <button class="viz-btn" onclick="v62CtrlStep(1)">Next &#8594;</button>
+      <button class="viz-btn" onclick="v62CtrlReset()">&#8635; Reset</button>
+      <span id="v62-status" style="font-family:var(--mono);font-size:0.76rem;color:var(--muted);flex:1;text-align:center;"></span>
+    </div>
+    <div class="viz-readout" id="v62-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 6.4 - BANG-FOR-THE-BUCK ENGINE ═══ -->
+  <section class="fig-section" id="sec-6-4">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 6.4</span>
+      <span class="fig-title">Bang-for-the-Buck Reallocation Engine</span>
+    </div>
+    <p class="fig-intro">
+      Set MPL, MPK, w, v. The two bars show MPL/w vs MPK/v. An animated dollar flows from the overpaid input to the underpaid one, and the bars converge to the optimum. This directly addresses the most common exam error: students forget to equalise the marginal products per dollar.
+    </p>
+    <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">MPL:</span>
+        <input type="range" class="viz-slider" id="v64-mpl" min="1" max="20" step="1" value="12" oninput="v64Update()">
+        <span class="viz-slider-val" id="v64-mpl-val">12</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">MPK:</span>
+        <input type="range" class="viz-slider" id="v64-mpk" min="1" max="20" step="1" value="8" oninput="v64Update()">
+        <span class="viz-slider-val" id="v64-mpk-val">8</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Wage w:</span>
+        <input type="range" class="viz-slider" id="v64-w" min="1" max="10" step="1" value="4" oninput="v64Update()">
+        <span class="viz-slider-val" id="v64-w-val">4</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Rental v:</span>
+        <input type="range" class="viz-slider" id="v64-v" min="1" max="10" step="1" value="4" oninput="v64Update()">
+        <span class="viz-slider-val" id="v64-v-val">4</span>
+      </div>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs64" height="240"></canvas></div>
+    <div class="viz-readout" id="v64-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 6.5 - SR vs LR COST CURVES ═══ -->
+  <section class="fig-section" id="sec-6-5">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 6.5</span>
+      <span class="fig-title">SR vs LR Cost Curves</span>
+    </div>
+    <p class="fig-intro">
+      SMC, AVC, ATC, and AFC drawn simultaneously. A TFC slider shows how fixed costs shift ATC but not SMC or AVC. A toggle overlays the LRAC for comparison. All five short-run curve properties in one diagram.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">TFC:</span>
+        <input type="range" class="viz-slider" id="v65-tfc" min="10" max="200" step="10" value="100" oninput="v65Update()">
+        <span class="viz-slider-val" id="v65-tfc-val">100</span>
+      </div>
+      <button class="viz-btn" id="v65-lr-btn" onclick="v65ToggleLR()">Show LRAC</button>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs65" height="280"></canvas></div>
+    <div class="viz-readout" id="v65-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 6.6 - LRAC ENVELOPE BUILDER ═══ -->
+  <section class="fig-section" id="sec-6-6">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 6.6</span>
+      <span class="fig-title">LRAC Envelope Builder</span>
+    </div>
+    <p class="fig-intro">
+      Add SRAC curves (each corresponding to a different plant size K). The LRAC envelope redraws after each addition, always hugging from below. The tangency point for each SRAC is highlighted. Watch the "lower envelope" concept build itself live.
+    </p>
+    <div class="cvs-wrap"><canvas id="cvs66" height="280"></canvas></div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" onclick="v66AddCurve()">+ Add Plant Size</button>
+      <button class="viz-btn" onclick="v66Reset()">&#8635; Reset</button>
+      <span id="v66-count" style="font-family:var(--mono);font-size:0.78rem;color:var(--muted);"></span>
+    </div>
+    <div class="viz-readout" id="v66-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR ═══ -->
+  <section class="fig-section" id="sec-6-8">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 6.8</span>
+      <span class="fig-title">Minimum Wage Automation Simulator</span>
+    </div>
+    <p class="fig-intro">
+      A firm is at cost-minimising (L*, K*) on an isoquant. Raise the minimum wage w. The isocost rotates, the old optimum turns red ("no longer optimal"), and the new tangency animates to a more capital-intensive point. Watch K/L and TC update live.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Min wage w:</span>
+        <input type="range" class="viz-slider" id="v68-w" min="1" max="12" step="0.5" value="3" oninput="v68Update()">
+        <span class="viz-slider-val" id="v68-w-val">3</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Capital cost v:</span>
+        <input type="range" class="viz-slider" id="v68-v" min="1" max="8" step="0.5" value="3" oninput="v68Update()">
+        <span class="viz-slider-val" id="v68-v-val">3</span>
+      </div>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs68" height="280"></canvas></div>
+    <div class="viz-readout" id="v68-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 6.10 - EFFICIENT SCALE FINDER ═══ -->
+  <section class="fig-section" id="sec-6-10">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 6.10</span>
+      <span class="fig-title">Efficient Scale Finder</span>
+    </div>
+    <p class="fig-intro">
+      Enter any AC function (pre-loaded with AC = 100/q + q). The tool plots AC, marks q* where dAC/dq = 0 (the efficient scale), shades economies of scale in green and diseconomies in red. A second panel shows the implied industry structure.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div style="display:flex;flex-direction:column;gap:0.3rem;">
+        <span class="viz-slider-label">AC function (type a, b for AC = a/q + b*q):</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">AC =</span>
+          <input type="number" id="v610-a" value="100" min="1" max="500" step="10" style="width:65px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v610Draw()"/>
+          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">/q +</span>
+          <input type="number" id="v610-b" value="1" min="0.1" max="10" step="0.1" style="width:55px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v610Draw()"/>
+          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">q</span>
+        </div>
+      </div>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs610" height="280"></canvas></div>
+    <div class="viz-readout" id="v610-readout"></div>
+  </section>
+
+  <footer class="hub-footer">
+    <div class="hub-footer-left">
+      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
+      &nbsp;·&nbsp; EC224 Intermediate Microeconomics
+      &nbsp;·&nbsp; <a href="week6.html">Back to Week 6</a>
+    </div>
+    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
+  </footer>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// SHARED UTILITIES
+// ══════════════════════════════════════════════════════════════════════
+const ML=50, MR=20, MT=20, MB=40;
+
+function setupCvs(id) {
+  const cvs=document.getElementById(id); if(!cvs) return {ctx:null,W:300,H:200};
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400;
+  const H=parseInt(cvs.getAttribute('height'))||260;
+  cvs.width=W*dpr; cvs.height=H*dpr; cvs.style.height=H+'px';
+  const ctx=cvs.getContext('2d'); ctx.scale(dpr,dpr);
+  return {ctx,W,H};
+}
+
+function toC(x,y,W,H,xR,yR){
+  const pw=W-ML-MR,ph=H-MT-MB;
+  return [ML+(x-xR[0])/(xR[1]-xR[0])*pw, MT+(yR[1]-y)/(yR[1]-yR[0])*ph];
+}
+
+function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
+  ctx.save(); ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
+  ctx.fillStyle='#888'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='center';
+  const xs=(xR[1]-xR[0])/4;
+  for(let i=0;i<=4;i++){
+    const v=xR[0]+i*xs; const [px]=toC(v,yR[0],W,H,xR,yR);
+    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+14);
+  }
+  const ys=(yR[1]-yR[0])/4;
+  for(let i=0;i<=4;i++){
+    const v=yR[0]+i*ys; const [,py]=toC(xR[0],v,W,H,xR,yR);
+    ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-5,py+4);
+  }
+  ctx.textAlign='center'; ctx.fillText(xLbl||'q',W/2,H-4);
+  ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText(yLbl||'$',0,0); ctx.restore(); ctx.restore();
+}
+
+function dot6(ctx,x,y,r,fill,stroke){
+  ctx.beginPath(); ctx.arc(x,y,r,0,2*Math.PI);
+  ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke||'#fff'; ctx.lineWidth=2; ctx.stroke();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 6.1 — COST MINIMISATION SANDBOX
+// ══════════════════════════════════════════════════════════════════════
+let v61DragL=null, v61DragK=null, v61W=300, v61H=280;
+
+function v61Opt(w,v,q){
+  // Q = K^0.5*L^0.5 => cost min: L* = q*sqrt(v/w), K* = q*sqrt(w/v)
+  const Ls=q*Math.sqrt(v/w), Ks=q*Math.sqrt(w/v);
+  return {Ls,Ks,TC:w*Ls+v*Ks};
+}
+
+function v61Draw(Lcur,Kcur){
+  const w=parseFloat(document.getElementById('v61-w').value);
+  const v=parseFloat(document.getElementById('v61-v').value);
+  const q=parseFloat(document.getElementById('v61-q').value);
+  const opt=v61Opt(w,v,q);
+  if(Lcur===undefined) Lcur=opt.Ls; if(Kcur===undefined) Kcur=opt.Ks;
+  const cvs=document.getElementById('cvs61'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  v61W=W; v61H=H;
+  const maxL=Math.max(opt.Ls*2.5,4), maxK=Math.max(opt.Ks*2.5,4);
+  const xR=[0,maxL],yR=[0,maxK];
+  drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
+
+  // Isoquant for Q=q
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  for(let l=0.1;l<=maxL;l+=0.05){
+    const k=q*q/l; if(k>maxK||k<0.05){first=true;continue;}
+    const [cx,cy]=toC(l,k,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`Q=${q}`,W-MR-40,MT+14);
+
+  // Isocost family
+  const TCopt=opt.TC;
+  [0.6,0.8,1.0,1.2].forEach((mult,i)=>{
+    const TC=TCopt*mult;
+    const Lint=TC/w, Kint=TC/v;
+    if(Lint>maxL||Kint>maxK) return;
+    const [lx0,ly0]=toC(0,Math.min(Kint,maxK),W,H,xR,yR);
+    const [lx1,ly1]=toC(Math.min(Lint,maxL),0,W,H,xR,yR);
+    ctx.beginPath(); ctx.strokeStyle=i===2?'#e74c3c':'#ddd'; ctx.lineWidth=i===2?1.5:1;
+    ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
+  });
+
+  // Current bundle
+  const MRTS=Kcur/Lcur, wv=w/v;
+  const atOpt=Math.abs(MRTS/wv-1)<0.08;
+  const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
+  dot6(ctx,bx,by,8,atOpt?'#2e8b57':'#e74c3c','#fff');
+  ctx.fillStyle=atOpt?'#2e8b57':'#e74c3c'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`(L=${Lcur.toFixed(1)},K=${Kcur.toFixed(1)})`,bx+10,by-5);
+  if(atOpt) ctx.fillText('Optimal!',bx+10,by+12);
+  else ctx.fillText(MRTS>wv?'Hire more L, less K':'Hire more K, less L',bx+10,by+12);
+
+  // Optimal point
+  const [ox,oy]=toC(opt.Ls,opt.Ks,W,H,xR,yR);
+  ctx.setLineDash([3,3]); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const TC=w*Lcur+v*Kcur;
+  document.getElementById('v61-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">L (drag)</div><div class="readout-val">${Lcur.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">K (drag)</div><div class="readout-val">${Kcur.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:#e74c3c">${MRTS.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">${(wv).toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">TC = wL+vK</div><div class="readout-val">${TC.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2e8b57">${opt.TC.toFixed(2)}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+      ${atOpt?'Cost minimised: MRTS = w/v. This is the cheapest way to produce Q='+q+'.':'Not optimal. Drag the point toward the tangency where MRTS = w/v = '+(wv).toFixed(2)+'.'}
+    </div>`;
+}
+
+function v61Update() {
+  const w=parseFloat(document.getElementById('v61-w').value);
+  const v=parseFloat(document.getElementById('v61-v').value);
+  const q=parseFloat(document.getElementById('v61-q').value);
+  document.getElementById('v61-w-val').textContent=w;
+  document.getElementById('v61-v-val').textContent=v;
+  document.getElementById('v61-q-val').textContent=q;
+  const opt=v61Opt(w,v,q);
+  v61Draw(opt.Ls, opt.Ks);
+}
+
+function v61ShowOptimal() {
+  const w=parseFloat(document.getElementById('v61-w').value);
+  const v=parseFloat(document.getElementById('v61-v').value);
+  const q=parseFloat(document.getElementById('v61-q').value);
+  const opt=v61Opt(w,v,q);
+  v61Draw(opt.Ls, opt.Ks);
+}
+
+function v61Init(){
+  const cvs=document.getElementById('cvs61'); if(!cvs) return;
+  v61Update();
+  let drag=false;
+  function getBundle(e){
+    const r=cvs.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    const px=(e.clientX-r.left)*(cvs.width/r.width)/dpr;
+    const py=(e.clientY-r.top)*(cvs.height/r.height)/dpr;
+    const W=cvs.width/dpr,H=cvs.height/dpr;
+    const w=parseFloat(document.getElementById('v61-w').value);
+    const v=parseFloat(document.getElementById('v61-v').value);
+    const q=parseFloat(document.getElementById('v61-q').value);
+    const opt=v61Opt(w,v,q);
+    const maxL=Math.max(opt.Ls*2.5,4),maxK=Math.max(opt.Ks*2.5,4);
+    const pw=W-ML-MR,ph=H-MT-MB;
+    const L=Math.max(0.1,Math.min(maxL, (px-ML)/pw*maxL));
+    const K=Math.max(0.1,Math.min(maxK, maxK - (py-MT)/ph*maxK));
+    return {L,K};
+  }
+  cvs.addEventListener('mousedown',e=>{drag=true; const {L,K}=getBundle(e); v61Draw(L,K);});
+  cvs.addEventListener('mousemove',e=>{if(!drag)return; const {L,K}=getBundle(e); v61Draw(L,K);});
+  cvs.addEventListener('mouseup',()=>drag=false);
+  cvs.addEventListener('mouseleave',()=>drag=false);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 6.2 — TWO-PANEL COST DERIVATION
+// ══════════════════════════════════════════════════════════════════════
+const V62_W=4,V62_V=4;
+const V62_Q_STEPS=[0.5,1,1.5,2,2.5,3,3.5,4,4.5,5];
+let v62CurrStep=0, v62Timer=null;
+
+function v62TC(q){
+  const Ls=q*Math.sqrt(V62_V/V62_W), Ks=q*Math.sqrt(V62_W/V62_V);
+  return V62_W*Ls+V62_V*Ks;
+}
+
+function v62Draw(){
+  const drawPanel=(id,isLeft)=>{
+    const cvs=document.getElementById(id); if(!cvs) return null;
+    const dpr=window.devicePixelRatio||1;
+    const W=cvs.clientWidth||300, H=260;
+    if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+    const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,H);
+    return {ctx,W,H};
+  };
+
+  const pA=drawPanel('cvs62a',true), pB=drawPanel('cvs62b',false);
+  if(!pA||!pB) return;
+  const {ctx:ctxA,W:WA,H:HA}=pA, {ctx:ctxB,W:WB,H:HB}=pB;
+
+  const xRA=[0,10],yRA=[0,10];
+  drawAxesSt(ctxA,WA,HA,xRA,yRA,'L','K');
+  const maxTC=v62TC(V62_Q_STEPS[V62_Q_STEPS.length-1])*1.15;
+  const xRB=[0,6],yRB=[0,maxTC];
+  drawAxesSt(ctxB,WB,HB,xRB,yRB,'q','TC');
+
+  const colors=['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80','#c0392b','#d4813a','#2e8b57','#1a56db'];
+
+  // Draw all completed steps
+  for(let i=0;i<v62CurrStep;i++){
+    const q=V62_Q_STEPS[i], col=colors[i%colors.length];
+    const isLast=(i===v62CurrStep-1);
+
+    // Left: isoquant
+    ctxA.beginPath(); let first=true;
+    ctxA.strokeStyle=col+(isLast?'':'99'); ctxA.lineWidth=isLast?2:1.2;
+    for(let l=0.1;l<=10;l+=0.1){
+      const k=q*q/l; if(k>10){first=true;continue;}
+      const [cx,cy]=toC(l,k,WA,HA,xRA,yRA);
+      first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
+    }
+    ctxA.stroke();
+
+    // Left: optimal bundle
+    const Ls=q*Math.sqrt(V62_V/V62_W), Ks=q*Math.sqrt(V62_W/V62_V);
+    const [bx,by]=toC(Ls,Ks,WA,HA,xRA,yRA);
+    dot6(ctxA,bx,by,isLast?7:4,col,'#fff');
+
+    // Left: isocost at optimal
+    const TC=v62TC(q);
+    const Lint=TC/V62_W, Kint=TC/V62_V;
+    if(Lint<=10&&Kint<=10){
+      ctxA.beginPath(); ctxA.strokeStyle=col+(isLast?'':'66'); ctxA.lineWidth=isLast?1.5:1;
+      ctxA.setLineDash([4,3]);
+      const [ix0,iy0]=toC(0,Math.min(Kint,10),WA,HA,xRA,yRA);
+      const [ix1,iy1]=toC(Math.min(Lint,10),0,WA,HA,xRA,yRA);
+      ctxA.moveTo(ix0,iy0); ctxA.lineTo(ix1,iy1); ctxA.stroke(); ctxA.setLineDash([]);
+    }
+
+    // Right: TC point
+    const [rx,ry]=toC(q,TC,WB,HB,xRB,yRB);
+    dot6(ctxB,rx,ry,isLast?7:4,col,'#fff');
+  }
+
+  // Right: TC curve (full, gray)
+  ctxB.beginPath(); let fp=true; ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1.5;
+  for(let q=0.1;q<=5.5;q+=0.05){
+    const tc=v62TC(q);
+    const [cx,cy]=toC(q,tc,WB,HB,xRB,yRB);
+    fp?(ctxB.moveTo(cx,cy),fp=false):ctxB.lineTo(cx,cy);
+  }
+  ctxB.stroke();
+
+  const step=v62CurrStep>0?V62_Q_STEPS[v62CurrStep-1]:null;
+  document.getElementById('v62-status').textContent=`Step ${v62CurrStep}/${V62_Q_STEPS.length}${step?` · q=${step} · TC=$${v62TC(step).toFixed(2)}`:''}`;
+  document.getElementById('v62-readout').innerHTML=v62CurrStep===0?
+    'Step through output levels to watch the TC curve build from the isoquant map.':
+    `At q=${step}: L* = ${(step*Math.sqrt(V62_V/V62_W)).toFixed(2)}, K* = ${(step*Math.sqrt(V62_W/V62_V)).toFixed(2)}, TC = $${v62TC(step).toFixed(2)}`;
+}
+
+function v62CtrlStep(d){
+  clearTimeout(v62Timer); v62Timer=null;
+  v62CurrStep=Math.max(0,Math.min(V62_Q_STEPS.length,v62CurrStep+d));
+  v62Draw();
+}
+function v62CtrlReset(){ clearTimeout(v62Timer);v62Timer=null;v62CurrStep=0;v62Draw(); }
+function v62CtrlPlay(){
+  v62CurrStep=0; v62Draw();
+  function tick(){ if(v62CurrStep>=V62_Q_STEPS.length){v62Timer=null;return;} v62CurrStep++;v62Draw();v62Timer=setTimeout(tick,900); }
+  v62Timer=setTimeout(tick,400);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 6.4 — BANG-FOR-THE-BUCK REALLOCATION
+// ══════════════════════════════════════════════════════════════════════
+function v64Draw(){
+  const mpl=parseFloat(document.getElementById('v64-mpl').value);
+  const mpk=parseFloat(document.getElementById('v64-mpk').value);
+  const w=parseFloat(document.getElementById('v64-w').value);
+  const v=parseFloat(document.getElementById('v64-v').value);
+  const bpl=mpl/w, bpk=mpk/v;
+  const optimal=Math.abs(bpl/bpk-1)<0.05;
+
+  const cvs=document.getElementById('cvs64'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=240;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const maxBP=Math.max(bpl,bpk)*1.35;
+  const barW=80, spacing=80, leftX=W/2-spacing-barW, rightX=W/2+spacing;
+  const barMaxH=H-80;
+
+  // Left bar: MPL/w
+  const lH=Math.min(barMaxH,(bpl/maxBP)*barMaxH);
+  ctx.fillStyle=bpl>bpk?'#2e8b57':'rgba(26,86,219,0.5)';
+  ctx.fillRect(leftX, H-40-lH, barW, lH);
+  ctx.fillStyle='#1a1a1a'; ctx.font='bold 12px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('MPL/w',leftX+barW/2,H-22);
+  ctx.fillStyle=bpl>bpk?'#2e8b57':'#1a56db'; ctx.font='bold 14px DM Mono,monospace';
+  ctx.fillText(bpl.toFixed(2),leftX+barW/2,H-40-lH-8);
+
+  // Right bar: MPK/v
+  const rH=Math.min(barMaxH,(bpk/maxBP)*barMaxH);
+  ctx.fillStyle=bpk>bpl?'#2e8b57':'rgba(231,76,60,0.5)';
+  ctx.fillRect(rightX, H-40-rH, barW, rH);
+  ctx.fillStyle='#1a1a1a'; ctx.font='bold 12px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('MPK/v',rightX+barW/2,H-22);
+  ctx.fillStyle=bpk>bpl?'#2e8b57':'#e74c3c';  ctx.font='bold 14px DM Mono,monospace';
+  ctx.fillText(bpk.toFixed(2),rightX+barW/2,H-40-rH-8);
+
+  // Arrow
+  if(!optimal){
+    const from=bpl>bpk?leftX+barW:rightX;
+    const to=bpl>bpk?rightX:leftX+barW;
+    const ay=H/2;
+    ctx.beginPath(); ctx.strokeStyle='#f39c12'; ctx.lineWidth=3;
+    ctx.moveTo(from,ay); ctx.lineTo(to,ay); ctx.stroke();
+    ctx.fillStyle='#f39c12';
+    const dir=bpl>bpk?1:-1;
+    ctx.beginPath(); ctx.moveTo(to,ay); ctx.lineTo(to-dir*12,ay-6); ctx.lineTo(to-dir*12,ay+6); ctx.closePath(); ctx.fill();
+    ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('reallocate',W/2,ay-10);
+  } else {
+    ctx.fillStyle='#2e8b57'; ctx.font='bold 13px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Cost Minimised!',W/2,H/2);
+  }
+
+  // Baseline
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,H-40); ctx.lineTo(W-MR,H-40); ctx.stroke();
+
+  document.getElementById('v64-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">MPL/w</div><div class="readout-val" style="color:${bpl>bpk?'#2e8b57':'#1a56db'}">${bpl.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPK/v</div><div class="readout-val" style="color:${bpk>bpl?'#2e8b57':'#e74c3c'}">${bpk.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Condition</div><div class="readout-val" style="color:${optimal?'#2e8b57':'#e74c3c'};font-size:0.85rem;">${optimal?'MPL/w = MPK/v':'Not equalised'}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+      ${optimal?'At the cost minimum: the last dollar spent on either input yields the same marginal product.':
+        bpl>bpk?`MPL/w > MPK/v: hire more L and use less K. Each dollar shifted to labor produces ${(bpl-bpk).toFixed(3)} extra units.`:
+        `MPK/v > MPL/w: use more K and less L. Each dollar shifted to capital produces ${(bpk-bpl).toFixed(3)} extra units.`}
+    </div>`;
+}
+
+function v64Update(){
+  document.getElementById('v64-mpl-val').textContent=parseFloat(document.getElementById('v64-mpl').value);
+  document.getElementById('v64-mpk-val').textContent=parseFloat(document.getElementById('v64-mpk').value);
+  document.getElementById('v64-w-val').textContent=parseFloat(document.getElementById('v64-w').value);
+  document.getElementById('v64-v-val').textContent=parseFloat(document.getElementById('v64-v').value);
+  v64Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 6.5 — SR vs LR COST CURVES
+// ══════════════════════════════════════════════════════════════════════
+let v65ShowLR=false;
+// TC = TFC + TVC; TVC = q^2 (simple quadratic)
+function v65TC(q,tfc){return tfc+q*q;}
+function v65MC(q){return 2*q;}
+function v65ATC(q,tfc){return v65TC(q,tfc)/q;}
+function v65AVC(q){return q;}
+function v65AFC(q,tfc){return tfc/q;}
+
+function v65Draw(){
+  const tfc=parseFloat(document.getElementById('v65-tfc').value);
+  const cvs=document.getElementById('cvs65'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,16], yR=[0,80];
+  drawAxesSt(ctx,W,H,xR,yR,'q','Cost per unit ($)');
+
+  const drawCurve=(fn,col,lw,dash)=>{
+    ctx.beginPath(); let first=true;
+    ctx.strokeStyle=col; ctx.lineWidth=lw;
+    if(dash) ctx.setLineDash(dash); else ctx.setLineDash([]);
+    for(let q=0.5;q<=15;q+=0.1){
+      const v=fn(q); if(v>yR[1]||v<0){first=true;continue;}
+      const [cx,cy]=toC(q,v,W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  };
+
+  drawCurve(q=>v65MC(q),'#e74c3c',2.5);            // SMC
+  drawCurve(q=>v65ATC(q,tfc),'#1a56db',2.5);        // ATC
+  drawCurve(q=>v65AVC(q),'#2e8b57',2);              // AVC
+  drawCurve(q=>v65AFC(q,tfc),'#888',1.5,[4,3]);     // AFC
+
+  if(v65ShowLR){
+    // LRAC: for CD production, LRTC = 2q (w=v=1, Q=K^0.5L^0.5 => LRTC = 2q*sqrt(wv)=2q)
+    drawCurve(q=>2,'#c0392b',2.5,[5,3]);
+    ctx.fillStyle='#c0392b'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('LRAC = $2 (CRS)',ML+4,MT+12);
+  }
+
+  // Legend
+  const leg=[['SMC','#e74c3c'],['ATC','#1a56db'],['AVC','#2e8b57'],['AFC','#888']];
+  leg.forEach(([lbl,col],i)=>{
+    ctx.fillStyle=col; ctx.fillRect(W-MR-80,MT+4+i*16,16,3);
+    ctx.fillStyle=col; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText(lbl,W-MR-60,MT+10+i*16);
+  });
+
+  // Min ATC
+  const qminATC=Math.sqrt(tfc); const minATC=v65ATC(qminATC,tfc);
+  if(qminATC<=15&&minATC<=yR[1]){
+    const [mx,my]=toC(qminATC,minATC,W,H,xR,yR);
+    dot6(ctx,mx,my,5,'#1a56db','#fff');
+    ctx.fillStyle='#1a56db'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(`min ATC: q*=${qminATC.toFixed(1)}`,mx,my-8);
+  }
+
+  document.getElementById('v65-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">TFC</div><div class="readout-val">$${tfc}</div></div>
+      <div class="readout-col"><div class="readout-label">Min ATC at q*</div><div class="readout-val">q*=${Math.sqrt(tfc).toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">TVC formula</div><div class="readout-val" style="font-size:0.75rem;">q&sup2;</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+      Key property: SMC passes through the minimum of ATC (and AVC). Changing TFC shifts ATC vertically but leaves SMC and AVC unchanged.
+    </div>`;
+}
+
+function v65Update(){
+  document.getElementById('v65-tfc-val').textContent=parseFloat(document.getElementById('v65-tfc').value);
+  v65Draw();
+}
+
+function v65ToggleLR(){
+  v65ShowLR=!v65ShowLR;
+  document.getElementById('v65-lr-btn').classList.toggle('active',v65ShowLR);
+  document.getElementById('v65-lr-btn').textContent=v65ShowLR?'Hide LRAC':'Show LRAC';
+  v65Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 6.6 — LRAC ENVELOPE BUILDER
+// ══════════════════════════════════════════════════════════════════════
+let v66Curves=[];
+const V66_K_SIZES=[2,4,6,8,10,12,14];
+
+function v66SRAC(q,K){
+  const w=4, r=4;
+  const Ls=q/Math.sqrt(K), TVC=w*Ls;
+  const TFC=r*K;
+  return (TVC+TFC)/q;
+}
+
+function v66Draw(){
+  const cvs=document.getElementById('cvs66'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,12],yR=[0,30];
+  drawAxesSt(ctx,W,H,xR,yR,'q','AC ($)');
+
+  const cols=['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80','#e74c3c'];
+
+  v66Curves.forEach((K,i)=>{
+    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[i%cols.length]; ctx.lineWidth=1.8;
+    for(let q=0.2;q<=11;q+=0.1){
+      const ac=v66SRAC(q,K); if(ac>yR[1]){first=true;continue;}
+      const [cx,cy]=toC(q,ac,W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+    // Tangency point (optimal q for this K)
+    const qOpt=K; const acOpt=v66SRAC(qOpt,K);
+    if(qOpt<=11&&acOpt<=yR[1]){
+      const [tx,ty]=toC(qOpt,acOpt,W,H,xR,yR);
+      dot6(ctx,tx,ty,4,cols[i%cols.length],'#fff');
+    }
+    ctx.fillStyle=cols[i%cols.length]; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+    const [lx,ly]=toC(Math.min(K*0.3+0.2,10),v66SRAC(K*0.3+0.2,K),W,H,xR,yR);
+    ctx.fillText(`K=${K}`,lx+3,ly-4);
+  });
+
+  // LRAC envelope
+  if(v66Curves.length>=2){
+    ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
+    for(let q=0.2;q<=11;q+=0.1){
+      const ac=Math.min(...v66Curves.map(K=>v66SRAC(q,K)));
+      if(ac>yR[1]){first=true;continue;}
+      const [cx,cy]=toC(q,ac,W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+    ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('LRAC',ML+4,MT+14);
+  }
+
+  document.getElementById('v66-count').textContent=`${v66Curves.length} plant size${v66Curves.length!==1?'s':''} added`;
+  document.getElementById('v66-readout').innerHTML=v66Curves.length===0?
+    'Press "+ Add Plant Size" to add SRAC curves. The LRAC envelope appears after 2+ curves.':
+    `${v66Curves.length} SRAC curve${v66Curves.length>1?'s are':' is'} shown. The LRAC (thick blue) is the lower envelope, tangent to each SRAC at its optimal output. Each tangency point represents the lowest cost for that output level in the long run.`;
+}
+
+function v66AddCurve(){
+  if(v66Curves.length>=V66_K_SIZES.length) return;
+  v66Curves.push(V66_K_SIZES[v66Curves.length]);
+  v66Draw();
+}
+
+function v66Reset(){
+  v66Curves=[]; v66Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 6.8 — MINIMUM WAGE AUTOMATION SIMULATOR
+// ══════════════════════════════════════════════════════════════════════
+const V68_Q=4; // fixed output target
+
+function v68Opt(w,v){
+  // Q = K^0.5*L^0.5 = 4 => L* = 4*sqrt(v/w), K* = 4*sqrt(w/v)
+  const q=V68_Q;
+  const Ls=q*Math.sqrt(v/w), Ks=q*Math.sqrt(w/v);
+  return {Ls,Ks,TC:w*Ls+v*Ks};
+}
+
+function v68Draw(){
+  const w=parseFloat(document.getElementById('v68-w').value);
+  const v=parseFloat(document.getElementById('v68-v').value);
+  const wBase=3, vBase=3;
+  const optBase=v68Opt(wBase,vBase);
+  const optNew=v68Opt(w,v);
+
+  const cvs=document.getElementById('cvs68'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const maxL=Math.max(optBase.Ls,optNew.Ls)*2.8, maxK=Math.max(optBase.Ks,optNew.Ks)*2.8;
+  const xR=[0,maxL],yR=[0,maxK];
+  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+
+  // Isoquant Q=4
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  for(let l=0.1;l<=maxL;l+=0.05){
+    const k=V68_Q*V68_Q/l; if(k>maxK||k<0.05){first=true;continue;}
+    const [cx,cy]=toC(l,k,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`Q=${V68_Q}`,W-MR-35,MT+14);
+
+  // Old isocost (w=wBase)
+  const TCold=optBase.TC;
+  const Lold=TCold/wBase, Kold=TCold/vBase;
+  if(Lold<=maxL&&Kold<=maxK){
+    const [ix0,iy0]=toC(0,Math.min(Kold,maxK),W,H,xR,yR);
+    const [ix1,iy1]=toC(Math.min(Lold,maxL),0,W,H,xR,yR);
+    ctx.beginPath(); ctx.strokeStyle='#aaa'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    ctx.moveTo(ix0,iy0); ctx.lineTo(ix1,iy1); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // New isocost (current w)
+  const TCnew=optNew.TC;
+  const Lnew=TCnew/w, Knew=TCnew/v;
+  const [nx0,ny0]=toC(0,Math.min(Knew,maxK),W,H,xR,yR);
+  const [nx1,ny1]=toC(Math.min(Lnew,maxL),0,W,H,xR,yR);
+  ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
+  ctx.moveTo(nx0,ny0); ctx.lineTo(nx1,ny1); ctx.stroke();
+  ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`New isocost (w=$${w})`,nx0+4,ny0-5);
+
+  // Old optimal (red X)
+  const [ox,oy]=toC(optBase.Ls,optBase.Ks,W,H,xR,yR);
+  ctx.fillStyle='#e74c3c'; ctx.font='bold 14px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('x',ox,oy+5);
+  ctx.font='9px DM Sans,sans-serif'; ctx.fillText('old optimum',ox,oy-8);
+
+  // New optimal (green dot)
+  const [bx,by]=toC(optNew.Ls,optNew.Ks,W,H,xR,yR);
+  dot6(ctx,bx,by,7,'#2e8b57','#fff');
+  ctx.fillStyle='#2e8b57'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText('new optimum',bx+8,by-3);
+
+  // Arrow
+  ctx.beginPath(); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1.5;
+  ctx.moveTo(ox,oy); ctx.lineTo(bx,by); ctx.stroke();
+
+  const kl_old=optBase.Ks/optBase.Ls, kl_new=optNew.Ks/optNew.Ls;
+  document.getElementById('v68-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Old K/L ratio</div><div class="readout-val">${kl_old.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">New K/L ratio</div><div class="readout-val" style="color:${kl_new>kl_old?'#e74c3c':'#2e8b57'}">${kl_new.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Old TC</div><div class="readout-val">$${optBase.TC.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">New TC</div><div class="readout-val" style="color:#e74c3c">$${optNew.TC.toFixed(2)}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+      ${w>wBase?`Wage rose from $${wBase} to $${w}. The firm substitutes capital for labor: K/L rises from ${kl_old.toFixed(2)} to ${kl_new.toFixed(2)}. Total cost rises to $${optNew.TC.toFixed(2)}.`:
+        w<wBase?`Wage fell below baseline. The firm substitutes labor for capital: K/L falls from ${kl_old.toFixed(2)} to ${kl_new.toFixed(2)}.`:
+        `Wage at baseline $${wBase}. The firm is at the original optimum.`}
+    </div>`;
+}
+
+function v68Update(){
+  document.getElementById('v68-w-val').textContent=parseFloat(document.getElementById('v68-w').value);
+  document.getElementById('v68-v-val').textContent=parseFloat(document.getElementById('v68-v').value);
+  v68Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 6.10 — EFFICIENT SCALE FINDER
+// ══════════════════════════════════════════════════════════════════════
+function v610Draw(){
+  const a=parseFloat(document.getElementById('v610-a').value)||100;
+  const b=parseFloat(document.getElementById('v610-b').value)||1;
+  // AC = a/q + b*q => dAC/dq = -a/q^2 + b = 0 => q* = sqrt(a/b)
+  const qstar=Math.sqrt(a/b);
+  const acstar=a/qstar+b*qstar;
+
+  const cvs=document.getElementById('cvs610'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const qmax=Math.min(qstar*3,60);
+  const acAtQmax=a/qmax+b*qmax;
+  const acmax=Math.max(acstar*2.5,acAtQmax)*1.1;
+  const xR=[0,qmax],yR=[0,acmax];
+  drawAxesSt(ctx,W,H,xR,yR,'q','AC ($)');
+
+  // Shade economies/diseconomies
+  // Economies (q < q*): green
+  ctx.beginPath(); let first=true;
+  for(let q=0.5;q<=qstar+0.1;q+=0.1){
+    const ac=a/q+b*q; if(ac>acmax){first=true;continue;}
+    const [cx,cy]=toC(q,ac,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  const [ex,ey]=toC(qstar,acstar,W,H,xR,yR);
+  const [,oy]=toC(0,0,W,H,xR,yR);
+  ctx.lineTo(ex,oy); ctx.lineTo(ML,oy); ctx.closePath();
+  ctx.fillStyle='rgba(46,139,87,0.15)'; ctx.fill();
+
+  // Diseconomies (q > q*): red
+  ctx.beginPath(); first=true;
+  for(let q=qstar;q<=qmax;q+=0.1){
+    const ac=a/q+b*q; if(ac>acmax){first=true;continue;}
+    const [cx,cy]=toC(q,ac,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  const [qmx,]=toC(qmax,0,W,H,xR,yR);
+  ctx.lineTo(qmx,oy); ctx.lineTo(ex,oy); ctx.closePath();
+  ctx.fillStyle='rgba(231,76,60,0.12)'; ctx.fill();
+
+  // AC curve
+  ctx.beginPath(); first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  for(let q=0.5;q<=qmax;q+=0.1){
+    const ac=a/q+b*q; if(ac>acmax){first=true;continue;}
+    const [cx,cy]=toC(q,ac,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+
+  // q* marker
+  const [qsx,qsy]=toC(qstar,acstar,W,H,xR,yR);
+  const [,qsy0]=toC(qstar,0,W,H,xR,yR);
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(qsx,qsy); ctx.lineTo(qsx,qsy0); ctx.stroke(); ctx.setLineDash([]);
+  dot6(ctx,qsx,qsy,7,'#1a56db','#fff');
+  ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(`q* = ${qstar.toFixed(2)}`,qsx,qsy-10);
+  ctx.fillStyle='#aaa'; ctx.fillText(`AC* = $${acstar.toFixed(2)}`,qsx,qsy0+14);
+
+  // Labels
+  ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillStyle='rgba(46,139,87,0.8)'; ctx.fillText('Economies of scale',ML+6,MT+14);
+  ctx.fillStyle='rgba(231,76,60,0.8)'; ctx.fillText('Diseconomies',qsx+8,MT+14);
+
+  document.getElementById('v610-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">AC = a/q + bq</div><div class="readout-val" style="font-size:0.78rem;">${a}/q + ${b}q</div></div>
+      <div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val">${qstar.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Min AC</div><div class="readout-val">$${acstar.toFixed(2)}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+      q* = sqrt(a/b) = sqrt(${a}/${b}) = ${qstar.toFixed(2)}. For q &lt; q*: AC is falling (economies of scale, green). For q &gt; q*: AC is rising (diseconomies, red). Industry structure: ${acstar<10?'very low min cost, likely competitive':'higher min cost, may support fewer firms'}.
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════════════
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+window.addEventListener('DOMContentLoaded', () => {
+  v61Init();
+  v62Draw();
+  v64Update();
+  v65Draw();
+  v66Draw();
+  v68Draw();
+  v610Draw();
+});
+
+window.addEventListener('resize', () => {
+  v61Update();
+  v62Draw();
+  v64Draw();
+  v65Draw();
+  v66Draw();
+  v68Draw();
+  v610Draw();
+});
+</script>
+</body>
+</html>

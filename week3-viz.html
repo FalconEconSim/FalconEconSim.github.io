@@ -172,8 +172,8 @@
     <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
     <li class="left-nav-item published active"><a href="week3.html">Week 3</a></li>
     <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 5</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 7</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
@@ -230,7 +230,7 @@
     <section class="section-block" id="sec-demand">
       <span class="section-number">Fig 3.1 · LO2 &amp; LO3</span>
       <h2>Two-Panel Demand Derivation</h2>
-      <p class="section-intro">Every price of X pins down one optimal bundle on the left. That bundle's X-coordinate is the quantity demanded at that price — which is exactly the horizontal coordinate of the corresponding demand-curve point on the right. Step through prices below to watch the demand curve build itself one point at a time.</p>
+      <p class="section-intro">Every price of X pins down one optimal bundle on the left. Now let's change the price of X and see what changes. As we lower the price step by step, the budget line pivots outward, the consumer finds a new indifference curve, and a new optimal point emerges. That bundle's X-coordinate is then plotted on the right, building the demand curve one point at a time.</p>
 
       <div class="viz-wrapper" id="vw-demand">
         <div class="viz-header fig-header-row" onclick="toggleViz('vw-demand')">
@@ -239,16 +239,40 @@
           <span class="fig-chevron">▾</span>
         </div>
         <div class="viz-body">
-          <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.9rem;line-height:0;">
-            <video controls playsinline preload="metadata"
-              style="width:100%;display:block;border-radius:10px;"
-              poster="">
-              <source src="assets/demand-derivation.mp4" type="video/mp4">
-              Your browser does not support HTML5 video.
-            </video>
+          <!-- Narration -->
+          <div id="v1-narration" style="background:#f0f4ff;border-left:4px solid var(--accent);border-radius:0 6px 6px 0;padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.9rem;color:var(--ink);line-height:1.65;min-height:3.2rem;transition:background 0.3s;">
+            Click <strong>Play</strong> or use the step buttons to watch the demand curve build itself one price at a time.
           </div>
-          <div class="callout key-idea">
-            <strong>Key insight:</strong> As P<sub>X</sub> falls, the budget line pivots outward. The optimal bundle moves along a new indifference curve, demanding more X. Each (P<sub>X</sub>, X*) pair is plotted on the right panel — connecting them traces the demand curve. Note that Y* = 10 stays fixed for all prices because with Cobb-Douglas utility, Y* = (1−α)I/P<sub>Y</sub> does not depend on P<sub>X</sub>.
+
+          <!-- Two-panel canvases -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+            <div>
+              <div class="viz-panel-label">Consumer's Budget &amp; Indifference Map</div>
+              <canvas id="cv1-left" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#fff;"></canvas>
+            </div>
+            <div>
+              <div class="viz-panel-label">Demand Curve (building point by point)</div>
+              <canvas id="cv1-right" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#fff;"></canvas>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;padding:0.6rem 0.8rem;background:#f8f9fb;border:1px solid var(--rule);border-radius:6px;">
+            <button id="v1-reset" onclick="v1CtrlReset()" style="font-family:var(--font);font-size:0.78rem;padding:0.28rem 0.7rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;color:var(--ink-light);">&#8635; Reset</button>
+            <button id="v1-prev" onclick="v1CtrlStep(-1)" style="font-family:var(--font);font-size:0.78rem;padding:0.28rem 0.7rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;color:var(--ink-light);">&#8592; Prev</button>
+            <button id="v1-play-btn" onclick="v1CtrlPlay()" style="font-family:var(--font);font-size:0.78rem;font-weight:600;padding:0.28rem 1rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent);color:#fff;cursor:pointer;">&#9654; Play</button>
+            <button id="v1-next" onclick="v1CtrlStep(1)" style="font-family:var(--font);font-size:0.78rem;padding:0.28rem 0.7rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;color:var(--ink-light);">Next &#8594;</button>
+            <span id="v1-status" style="font-family:var(--mono);font-size:0.76rem;color:var(--ink-light);flex:1;text-align:center;min-width:80px;"></span>
+            <div style="display:flex;align-items:center;gap:0.3rem;margin-left:auto;">
+              <span style="font-family:var(--mono);font-size:0.7rem;color:var(--ink-light);">Speed:</span>
+              <button class="v1-speed-btn" data-speed="0.5" onclick="v1SetSpeed(0.5)" style="font-family:var(--mono);font-size:0.7rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);border-radius:4px;background:#fff;cursor:pointer;">0.5x</button>
+              <button class="v1-speed-btn" data-speed="1" onclick="v1SetSpeed(1)" style="font-family:var(--mono);font-size:0.7rem;padding:0.2rem 0.5rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
+              <button class="v1-speed-btn" data-speed="2" onclick="v1SetSpeed(2)" style="font-family:var(--mono);font-size:0.7rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);border-radius:4px;background:#fff;cursor:pointer;">2x</button>
+            </div>
+          </div>
+
+          <div class="callout key-idea" style="margin-top:1rem;">
+            <strong>Key insight:</strong> As P<sub>X</sub> falls, the budget line pivots outward. The new indifference curve gives a new optimal point. Each (P<sub>X</sub>, X*) pair contributes one point to the right panel. At the end, connecting all these points traces the demand curve. Note Y* = 10 throughout: with Cobb-Douglas preferences, spending shares are constant so Y* is independent of P<sub>X</sub>.
           </div>
         </div>
       </div>
@@ -260,7 +284,7 @@
     <section class="section-block" id="sec-slutsky">
       <span class="section-number">Fig 3.2 · LO6</span>
       <h2>Slutsky Decomposition Explorer</h2>
-      <p class="section-intro">Any price change can be split into a substitution effect (SE) — moving along the original IC at new prices — and an income effect (IE) — shifting between ICs due to changed real income. Use the slider to vary the new price and watch the decomposition update live.</p>
+      <p class="section-intro">Any price change can be split into a substitution effect (SE) - moving along the original IC at new prices - and an income effect (IE) - shifting between ICs due to changed real income. Use the slider to vary the new price and watch the decomposition update live.</p>
 
       <div class="viz-wrapper" id="vw-slutsky">
         <div class="viz-header fig-header-row" onclick="toggleViz('vw-slutsky')">
@@ -372,7 +396,7 @@
     <section class="section-block" id="sec-drill">
       <span class="section-number">Fig 3.4 · LO2, LO3 &amp; LO4</span>
       <h2>Shift vs. Movement Drill</h2>
-      <p class="section-intro">The demand curve for X plots P<sub>X</sub> on the vertical axis and Q<sub>X</sub> on the horizontal axis — everything else is held fixed. So a change in P<sub>X</sub> itself simply slides the consumer along the existing curve (a <em>movement</em>). Any other change — income, the price of another good, tastes, number of buyers — alters how much X is demanded <em>at every price</em>, which shifts the entire curve. The diagram animates whichever effect applies when you answer each scenario.</p>
+      <p class="section-intro">The demand curve for X plots P<sub>X</sub> on the vertical axis and Q<sub>X</sub> on the horizontal axis - everything else is held fixed. So a change in P<sub>X</sub> itself simply slides the consumer along the existing curve (a <em>movement</em>). Any other change - income, the price of another good, tastes, number of buyers - alters how much X is demanded <em>at every price</em>, which shifts the entire curve. The diagram animates whichever effect applies when you answer each scenario.</p>
 
       <div class="viz-wrapper" id="vw-drill">
         <div class="viz-header fig-header-row" onclick="toggleViz('vw-drill')">
@@ -392,9 +416,9 @@
     <section class="section-block" id="sec-cross">
       <span class="section-number">Fig 3.5 · LO1 &amp; LO4</span>
       <h2>Cross-Price &amp; Demand Function Explorer</h2>
-      <p class="section-intro">Two types of price effects show up on a demand diagram — and they look completely different. Moving the <strong>own price</strong> (P<sub>X</sub>) traces a path <em>along</em> the existing demand curve: quantity adjusts, but the curve itself stays put. Changing the <strong>cross price</strong> (P<sub>Y</sub>, the price of another good) <em>shifts the entire curve</em> — at every possible P<sub>X</sub>, demand for X is now higher or lower than before.</p>
-      <p class="section-intro" style="margin-top:0.6rem;">Why the difference? The demand curve for X already embeds a fixed P<sub>Y</sub>. When P<sub>Y</sub> changes, that embedded assumption breaks — you need a whole new curve. The direction of the shift reveals the relationship: if X and Y are <strong>substitutes</strong> (think Pepsi vs Coke), a higher P<sub>Y</sub> makes X look relatively cheaper and shifts demand for X <em>rightward</em>. If they are <strong>complements</strong> (think coffee and milk), a higher P<sub>Y</sub> makes the combination more expensive and shifts demand for X <em>leftward</em>.</p>
-      <p class="section-intro" style="margin-top:0.6rem;color:var(--accent);font-weight:500;">Try this: set the relationship to <em>Substitutes</em>, then hold P<sub>X</sub> fixed and raise P<sub>Y</sub>. Watch the demand curve shift right — meaning at the same P<sub>X</sub>, consumers now want <em>more</em> X because Y just got more expensive. Then switch to <em>Complements</em> and repeat: the shift reverses.</p>
+      <p class="section-intro">Two types of price effects show up on a demand diagram - and they look completely different. Moving the <strong>own price</strong> (P<sub>X</sub>) traces a path <em>along</em> the existing demand curve: quantity adjusts, but the curve itself stays put. Changing the <strong>cross price</strong> (P<sub>Y</sub>, the price of another good) <em>shifts the entire curve</em> - at every possible P<sub>X</sub>, demand for X is now higher or lower than before.</p>
+      <p class="section-intro" style="margin-top:0.6rem;">Why the difference? The demand curve for X already embeds a fixed P<sub>Y</sub>. When P<sub>Y</sub> changes, that embedded assumption breaks - you need a whole new curve. The direction of the shift reveals the relationship: if X and Y are <strong>substitutes</strong> (think Pepsi vs Coke), a higher P<sub>Y</sub> makes X look relatively cheaper and shifts demand for X <em>rightward</em>. If they are <strong>complements</strong> (think coffee and milk), a higher P<sub>Y</sub> makes the combination more expensive and shifts demand for X <em>leftward</em>.</p>
+      <p class="section-intro" style="margin-top:0.6rem;color:var(--accent);font-weight:500;">Try this: set the relationship to <em>Substitutes</em>, then hold P<sub>X</sub> fixed and raise P<sub>Y</sub>. Watch the demand curve shift right - meaning at the same P<sub>X</sub>, consumers now want <em>more</em> X because Y just got more expensive. Then switch to <em>Complements</em> and repeat: the shift reverses.</p>
 
       <div class="viz-wrapper" id="vw-cross">
         <div class="viz-header fig-header-row" onclick="toggleViz('vw-cross')">
@@ -496,13 +520,25 @@ function freeB(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } ret
    VIZ 1: Two-Panel Demand Derivation (Canvas Animation)
    ============================================================ */
 const V1_I = 60, V1_Py = 3, V1_alpha = 0.5;
-// Step through these prices high→low (budget line pivots outward)
 const V1_PX_STEPS = [6, 5, 4, 3, 2, 1];
-const V1_COLS     = ['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80'];
-const V1_Ystar    = (1 - V1_alpha) * V1_I / V1_Py; // = 10, fixed
+const V1_COLS = ['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80'];
+const V1_Ystar = (1 - V1_alpha) * V1_I / V1_Py; // = 10, fixed
 
 let v1CurrStep = 0;
 let v1PlayTimer = null;
+let v1Speed = 1;
+let v1AnimRAF = null;
+let v1AnimStart = null;
+
+const V1_NARRATION = [
+  'Click <strong>Play</strong> or use the step buttons to watch the demand curve build itself one price at a time.',
+  'Now change P<sub>X</sub> to <strong>$6</strong>. The budget line is steep, reflecting the high price of X. The indifference curve is tangent at <strong>X* = 5 units</strong>. On the right panel, $6 is marked on the price axis and 5 on the quantity axis. The dashed lines converge to reveal the first demand point.',
+  'Now change P<sub>X</sub> to <strong>$5</strong>. The budget line pivots outward as X becomes cheaper. A new indifference curve is tangent at <strong>X* = 6 units</strong>. The budget line pivot and new optimal bundle lead to a second demand point.',
+  'Now change P<sub>X</sub> to <strong>$4</strong>. Another pivot outward. The new optimal bundle gives <strong>X* = 7.5 units</strong>. Each price reduction reveals a new demand point on the right.',
+  'Now change P<sub>X</sub> to <strong>$3</strong>. The optimal bundle gives <strong>X* = 10 units</strong>. Notice that Y* = 10 has not changed across any step. With Cobb-Douglas preferences (α = 0.5), the consumer always spends half of income on each good, so Y* is independent of P<sub>X</sub>.',
+  'Now change P<sub>X</sub> to <strong>$2</strong>. The budget line is now three times as flat as at the start. <strong>X* = 15 units</strong>. As X becomes cheaper, the consumer substitutes strongly toward it.',
+  'Now change P<sub>X</sub> to <strong>$1</strong>. <strong>X* = 30 units</strong>. All six demand points are plotted. Each point tells the optimal consumption of X at a given price. How this relationship changes with price <em>is</em> the demand curve. Joining these points gives us the demand curve D.'
+];
 
 function v1Xstar(px) { return V1_alpha * V1_I / px; }
 
@@ -510,150 +546,176 @@ function initViz1() {
   const cvL = document.getElementById('cv1-left');
   const cvR = document.getElementById('cv1-right');
   if (!cvL || !cvR) return;
-
   function setSize() {
-    const w = cvL.offsetWidth || 300;
-    const h = Math.round(w * 0.85);
+    const w = cvL.parentElement ? Math.max(200, cvL.parentElement.clientWidth) : 300;
+    const h = Math.round(w * 0.82);
     const dpr = window.devicePixelRatio || 1;
     [cvL, cvR].forEach(c => {
-      c.width  = w * dpr;
-      c.height = h * dpr;
-      c.style.height = h + 'px';
+      c.width = w * dpr; c.height = h * dpr; c.style.height = h + 'px';
     });
-    v1DrawCanvas();
+    v1DrawCanvas(1);
   }
   setSize();
-  window.addEventListener('resize', setSize);
+  window.addEventListener('resize', () => { setSize(); });
   v1UpdateStatus();
 }
 
-function v1DrawCanvas() {
+function v1DrawCanvas(animProg) {
+  if (animProg === undefined) animProg = 1;
   const cvL = document.getElementById('cv1-left');
   const cvR = document.getElementById('cv1-right');
   if (!cvL || !cvR) return;
   const dpr = window.devicePixelRatio || 1;
   const W = cvL.width, H = cvL.height;
-  const pL = 38*dpr, pB = 28*dpr, pT = 12*dpr, pR = 10*dpr;
+  const pL = 44*dpr, pB = 30*dpr, pT = 14*dpr, pR = 12*dpr;
   const pw = W - pL - pR, ph = H - pT - pB;
 
-  // Coordinate mappings
-  const toL = (x, y)  => [pL + (x/65)*pw, pT + (1 - y/22)*ph];
-  const toR = (x, px) => [pL + (x/65)*pw, pT + (1 - px/7)*ph];
-
-  function drawAxes(ctx, labelX, labelY, toFn, maxX, maxY) {
-    ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = '#c8ccce'; ctx.lineWidth = 1.5*dpr;
-    const orig = toFn(0, 0);
-    ctx.beginPath(); ctx.moveTo(orig[0], orig[1]);
-    ctx.lineTo(toFn(maxX, 0)[0], orig[1]); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(orig[0], orig[1]);
-    ctx.lineTo(orig[0], toFn(0, maxY)[1]); ctx.stroke();
-    // Arrowheads
-    const ax = toFn(maxX, 0);
-    ctx.beginPath(); ctx.moveTo(ax[0],orig[1]); ctx.lineTo(ax[0]-6*dpr, orig[1]-4*dpr);
-    ctx.lineTo(ax[0]-6*dpr, orig[1]+4*dpr); ctx.closePath();
-    ctx.fillStyle = '#c8ccce'; ctx.fill();
-    const ay = toFn(0, maxY);
-    ctx.beginPath(); ctx.moveTo(orig[0],ay[1]); ctx.lineTo(orig[0]-4*dpr, ay[1]+6*dpr);
-    ctx.lineTo(orig[0]+4*dpr, ay[1]+6*dpr); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#9aa3b2'; ctx.font = `${11*dpr}px sans-serif`;
-    ctx.fillText(labelX, ax[0]+4*dpr, orig[1]+5*dpr);
-    ctx.fillText(labelY, orig[0]-15*dpr, ay[1]+3*dpr);
-  }
+  const toL = (x, y) => [pL + (x/65)*pw, pT + (1 - y/22)*ph];
+  const toR = (x, p) => [pL + (x/35)*pw, pT + (1 - p/7)*ph];
 
   const ctxL = cvL.getContext('2d');
   const ctxR = cvR.getContext('2d');
-  drawAxes(ctxL, 'X', 'Y', toL, 65, 22);
-  drawAxes(ctxR, 'X', 'P', toR, 65, 7);
+  ctxL.clearRect(0, 0, W, H);
+  ctxR.clearRect(0, 0, W, H);
 
-  // Right panel: static demand curve P = 30/X
-  ctxR.beginPath();
-  let firstPt = true;
-  for (let x = 4.5; x <= 63; x += 0.3) {
-    const p = (V1_alpha * V1_I) / x;
-    if (p > 6.8) { firstPt = true; continue; }
-    const [cx, cy] = toR(x, p);
-    firstPt ? (ctxR.moveTo(cx,cy), firstPt=false) : ctxR.lineTo(cx,cy);
+  function drawAxisArrows(ctx, toFn, maxX, maxY, labelX, labelY) {
+    ctx.strokeStyle = '#c8ccce'; ctx.lineWidth = 1.5*dpr;
+    const o = toFn(0,0), xE = toFn(maxX,0), yE = toFn(0,maxY);
+    ctx.beginPath(); ctx.moveTo(o[0],o[1]); ctx.lineTo(xE[0],o[1]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(o[0],o[1]); ctx.lineTo(o[0],yE[1]); ctx.stroke();
+    ctx.fillStyle='#c8ccce';
+    ctx.beginPath(); ctx.moveTo(xE[0],o[1]); ctx.lineTo(xE[0]-6*dpr,o[1]-4*dpr); ctx.lineTo(xE[0]-6*dpr,o[1]+4*dpr); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(o[0],yE[1]); ctx.lineTo(o[0]-4*dpr,yE[1]+6*dpr); ctx.lineTo(o[0]+4*dpr,yE[1]+6*dpr); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#9aa3b2'; ctx.font=`${11*dpr}px sans-serif`; ctx.textAlign='left';
+    ctx.fillText(labelX, xE[0]+4*dpr, o[1]+5*dpr);
+    ctx.textAlign='center'; ctx.fillText(labelY, o[0], yE[1]-6*dpr); ctx.textAlign='left';
   }
-  ctxR.strokeStyle = '#3d5a80'; ctxR.lineWidth = 2.5*dpr; ctxR.stroke();
-  const [dlx,dly] = toR(52, (V1_alpha*V1_I)/52);
-  ctxR.fillStyle='#3d5a80'; ctxR.font=`italic ${12*dpr}px sans-serif`;
-  ctxR.fillText('D', dlx+5*dpr, dly-5*dpr);
 
-  // Draw each completed step
+  drawAxisArrows(ctxL, toL, 65, 22, 'X', 'Y');
+  drawAxisArrows(ctxR, toR, 35,  7, 'X', 'P($)');
+
+  const origL = toL(0,0);
+  const origR = toR(0,0);
+
+  // ── LEFT PANEL ──
   for (let i = 0; i < v1CurrStep; i++) {
-    const px  = V1_PX_STEPS[i];
-    const xs  = v1Xstar(px);
-    const col = V1_COLS[i];
+    const px = V1_PX_STEPS[i], xs = v1Xstar(px), col = V1_COLS[i];
     const isLast = (i === v1CurrStep - 1);
-    const lw = isLast ? 2.2*dpr : 1.4*dpr;
-    const alpha = isLast ? '' : '77';
-
-    // ─── Left panel ───
-    // Budget line: (0, I/Py=20) to (I/Px, 0)
+    const lw = isLast ? 2.2*dpr : 1.3*dpr;
+    const a8 = isLast ? '' : '66';
     const xi = V1_I / px;
-    const [bx0,by0] = toL(0, 20);
-    const [bx1,by1] = toL(xi, 0);
+    const [bx0,by0] = toL(0,20), [bx1,by1] = toL(xi,0);
     ctxL.beginPath(); ctxL.moveTo(bx0,by0); ctxL.lineTo(bx1,by1);
-    ctxL.strokeStyle = col + alpha; ctxL.lineWidth = lw; ctxL.stroke();
-
-    // IC: Y = k/X where k = xs * V1_Ystar
+    ctxL.strokeStyle=col+a8; ctxL.lineWidth=lw; ctxL.stroke();
     const k = xs * V1_Ystar;
-    ctxL.beginPath(); firstPt = true;
-    for (let x = 0.5; x <= 63; x += 0.3) {
-      const y = k / x; if (y > 21.5) { firstPt=true; continue; }
-      const [cx,cy] = toL(x,y);
-      firstPt ? (ctxL.moveTo(cx,cy), firstPt=false) : ctxL.lineTo(cx,cy);
+    ctxL.beginPath(); let fp=true;
+    for (let x=0.5; x<=63; x+=0.3) {
+      const y=k/x; if(y>21.5){fp=true;continue;}
+      const [cx,cy]=toL(x,y); fp?(ctxL.moveTo(cx,cy),fp=false):ctxL.lineTo(cx,cy);
     }
-    ctxL.strokeStyle = col + alpha; ctxL.lineWidth = lw; ctxL.stroke();
-
-    // Optimal bundle dot
-    const [ox,oy] = toL(xs, V1_Ystar);
-    ctxL.beginPath(); ctxL.arc(ox, oy, (isLast?7:4)*dpr, 0, 2*Math.PI);
-    ctxL.fillStyle = col; ctxL.fill();
-    ctxL.strokeStyle = '#fff'; ctxL.lineWidth = 2*dpr; ctxL.stroke();
-
-    // ─── Right panel ───
-    const [rx,ry] = toR(xs, px);
-    ctxR.beginPath(); ctxR.arc(rx, ry, (isLast?7:4)*dpr, 0, 2*Math.PI);
-    ctxR.fillStyle = col; ctxR.fill();
-    ctxR.strokeStyle = '#fff'; ctxR.lineWidth = 2*dpr; ctxR.stroke();
-
-    // ─── Current step extras ───
+    ctxL.strokeStyle=col+a8; ctxL.lineWidth=lw; ctxL.stroke();
+    const [ox,oy]=toL(xs,V1_Ystar);
+    ctxL.beginPath(); ctxL.arc(ox,oy,(isLast?7:4)*dpr,0,2*Math.PI);
+    ctxL.fillStyle=col; ctxL.fill(); ctxL.strokeStyle='#fff'; ctxL.lineWidth=2*dpr; ctxL.stroke();
     if (isLast) {
-      ctxL.fillStyle = col; ctxL.font = `bold ${11*dpr}px sans-serif`;
-      ctxL.fillText(`(${xs.toFixed(0)}, ${V1_Ystar})`, ox+10*dpr, oy-7*dpr);
-
-      // Dashed drop line from bundle to X-axis (left)
-      const [axXL,axYL] = toL(xs, 0);
-      ctxL.setLineDash([5*dpr,4*dpr]); ctxL.strokeStyle = col+'88'; ctxL.lineWidth = 1.5*dpr;
-      ctxL.beginPath(); ctxL.moveTo(ox, oy); ctxL.lineTo(axXL, axYL); ctxL.stroke();
+      const [axXL] = toL(xs,0);
+      ctxL.setLineDash([5*dpr,4*dpr]); ctxL.strokeStyle=col+'88'; ctxL.lineWidth=1.5*dpr;
+      ctxL.beginPath(); ctxL.moveTo(ox,oy); ctxL.lineTo(axXL,origL[1]); ctxL.stroke();
       ctxL.setLineDash([]);
-      ctxL.fillStyle = col; ctxL.font = `${10*dpr}px sans-serif`;
-      ctxL.fillText(`X*=${xs.toFixed(0)}`, axXL-14*dpr, axYL+16*dpr);
-
-      ctxR.fillStyle = col; ctxR.font = `bold ${11*dpr}px sans-serif`;
-      ctxR.fillText(`P=$${px}`, rx+10*dpr, ry-7*dpr);
-
-      // Dashed drop line from demand point to X-axis (right)
-      const [axXR,axYR] = toR(xs, 0);
-      ctxR.setLineDash([5*dpr,4*dpr]); ctxR.strokeStyle = col+'88'; ctxR.lineWidth = 1.5*dpr;
-      ctxR.beginPath(); ctxR.moveTo(rx, ry); ctxR.lineTo(axXR, axYR); ctxR.stroke();
-      ctxR.setLineDash([]);
-      ctxR.fillStyle = col; ctxR.font = `${10*dpr}px sans-serif`;
-      ctxR.fillText(`X*=${xs.toFixed(0)}`, axXR-14*dpr, axYR+16*dpr);
+      ctxL.fillStyle=col; ctxL.font=`${10*dpr}px sans-serif`;
+      ctxL.textAlign='center'; ctxL.fillText(`X*=${xs.toFixed(0)}`,axXL,origL[1]+15*dpr);
+      ctxL.textAlign='right'; ctxL.fillText(`P=$${px}`,bx0-4*dpr,by0-4*dpr);
+      ctxL.textAlign='left';
     }
   }
+
+  // ── RIGHT PANEL: previous steps as small dots ──
+  for (let i = 0; i < v1CurrStep - 1; i++) {
+    const px=V1_PX_STEPS[i], xs=v1Xstar(px), col=V1_COLS[i];
+    const [rx,ry]=toR(xs,px);
+    ctxR.beginPath(); ctxR.arc(rx,ry,4*dpr,0,2*Math.PI);
+    ctxR.fillStyle=col+'99'; ctxR.fill(); ctxR.strokeStyle='#fff'; ctxR.lineWidth=1.5*dpr; ctxR.stroke();
+    ctxR.beginPath(); ctxR.moveTo(origR[0]-4*dpr,ry); ctxR.lineTo(origR[0]+3*dpr,ry);
+    ctxR.strokeStyle=col+'55'; ctxR.lineWidth=1.2*dpr; ctxR.stroke();
+    ctxR.beginPath(); ctxR.moveTo(rx,origR[1]+4*dpr); ctxR.lineTo(rx,origR[1]-3*dpr);
+    ctxR.strokeStyle=col+'55'; ctxR.lineWidth=1.2*dpr; ctxR.stroke();
+  }
+
+  // ── RIGHT PANEL: current step with converging-lines animation ──
+  if (v1CurrStep > 0) {
+    const i = v1CurrStep - 1;
+    const px=V1_PX_STEPS[i], xs=v1Xstar(px), col=V1_COLS[i];
+    const [rx,ry]=toR(xs,px);
+    const prog = Math.min(1, animProg);
+
+    // Axis tick marks (instant)
+    ctxR.lineWidth=2*dpr; ctxR.strokeStyle=col;
+    ctxR.beginPath(); ctxR.moveTo(origR[0]-7*dpr,ry); ctxR.lineTo(origR[0]+5*dpr,ry); ctxR.stroke();
+    ctxR.beginPath(); ctxR.moveTo(rx,origR[1]+7*dpr); ctxR.lineTo(rx,origR[1]-5*dpr); ctxR.stroke();
+    ctxR.fillStyle=col; ctxR.font=`bold ${10*dpr}px sans-serif`;
+    ctxR.textAlign='right'; ctxR.fillText(`$${px}`,origR[0]-9*dpr,ry+4*dpr);
+    ctxR.textAlign='center'; ctxR.fillText(`${xs.toFixed(0)}`,rx,origR[1]+15*dpr);
+    ctxR.textAlign='left';
+
+    // Converging dashed lines (animated by prog)
+    const hEnd = origR[0] + (rx - origR[0]) * prog;
+    const vEnd = origR[1] - (origR[1] - ry) * prog;
+    ctxR.setLineDash([4*dpr,3*dpr]); ctxR.lineWidth=1.6*dpr; ctxR.strokeStyle=col+'aa';
+    ctxR.beginPath(); ctxR.moveTo(origR[0],ry); ctxR.lineTo(hEnd,ry); ctxR.stroke();
+    ctxR.beginPath(); ctxR.moveTo(rx,origR[1]); ctxR.lineTo(rx,vEnd); ctxR.stroke();
+    ctxR.setLineDash([]);
+
+    // Dot fades in once lines reach the point
+    if (prog >= 0.85) {
+      const da = Math.min(1,(prog-0.85)/0.15);
+      ctxR.globalAlpha=da;
+      ctxR.beginPath(); ctxR.arc(rx,ry,7*dpr,0,2*Math.PI);
+      ctxR.fillStyle=col; ctxR.fill(); ctxR.strokeStyle='#fff'; ctxR.lineWidth=2*dpr; ctxR.stroke();
+      ctxR.globalAlpha=1;
+    }
+  }
+
+  // ── RIGHT PANEL: draw demand curve only at final step ──
+  if (v1CurrStep === V1_PX_STEPS.length) {
+    ctxR.beginPath(); let fp=true;
+    for (let x=4.5; x<=33; x+=0.2) {
+      const p=(V1_alpha*V1_I)/x; if(p>6.8||p<0.5){fp=true;continue;}
+      const [cx,cy]=toR(x,p); fp?(ctxR.moveTo(cx,cy),fp=false):ctxR.lineTo(cx,cy);
+    }
+    ctxR.strokeStyle='#3d5a80'; ctxR.lineWidth=2.5*dpr; ctxR.stroke();
+    const [dlx,dly]=toR(27,(V1_alpha*V1_I)/27);
+    ctxR.fillStyle='#3d5a80'; ctxR.font=`italic bold ${13*dpr}px sans-serif`;
+    ctxR.textAlign='left'; ctxR.fillText('D',dlx+5*dpr,dly-6*dpr);
+  }
+}
+
+function v1RunAnim() {
+  const now = performance.now();
+  if (!v1AnimStart) v1AnimStart = now;
+  const dur = Math.round(700 / v1Speed);
+  const prog = Math.min(1, (now - v1AnimStart) / dur);
+  v1DrawCanvas(prog);
+  if (prog < 1) { v1AnimRAF = requestAnimationFrame(v1RunAnim); }
+  else { v1AnimRAF = null; v1AnimStart = null; }
+}
+
+function v1StartAnim() {
+  if (v1AnimRAF) { cancelAnimationFrame(v1AnimRAF); v1AnimRAF = null; }
+  v1AnimStart = null;
+  v1AnimRAF = requestAnimationFrame(v1RunAnim);
 }
 
 function v1UpdateStatus() {
   const el = document.getElementById('v1-status');
+  const nar = document.getElementById('v1-narration');
   if (!el) return;
   if (v1CurrStep === 0) {
-    el.innerHTML = '— Press Play or step through —';
+    el.textContent = 'Step 0 / 6';
+    if (nar) nar.innerHTML = V1_NARRATION[0];
   } else {
     const px = V1_PX_STEPS[v1CurrStep-1];
-    el.innerHTML = `Step ${v1CurrStep}/${V1_PX_STEPS.length} · P<sub>X</sub> = $${px} → X* = ${v1Xstar(px).toFixed(1)}, Y* = ${V1_Ystar}`;
+    el.innerHTML = `Step ${v1CurrStep}/6 &middot; P<sub>X</sub>=$${px} &rarr; X*=${v1Xstar(px).toFixed(1)}`;
+    if (nar) nar.innerHTML = V1_NARRATION[v1CurrStep];
   }
   const prev = document.getElementById('v1-prev');
   const next = document.getElementById('v1-next');
@@ -661,20 +723,30 @@ function v1UpdateStatus() {
   if (next) next.disabled = v1CurrStep === V1_PX_STEPS.length;
 }
 
+function v1SetSpeed(s) {
+  v1Speed = s;
+  document.querySelectorAll('.v1-speed-btn').forEach(b => {
+    const on = parseFloat(b.dataset.speed) === s;
+    b.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
+    b.style.background  = on ? 'var(--accent-lt)' : '#fff';
+    b.style.color       = on ? 'var(--accent)' : '';
+  });
+}
+
 function v1CtrlStep(dir) {
   clearTimeout(v1PlayTimer); v1PlayTimer = null;
   const pb = document.getElementById('v1-play-btn');
   if (pb) pb.textContent = '▶ Play';
-  v1CurrStep = Math.max(0, Math.min(V1_PX_STEPS.length, v1CurrStep + dir));
-  v1DrawCanvas(); v1UpdateStatus();
+  const ns = Math.max(0, Math.min(V1_PX_STEPS.length, v1CurrStep + dir));
+  if (ns !== v1CurrStep) { v1CurrStep = ns; v1StartAnim(); v1UpdateStatus(); }
 }
 
 function v1CtrlReset() {
   clearTimeout(v1PlayTimer); v1PlayTimer = null;
+  if (v1AnimRAF) { cancelAnimationFrame(v1AnimRAF); v1AnimRAF = null; }
   const pb = document.getElementById('v1-play-btn');
   if (pb) pb.textContent = '▶ Play';
-  v1CurrStep = 0;
-  v1DrawCanvas(); v1UpdateStatus();
+  v1CurrStep = 0; v1DrawCanvas(1); v1UpdateStatus();
 }
 
 function v1CtrlPlay() {
@@ -684,7 +756,7 @@ function v1CtrlPlay() {
     if (pb) pb.textContent = '▶ Play';
     return;
   }
-  v1CurrStep = 0; v1DrawCanvas(); v1UpdateStatus();
+  v1CurrStep = 0; v1DrawCanvas(1); v1UpdateStatus();
   if (pb) pb.textContent = '⏸ Pause';
   function tick() {
     if (v1CurrStep >= V1_PX_STEPS.length) {
@@ -692,8 +764,8 @@ function v1CtrlPlay() {
       if (pb) pb.textContent = '▶ Play';
       return;
     }
-    v1CurrStep++; v1DrawCanvas(); v1UpdateStatus();
-    v1PlayTimer = setTimeout(tick, 1100);
+    v1CurrStep++; v1StartAnim(); v1UpdateStatus();
+    v1PlayTimer = setTimeout(tick, Math.round(1600 / v1Speed));
   }
   v1PlayTimer = setTimeout(tick, 400);
 }
@@ -930,31 +1002,31 @@ function initViz3() {
    VIZ 4: Shift vs. Movement Drill
    ============================================================ */
 const SCENARIOS = [
-  { text:'P<sub>X</sub> rises from $3 to $5.', answer:'movement', explanation:'A change in the good\'s own price causes a movement along the demand curve — the consumer slides to a new point on the existing curve.' },
-  { text:'Consumer income increases by 25%.', answer:'shift', explanation:'Income changes shift the entire demand curve — at every price, demand changes. For a normal good, demand shifts rightward.' },
+  { text:'P<sub>X</sub> rises from $3 to $5.', answer:'movement', explanation:'A change in the good\'s own price causes a movement along the demand curve - the consumer slides to a new point on the existing curve.' },
+  { text:'Consumer income increases by 25%.', answer:'shift', explanation:'Income changes shift the entire demand curve - at every price, demand changes. For a normal good, demand shifts rightward.' },
   { text:'The price of a complement good falls.', answer:'shift', explanation:'A complement\'s price change shifts the demand curve. Cheaper complements increase demand for X, shifting the curve right.' },
-  { text:'Consumer tastes shift toward good X.', answer:'shift', explanation:'Preference changes shift the demand curve. Stronger tastes for X mean more is demanded at every price — a rightward shift.' },
-  { text:'P<sub>X</sub> falls from $4 to $2.', answer:'movement', explanation:'A change in own price causes a movement along the existing demand curve — quantity demanded increases, but the curve itself does not shift.' },
-  { text:'The price of a substitute good rises.', answer:'shift', explanation:'When a substitute becomes more expensive, consumers switch to X — demand for X increases at every price, shifting the curve rightward.' },
+  { text:'Consumer tastes shift toward good X.', answer:'shift', explanation:'Preference changes shift the demand curve. Stronger tastes for X mean more is demanded at every price - a rightward shift.' },
+  { text:'P<sub>X</sub> falls from $4 to $2.', answer:'movement', explanation:'A change in own price causes a movement along the existing demand curve - quantity demanded increases, but the curve itself does not shift.' },
+  { text:'The price of a substitute good rises.', answer:'shift', explanation:'When a substitute becomes more expensive, consumers switch to X - demand for X increases at every price, shifting the curve rightward.' },
   { text:'Consumer income falls by 30%.', answer:'shift', explanation:'Lower income shifts the demand curve. For a normal good, demand shifts leftward (less demanded at every price).' },
-  { text:'The government imposes a $2 per-unit tax on good X.', answer:'movement', explanation:'A per-unit tax raises the effective price of X for the consumer — this causes a movement along the existing demand curve, not a shift.' },
-  { text:'New scientific study shows X has major health benefits.', answer:'shift', explanation:'Improved perceptions of X shift demand rightward — at every price, consumers now demand more of X.' },
+  { text:'The government imposes a $2 per-unit tax on good X.', answer:'movement', explanation:'A per-unit tax raises the effective price of X for the consumer - this causes a movement along the existing demand curve, not a shift.' },
+  { text:'New scientific study shows X has major health benefits.', answer:'shift', explanation:'Improved perceptions of X shift demand rightward - at every price, consumers now demand more of X.' },
   { text:'P<sub>X</sub> rises from $2 to $6.', answer:'movement', explanation:'Own-price change: movement along the demand curve. Quantity demanded falls as you move up the curve.' },
   { text:'The price of a complement good rises.', answer:'shift', explanation:'Costlier complement → demand for X falls → leftward shift of the demand curve.' },
-  { text:'Number of buyers in the market doubles.', answer:'shift', explanation:'More buyers means more total demand at every price — a rightward shift of the market demand curve.' },
-  { text:'A government subsidy reduces P<sub>X</sub> by $1 per unit.', answer:'movement', explanation:'A subsidy that lowers the effective price of X causes movement along the demand curve — the own price changed, so quantity adjusts along the existing curve.' },
-  { text:'Consumers expect P<sub>X</sub> to rise sharply next month.', answer:'shift', explanation:'Expectations of future price increases cause consumers to buy more today — shifting demand for X rightward right now.' },
-  { text:'A new advertising campaign makes X more fashionable.', answer:'shift', explanation:'Advertising shifts tastes and preferences — more demand for X at every price, shifting the curve rightward.' },
+  { text:'Number of buyers in the market doubles.', answer:'shift', explanation:'More buyers means more total demand at every price - a rightward shift of the market demand curve.' },
+  { text:'A government subsidy reduces P<sub>X</sub> by $1 per unit.', answer:'movement', explanation:'A subsidy that lowers the effective price of X causes movement along the demand curve - the own price changed, so quantity adjusts along the existing curve.' },
+  { text:'Consumers expect P<sub>X</sub> to rise sharply next month.', answer:'shift', explanation:'Expectations of future price increases cause consumers to buy more today - shifting demand for X rightward right now.' },
+  { text:'A new advertising campaign makes X more fashionable.', answer:'shift', explanation:'Advertising shifts tastes and preferences - more demand for X at every price, shifting the curve rightward.' },
   { text:'P<sub>X</sub> falls from $10 to $6.', answer:'movement', explanation:'Only the own price of X changed. The consumer moves down along the existing demand curve to a higher quantity.' },
-  { text:'The price of a substitute good falls sharply.', answer:'shift', explanation:'When a substitute becomes cheaper, consumers switch away from X — demand for X decreases at every price, shifting the curve leftward.' },
-  { text:'A recession reduces household incomes by 15%.', answer:'shift', explanation:'For a normal good, lower income shifts demand leftward — less demanded at every price.' },
+  { text:'The price of a substitute good falls sharply.', answer:'shift', explanation:'When a substitute becomes cheaper, consumers switch away from X - demand for X decreases at every price, shifting the curve leftward.' },
+  { text:'A recession reduces household incomes by 15%.', answer:'shift', explanation:'For a normal good, lower income shifts demand leftward - less demanded at every price.' },
   { text:'P<sub>X</sub> is unchanged but P<sub>Y</sub> doubles (Y is a complement).', answer:'shift', explanation:'P<sub>Y</sub> is NOT the own price of X. A change in the price of a complement shifts the demand curve for X leftward.' },
-  { text:'Population in the market grows by 10%.', answer:'shift', explanation:'More potential buyers shifts market demand rightward — at every price, total quantity demanded is higher.' },
-  { text:'P<sub>X</sub> rises from $5 to $5.50.', answer:'movement', explanation:'Even a small change in own price causes a movement along the demand curve — quantity falls slightly, but the curve itself does not shift.' },
+  { text:'Population in the market grows by 10%.', answer:'shift', explanation:'More potential buyers shifts market demand rightward - at every price, total quantity demanded is higher.' },
+  { text:'P<sub>X</sub> rises from $5 to $5.50.', answer:'movement', explanation:'Even a small change in own price causes a movement along the demand curve - quantity falls slightly, but the curve itself does not shift.' },
   { text:'A social media trend makes X less desirable.', answer:'shift', explanation:'Changing tastes shift demand. If X becomes less desirable, demand shifts leftward at every price.' },
-  { text:'A competing substitute good is pulled from shelves.', answer:'shift', explanation:'Removing a substitute reduces the alternatives available — consumers demand more X at every price, shifting the curve rightward.' },
+  { text:'A competing substitute good is pulled from shelves.', answer:'shift', explanation:'Removing a substitute reduces the alternatives available - consumers demand more X at every price, shifting the curve rightward.' },
   { text:'P<sub>X</sub> falls from $8 to $3.', answer:'movement', explanation:'Own-price change: movement along the demand curve. As price falls, quantity demanded rises along the existing curve.' },
-  { text:'Consumer credit becomes easier to obtain.', answer:'shift', explanation:'Easier credit effectively raises purchasing power (like an income increase) — demand shifts rightward for normal goods.' },
+  { text:'Consumer credit becomes easier to obtain.', answer:'shift', explanation:'Easier credit effectively raises purchasing power (like an income increase) - demand shifts rightward for normal goods.' },
 ];
 
 let drillIdx = 0, drillScore = 0, drillTotal = 0, drillOrder = [], drillAnswered = false;
@@ -1069,7 +1141,7 @@ function redrawV5() {
   const pyBase = 4;
   const k = v5Rel === 'sub' ? 0.4 * (v5Py - pyBase) : -0.4 * (v5Py - pyBase);
 
-  // Demand curve: P = (V5_alpha * v5I + k*P) / X — simplify: X(P) = (v5I/2 + k*v5I/(2*v5Py)) / P
+  // Demand curve: P = (V5_alpha * v5I + k*P) / X - simplify: X(P) = (v5I/2 + k*v5I/(2*v5Py)) / P
   const adjI = v5I/2 + k * v5I / (2 * v5Py);
   const safAdj = Math.max(adjI, 5);
 

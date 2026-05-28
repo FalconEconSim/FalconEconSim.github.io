@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 5: Interactive Visualizations - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
+    .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
+    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; }
+    .viz-instructor { font-size:0.9rem; color:var(--muted); }
+    .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
+    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
+    .toc ol { margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:0.28rem; }
+    .toc li { font-size:0.855rem; color:var(--muted); }
+    .toc a { color:var(--accent); text-decoration:none; }
+    .toc a:hover { text-decoration:underline; }
+    .fig-section { border-top:2px solid var(--rule); padding-top:2.5rem; margin-top:3rem; }
+    .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
+    .fig-label { font-family:var(--mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
+    .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
+    .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
+    .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
+    canvas { display:block; width:100%; cursor:default; }
+    .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
+    .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
+    .viz-slider-label { font-family:var(--mono); font-size:0.75rem; color:var(--muted); white-space:nowrap; }
+    .viz-slider { width:130px; accent-color:var(--accent); }
+    .viz-slider-val { font-family:var(--mono); font-size:0.82rem; color:var(--accent); min-width:36px; }
+    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
+    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
+    .viz-readout { background:var(--off-white); border:1px solid var(--rule); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
+    .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
+    .readout-col { flex:1; min-width:120px; }
+    .readout-label { font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
+    .readout-val { font-size:1.05rem; font-weight:600; color:var(--accent); font-family:var(--mono); }
+    .quiz-scenario { background:#fff; border:1px solid var(--rule); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.97rem; font-weight:500; margin-bottom:1rem; }
+    .quiz-btns { display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+    .quiz-btn { padding:0.5rem 1rem; font-family:var(--font); font-size:0.82rem; font-weight:600; border:1px solid var(--rule); border-radius:8px; cursor:pointer; background:var(--off-white); color:var(--text); transition:all 0.15s; }
+    .quiz-btn:hover { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
+    .quiz-btn.correct { background:#dcfce7; border-color:#4ade80; color:#166534; }
+    .quiz-btn.incorrect { background:#fee2e2; border-color:#fc8181; color:#991b1b; }
+    .quiz-btn.revealed { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
+    .quiz-feedback { background:var(--off-white); border:1px solid var(--rule); border-radius:6px; padding:0.7rem 1rem; font-size:0.85rem; line-height:1.65; margin-bottom:0.75rem; }
+    .quiz-next { font-family:var(--font); font-size:0.82rem; font-weight:500; padding:0.35rem 1rem; border:1px solid var(--accent); border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
+    .hub-footer { border-top:1px solid var(--rule); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
+    .hub-footer-left { font-size:0.82rem; color:var(--muted); }
+    .hub-footer-left a { color:var(--muted); text-decoration:none; }
+    .hub-footer-left a:hover { color:var(--accent); }
+    .footer-logo { height:22px; opacity:0.5; }
+    .phase-badge { display:inline-block; font-family:var(--mono); font-size:0.75rem; font-weight:600; padding:0.2rem 0.65rem; border-radius:20px; background:var(--accent-light); color:var(--accent); border:1px solid rgba(26,86,219,0.2); }
+    .two-col-panels { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+    @media(max-width:580px){ .two-col-panels { grid-template-columns:1fr; } }
+    .panel-label { font-family:var(--mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0.4rem 0.6rem; background:var(--off-white); border-bottom:1px solid var(--rule); }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published active"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><span>Week 7</span></li>
+    <li class="left-nav-item upcoming"><span>Week 8</span></li>
+    <li class="left-nav-item upcoming"><span>Week 9</span></li>
+    <li class="left-nav-item upcoming"><span>Week 10</span></li>
+    <li class="left-nav-item upcoming"><span>Week 11</span></li>
+    <li class="left-nav-item upcoming"><span>Week 12</span></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="week5.html">Week 5</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Visualizations</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main class="main" style="max-width:800px;">
+
+  <div class="viz-hero">
+    <div class="viz-ghost">05</div>
+    <p class="viz-week-label">Week 5 · Interactive Visualizations</p>
+    <h1 class="viz-title">Production Theory</h1>
+    <p class="viz-instructor">Prof. Naveen Sunder</p>
+    <nav class="toc">
+      <div class="toc-title">Ten Figures</div>
+      <ol>
+        <li><a href="#sec-5-1">Fig 5.1: Total Product &amp; Marginal Product Animator</a></li>
+        <li><a href="#sec-5-2">Fig 5.2: Isoquant Explorer</a></li>
+        <li><a href="#sec-5-3">Fig 5.3: MRTS Live Calculator</a></li>
+        <li><a href="#sec-5-4">Fig 5.4: Diminishing MP vs Decreasing Returns to Scale</a></li>
+        <li><a href="#sec-5-5">Fig 5.5: Returns to Scale Isoquant Spacer</a></li>
+        <li><a href="#sec-5-6">Fig 5.6: Input Substitution vs Technological Change</a></li>
+        <li><a href="#sec-5-7">Fig 5.7: Consumer-Production Analogy</a></li>
+        <li><a href="#sec-5-8">Fig 5.8: Cobb-Douglas Production Function Lab</a></li>
+        <li><a href="#sec-5-9">Fig 5.9: Bakery / Factory Scenario Simulator</a></li>
+        <li><a href="#sec-5-10">Fig 5.10: Isoquant Shape Identifier Quiz</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- ═══ FIG 5.1 - TP / MP ANIMATOR ═══ -->
+  <section class="fig-section" id="sec-5-1">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.1</span>
+      <span class="fig-title">Total Product &amp; Marginal Product Animator</span>
+    </div>
+    <p class="fig-intro">
+      Drag the worker slider to move simultaneously on both panels. The top panel draws a tangent line on the TP curve
+      (whose slope is MPL); the bottom panel lights up the corresponding MPL point. This makes the
+      "MPL = slope of TP" relationship viscerally clear.
+    </p>
+    <div class="cvs-wrap">
+      <div class="panel-label">Total Product (TP)</div>
+      <canvas id="cvs51a" height="200"></canvas>
+      <div class="panel-label" style="border-top:1px solid var(--rule);">Marginal Product of Labor (MPL)</div>
+      <canvas id="cvs51b" height="140"></canvas>
+    </div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Workers L:</span>
+        <input type="range" class="viz-slider" id="v51-l" min="0.1" max="9.9" step="0.1" value="3" oninput="v51Update()" style="width:200px;">
+        <span class="viz-slider-val" id="v51-l-val">3.0</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Capital K:</span>
+        <input type="range" class="viz-slider" id="v51-k" min="1" max="16" step="1" value="4" oninput="v51Update()">
+        <span class="viz-slider-val" id="v51-k-val">4</span>
+      </div>
+    </div>
+    <div class="viz-readout" id="v51-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.2 - ISOQUANT EXPLORER ═══ -->
+  <section class="fig-section" id="sec-5-2">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.2</span>
+      <span class="fig-title">Isoquant Explorer</span>
+    </div>
+    <p class="fig-intro">
+      Three production function types produce three very different isoquant shapes. A draggable point P shows the live MRTS
+      at that location. Toggle between IC (consumer) and isoquant (firm) mode to see the analogy directly.
+    </p>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+      <button class="viz-btn active" id="v52-mode-iq" onclick="v52SetMode('iq')">Isoquant (Firm)</button>
+      <button class="viz-btn" id="v52-mode-ic" onclick="v52SetMode('ic')">Indifference Curve (Consumer)</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;">
+      <div class="cvs-wrap">
+        <div class="panel-label">Cobb-Douglas (Smooth)</div>
+        <canvas id="cvs52a" height="220"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Linear (Perfect Substitutes)</div>
+        <canvas id="cvs52b" height="220"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Leontief (Fixed Proportions)</div>
+        <canvas id="cvs52c" height="220"></canvas>
+      </div>
+    </div>
+    <div class="viz-readout" id="v52-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.3 - MRTS LIVE CALCULATOR ═══ -->
+  <section class="fig-section" id="sec-5-3">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.3</span>
+      <span class="fig-title">MRTS Live Calculator</span>
+    </div>
+    <p class="fig-intro">
+      Drag the point along the isoquant Q = K<sup>0.5</sup>L<sup>0.5</sup>. As you move right (more L, less K),
+      the annotation updates: "At this point, 1 worker replaces X machines." The tangent line redraws and MRTS = K/L
+      updates in real time.
+    </p>
+    <div class="two-col-panels">
+      <div class="cvs-wrap">
+        <div class="panel-label">Isoquant with Tangent</div>
+        <canvas id="cvs53" height="280"></canvas>
+      </div>
+      <div>
+        <div class="viz-readout" id="v53-readout" style="margin-top:0;height:100%;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FIG 5.4 - DIMINISHING MP VS DRS ═══ -->
+  <section class="fig-section" id="sec-5-4">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.4</span>
+      <span class="fig-title">Diminishing MP vs Decreasing Returns to Scale</span>
+    </div>
+    <p class="fig-intro">
+      The same Cobb-Douglas function Q = K<sup>a</sup>L<sup>b</sup> can simultaneously exhibit diminishing MPL AND increasing returns to scale.
+      Left panel: hold K fixed, vary L and watch MPL fall. Right panel: scale both K and L proportionally and watch output more than double.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">a (capital exponent):</span>
+        <input type="range" class="viz-slider" id="v54-a" min="0.1" max="0.9" step="0.05" value="0.6" oninput="v54Update()">
+        <span class="viz-slider-val" id="v54-a-val">0.60</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">b (labor exponent):</span>
+        <input type="range" class="viz-slider" id="v54-b" min="0.1" max="0.9" step="0.05" value="0.6" oninput="v54Update()">
+        <span class="viz-slider-val" id="v54-b-val">0.60</span>
+      </div>
+    </div>
+    <div class="two-col-panels">
+      <div class="cvs-wrap">
+        <div class="panel-label">MPL (K fixed = 4)</div>
+        <canvas id="cvs54a" height="220"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Scale Both Inputs (L)</div>
+        <canvas id="cvs54b" height="220"></canvas>
+      </div>
+    </div>
+    <div class="viz-readout" id="v54-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.5 - RTS ISOQUANT SPACER ═══ -->
+  <section class="fig-section" id="sec-5-5">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.5</span>
+      <span class="fig-title">Returns to Scale Isoquant Spacer</span>
+    </div>
+    <p class="fig-intro">
+      A ray from the origin cuts through three isoquants (Q = 1, 2, 4). Under CRS the intersection points are equally spaced; under IRS they bunch up; under DRS they spread out.
+      Type in exponents a and b and watch the spacing animate live.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">a:</span>
+        <input type="number" id="v55-a" value="0.5" min="0.1" max="1.5" step="0.05" style="width:65px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v55Update()"/>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">b:</span>
+        <input type="number" id="v55-b" value="0.5" min="0.1" max="1.5" step="0.05" style="width:65px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v55Update()"/>
+      </div>
+      <span id="v55-verdict" style="font-family:var(--mono);font-size:0.82rem;color:var(--accent);font-weight:600;"></span>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs55" height="260"></canvas></div>
+    <div class="viz-readout" id="v55-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.6 - INPUT SUBSTITUTION VS TECH CHANGE ═══ -->
+  <section class="fig-section" id="sec-5-6">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.6</span>
+      <span class="fig-title">Input Substitution vs Technological Change</span>
+    </div>
+    <p class="fig-intro">
+      Two fundamentally different actions can change how a firm produces. Pressing "Substitute Inputs" moves the production bundle along the existing isoquant - technology unchanged.
+      Pressing "Improve Technology" shifts the entire isoquant inward - fewer inputs can now produce the same output.
+    </p>
+    <div class="cvs-wrap"><canvas id="cvs56" height="280"></canvas></div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" onclick="v56SubstituteInputs()">Substitute Inputs</button>
+      <button class="viz-btn" onclick="v56ImproveTechnology()">Improve Technology</button>
+      <button class="viz-btn" onclick="v56Reset()">Reset</button>
+    </div>
+    <div class="viz-readout" id="v56-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.7 - CONSUMER-PRODUCTION ANALOGY ═══ -->
+  <section class="fig-section" id="sec-5-7">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.7</span>
+      <span class="fig-title">Consumer-Production Analogy Side-by-Side</span>
+    </div>
+    <p class="fig-intro">
+      The consumer and the firm face mathematically identical optimisation problems. Left: indifference curve, MRS, budget line. Right: isoquant, MRTS, isocost line.
+      Moving the slider shifts the reference curve on both sides simultaneously.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Utility/Output level:</span>
+        <input type="range" class="viz-slider" id="v57-u" min="1" max="5" step="0.5" value="3" oninput="v57Update()" style="width:180px;">
+        <span class="viz-slider-val" id="v57-u-val">3.0</span>
+      </div>
+    </div>
+    <div class="two-col-panels">
+      <div class="cvs-wrap">
+        <div class="panel-label">Consumer: Indifference Curve + Budget Line</div>
+        <canvas id="cvs57a" height="240"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Firm: Isoquant + Isocost Line</div>
+        <canvas id="cvs57b" height="240"></canvas>
+      </div>
+    </div>
+    <div class="viz-readout" id="v57-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.8 - COBB-DOUGLAS LAB ═══ -->
+  <section class="fig-section" id="sec-5-8">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.8</span>
+      <span class="fig-title">Cobb-Douglas Production Function Lab</span>
+    </div>
+    <p class="fig-intro">
+      Set A, a, b using sliders. Live outputs: (1) isoquant map with spacing, (2) CRS/IRS/DRS verdict, (3) MPL and MPK evaluated at (K, L), (4) MRTS at that point.
+      The scale-by-lambda slider directly tests the returns-to-scale definition.
+    </p>
+    <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">A:</span>
+        <input type="range" class="viz-slider" id="v58-A" min="0.5" max="4" step="0.1" value="1" oninput="v58Update()">
+        <span class="viz-slider-val" id="v58-A-val">1.0</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">a (K exponent):</span>
+        <input type="range" class="viz-slider" id="v58-a" min="0.1" max="0.9" step="0.05" value="0.5" oninput="v58Update()">
+        <span class="viz-slider-val" id="v58-a-val">0.50</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">b (L exponent):</span>
+        <input type="range" class="viz-slider" id="v58-b" min="0.1" max="0.9" step="0.05" value="0.5" oninput="v58Update()">
+        <span class="viz-slider-val" id="v58-b-val">0.50</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">K point:</span>
+        <input type="range" class="viz-slider" id="v58-K" min="1" max="8" step="0.5" value="4" oninput="v58Update()">
+        <span class="viz-slider-val" id="v58-K-val">4.0</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">L point:</span>
+        <input type="range" class="viz-slider" id="v58-L" min="1" max="8" step="0.5" value="4" oninput="v58Update()">
+        <span class="viz-slider-val" id="v58-L-val">4.0</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Scale &lambda;:</span>
+        <input type="range" class="viz-slider" id="v58-lam" min="0.5" max="3" step="0.1" value="1" oninput="v58Update()">
+        <span class="viz-slider-val" id="v58-lam-val">1.0</span>
+      </div>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs58" height="280"></canvas></div>
+    <div class="viz-readout" id="v58-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.9 - BAKERY SIMULATOR ═══ -->
+  <section class="fig-section" id="sec-5-9">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.9</span>
+      <span class="fig-title">Bakery / Factory Scenario Simulator</span>
+    </div>
+    <p class="fig-intro">
+      A bakery has a fixed number of machines (K fixed). Hire workers one at a time and watch TP, MPL, and running wage cost update.
+      At some point MPL turns negative and the simulator refuses the hire. Optionally buy a new machine to shift the TP curve upward.
+    </p>
+    <div class="cvs-wrap"><canvas id="cvs59" height="240"></canvas></div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" onclick="v59HireWorker()">+ Hire Worker</button>
+      <button class="viz-btn" onclick="v59FireWorker()">- Fire Worker</button>
+      <button class="viz-btn" onclick="v59BuyMachine()">Buy Machine (K+1)</button>
+      <button class="viz-btn" onclick="v59Reset()">Reset</button>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Wage w:</span>
+        <input type="range" class="viz-slider" id="v59-w" min="5" max="50" step="5" value="15" oninput="v59Update()">
+        <span class="viz-slider-val" id="v59-w-val">$15</span>
+      </div>
+    </div>
+    <div class="viz-readout" id="v59-readout"></div>
+  </section>
+
+  <!-- ═══ FIG 5.10 - ISOQUANT SHAPE QUIZ ═══ -->
+  <section class="fig-section" id="sec-5-10">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.10</span>
+      <span class="fig-title">Isoquant Shape Identifier Quiz</span>
+    </div>
+    <p class="fig-intro">
+      A production function appears. Predict the isoquant shape before it renders, then check if you are right.
+      Covers all three types: smooth convex (Cobb-Douglas), straight line (linear / perfect substitutes), and L-shaped (Leontief / fixed proportions).
+    </p>
+    <div id="quiz510-root"></div>
+  </section>
+
+  <footer class="hub-footer">
+    <div class="hub-footer-left">
+      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
+      &nbsp;·&nbsp; EC224 Intermediate Microeconomics
+      &nbsp;·&nbsp; <a href="week5.html">Back to Week 5</a>
+    </div>
+    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
+  </footer>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// SHARED CANVAS UTILITIES
+// ══════════════════════════════════════════════════════════════════════
+const ML=44, MR=16, MT=16, MB=32;
+
+function setupCvs(id) {
+  const cvs = document.getElementById(id);
+  if (!cvs) return {ctx:null, W:300, H:200};
+  const dpr = window.devicePixelRatio || 1;
+  const W = cvs.clientWidth || 400;
+  const H = parseInt(cvs.getAttribute('height')) || 220;
+  cvs.width = W * dpr;
+  cvs.height = H * dpr;
+  cvs.style.height = H + 'px';
+  const ctx = cvs.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return {ctx, W, H};
+}
+
+function toC(x, y, W, H, xR, yR) {
+  const pw = W-ML-MR, ph = H-MT-MB;
+  return [ML + (x-xR[0])/(xR[1]-xR[0])*pw, MT + (yR[1]-y)/(yR[1]-yR[0])*ph];
+}
+
+function fromC(px, py, W, H, xR, yR) {
+  const pw = W-ML-MR, ph = H-MT-MB;
+  return [xR[0]+(px-ML)/pw*(xR[1]-xR[0]), yR[1]-(py-MT)/ph*(yR[1]-yR[0])];
+}
+
+function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
+  ctx.save();
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
+  ctx.fillStyle='#888'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='center';
+  const xStep=(xR[1]-xR[0])/4;
+  for(let i=0;i<=4;i++){
+    const v=xR[0]+i*xStep;
+    const [px]=toC(v,yR[0],W,H,xR,yR);
+    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+14);
+  }
+  const yStep=(yR[1]-yR[0])/4;
+  for(let i=0;i<=4;i++){
+    const v=yR[0]+i*yStep;
+    const [,py]=toC(xR[0],v,W,H,xR,yR);
+    ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-4,py+4);
+  }
+  ctx.textAlign='center'; ctx.fillText(xLbl||'L',W/2,H-2);
+  ctx.save(); ctx.translate(10,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText(yLbl||'K',0,0); ctx.restore();
+  ctx.restore();
+}
+
+function dot5(ctx, x, y, r, fill, stroke) {
+  ctx.beginPath(); ctx.arc(x,y,r,0,2*Math.PI);
+  ctx.fillStyle=fill; ctx.fill();
+  ctx.strokeStyle=stroke||'#fff'; ctx.lineWidth=2; ctx.stroke();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.1 — TP / MPL DUAL-PANEL
+// ══════════════════════════════════════════════════════════════════════
+let v51W, v51H, v51Ha, v51ctxA, v51ctxB;
+
+function v51TP(L, K, a, b) { return Math.pow(K, a) * Math.pow(Math.max(0.001,L), b); }
+function v51MPL(L, K, a, b) { return b * Math.pow(K, a) * Math.pow(Math.max(0.001,L), b-1); }
+
+function v51Draw() {
+  const cvA = document.getElementById('cvs51a');
+  const cvB = document.getElementById('cvs51b');
+  if (!cvA || !cvB) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cvA.clientWidth || 400;
+  if (cvA.width !== W*dpr) {
+    cvA.width=W*dpr; cvA.height=200*dpr; cvA.style.height='200px';
+    cvB.width=W*dpr; cvB.height=140*dpr; cvB.style.height='140px';
+  }
+  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
+  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  const HA=200, HB=140;
+
+  const L = parseFloat(document.getElementById('v51-l').value);
+  const K = parseInt(document.getElementById('v51-k').value);
+  const a=0.5, b=0.5;
+  const xR=[0,10], yRA=[0,5], yRB=[-0.2,1.2];
+
+  const tp=L=>v51TP(L,K,a,b);
+  const mpl=L=>v51MPL(L,K,a,b);
+
+  // ─ TOP PANEL (TP) ─
+  ctxA.clearRect(0,0,W,HA);
+  drawAxesSt(ctxA,W,HA,xR,yRA,'L (workers)','TP (output)');
+
+  // TP curve
+  ctxA.beginPath(); let first=true;
+  for(let l=0.1;l<=10;l+=0.05){
+    const [cx,cy]=toC(l,tp(l),W,HA,xR,yRA);
+    if(cy<MT-5||cy>HA-MB+5){first=true;continue;}
+    first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
+  }
+  ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2.5; ctxA.stroke();
+
+  // Current point on TP
+  const tpL=tp(L), mplL=mpl(L);
+  const [cx,cy]=toC(L,tpL,W,HA,xR,yRA);
+  // Tangent line
+  const dx=1.5;
+  const [tx0,ty0]=toC(Math.max(0.1,L-dx),tp(L)-mplL*dx,W,HA,xR,yRA);
+  const [tx1,ty1]=toC(L+dx,tp(L)+mplL*dx,W,HA,xR,yRA);
+  ctxA.beginPath(); ctxA.setLineDash([5,4]); ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=1.5;
+  ctxA.moveTo(tx0,ty0); ctxA.lineTo(tx1,ty1); ctxA.stroke(); ctxA.setLineDash([]);
+  dot5(ctxA,cx,cy,7,'#1a56db','#fff');
+  ctxA.fillStyle='#1a56db'; ctxA.font='bold 10px DM Sans,sans-serif'; ctxA.textAlign='left';
+  ctxA.fillText(`TP=${tpL.toFixed(2)}`,cx+10,cy-5);
+  ctxA.fillStyle='#e74c3c'; ctxA.fillText(`slope=MPL=${mplL.toFixed(3)}`,cx+10,cy+12);
+
+  // Phase label
+  const phase=mplL>0.5?'Rising fast':mplL>0.2?'Slowing':mplL>0?'Near peak':'Declining';
+  ctxA.fillStyle='#6b52a8'; ctxA.textAlign='right';
+  ctxA.fillText(phase,W-MR-4,MT+16);
+
+  // Drop line
+  const [axL]=toC(L,0,W,HA,xR,yRA);
+  ctxA.setLineDash([3,3]); ctxA.strokeStyle='#aaa'; ctxA.lineWidth=1;
+  ctxA.beginPath(); ctxA.moveTo(cx,cy); ctxA.lineTo(axL,HA-MB); ctxA.stroke();
+  ctxA.setLineDash([]);
+
+  // ─ BOTTOM PANEL (MPL) ─
+  ctxB.clearRect(0,0,W,HB);
+  drawAxesSt(ctxB,W,HB,xR,yRB,'L (workers)','MPL');
+
+  // MPL curve
+  ctxB.beginPath(); first=true;
+  for(let l=0.1;l<=10;l+=0.05){
+    const m=mpl(l);
+    const [cx2,cy2]=toC(l,m,W,HB,xR,yRB);
+    if(cy2<MT-5||cy2>HB-MB+5){first=true;continue;}
+    first?(ctxB.moveTo(cx2,cy2),first=false):ctxB.lineTo(cx2,cy2);
+  }
+  ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=2.5; ctxB.stroke();
+
+  // Current MPL point
+  const [mx,my]=toC(L,mplL,W,HB,xR,yRB);
+  dot5(ctxB,mx,my,7,'#e74c3c','#fff');
+  ctxB.fillStyle='#e74c3c'; ctxB.font='10px DM Sans,sans-serif'; ctxB.textAlign='left';
+  ctxB.fillText(`MPL=${mplL.toFixed(3)}`,mx+8,my-4);
+
+  // Zero line
+  const [,zy]=toC(0,0,W,HB,xR,yRB);
+  ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1;
+  ctxB.beginPath(); ctxB.moveTo(ML,zy); ctxB.lineTo(W-MR,zy); ctxB.stroke();
+}
+
+function v51Update() {
+  const L=parseFloat(document.getElementById('v51-l').value);
+  const K=parseInt(document.getElementById('v51-k').value);
+  document.getElementById('v51-l-val').textContent=L.toFixed(1);
+  document.getElementById('v51-k-val').textContent=K;
+  const a=0.5,b=0.5;
+  const tp=Math.pow(K,a)*Math.pow(L,b);
+  const mpl=b*Math.pow(K,a)*Math.pow(L,b-1);
+  const mpl2=a*(a-1)*Math.pow(K,a-1)*Math.pow(L,b);
+  const phase=mpl>0.5?'Rising fast':mpl>0.2?'Slowing':mpl>0?'Near peak':'Declining';
+  document.getElementById('v51-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">L</div><div class="readout-val">${L.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">K (fixed)</div><div class="readout-val">${K}</div></div>
+      <div class="readout-col"><div class="readout-label">TP</div><div class="readout-val">${tp.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL = slope of TP</div><div class="readout-val" style="color:#e74c3c">${mpl.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Phase</div><div class="readout-val" style="color:#6b52a8;font-size:0.82rem;">${phase}</div></div>
+    </div>`;
+  v51Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.2 — ISOQUANT EXPLORER (3 types)
+// ══════════════════════════════════════════════════════════════════════
+let v52Mode = 'iq';
+
+function v52SetMode(m) {
+  v52Mode = m;
+  document.getElementById('v52-mode-iq').classList.toggle('active', m==='iq');
+  document.getElementById('v52-mode-ic').classList.toggle('active', m==='ic');
+  v52DrawAll();
+}
+
+function v52DrawPanel(canvasId, type, qLevels, mode) {
+  const cvs=document.getElementById(canvasId); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||220, H=220;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,10],yR=[0,10];
+  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+
+  const label=mode==='iq'?'Q':'U';
+  const colors=['#1a56db','#2e8b57','#c0392b'];
+  qLevels.forEach((q,qi)=>{
+    ctx.beginPath(); let first=true; ctx.strokeStyle=colors[qi]||'#888'; ctx.lineWidth=2;
+    if(type==='cd'){
+      for(let l=0.3;l<=10;l+=0.05){
+        const k=q*q/l; if(k>10||k<0.1){first=true;continue;}
+        const [cx,cy]=toC(l,k,W,H,xR,yR);
+        first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+      }
+    } else if(type==='linear'){
+      // Q = 2L + K => K = Q - 2L
+      const kmax=q, lmax=q/2;
+      if(kmax<=yR[1]&&lmax<=xR[1]){
+        const [x0,y0]=toC(0,kmax,W,H,xR,yR);
+        const [x1,y1]=toC(lmax,0,W,H,xR,yR);
+        ctx.moveTo(x0,y0); ctx.lineTo(x1,y1);
+      }
+    } else if(type==='leontief'){
+      // Q = min(L, K/2) => kink at L=Q, K=2Q
+      const lk=q, kk=2*q;
+      if(lk<=xR[1]&&kk<=yR[1]){
+        const [x0,y0]=toC(lk,yR[1]*0.95,W,H,xR,yR);
+        const [xc,yc]=toC(lk,kk,W,H,xR,yR);
+        const [x1,y1]=toC(xR[1]*0.95,kk,W,H,xR,yR);
+        ctx.moveTo(x0,y0); ctx.lineTo(xc,yc); ctx.lineTo(x1,y1);
+      }
+    }
+    ctx.stroke();
+    // label
+    ctx.fillStyle=colors[qi]||'#888'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+    if(type==='cd'){
+      const lm=q; const km=q;
+      const [tx,ty]=toC(Math.min(lm+0.2,9),Math.min(km+0.2,9),W,H,xR,yR);
+      ctx.fillText(`${label}=${q}`,tx,ty-4);
+    } else if(type==='linear'){
+      ctx.fillText(`${label}=${q}`,W-MR-35,MT+12+(qi*13));
+    } else if(type==='leontief'){
+      const [tx,ty]=toC(Math.min(q+0.3,9),2*q,W,H,xR,yR);
+      ctx.fillText(`${label}=${q}`,tx+4,ty-4);
+    }
+  });
+}
+
+function v52DrawAll() {
+  const qL=[2,4,6];
+  v52DrawPanel('cvs52a','cd',qL,v52Mode);
+  v52DrawPanel('cvs52b','linear',qL,v52Mode);
+  v52DrawPanel('cvs52c','leontief',qL,v52Mode);
+  const modeText=v52Mode==='iq'?'Isoquant (firm): shows all input combinations that produce the same output Q.':'Indifference Curve (consumer): shows all bundles that give the same utility U.';
+  document.getElementById('v52-readout').innerHTML=
+    `<strong>${v52Mode==='iq'?'Firm Isoquant':'Consumer IC'} mode</strong><br>${modeText}<br>
+    <br><strong>Cobb-Douglas (Q = L<sup>0.5</sup>K<sup>0.5</sup>):</strong> Smooth, convex - MRTS diminishes as we substitute labor for capital.<br>
+    <strong>Linear (Q = 2L + K):</strong> Straight line - perfect substitutes, constant MRTS = 2.<br>
+    <strong>Leontief (Q = min(L, K/2)):</strong> L-shaped - fixed proportions, no substitution possible.`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.3 — MRTS LIVE CALCULATOR
+// ══════════════════════════════════════════════════════════════════════
+let v53L=4, v53drag=false, v53W, v53H;
+
+function v53Q0() { return 4; } // Fixed Q level: Q=K^0.5*L^0.5=4 => K=16/L
+function v53K(L) { return v53Q0()*v53Q0()/L; }
+function v53MRTS(L) { return v53K(L)/L; } // MRTS = K/L for Cobb-Douglas alpha=beta=0.5
+
+function v53Draw() {
+  const cvs=document.getElementById('cvs53'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||300, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H); v53W=W; v53H=H;
+  const Q0=v53Q0();
+  const xR=[0,18],yR=[0,18];
+  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+
+  // Isoquant
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  for(let l=0.5;l<=17;l+=0.1){
+    const k=v53K(l); if(k>17||k<0.1){first=true;continue;}
+    const [cx,cy]=toC(l,k,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+  const [dlx,dly]=toC(14,Q0*Q0/14,W,H,xR,yR);
+  ctx.fillStyle='#1a56db'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`Q = ${Q0}`,dlx+4,dly-5);
+
+  // Current point
+  const L=v53L, K=v53K(L), mrts=v53MRTS(L);
+  const [cx,cy]=toC(L,K,W,H,xR,yR);
+  // Tangent: dK/dL = -MRTS
+  const dx=2;
+  const [tx0,ty0]=toC(Math.max(0.5,L-dx),K+mrts*dx,W,H,xR,yR);
+  const [tx1,ty1]=toC(Math.min(17,L+dx),K-mrts*dx,W,H,xR,yR);
+  ctx.setLineDash([5,4]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
+  dot5(ctx,cx,cy,8,'#2e8b57','#fff');
+  ctx.fillStyle='#2e8b57'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`(L=${L.toFixed(1)}, K=${K.toFixed(1)})`,cx+10,cy-6);
+
+  document.getElementById('v53-readout').innerHTML=
+    `<div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val" style="color:#2e8b57">${L.toFixed(2)}</div></div>
+    <div class="readout-col"><div class="readout-label">K (machines)</div><div class="readout-val" style="color:#2e8b57">${K.toFixed(2)}</div></div>
+    <div class="readout-col" style="margin-top:0.75rem;"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:#e74c3c">${mrts.toFixed(3)}</div></div>
+    <div style="margin-top:0.75rem;font-size:0.88rem;line-height:1.7;color:var(--muted);">
+      At this point, <strong>1 additional worker</strong> can replace <strong>${mrts.toFixed(2)} machines</strong>.<br>
+      The MRTS diminishes as L rises because each additional worker adds less marginal product as K/L falls.
+    </div>`;
+}
+
+function v53Init() {
+  const cvs=document.getElementById('cvs53'); if(!cvs) return;
+  function pyToL(py) {
+    const dpr=window.devicePixelRatio||1;
+    const W=cvs.width/dpr, H=cvs.height/dpr;
+    const [L]=fromC(py,0,W,H,[0,18],[0,18]);
+    return Math.max(0.5,Math.min(16,L));
+  }
+  cvs.addEventListener('mousedown',e=>{
+    v53drag=true;
+    const r=cvs.getBoundingClientRect();
+    const px=(e.clientX-r.left)*(cvs.width/r.width)/(window.devicePixelRatio||1);
+    v53L=Math.max(0.5,Math.min(16,fromC(px,0,cvs.width/(window.devicePixelRatio||1),cvs.height/(window.devicePixelRatio||1),[0,18],[0,18])[0]));
+    v53Draw();
+  });
+  cvs.addEventListener('mousemove',e=>{
+    if(!v53drag)return;
+    const r=cvs.getBoundingClientRect();
+    const px=(e.clientX-r.left)*(cvs.width/r.width)/(window.devicePixelRatio||1);
+    v53L=Math.max(0.5,Math.min(16,fromC(px,0,cvs.width/(window.devicePixelRatio||1),cvs.height/(window.devicePixelRatio||1),[0,18],[0,18])[0]));
+    v53Draw();
+  });
+  cvs.addEventListener('mouseup',()=>v53drag=false);
+  cvs.addEventListener('mouseleave',()=>v53drag=false);
+  v53Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.4 — DIMINISHING MP VS DRS
+// ══════════════════════════════════════════════════════════════════════
+function v54CD(K,L,a,b){return Math.pow(Math.max(0.001,K),a)*Math.pow(Math.max(0.001,L),b);}
+
+function v54Draw() {
+  const a=parseFloat(document.getElementById('v54-a').value);
+  const b=parseFloat(document.getElementById('v54-b').value);
+  const Kfix=4;
+
+  // Left panel: MPL vs L (K fixed)
+  const cvA=document.getElementById('cvs54a'); if(!cvA) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvA.clientWidth||300;
+  if(cvA.width!==W*dpr){cvA.width=W*dpr;cvA.height=220*dpr;cvA.style.height='220px';}
+  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
+  ctxA.clearRect(0,0,W,220);
+  const xRa=[0,12],yRa=[0,2];
+  drawAxesSt(ctxA,W,220,xRa,yRa,'L','MPL');
+  ctxA.beginPath(); let first=true; ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=2.5;
+  for(let l=0.2;l<=12;l+=0.1){
+    const mpl=b*v54CD(Kfix,l,a,b)/l;
+    const [cx,cy]=toC(l,mpl,W,220,xRa,yRa);
+    if(cy<MT-5||cy>220-MB+5){first=true;continue;}
+    first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
+  }
+  ctxA.stroke();
+  ctxA.fillStyle='#e74c3c'; ctxA.font='10px DM Sans,sans-serif'; ctxA.textAlign='left';
+  ctxA.fillText('MPL falls as L rises (K fixed)',ML+4,MT+12);
+
+  // Right panel: scale both inputs
+  const cvB=document.getElementById('cvs54b'); if(!cvB) return;
+  if(cvB.width!==W*dpr){cvB.width=W*dpr;cvB.height=220*dpr;cvB.style.height='220px';}
+  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  ctxB.clearRect(0,0,W,220);
+  const Lbase=4, Kbase=4;
+  const xRb=[0.5,4],yRb=[0,8];
+  drawAxesSt(ctxB,W,220,xRb,yRb,'Scale lambda','Output Q');
+  ctxB.beginPath(); first=true; ctxB.strokeStyle='#1a56db'; ctxB.lineWidth=2.5;
+  for(let lam=0.5;lam<=4;lam+=0.05){
+    const q=v54CD(lam*Kbase,lam*Lbase,a,b);
+    const [cx,cy]=toC(lam,q,W,220,xRb,yRb);
+    if(cy<MT-5||cy>220-MB+5){first=true;continue;}
+    first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
+  }
+  ctxB.stroke();
+  // Q at lambda=1
+  const q1=v54CD(Kbase,Lbase,a,b);
+  const q2=v54CD(2*Kbase,2*Lbase,a,b);
+  const [dx1,dy1]=toC(1,q1,W,220,xRb,yRb);
+  const [dx2,dy2]=toC(2,q2,W,220,xRb,yRb);
+  dot5(ctxB,dx1,dy1,6,'#2e8b57','#fff');
+  dot5(ctxB,dx2,dy2,6,'#2e8b57','#fff');
+  ctxB.fillStyle='#2e8b57'; ctxB.font='9px DM Sans,sans-serif'; ctxB.textAlign='left';
+  ctxB.fillText(`Q(1)=${q1.toFixed(2)}`,dx1+6,dy1-3);
+  ctxB.fillText(`Q(2)=${q2.toFixed(2)}`,dx2+6,dy2-3);
+
+  const rts=a+b;
+  const rtsLabel=rts>1.01?'IRS':rts<0.99?'DRS':'CRS';
+  document.getElementById('v54-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(a+b).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rtsLabel}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL (diminishing?)</div><div class="readout-val">Yes: b&lt;1</div></div>
+      <div class="readout-col"><div class="readout-label">Q doubles when scale=2</div><div class="readout-val">${(q2/q1).toFixed(2)}x</div></div>
+    </div>
+    <div style="margin-top:0.5rem;font-size:0.84rem;color:var(--muted)">
+      With a=${a.toFixed(2)}, b=${b.toFixed(2)}: Both panels use the same Q = K<sup>${a.toFixed(2)}</sup>L<sup>${b.toFixed(2)}</sup>.
+      MPL falls as L rises (left) yet output scales by 2<sup>${(a+b).toFixed(2)}</sup>=${Math.pow(2,a+b).toFixed(2)} when both inputs double (right). These are not contradictory.
+    </div>`;
+}
+
+function v54Update() {
+  document.getElementById('v54-a-val').textContent=parseFloat(document.getElementById('v54-a').value).toFixed(2);
+  document.getElementById('v54-b-val').textContent=parseFloat(document.getElementById('v54-b').value).toFixed(2);
+  v54Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.5 — RTS ISOQUANT SPACER
+// ══════════════════════════════════════════════════════════════════════
+function v55Draw() {
+  const a=parseFloat(document.getElementById('v55-a').value)||0.5;
+  const b=parseFloat(document.getElementById('v55-b').value)||0.5;
+  const cvs=document.getElementById('cvs55'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=260;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,10],yR=[0,10];
+  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+
+  // Q = A*K^a*L^b with A=1
+  const qLevels=[1,2,4];
+  const cols=['#2e8b57','#1a56db','#c0392b'];
+  const rayPts=[];
+
+  qLevels.forEach((q,qi)=>{
+    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2;
+    for(let l=0.1;l<=10;l+=0.05){
+      // Q = K^a * L^b => K = (Q / L^b)^(1/a)
+      const K=Math.pow(q/Math.pow(l,b),1/a);
+      if(K>10||K<0.1){first=true;continue;}
+      const [cx,cy]=toC(l,K,W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+    // Intersection with ray L=K (45-degree ray)
+    // On ray L=K: Q = L^(a+b) => L = Q^(1/(a+b))
+    const lRay=Math.pow(q,1/(a+b));
+    if(lRay<=9){
+      rayPts.push({q,l:lRay,col:cols[qi]});
+      const [rx,ry]=toC(lRay,lRay,W,H,xR,yR);
+      dot5(ctx,rx,ry,6,cols[qi],'#fff');
+      ctx.fillStyle=cols[qi]; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+      ctx.fillText(`Q=${q}`,rx+6,ry-4);
+    }
+  });
+
+  // Draw the 45-degree ray
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  const [r0x,r0y]=toC(0,0,W,H,xR,yR);
+  const [r1x,r1y]=toC(9,9,W,H,xR,yR);
+  ctx.beginPath(); ctx.moveTo(r0x,r0y); ctx.lineTo(r1x,r1y); ctx.stroke(); ctx.setLineDash([]);
+
+  const rts=a+b;
+  const verdict=rts>1.01?'IRS: isoquants bunch up (get closer along ray)':rts<0.99?'DRS: isoquants spread out':' CRS: isoquants equally spaced';
+  document.getElementById('v55-verdict').textContent=rts>1?'IRS':rts<1?'DRS':'CRS';
+  document.getElementById('v55-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(a+b).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rts>1?'IRS':rts<1?'DRS':'CRS'}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">${verdict}. Q = K<sup>${a}</sup>L<sup>${b}</sup>. Spacing along ray L=K: Q=1 at L=${rayPts[0]?rayPts[0].l.toFixed(2):'?'}, Q=2 at L=${rayPts[1]?rayPts[1].l.toFixed(2):'?'}, Q=4 at L=${rayPts[2]?rayPts[2].l.toFixed(2):'?'}.</div>`;
+}
+
+function v55Update() { v55Draw(); }
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.6 — INPUT SUBSTITUTION VS TECH CHANGE
+// ══════════════════════════════════════════════════════════════════════
+let v56TechShift=0, v56L=4, v56K=4, v56Anim=null;
+
+function v56Q(L,K,shift){return Math.pow(Math.max(0.001,K),0.5)*Math.pow(Math.max(0.001,L),0.5)*Math.pow(1.4,shift);}
+
+function v56Draw() {
+  const cvs=document.getElementById('cvs56'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,10],yR=[0,10];
+  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+
+  // Draw isoquants for Q = 4 at different tech shifts
+  [0,1,2].forEach(s=>{
+    const qTarget=v56Q(4,4,0); // original Q at point (4,4)
+    const shifted=Math.pow(1.4,v56TechShift);
+    const alpha=s===Math.round(v56TechShift)?1:0.3;
+    ctx.globalAlpha=s===0?0.5:0.3;
+    ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=1.5;
+    for(let l=0.3;l<=10;l+=0.1){
+      const k=qTarget*qTarget/(l*Math.pow(1.4,2*s));
+      if(k>10||k<0.1){first=true;continue;}
+      const [cx,cy]=toC(l,k,W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+  });
+  ctx.globalAlpha=1;
+
+  // Current active isoquant (at current tech level)
+  const qNow=v56Q(4,4,v56TechShift);
+  const targetQ=v56Q(v56L,v56K,0); // original Q
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  for(let l=0.3;l<=10;l+=0.1){
+    const k=Math.pow(qNow/(Math.pow(l,0.5)),2);
+    if(k>10||k<0.1){first=true;continue;}
+    const [cx,cy]=toC(l,k,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+
+  // Current bundle point
+  const [bx,by]=toC(v56L,v56K,W,H,xR,yR);
+  dot5(ctx,bx,by,8,'#2e8b57','#fff');
+
+  // Labels
+  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+  const qLabel=v56Q(v56L,v56K,v56TechShift).toFixed(2);
+  ctx.fillText(`Q = ${qLabel}`,bx+10,by-5);
+  if(v56TechShift>0){
+    ctx.fillStyle='#e74c3c';
+    ctx.fillText('Technology improved!',ML+4,MT+12);
+  }
+}
+
+function v56SubstituteInputs() {
+  v56L=Math.min(9,v56L+0.5);
+  // Move along isoquant: K = Q^2/L (Q fixed)
+  const q=v56Q(4,4,v56TechShift);
+  v56K=q*q/v56L;
+  v56Draw();
+  document.getElementById('v56-readout').innerHTML=
+    `<strong>Substituting inputs</strong>: Moving <em>along</em> the existing isoquant. L increased, K decreased. Same output Q = ${v56Q(v56L,v56K,v56TechShift).toFixed(2)}. Technology unchanged.`;
+}
+
+function v56ImproveTechnology() {
+  v56TechShift=Math.min(2,v56TechShift+0.5);
+  v56Draw();
+  document.getElementById('v56-readout').innerHTML=
+    `<strong>Technology improved</strong>: The isoquant has shifted <em>inward</em>. The same inputs (L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}) now produce more output: Q = ${v56Q(v56L,v56K,v56TechShift).toFixed(2)}. The whole isoquant map shifted.`;
+}
+
+function v56Reset() {
+  v56TechShift=0; v56L=4; v56K=4; v56Draw();
+  document.getElementById('v56-readout').innerHTML='Use the buttons to substitute inputs (move along the isoquant) or improve technology (shift the isoquant inward).';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.7 — CONSUMER-PRODUCTION ANALOGY
+// ══════════════════════════════════════════════════════════════════════
+function v57Draw() {
+  const u=parseFloat(document.getElementById('v57-u').value);
+  document.getElementById('v57-u-val').textContent=u.toFixed(1);
+
+  function drawAnalogy(canvasId, type, level) {
+    const cvs=document.getElementById(canvasId); if(!cvs) return;
+    const dpr=window.devicePixelRatio||1;
+    const W=cvs.clientWidth||300, H=240;
+    if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+    const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,H);
+    const xR=[0,10],yR=[0,10];
+    const xLbl=type==='ic'?'X (good 1)':'L (labor)';
+    const yLbl=type==='ic'?'Y (good 2)':'K (capital)';
+    drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl);
+
+    // Multiple curves
+    [level-1,level,level+1.5].forEach((q,qi)=>{
+      if(q<=0) return;
+      const alpha=qi===1?1:0.4;
+      ctx.globalAlpha=alpha;
+      ctx.beginPath(); let first=true; ctx.strokeStyle=qi===1?'#1a56db':'#aac';  ctx.lineWidth=qi===1?2.5:1.5;
+      for(let x=0.3;x<=10;x+=0.1){
+        const y=q*q/x; if(y>10||y<0.1){first=true;continue;}
+        const [cx,cy]=toC(x,y,W,H,xR,yR);
+        first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+      }
+      ctx.stroke();
+    });
+    ctx.globalAlpha=1;
+
+    // Budget / isocost line (tangent at (level, level))
+    const slope=1; // unit prices
+    const intercept=2*level;
+    const [lx0,ly0]=toC(0,intercept,W,H,xR,yR);
+    const [lx1,ly1]=toC(intercept,0,W,H,xR,yR);
+    ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
+    ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
+
+    // Optimal point
+    const [ox,oy]=toC(level,level,W,H,xR,yR);
+    dot5(ctx,ox,oy,7,qi=>'#2e8b57','#fff');
+    dot5(ctx,ox,oy,7,'#2e8b57','#fff');
+    const curveLabel=type==='ic'?'IC':'Isoquant';
+    const lineLabel=type==='ic'?'Budget':'Isocost';
+    const tangLabel=type==='ic'?'MRS = Px/Py':'MRTS = w/v';
+    ctx.fillStyle='#2e8b57'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('Optimum',ox+8,oy-4);
+    ctx.fillStyle='#e74c3c'; ctx.fillText(lineLabel,lx0+4,ly0-6);
+    ctx.fillStyle='#1a56db'; ctx.fillText(curveLabel,W-MR-55,MT+12);
+  }
+
+  drawAnalogy('cvs57a','ic',u);
+  drawAnalogy('cvs57b','iq',u);
+
+  document.getElementById('v57-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Consumer optimum</div><div class="readout-val" style="font-size:0.78rem;">MRS = P<sub>X</sub>/P<sub>Y</sub></div></div>
+      <div class="readout-col"><div class="readout-label">Firm optimum</div><div class="readout-val" style="font-size:0.78rem;">MRTS = w/v</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">Both problems have identical structure: maximise utility/output subject to a budget/cost constraint. The tangency condition in both cases equates the marginal rate of substitution to the price ratio.</div>`;
+}
+
+function v57Update() { v57Draw(); }
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.8 — COBB-DOUGLAS LAB
+// ══════════════════════════════════════════════════════════════════════
+function v58Q(K,L,A,a,b){return A*Math.pow(Math.max(0.001,K),a)*Math.pow(Math.max(0.001,L),b);}
+
+function v58Draw() {
+  const A=parseFloat(document.getElementById('v58-A').value);
+  const a=parseFloat(document.getElementById('v58-a').value);
+  const b=parseFloat(document.getElementById('v58-b').value);
+  const Kpt=parseFloat(document.getElementById('v58-K').value);
+  const Lpt=parseFloat(document.getElementById('v58-L').value);
+  const lam=parseFloat(document.getElementById('v58-lam').value);
+
+  const cvs=document.getElementById('cvs58'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=280;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,10],yR=[0,10];
+  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+
+  // Isoquant map at Q=A*(Kpt*lam)^a*(Lpt*lam)^b base values
+  const qBase=v58Q(Kpt,Lpt,A,a,b);
+  [qBase*0.5,qBase,qBase*2].forEach((q,qi)=>{
+    ctx.beginPath(); let first=true; ctx.strokeStyle=['#aac','#1a56db','#aac'][qi]; ctx.lineWidth=qi===1?2.5:1.5;
+    for(let l=0.2;l<=10;l+=0.05){
+      const K=Math.pow(q/(A*Math.pow(l,b)),1/a);
+      if(K>10||K<0.1){first=true;continue;}
+      const [cx,cy]=toC(l,K,W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+  });
+
+  // Current point and scaled point
+  const [px,py]=toC(Lpt,Kpt,W,H,xR,yR);
+  dot5(ctx,px,py,7,'#2e8b57','#fff');
+  if(Math.abs(lam-1)>0.05){
+    const [spx,spy]=toC(Lpt*lam,Kpt*lam,W,H,xR,yR);
+    dot5(ctx,spx,spy,7,'#e74c3c','#fff');
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(spx,spy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText(`lambda=${lam.toFixed(1)} point`,spx+6,spy-4);
+  }
+
+  const q0=v58Q(Kpt,Lpt,A,a,b);
+  const qLam=v58Q(Kpt*lam,Lpt*lam,A,a,b);
+  const MPL=b*v58Q(Kpt,Lpt,A,a,b)/Lpt;
+  const MPK=a*v58Q(Kpt,Lpt,A,a,b)/Kpt;
+  const MRTS=MPL/MPK;
+  const rts=a+b;
+
+  document.getElementById('v58-readout').innerHTML=
+    `<div class="readout-row" style="flex-wrap:wrap;">
+      <div class="readout-col"><div class="readout-label">Q(K,L)</div><div class="readout-val">${q0.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Q(lambda*K, lambda*L)</div><div class="readout-val" style="color:#e74c3c">${qLam.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Ratio = lambda^(a+b)</div><div class="readout-val">${(qLam/q0).toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL at point</div><div class="readout-val">${MPL.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPK at point</div><div class="readout-val">${MPK.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">MRTS = MPL/MPK</div><div class="readout-val" style="color:#e74c3c">${MRTS.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(rts).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rts>1.01?'IRS':rts<0.99?'DRS':'CRS'}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+      Q = ${A.toFixed(1)} &times; K<sup>${a.toFixed(2)}</sup> &times; L<sup>${b.toFixed(2)}</sup>. Scaling inputs by lambda=${lam.toFixed(1)} scales output by ${(qLam/q0).toFixed(3)} = lambda<sup>${rts.toFixed(2)}</sup>.
+    </div>`;
+}
+
+function v58Update() {
+  document.getElementById('v58-A-val').textContent=parseFloat(document.getElementById('v58-A').value).toFixed(1);
+  document.getElementById('v58-a-val').textContent=parseFloat(document.getElementById('v58-a').value).toFixed(2);
+  document.getElementById('v58-b-val').textContent=parseFloat(document.getElementById('v58-b').value).toFixed(2);
+  document.getElementById('v58-K-val').textContent=parseFloat(document.getElementById('v58-K').value).toFixed(1);
+  document.getElementById('v58-L-val').textContent=parseFloat(document.getElementById('v58-L').value).toFixed(1);
+  document.getElementById('v58-lam-val').textContent=parseFloat(document.getElementById('v58-lam').value).toFixed(1);
+  v58Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.9 — BAKERY SIMULATOR
+// ══════════════════════════════════════════════════════════════════════
+let v59L=0, v59K=2;
+
+function v59TP(L,K){return K>0&&L>0?Math.pow(K,0.5)*Math.pow(L,0.5):0;}
+function v59MPL(L,K){return L>0.05?0.5*Math.pow(K,0.5)*Math.pow(L,-0.5):Infinity;}
+
+function v59Draw() {
+  const cvs=document.getElementById('cvs59'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=240;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const Lmax=12, TPmax=8;
+  const xR=[0,Lmax],yR=[0,TPmax];
+  drawAxesSt(ctx,W,H,xR,yR,'Workers L','Output (units)');
+
+  // TP curve
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  for(let l=0;l<=Lmax;l+=0.1){
+    const tp=v59TP(l,v59K);
+    const [cx,cy]=toC(l,tp,W,H,xR,yR);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`K = ${v59K} machines`,ML+4,MT+12);
+
+  // Current workers
+  if(v59L>0){
+    const tp=v59TP(v59L,v59K);
+    const [px,py]=toC(v59L,tp,W,H,xR,yR);
+    dot5(ctx,px,py,7,'#2e8b57','#fff');
+    const [ax]=toC(v59L,0,W,H,xR,yR);
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ax,H-MB); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#2e8b57'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(`L=${v59L}`,ax,H-MB+12);
+  }
+}
+
+function v59HireWorker() {
+  const mpl=v59MPL(v59L+1,v59K);
+  if(mpl<=0){
+    document.getElementById('v59-readout').innerHTML=`<strong style="color:#e74c3c">Hire refused!</strong> MPL is negative at L=${v59L+1}. Adding another worker would reduce output. This worker makes the team worse.`;
+    return;
+  }
+  v59L++;
+  v59Update();
+}
+
+function v59FireWorker() {
+  if(v59L>0){v59L--; v59Update();}
+}
+
+function v59BuyMachine() {
+  v59K++; v59Update();
+}
+
+function v59Reset() {
+  v59L=0; v59K=2; v59Update();
+}
+
+function v59Update() {
+  document.getElementById('v59-w-val').textContent='$'+parseInt(document.getElementById('v59-w').value);
+  const w=parseInt(document.getElementById('v59-w').value);
+  v59Draw();
+  const tp=v59TP(v59L,v59K);
+  const mpl=v59L>0?v59MPL(v59L,v59K):0;
+  const nextMPL=v59MPL(v59L+1,v59K);
+  const totalWage=v59L*w;
+  const shouldHire=nextMPL>0;
+  document.getElementById('v59-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Workers L</div><div class="readout-val">${v59L}</div></div>
+      <div class="readout-col"><div class="readout-label">Machines K</div><div class="readout-val">${v59K}</div></div>
+      <div class="readout-col"><div class="readout-label">Output TP</div><div class="readout-val">${tp.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL (current)</div><div class="readout-val" style="color:${mpl>0?'#2e8b57':'#e74c3c'}">${v59L>0?mpl.toFixed(3):'n/a'}</div></div>
+      <div class="readout-col"><div class="readout-label">Total Wage Bill</div><div class="readout-val">$${totalWage}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+      ${shouldHire?`Next worker's MPL = ${nextMPL.toFixed(3)} > 0. <strong style="color:#2e8b57">Safe to hire.</strong>`:`Next worker's MPL = ${nextMPL.toFixed(3)} &le; 0. <strong style="color:#e74c3c">Do NOT hire - output would fall.</strong>`}
+      Diminishing returns come from the fixed capital K=${v59K}. Buy a machine to shift the TP curve up.
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 5.10 — ISOQUANT SHAPE QUIZ
+// ══════════════════════════════════════════════════════════════════════
+const QUIZ510_FUNCTIONS = [
+  {fn:'Q = L^0.5 * K^0.5',type:'cd', desc:'Cobb-Douglas with equal exponents: smooth convex isoquants, MRTS diminishes.'},
+  {fn:'Q = L + 2K',type:'linear', desc:'Linear: perfect substitutes. Isoquant is a straight line with slope -1/2.'},
+  {fn:'Q = min(L, K)',type:'leontief', desc:'Leontief: fixed proportions. L-shaped isoquant. No substitution possible.'},
+  {fn:'Q = L^0.3 * K^0.7',type:'cd', desc:'Cobb-Douglas with unequal exponents: still smooth convex, but more capital-intensive.'},
+  {fn:'Q = 3L + K',type:'linear', desc:'Linear: MRTS = 3 everywhere. One worker perfectly substitutes for 3 units of K.'},
+  {fn:'Q = min(2L, K)',type:'leontief', desc:'Leontief fixed-proportion: kink at K=2L. Use 1 unit of L and 2 units of K per unit of output.'},
+  {fn:'Q = L^0.6 * K^0.6',type:'cd', desc:'Cobb-Douglas with IRS (a+b=1.2 > 1): smooth convex isoquants bunched more closely.'},
+  {fn:'Q = 0.5L + 1.5K',type:'linear', desc:'Linear: slope -1/3. Each unit of K can be replaced by 1/3 unit of L.'},
+  {fn:'Q = min(L, 2K)',type:'leontief', desc:'Leontief: kink at L=2K. Need exactly 2K per unit of L to produce efficiently.'},
+  {fn:'Q = A * L^0.4 * K^0.4, A=2',type:'cd', desc:'Cobb-Douglas with TFP=2 and DRS: smooth convex, isoquants spaced farther apart.'},
+];
+
+let q510Idx=0, q510Score=0, q510Total=0, q510Answered=false, q510Order=[];
+
+function quiz510NewRound() {
+  if(!q510Order.length) q510Order=QUIZ510_FUNCTIONS.map((_,i)=>i).sort(()=>Math.random()-0.5);
+  q510Idx=q510Order.shift();
+  q510Answered=false;
+  const fn=QUIZ510_FUNCTIONS[q510Idx];
+  const root=document.getElementById('quiz510-root');
+  root.innerHTML=`
+    <div class="quiz-scenario">
+      Given the production function <strong>${fn.fn}</strong>, what shape are the isoquants?
+    </div>
+    <div class="quiz-score" style="font-family:var(--mono);font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Score: ${q510Score} / ${q510Total}</div>
+    <div class="quiz-btns">
+      <button class="quiz-btn" onclick="quiz510Answer('cd')">Smooth Convex (Cobb-Douglas)</button>
+      <button class="quiz-btn" onclick="quiz510Answer('linear')">Straight Line (Linear / Perfect Substitutes)</button>
+      <button class="quiz-btn" onclick="quiz510Answer('leontief')">L-Shaped (Leontief / Fixed Proportions)</button>
+    </div>
+    <div id="q510-fb" class="quiz-feedback" style="display:none;"></div>
+    <div id="q510-canvas-wrap" style="display:none;margin-bottom:0.75rem;">
+      <div class="panel-label">Isoquant rendered:</div>
+      <canvas id="cvs510" height="200"></canvas>
+    </div>
+    <button class="quiz-next" onclick="quiz510NewRound()" id="q510-next" style="display:none;">Next function &rarr;</button>`;
+}
+
+function quiz510DrawResult(type) {
+  const wrap=document.getElementById('q510-canvas-wrap');
+  if(wrap) wrap.style.display='block';
+  const cvs=document.getElementById('cvs510'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=200;
+  cvs.width=W*dpr; cvs.height=H*dpr; cvs.style.height=H+'px';
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,10],yR=[0,10];
+  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+  [2,4,6].forEach((q,qi)=>{
+    ctx.beginPath(); let first=true; ctx.strokeStyle=['#2e8b57','#1a56db','#c0392b'][qi]; ctx.lineWidth=2;
+    if(type==='cd'){
+      for(let l=0.3;l<=10;l+=0.1){
+        const k=q*q/l; if(k>10){first=true;continue;}
+        const [cx,cy]=toC(l,k,W,H,xR,yR);
+        first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+      }
+    }else if(type==='linear'){
+      const [x0,y0]=toC(0,Math.min(q,yR[1]),W,H,xR,yR);
+      const [x1,y1]=toC(Math.min(q/0.5,xR[1]),0,W,H,xR,yR);
+      ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);
+    }else if(type==='leontief'){
+      const lk=q,kk=q;
+      const [x0,y0]=toC(lk,Math.min(yR[1]*0.95,10),W,H,xR,yR);
+      const [xc,yc]=toC(lk,kk,W,H,xR,yR);
+      const [x1,y1]=toC(Math.min(xR[1]*0.95,10),kk,W,H,xR,yR);
+      ctx.moveTo(x0,y0);ctx.lineTo(xc,yc);ctx.lineTo(x1,y1);
+    }
+    ctx.stroke();
+    ctx.fillStyle=ctx.strokeStyle; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+    const [tx,ty]=toC(type==='cd'?q:type==='linear'?0:q,type==='cd'?q:type==='linear'?Math.min(q,9):q,W,H,xR,yR);
+    ctx.fillText(`Q=${q}`,tx+4,ty-3);
+  });
+}
+
+function quiz510Answer(ans) {
+  if(q510Answered)return;
+  q510Answered=true; q510Total++;
+  const fn=QUIZ510_FUNCTIONS[q510Idx];
+  const correct=ans===fn.type;
+  if(correct) q510Score++;
+  document.querySelector('.quiz-score').textContent=`Score: ${q510Score} / ${q510Total}`;
+  document.querySelectorAll('.quiz-btn').forEach(b=>{
+    const bType=b.textContent.includes('Smooth')?'cd':b.textContent.includes('Straight')?'linear':'leontief';
+    if(bType===ans) b.classList.add(correct?'correct':'incorrect');
+    if(!correct&&bType===fn.type) b.classList.add('revealed');
+  });
+  const fb=document.getElementById('q510-fb');
+  fb.style.display='block';
+  fb.innerHTML=`${correct?'Correct!':'Incorrect.'} ${fn.desc}`;
+  quiz510DrawResult(fn.type);
+  document.getElementById('q510-next').style.display='inline-block';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════════════
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+window.addEventListener('DOMContentLoaded', () => {
+  v51Update();
+  v52DrawAll();
+  v53Init();
+  v54Update();
+  v55Draw();
+  v56Draw();
+  document.getElementById('v56-readout').innerHTML='Use the buttons to substitute inputs (move along the isoquant) or improve technology (shift the isoquant inward).';
+  v57Draw();
+  v58Update();
+  v59Update();
+  quiz510NewRound();
+});
+
+window.addEventListener('resize', () => {
+  v51Draw();
+  v52DrawAll();
+  v53Draw();
+  v54Draw();
+  v55Draw();
+  v56Draw();
+  v57Draw();
+  v58Draw();
+  v59Draw();
+});
+</script>
+</body>
+</html>
