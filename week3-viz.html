@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function freeB(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } return null; }
 
 /* ============================================================
-   VIZ 1: Demand Derivation — video playback speed control
+   VIZ 1: Demand Derivation - video playback speed control
    ============================================================ */
 function v1SetRate(r) {
   const vid = document.getElementById('v1-video');
@@ -821,10 +821,12 @@ function drawV2() {
 
   // Budget lines
   b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
-  b.create('text',[xiA*0.35,yi*0.8,'Original'],{fontSize:9,color:'#3d5a80',fixed:true});
+  // "Original" label: place in upper-left region, well away from the red/new line
+  b.create('text',[xiA*0.12, yi*0.92, 'Original'],{fontSize:9,color:'#3d5a80',fixed:true});
 
   b.create('segment',[[0,yHicksInt],[xiHicks,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
-  b.create('text',[xiHicks*0.06,yHicksInt*0.80,'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
+  // "Compensated" label: place at lower end of the compensated line, clear of the dashed line
+  b.create('text',[xiHicks*0.55, yHicksInt*0.15, 'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
 
   b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
   b.create('text',[xiB*0.5,yi*0.6,'New'],{fontSize:9,color:'#c0392b',fixed:true});
@@ -914,7 +916,8 @@ function initViz3() {
     // Ray from origin slope = (V3_Px/V3_Py) = 2/3
     b1.create('line',[[0,0],[1,V3_Px/V3_Py]],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true,
       point1:{visible:false},point2:{visible:false}});
-    b1.create('text',[xmax*0.6,xmax*0.6*(V3_Px/V3_Py)*0.75,'Income Expansion Path'],{fontSize:9,color:'#6b52a8',fixed:true});
+    // Label placed to the LEFT of the expansion path line to avoid overlap
+    b1.create('text',[xmax*0.25, xmax*0.25*(V3_Px/V3_Py)+1.2, 'Income\nExpansion Path'],{fontSize:9,color:'#6b52a8',fixed:true});
   } else {
     // Backward-bending: X decreases as I rises
     const pathPts = [];
@@ -952,7 +955,7 @@ function initViz3() {
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
     v3Pt = b1.create('point',[xs,ys],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
-      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:10,color:'#e05252',offset:[7,7]}});
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:10,color:'#e05252',offset:[14,-18]}});
 
     // Right panel: draw demand curve at current I
     if (v3D1) { try{b2.removeObject(v3D1);}catch(e){} }
@@ -1027,7 +1030,7 @@ const SCENARIOS = [
 let drillIdx = 0, drillScore = 0, drillTotal = 0, drillOrder = [], drillAnswered = false;
 
 function drillNewRound() {
-  // Always reshuffle when deck is empty — game runs forever
+  // Always reshuffle when deck is empty - game runs forever
   if (drillOrder.length === 0) { drillOrder = SCENARIOS.map((_,i)=>i).sort(()=>Math.random()-0.5); }
   drillIdx = drillOrder.shift();
   drillAnswered = false;

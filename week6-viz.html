@@ -350,7 +350,7 @@ function dot6(ctx,x,y,r,fill,stroke){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 6.1 — COST MINIMISATION SANDBOX
+// FIG 6.1 - COST MINIMISATION SANDBOX
 // ══════════════════════════════════════════════════════════════════════
 let v61DragL=null, v61DragK=null, v61W=300, v61H=280;
 
@@ -368,12 +368,15 @@ function v61Draw(Lcur,Kcur){
   if(Lcur===undefined) Lcur=opt.Ls; if(Kcur===undefined) Kcur=opt.Ks;
   const cvs=document.getElementById('cvs61'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=280;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
-  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
+  const W=cvs.clientWidth||400;
+  // Will be made square below
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  // Square canvas: both axes go [0,16] so equal visual scale
+  const H=W;
+  if(cvs.height!==Math.round(H*dpr)){cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   v61W=W; v61H=H;
-  // Fixed axes — do not change with slider values
+  // Fixed axes - do not change with slider values
   const AXIS_MAX=16;
   const xR=[0,AXIS_MAX],yR=[0,AXIS_MAX];
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
@@ -404,7 +407,7 @@ function v61Draw(Lcur,Kcur){
   ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
   ctx.fillText(`Isocost TC* = ${opt.TC.toFixed(1)}`,icLx+4,icLy-4);
 
-  // Current bundle — only show "optimal" if near the isoquant AND near the tangency
+  // Current bundle - only show "optimal" if near the isoquant AND near the tangency
   const MRTS=Kcur/Lcur, wv=w/v;
   // Check on isoquant: Q_at_bundle ≈ q
   const Q_bundle = Math.pow(Lcur,0.5)*Math.pow(Kcur,0.5);
@@ -417,8 +420,8 @@ function v61Draw(Lcur,Kcur){
   ctx.fillStyle=atOpt?'#2e8b57':'#e74c3c'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
   ctx.fillText(`(L=${Lcur.toFixed(1)}, K=${Kcur.toFixed(1)})`,lblX,by-6);
   if(atOpt) ctx.fillText('Cost minimised!',lblX,by+10);
-  else if(!onIsoquant) ctx.fillText('Not on isoquant — drag near the blue curve',lblX,by+10);
-  else ctx.fillText(`MRTS=${MRTS.toFixed(2)} vs w/v=${wv.toFixed(2)} — keep adjusting`,lblX,by+10);
+  else if(!onIsoquant) { ctx.fillStyle='#888'; ctx.fillText('Not on isoquant yet - drag near the blue curve',lblX,by+22); }
+  else { ctx.fillStyle='#888'; ctx.fillText(`MRTS=${MRTS.toFixed(2)} vs w/v=${wv.toFixed(2)}, keep adjusting`,lblX,by+22); }
 
   // Optimal point
   const [ox,oy]=toC(opt.Ls,opt.Ks,W,H,xR,yR);
@@ -484,7 +487,7 @@ function v61Init(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 6.2 — TWO-PANEL COST DERIVATION
+// FIG 6.2 - TWO-PANEL COST DERIVATION
 // ══════════════════════════════════════════════════════════════════════
 const V62_W=4,V62_V=4;
 const V62_Q_STEPS=[0.5,1,1.5,2,2.5,3,3.5,4,4.5,5];
@@ -583,7 +586,7 @@ function v62CtrlPlay(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 6.4 — BANG-FOR-THE-BUCK REALLOCATION
+// FIG 6.4 - BANG-FOR-THE-BUCK REALLOCATION
 // ══════════════════════════════════════════════════════════════════════
 function v64Draw(){
   const mpl=parseFloat(document.getElementById('v64-mpl').value);
@@ -665,7 +668,7 @@ function v64Update(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 6.5 — SR vs LR COST CURVES
+// FIG 6.5 - SR vs LR COST CURVES
 // ══════════════════════════════════════════════════════════════════════
 let v65ShowLR=false;
 // TC = TFC + TVC; TVC = q^2 (simple quadratic)
@@ -751,7 +754,7 @@ function v65ToggleLR(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 6.6 — LRAC ENVELOPE BUILDER
+// FIG 6.6 - LRAC ENVELOPE BUILDER
 // ══════════════════════════════════════════════════════════════════════
 let v66Curves=[];
 const V66_K_SIZES=[2,4,6,8,10,12,14];
@@ -804,8 +807,11 @@ function v66Draw(){
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
     ctx.stroke();
+    // LRAC label: place at q=1 level, BELOW the envelope curve to avoid overlap
+    const lrac_at_q1 = Math.min(...v66Curves.map(K=>v66SRAC(1,K)));
+    const [lx_lrac,ly_lrac]=toC(1.2, lrac_at_q1, W, H, xR, yR);
     ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('LRAC',ML+4,MT+14);
+    ctx.fillText('LRAC (envelope)', lx_lrac, ly_lrac + 16);
   }
 
   document.getElementById('v66-count').textContent=`${v66Curves.length} plant size${v66Curves.length!==1?'s':''} added`;
@@ -825,7 +831,7 @@ function v66Reset(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 6.8 — MINIMUM WAGE AUTOMATION SIMULATOR
+// FIG 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR
 // ══════════════════════════════════════════════════════════════════════
 const V68_Q=4; // fixed output target
 
@@ -850,7 +856,7 @@ function v68Draw(){
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
 
-  // Fixed axes — do not change when sliders move
+  // Fixed axes - do not change when sliders move
   const AXIS_MAX6=18;
   const xR=[0,AXIS_MAX6],yR=[0,AXIS_MAX6];
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
@@ -888,15 +894,21 @@ function v68Draw(){
 
   // Old optimal (red X)
   const [ox,oy]=toC(optBase.Ls,optBase.Ks,W,H,xR,yR);
-  ctx.fillStyle='#e74c3c'; ctx.font='bold 14px DM Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('x',ox,oy+5);
-  ctx.font='9px DM Sans,sans-serif'; ctx.fillText('old optimum',ox,oy-8);
+  ctx.fillStyle='#e74c3c'; ctx.font='bold 16px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('✕',ox,oy+6);
+  // Label: above and slightly left, clear of the isoquant
+  ctx.font='10px DM Sans,sans-serif';
+  const olx=ox>W/2?ox-6:ox+6;
+  ctx.textAlign=ox>W/2?'right':'left';
+  ctx.fillText('old optimum (no longer min cost)',olx,oy-14);
 
   // New optimal (green dot)
   const [bx,by]=toC(optNew.Ls,optNew.Ks,W,H,xR,yR);
-  dot6(ctx,bx,by,7,'#2e8b57','#fff');
-  ctx.fillStyle='#2e8b57'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('new optimum',bx+8,by-3);
+  dot6(ctx,bx,by,8,'#2e8b57','#fff');
+  ctx.fillStyle='#2e8b57'; ctx.font='10px DM Sans,sans-serif';
+  const nlx=bx>W/2?bx-6:bx+12;
+  ctx.textAlign=bx>W/2?'right':'left';
+  ctx.fillText('new optimum',nlx,by-10);
 
   // Arrow
   ctx.beginPath(); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1.5;
@@ -924,7 +936,7 @@ function v68Update(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 6.10 — EFFICIENT SCALE FINDER
+// FIG 6.10 - EFFICIENT SCALE FINDER
 // ══════════════════════════════════════════════════════════════════════
 function v610Draw(){
   const a=parseFloat(document.getElementById('v610-a').value)||100;
@@ -975,7 +987,7 @@ function v610Draw(){
 
   ctx.restore();
 
-  // AC curve — clip to graph boundary
+  // AC curve - clip to graph boundary
   ctx.save();
   ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
   ctx.beginPath(); first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
@@ -987,7 +999,7 @@ function v610Draw(){
   ctx.stroke();
   ctx.restore();
 
-  // q* marker — only if within graph bounds
+  // q* marker - only if within graph bounds
   if(qstar <= qmax && acstar <= acmax){
     const [qsx,qsy]=toC(qstar,acstar,W,H,xR,yR);
     const [,qsy0]=toC(qstar,0,W,H,xR,yR);
@@ -998,10 +1010,13 @@ function v610Draw(){
     ctx.fillText(`q* = ${qstar.toFixed(2)}`,qsx,qsy-10);
     ctx.fillStyle='#888'; ctx.fillText(`AC* = $${acstar.toFixed(2)}`,qsx,qsy0+14);
 
-    // Region labels
-    ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillStyle='rgba(46,139,87,0.8)'; ctx.fillText('Economies of scale',ML+6,MT+14);
-    ctx.fillStyle='rgba(231,76,60,0.8)'; ctx.fillText('Diseconomies',qsx+8,MT+14);
+    // Region labels: green=bottom-left (economies), red=bottom-right (diseconomies)
+    ctx.font='10px DM Sans,sans-serif';
+    ctx.fillStyle='rgba(46,139,87,0.85)'; ctx.textAlign='left';
+    ctx.fillText('Economies of scale', ML+6, H-MB-6);
+    ctx.fillStyle='rgba(231,76,60,0.85)'; ctx.textAlign='right';
+    ctx.fillText('Diseconomies of scale', W-MR-4, H-MB-6);
+    ctx.textAlign='left';
   } else {
     ctx.fillStyle='#e74c3c'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
     ctx.fillText(`q* = ${qstar.toFixed(1)} is outside graph range. Adjust a or b.`,ML+6,MT+20);
