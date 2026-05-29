@@ -239,40 +239,23 @@
           <span class="fig-chevron">▾</span>
         </div>
         <div class="viz-body">
-          <!-- Narration -->
-          <div id="v1-narration" style="background:#f0f4ff;border-left:4px solid var(--accent);border-radius:0 6px 6px 0;padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.9rem;color:var(--ink);line-height:1.65;min-height:3.2rem;transition:background 0.3s;">
-            Click <strong>Play</strong> or use the step buttons to watch the demand curve build itself one price at a time.
+          <!-- Video + speed controls -->
+          <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.75rem;line-height:0;">
+            <video id="v1-video" controls playsinline preload="metadata"
+              style="width:100%;display:block;border-radius:10px;">
+              <source src="assets/demand-derivation.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
           </div>
-
-          <!-- Two-panel canvases -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
-            <div>
-              <div class="viz-panel-label">Consumer's Budget &amp; Indifference Map</div>
-              <canvas id="cv1-left" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#fff;"></canvas>
-            </div>
-            <div>
-              <div class="viz-panel-label">Demand Curve (building point by point)</div>
-              <canvas id="cv1-right" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#fff;"></canvas>
-            </div>
+          <!-- Playback speed controls -->
+          <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.85rem;flex-wrap:wrap;">
+            <span style="font-family:var(--mono);font-size:0.72rem;color:var(--ink-light);">Playback speed:</span>
+            <button class="v1-speed-btn" data-rate="0.5" onclick="v1SetRate(0.5)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
+            <button class="v1-speed-btn active-rate" data-rate="1" onclick="v1SetRate(1)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
+            <button class="v1-speed-btn" data-rate="2" onclick="v1SetRate(2)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
           </div>
-
-          <!-- Controls -->
-          <div style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;padding:0.6rem 0.8rem;background:#f8f9fb;border:1px solid var(--rule);border-radius:6px;">
-            <button id="v1-reset" onclick="v1CtrlReset()" style="font-family:var(--font);font-size:0.78rem;padding:0.28rem 0.7rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;color:var(--ink-light);">&#8635; Reset</button>
-            <button id="v1-prev" onclick="v1CtrlStep(-1)" style="font-family:var(--font);font-size:0.78rem;padding:0.28rem 0.7rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;color:var(--ink-light);">&#8592; Prev</button>
-            <button id="v1-play-btn" onclick="v1CtrlPlay()" style="font-family:var(--font);font-size:0.78rem;font-weight:600;padding:0.28rem 1rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent);color:#fff;cursor:pointer;">&#9654; Play</button>
-            <button id="v1-next" onclick="v1CtrlStep(1)" style="font-family:var(--font);font-size:0.78rem;padding:0.28rem 0.7rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;color:var(--ink-light);">Next &#8594;</button>
-            <span id="v1-status" style="font-family:var(--mono);font-size:0.76rem;color:var(--ink-light);flex:1;text-align:center;min-width:80px;"></span>
-            <div style="display:flex;align-items:center;gap:0.3rem;margin-left:auto;">
-              <span style="font-family:var(--mono);font-size:0.7rem;color:var(--ink-light);">Speed:</span>
-              <button class="v1-speed-btn" data-speed="0.5" onclick="v1SetSpeed(0.5)" style="font-family:var(--mono);font-size:0.7rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);border-radius:4px;background:#fff;cursor:pointer;">0.5x</button>
-              <button class="v1-speed-btn" data-speed="1" onclick="v1SetSpeed(1)" style="font-family:var(--mono);font-size:0.7rem;padding:0.2rem 0.5rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
-              <button class="v1-speed-btn" data-speed="2" onclick="v1SetSpeed(2)" style="font-family:var(--mono);font-size:0.7rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);border-radius:4px;background:#fff;cursor:pointer;">2x</button>
-            </div>
-          </div>
-
-          <div class="callout key-idea" style="margin-top:1rem;">
-            <strong>Key insight:</strong> As P<sub>X</sub> falls, the budget line pivots outward. The new indifference curve gives a new optimal point. Each (P<sub>X</sub>, X*) pair contributes one point to the right panel. At the end, connecting all these points traces the demand curve. Note Y* = 10 throughout: with Cobb-Douglas preferences, spending shares are constant so Y* is independent of P<sub>X</sub>.
+          <div class="callout key-idea">
+            <strong>Key insight:</strong> At each price, the budget line pivots and a new indifference curve is tangent at the new optimal bundle. Each (P<sub>X</sub>, X*) pair marks one point on the right panel. The dashed lines show exactly where the price (from the Y axis) and the quantity (from the X axis) come from before they converge into the demand point. Connecting all six points at the end traces the demand curve D.
           </div>
         </div>
       </div>
@@ -517,8 +500,20 @@ document.addEventListener('DOMContentLoaded', () => {
 function freeB(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } return null; }
 
 /* ============================================================
-   VIZ 1: Two-Panel Demand Derivation (Canvas Animation)
+   VIZ 1: Demand Derivation — video playback speed control
    ============================================================ */
+function v1SetRate(r) {
+  const vid = document.getElementById('v1-video');
+  if (vid) vid.playbackRate = r;
+  document.querySelectorAll('.v1-speed-btn').forEach(b => {
+    const on = parseFloat(b.dataset.rate) === r;
+    b.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
+    b.style.background  = on ? 'var(--accent-lt)' : '#fff';
+    b.style.color       = on ? 'var(--accent)' : '';
+  });
+}
+
+/* (canvas animation variables kept as stubs so nothing breaks) */
 const V1_I = 60, V1_Py = 3, V1_alpha = 0.5;
 const V1_PX_STEPS = [6, 5, 4, 3, 2, 1];
 const V1_COLS = ['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80'];
@@ -1032,6 +1027,7 @@ const SCENARIOS = [
 let drillIdx = 0, drillScore = 0, drillTotal = 0, drillOrder = [], drillAnswered = false;
 
 function drillNewRound() {
+  // Always reshuffle when deck is empty — game runs forever
   if (drillOrder.length === 0) { drillOrder = SCENARIOS.map((_,i)=>i).sort(()=>Math.random()-0.5); }
   drillIdx = drillOrder.shift();
   drillAnswered = false;
@@ -1080,6 +1076,8 @@ function drillAnswer(ans) {
   fb.style.display = 'block';
   fb.innerHTML = `${correct ? '✅ <strong>Correct!</strong>' : `❌ <strong>Incorrect.</strong> The answer is <em>${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}</em>.`} ${sc.explanation}`;
   next.style.display = 'inline-block';
+  next.style.cssText = 'font-family:var(--font);font-size:0.88rem;font-weight:600;padding:0.45rem 1.4rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;';
+  setTimeout(() => next.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
 
   if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([fb]);
 }
@@ -1172,7 +1170,6 @@ function redrawV5() {
    Boot all visualizations
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  initViz1();
   initViz2();
   initViz3();
   drillNewRound();

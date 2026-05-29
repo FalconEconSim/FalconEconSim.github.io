@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 6: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+    body { background: #f4f7fb; }
+    .fc-wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .fc-hdr { display: flex; align-items: center; justify-content: space-between; }
+    .fc-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; color: #0077C8; }
+    .fc-ctr { font-size: 13px; color: #999; font-weight: 500; }
+    .fc-prog { width: 100%; height: 4px; background: #E8EFF8; border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: #0077C8; border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid #E2EAF4; border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 500; cursor: pointer; background: #fff; color: #666; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+    .fc-ftag.active { background: #0077C8; color: #fff; border-color: #0077C8; }
+    .fc-badge { display: inline-flex; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 99px; width: fit-content; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: #CBD8EC; }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.5; color: #111; flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: 0.88rem; color: #666; font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid #EEF3FA; margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: 0.88rem; line-height: 1.75; color: #333; white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: 12px; color: #BCC8D8; text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: #F0F4FA; border: 1px solid #DDE6F0; border-radius: 4px; padding: 0 5px; font-size: 10px; color: #888; }
+    .fc-rate-label { font-size: 12px; color: #BCC8D8; text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: 10px; opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: #0077C8; }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: 1.5rem; font-weight: 500; }
+    .fc-stat-l { font-size: 11px; font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: #F0F4FA; border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: #0077C8; color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid #E2EAF4; border-radius: 12px; padding: 0.65rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; font-family: 'DM Sans', sans-serif; color: #0077C8; transition: background 0.15s; }
+    .fc-btn-outline:hover { background: #E6F1FB; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published active"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><span>Week 7</span></li>
+    <li class="left-nav-item upcoming"><span>Week 8</span></li>
+    <li class="left-nav-item upcoming"><span>Week 9</span></li>
+    <li class="left-nav-item upcoming"><span>Week 10</span></li>
+    <li class="left-nav-item upcoming"><span>Week 11</span></li>
+    <li class="left-nav-item upcoming"><span>Week 12</span></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="week6.html">Week 6</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Flashcards</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"Distinguish accounting profit from economic profit. Why does the difference matter for decisions?",
+    a:"Accounting profit = Total Revenue - Explicit costs (out-of-pocket payments).\n\nEconomic profit = Total Revenue - Explicit costs - Implicit costs (opportunity costs of owner-supplied inputs).\n\nWhy it matters: a firm can be profitable in an accounting sense but earning zero or negative economic profit — meaning the owner's resources are better deployed elsewhere.\n\nEconomic profit = 0 means the firm earns exactly its opportunity cost — this is the long-run equilibrium condition in perfect competition." },
+
+  { id:2, type:"Def",
+    q:"Define sunk costs and explain why they should not affect forward-looking decisions.",
+    a:"Sunk costs are costs that have already been paid and cannot be recovered, regardless of what the firm does next.\n\nExamples: past R&D expenditure, a non-refundable deposit, the cost of a machine that cannot be resold.\n\nWhy ignore them: a rational decision-maker compares future benefits to future costs only. Including sunk costs in the analysis leads to the 'sunk cost fallacy' — continuing a losing project because of past investment." },
+
+  { id:3, type:"Eq",
+    q:"Write the Total Cost (TC) decomposition for the short run. Define each component.",
+    a:"\\[TC = TFC + TVC\\]\n\nTotal Fixed Cost (TFC): Costs that do not vary with output q. Examples: capital rental, insurance. Must be paid even if q = 0.\n\nTotal Variable Cost (TVC): Costs that rise with output. Examples: labour, raw materials. TVC(0) = 0.\n\nIn the long run: ALL costs are variable — there are no fixed costs." },
+
+  { id:4, type:"Def",
+    q:"Define the isocost line. What does its slope represent?",
+    a:"The isocost line shows all (K, L) combinations that cost the same total amount TC:\n\n\\[TC = wL + vK \\quad \\Rightarrow \\quad K = \\frac{TC}{v} - \\frac{w}{v}L\\]\n\nSlope = -w/v (the ratio of input prices).\n\nK-intercept = TC/v (maximum capital if no labour).\nL-intercept = TC/w (maximum labour if no capital).\n\nParallel shifts in the isocost (changing TC) correspond to different cost levels; rotations (changing w or v) correspond to changes in relative input prices." },
+
+  { id:5, type:"Eq",
+    q:"State the cost-minimisation condition and explain why it must hold at the optimal input bundle.",
+    a:"At the cost-minimising bundle:\n\\[MRTS_{LK} = \\frac{MPL}{MPK} = \\frac{w}{v}\\]\n\nIntuition (bang-for-the-buck rule): the cost-minimising firm equalises the output per dollar spent on each input:\n\\[\\frac{MPL}{w} = \\frac{MPK}{v}\\]\n\nIf MPL/w > MPK/v: shift spending from K to L (each dollar on L buys more output).\nIf MPL/w < MPK/v: shift spending from K to L. Converges at equality." },
+
+  { id:6, type:"Def",
+    q:"List the five short-run cost curves and describe the relationship between them.",
+    a:"1. TC (Total Cost) = TFC + TVC\n2. AFC (Average Fixed Cost) = TFC/q — always declining\n3. AVC (Average Variable Cost) = TVC/q — U-shaped\n4. ATC (Average Total Cost) = TC/q = AFC + AVC — U-shaped, above AVC\n5. SMC (Short-run Marginal Cost) = dTC/dq = dTVC/dq\n\nKey relationships:\n- SMC passes through the minimum of ATC\n- SMC passes through the minimum of AVC\n- As q increases, ATC-AVC = AFC narrows (AFC falls)" },
+
+  { id:7, type:"Graph",
+    q:"Why does SMC (Short-run Marginal Cost) always pass through the minimum of ATC (Average Total Cost)?",
+    a:"When MC < ATC: adding one more unit of output costs less than the current average, pulling the average down.\nWhen MC > ATC: adding one unit costs more than average, pulling the average up.\nWhen MC = ATC: ATC is at its minimum (neither rising nor falling).\n\nThis is the same logic as class grades: if your new exam score (MC) is below your average (AC), your average falls; above it, your average rises; equal to it, your average is at a turning point.\n\nMathematically: d(ATC)/dq = (MC - ATC)/q. Setting to zero: MC = ATC." },
+
+  { id:8, type:"Def",
+    q:"What is the efficient scale of a firm? How does it appear on an AC diagram?",
+    a:"The efficient scale is the output level q* that minimises Average Total Cost (ATC).\n\nFor AC = a/q + bq: \\(q^* = \\sqrt{a/b}\\)\n\nOn the AC diagram: it is the bottom of the U-shaped ATC curve, where SMC intersects ATC.\n\nIndustry structure implication:\n- Low q*: many small firms can be efficient (competitive market)\n- High q*: few large firms are needed for efficiency (natural monopoly tendency)" },
+
+  { id:9, type:"Def",
+    q:"Define economies of scale and diseconomies of scale. How are they related to the LRAC?",
+    a:"Economies of scale: Long-Run Average Cost (LRAC) falls as output rises. Each unit produced costs less on average as the firm grows.\n\nDiseconomies of scale: LRAC rises as output rises. The firm becomes less efficient at large scale (coordination problems, bureaucracy).\n\nOn the LRAC diagram:\n- Downward-sloping segment = economies of scale\n- Upward-sloping segment = diseconomies of scale\n- Minimum LRAC = minimum efficient scale\n\nNote: economies of scale concern output changes, not input proportions." },
+
+  { id:10, type:"Eq",
+    q:"State the LRAC Envelope Theorem. Why is the long-run cost always at most equal to the short-run cost?",
+    a:"The Long-Run Average Cost (LRAC) curve is the lower envelope of all Short-Run Average Cost (SRAC) curves (one for each plant size K).\n\n\\[LRAC(q) \\leq SRAC(q, K) \\quad \\forall K\\]\n\nWhy: in the long run, the firm can choose the optimal plant size K for any output q. In the short run, K is fixed, which may not be optimal. Extra flexibility always (weakly) reduces cost.\n\nTangency: each SRAC is tangent to the LRAC from above at exactly one output level — the one for which that plant size is optimal." },
+
+  { id:11, type:"Mistake",
+    q:"Common mistake: 'IRS (Increasing Returns to Scale) implies economies of scale, and DRS implies diseconomies of scale.' Is this always correct?",
+    a:"Mostly yes, but the concepts are distinct.\n\nReturns to scale (production concept): how output responds when ALL inputs scale together.\n\nEconomies of scale (cost concept): how average cost responds as output rises (with optimal input choices).\n\nFor Cobb-Douglas: the relationship is direct — IRS gives falling LRAC (economies), CRS gives flat LRAC, DRS gives rising LRAC (diseconomies).\n\nBut for non-Cobb-Douglas technologies, the relationship can be more complex. Economies of scale is the more general concept for cost theory." },
+
+  { id:12, type:"Graph",
+    q:"Explain how to derive the TC(q) curve from the isoquant map. What is being minimised?",
+    a:"For each output level q:\n1. Draw the isoquant for Q = q.\n2. Find the isocost line (with slope -w/v) that is tangent to the isoquant from below.\n3. The TC for that output = the cost of the tangent isocost = wL* + vK*.\n4. Plot (q, TC) on a new graph.\n\nRepeat for all q levels — each tangency gives one point on the TC(q) curve.\n\nThis is cost minimisation: for each output level, we find the cheapest input combination." },
+
+  { id:13, type:"Def",
+    q:"What happens to ATC when Total Fixed Cost (TFC) increases? What happens to SMC and AVC?",
+    a:"When TFC rises:\n- ATC shifts UP (since ATC = TC/q = (TFC + TVC)/q, and TFC appears in the numerator)\n- AVC is UNCHANGED (TVC is unchanged, so AVC = TVC/q is unchanged)\n- SMC is UNCHANGED (SMC = dTC/dq = dTVC/dq, and TFC does not affect marginal cost)\n\nIntuition: fixed costs are fixed — they don't vary with output, so they don't affect the marginal decision. Only variable costs affect SMC and AVC." },
+
+  { id:14, type:"Def",
+    q:"Describe what AFC (Average Fixed Cost) looks like and why it matters for the shape of ATC.",
+    a:"AFC = TFC/q is a rectangular hyperbola — it falls continuously and approaches zero as q rises, but never reaches it.\n\nAs q increases, AFC → 0, so ATC → AVC.\n\nThis means the gap between ATC and AVC narrows as output rises — the two curves get closer together.\n\nAt low output, ATC is much higher than AVC (large AFC contribution). At high output, ATC ≈ AVC (AFC is negligible).\n\nThis spreading of fixed costs over more units is sometimes called 'spreading the overhead.'" },
+
+  { id:15, type:"Eq",
+    q:"For a Leontief firm Q = min(L, K/2) with w = 4, v = 2. Find TC(q), LRTC, and LRAC.",
+    a:"Optimal bundle: L = q and K = 2q (to satisfy Q = min(L, K/2) = q).\n\n\\[TC = wL + vK = 4q + 2(2q) = 4q + 4q = 8q\\]\n\n\\[LRAC = \\frac{TC}{q} = 8\\]\n\nLRAC is constant — the firm has Constant Returns to Scale (CRS). Doubling both inputs doubles output and cost, so average cost stays flat." },
+
+  { id:16, type:"Def",
+    q:"Define short-run costs vs long-run costs and explain the key SR/LR principle.",
+    a:"Short run: At least one input (K) is fixed at K-bar. The firm can only adjust L.\nLong run: All inputs are variable. The firm chooses both K and L optimally.\n\nKey SR/LR principle: SRTC(q, K-bar) >= LRTC(q) for all q and all K-bar.\n\nEquality holds only where K-bar = K*(q) — i.e. where the fixed K happens to be the long-run optimal capital level for that output.\n\nImplication: the long-run always offers at least as low a cost as the short-run, because it provides an extra degree of freedom (choosing K)." },
+
+  { id:17, type:"Graph",
+    q:"What does the LRAC envelope look like, and where is each SRAC tangent to it?",
+    a:"The LRAC is the lower envelope of a family of U-shaped SRAC curves, one for each plant size K-bar.\n\nFor each plant size K-bar, the SRAC is tangent to the LRAC at exactly one output level — the output for which K-bar is optimal.\n\n- If the economy-of-scale region (downward-sloping LRAC): the tangency is on the DOWNWARD-SLOPING part of the SRAC.\n- At minimum LRAC (efficient scale): tangency is at the MINIMUM of the corresponding SRAC.\n- If diseconomy-of-scale region: tangency is on the UPWARD-SLOPING part of the SRAC." },
+
+  { id:18, type:"Eq",
+    q:"For a Cobb-Douglas firm Q = K^0.5 L^0.5 with w and v, derive the long-run TC function.",
+    a:"Cost minimisation: MRTS = w/v => K/L = w/v => K = (w/v)L.\n\nSubstitute into production function: Q = K^0.5 L^0.5 = ((w/v)L)^0.5 L^0.5 = (w/v)^0.5 L.\n\nSo \\(L^* = q(v/w)^{0.5}\\) and \\(K^* = q(w/v)^{0.5}\\).\n\n\\[TC = wL^* + vK^* = wq(v/w)^{0.5} + vq(w/v)^{0.5} = 2q\\sqrt{wv}\\]\n\nLRAC = 2sqrt(wv) — constant, confirming CRS (a+b=1)." },
+
+  { id:19, type:"Mistake",
+    q:"A firm's production function has IRS. Does this mean it should produce infinite output?",
+    a:"No. IRS means average cost falls as output rises, which is an advantage. But the firm still faces:\n\n1. Demand constraints: consumers are not willing to buy unlimited output at positive prices.\n2. Eventually: most real-world production functions exhibit DRS at some large scale (managerial diseconomies, coordination failures).\n3. Competition: in markets, prices can fall as quantity rises.\n\nIRS mainly implies:\n- Natural monopoly tendency (one large firm is more efficient than many small ones)\n- Minimum efficient scale is large relative to the market\n- The firm benefits from growing — but this is bounded by the market." },
+
+  { id:20, type:"Def",
+    q:"State the 'bang-for-the-buck' rule and show how to apply it to reallocate inputs optimally.",
+    a:"The firm minimises cost by equalising the output per dollar spent on each input:\n\\[\\frac{MPL}{w} = \\frac{MPK}{v}\\]\n\nIf MPL/w > MPK/v: shift one dollar from K to L — output rises without changing cost. Repeat until equalised.\n\nExample: MPL = 12, MPK = 8, w = 4, v = 4.\n- MPL/w = 12/4 = 3, MPK/v = 8/4 = 2. MPL/w > MPK/v.\n- Hire more L, less K. As L rises, MPL falls; as K falls, MPK rises.\n- Stop when MPL/w = MPK/v." }
+];
+
+// ─── engine ───────────────────────────────────────────────────────────
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'#0077C8',Eq:'#7C3AED',Graph:'#065F46',Mistake:'#B45309'};
+const BG  = {Def:'#EFF8FF',Eq:'#F5F3FF',Graph:'#ECFDF5',Mistake:'#FFFBEB'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All';
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax)MathJax.typesetPromise([root]);return;}
+  const c=deck[idx];const col=COL[c.type]||'#0077C8';const bg=BG[c.type]||'#EFF8FF';
+  const total=deck.length;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <span class="fc-title">Week 6 · Cost Theory</span>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+            &nbsp;Card ${idx+1}
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:#B45309;border-color:#FDE68A" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:#0077C8;border-color:#BFDBFE" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:#065F46;border-color:#A7F3D0" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(window.MathJax)MathJax.typesetPromise([root]);
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:#ECFDF5"><div class="fc-stat-n" style="color:#065F46">${stats.Easy}</div><div class="fc-stat-l" style="color:#065F46">Easy</div></div>
+      <div class="fc-stat" style="background:#EFF8FF"><div class="fc-stat-n" style="color:#0077C8">${stats.Good}</div><div class="fc-stat-l" style="color:#0077C8">Good</div></div>
+      <div class="fc-stat" style="background:#FFFBEB"><div class="fc-stat-n" style="color:#B45309">${stats.Hard}</div><div class="fc-stat-l" style="color:#B45309">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:#34D399"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:#60A5FA"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:#FBBF24"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){deck=shuffle(CARDS.filter(c=>c.type===filter||filter==='All'));idx=0;stats={Easy:0,Good:0,Hard:0};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+</body>
+</html>

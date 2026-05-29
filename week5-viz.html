@@ -170,15 +170,15 @@
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;">
       <div class="cvs-wrap">
         <div class="panel-label">Cobb-Douglas (Smooth)</div>
-        <canvas id="cvs52a" height="220"></canvas>
+        <canvas id="cvs52a" height="280"></canvas>
       </div>
       <div class="cvs-wrap">
         <div class="panel-label">Linear (Perfect Substitutes)</div>
-        <canvas id="cvs52b" height="220"></canvas>
+        <canvas id="cvs52b" height="280"></canvas>
       </div>
       <div class="cvs-wrap">
         <div class="panel-label">Leontief (Fixed Proportions)</div>
-        <canvas id="cvs52c" height="220"></canvas>
+        <canvas id="cvs52c" height="280"></canvas>
       </div>
     </div>
     <div class="viz-readout" id="v52-readout"></div>
@@ -514,18 +514,23 @@ function v51Draw() {
   ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2.5; ctxA.stroke();
 
   // Current point on TP
-  const tpL=tp(L), mplL=mpl(L);
+  const tpL=v51TP(L,K,a,b), mplL=v51MPL(L,K,a,b);
   const [cx,cy]=toC(L,tpL,W,HA,xR,yRA);
-  // Tangent line
-  const dx=1.5;
-  const [tx0,ty0]=toC(Math.max(0.1,L-dx),tp(L)-mplL*dx,W,HA,xR,yRA);
-  const [tx1,ty1]=toC(L+dx,tp(L)+mplL*dx,W,HA,xR,yRA);
+  // Tangent line: y = tpL + mplL*(x - L), always through the current point
+  const dx=Math.min(L-0.1, 10-L, 2.0);
+  const x0=L-dx, x1=L+dx;
+  const y0=tpL+mplL*(x0-L), y1=tpL+mplL*(x1-L);
+  const [tx0,ty0]=toC(Math.max(0.05,x0),y0,W,HA,xR,yRA);
+  const [tx1,ty1]=toC(Math.min(10,x1),y1,W,HA,xR,yRA);
   ctxA.beginPath(); ctxA.setLineDash([5,4]); ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=1.5;
   ctxA.moveTo(tx0,ty0); ctxA.lineTo(tx1,ty1); ctxA.stroke(); ctxA.setLineDash([]);
   dot5(ctxA,cx,cy,7,'#1a56db','#fff');
+  // Label: choose left side if near right edge
+  const lblX = cx > W-MR-120 ? cx-120 : cx+10;
   ctxA.fillStyle='#1a56db'; ctxA.font='bold 10px DM Sans,sans-serif'; ctxA.textAlign='left';
-  ctxA.fillText(`TP=${tpL.toFixed(2)}`,cx+10,cy-5);
-  ctxA.fillStyle='#e74c3c'; ctxA.fillText(`slope=MPL=${mplL.toFixed(3)}`,cx+10,cy+12);
+  ctxA.fillText(`TP = ${tpL.toFixed(2)}`, lblX, Math.max(MT+14, cy-16));
+  ctxA.fillStyle='#e74c3c';
+  ctxA.fillText(`slope = MPL = ${mplL.toFixed(3)}`, lblX, Math.max(MT+26, cy-2));
 
   // Phase label
   const phase=mplL>0.5?'Rising fast':mplL>0.2?'Slowing':mplL>0?'Near peak':'Declining';
@@ -597,17 +602,24 @@ function v52SetMode(m) {
   v52DrawAll();
 }
 
+// Draggable point state for Fig 5.2 (Cobb-Douglas panel only)
+let v52DragL = 4, v52DragK = 4, v52Dragging = false;
+
 function v52DrawPanel(canvasId, type, qLevels, mode) {
   const cvs=document.getElementById(canvasId); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||220, H=220;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||280, H=280;
+  if(cvs.width!==W*dpr||cvs.height!==H*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
-  drawAxesSt(ctx,W,H,xR,yR,'L','K');
+  // Axis labels change based on mode
+  const xLbl=mode==='iq'?'L (labor)':'X (good 1)';
+  const yLbl=mode==='iq'?'K (capital)':'Y (good 2)';
+  drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl);
 
   const label=mode==='iq'?'Q':'U';
+  const tangLabel=mode==='iq'?'MRTS':'MRS';
   const colors=['#1a56db','#2e8b57','#c0392b'];
   qLevels.forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=colors[qi]||'#888'; ctx.lineWidth=2;
@@ -618,7 +630,6 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
         first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
       }
     } else if(type==='linear'){
-      // Q = 2L + K => K = Q - 2L
       const kmax=q, lmax=q/2;
       if(kmax<=yR[1]&&lmax<=xR[1]){
         const [x0,y0]=toC(0,kmax,W,H,xR,yR);
@@ -626,7 +637,6 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
         ctx.moveTo(x0,y0); ctx.lineTo(x1,y1);
       }
     } else if(type==='leontief'){
-      // Q = min(L, K/2) => kink at L=Q, K=2Q
       const lk=q, kk=2*q;
       if(lk<=xR[1]&&kk<=yR[1]){
         const [x0,y0]=toC(lk,yR[1]*0.95,W,H,xR,yR);
@@ -636,19 +646,41 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
       }
     }
     ctx.stroke();
-    // label
+    // Curve labels: placed to avoid overlapping curves
     ctx.fillStyle=colors[qi]||'#888'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
     if(type==='cd'){
-      const lm=q; const km=q;
-      const [tx,ty]=toC(Math.min(lm+0.2,9),Math.min(km+0.2,9),W,H,xR,yR);
-      ctx.fillText(`${label}=${q}`,tx,ty-4);
-    } else if(type==='linear'){
-      ctx.fillText(`${label}=${q}`,W-MR-35,MT+12+(qi*13));
-    } else if(type==='leontief'){
-      const [tx,ty]=toC(Math.min(q+0.3,9),2*q,W,H,xR,yR);
+      // Place label near top-right of each curve (at L=1.5, K=q²/1.5)
+      const [tx,ty]=toC(1.5, Math.min(q*q/1.5,9.5),W,H,xR,yR);
       ctx.fillText(`${label}=${q}`,tx+4,ty-4);
+    } else if(type==='linear'){
+      ctx.fillText(`${label}=${q}`,W-MR-36,MT+12+(qi*14));
+    } else if(type==='leontief'){
+      const [tx,ty]=toC(Math.min(q+0.4,9),2*q,W,H,xR,yR);
+      ctx.fillText(`${label}=${q}`,tx+5,ty-4);
     }
   });
+
+  // Draggable point P only on the Cobb-Douglas panel (cvs52a)
+  if(canvasId==='cvs52a' && type==='cd'){
+    // Snap drag point to closest isoquant q=4
+    const q4=4, L=v52DragL;
+    const K=q4*q4/L; // on the Q=4 curve
+    const [px,py]=toC(L,K,W,H,xR,yR);
+    // Draw tangent line (MRTS = K/L for Cobb-Douglas α=β=0.5)
+    const mrts=K/L;
+    const dxT=1.5;
+    const [tx0,ty0]=toC(Math.max(0.1,L-dxT),K+mrts*dxT,W,H,xR,yR);
+    const [tx1,ty1]=toC(Math.min(9.8,L+dxT),K-mrts*dxT,W,H,xR,yR);
+    ctx.setLineDash([4,3]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
+    // Dot P
+    dot5(ctx,px,py,8,'#e74c3c','#fff');
+    ctx.fillStyle='#e74c3c'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
+    const lx=px>W-MR-120?px-130:px+10;
+    ctx.fillText(`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`,lx,py-8);
+    ctx.fillText(`${tangLabel} = ${mrts.toFixed(2)}`,lx,py+8);
+    ctx.textAlign='left';
+  }
 }
 
 function v52DrawAll() {
@@ -656,12 +688,34 @@ function v52DrawAll() {
   v52DrawPanel('cvs52a','cd',qL,v52Mode);
   v52DrawPanel('cvs52b','linear',qL,v52Mode);
   v52DrawPanel('cvs52c','leontief',qL,v52Mode);
-  const modeText=v52Mode==='iq'?'Isoquant (firm): shows all input combinations that produce the same output Q.':'Indifference Curve (consumer): shows all bundles that give the same utility U.';
+  const isIQ=v52Mode==='iq';
+  const modeText=isIQ
+    ?'<strong>Isoquant mode (firm):</strong> Each curve shows all (L, K) combinations that produce the same output Q. The draggable point P on the left panel shows the MRTS at that location.'
+    :'<strong>Indifference curve mode (consumer):</strong> Each curve shows all (X, Y) bundles that give the same utility U. The draggable point P shows the MRS. Notice the math is identical — only the economic interpretation changes.';
   document.getElementById('v52-readout').innerHTML=
-    `<strong>${v52Mode==='iq'?'Firm Isoquant':'Consumer IC'} mode</strong><br>${modeText}<br>
-    <br><strong>Cobb-Douglas (Q = L<sup>0.5</sup>K<sup>0.5</sup>):</strong> Smooth, convex - MRTS diminishes as we substitute labor for capital.<br>
-    <strong>Linear (Q = 2L + K):</strong> Straight line - perfect substitutes, constant MRTS = 2.<br>
-    <strong>Leontief (Q = min(L, K/2)):</strong> L-shaped - fixed proportions, no substitution possible.`;
+    `${modeText}<br><br>
+    <strong>Cobb-Douglas ${isIQ?'(Q = L<sup>0.5</sup>K<sup>0.5</sup>)':'(U = X<sup>0.5</sup>Y<sup>0.5</sup>)'}:</strong> Smooth convex. ${isIQ?'MRTS':'MRS'} diminishes along the curve.<br>
+    <strong>Linear ${isIQ?'(Q = 2L + K)':'(U = 2X + Y)'}:</strong> Straight line. Perfect substitutes. Constant ${isIQ?'MRTS = 2':'MRS = 2'}.<br>
+    <strong>Leontief ${isIQ?'(Q = min(L, K/2))':'(U = min(X, Y/2))'}:</strong> L-shaped. Fixed proportions. No substitution possible.`;
+}
+
+function v52InitDrag() {
+  const cvs=document.getElementById('cvs52a'); if(!cvs) return;
+  function getL(e) {
+    const r=cvs.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    const W=cvs.width/dpr, H=cvs.height/dpr;
+    const px=(e.clientX-r.left)*(cvs.width/r.width)/dpr;
+    const [L]=fromC(px,0,W,H,[0,10],[0,10]);
+    return Math.max(0.5, Math.min(9.5, L));
+  }
+  cvs.addEventListener('mousedown',e=>{v52Dragging=true; v52DragL=getL(e); v52DrawAll();});
+  cvs.addEventListener('mousemove',e=>{if(!v52Dragging)return; v52DragL=getL(e); v52DrawAll();});
+  cvs.addEventListener('mouseup',()=>v52Dragging=false);
+  cvs.addEventListener('mouseleave',()=>v52Dragging=false);
+  cvs.addEventListener('touchstart',e=>{e.preventDefault();v52Dragging=true;v52DragL=getL(e.touches[0]);v52DrawAll();},{passive:false});
+  cvs.addEventListener('touchmove',e=>{e.preventDefault();if(!v52Dragging)return;v52DragL=getL(e.touches[0]);v52DrawAll();},{passive:false});
+  cvs.addEventListener('touchend',()=>v52Dragging=false);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -696,18 +750,24 @@ function v53Draw() {
   ctx.fillStyle='#1a56db'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='left';
   ctx.fillText(`Q = ${Q0}`,dlx+4,dly-5);
 
-  // Current point
+  // Current point — always on the isoquant K=Q²/L
   const L=v53L, K=v53K(L), mrts=v53MRTS(L);
   const [cx,cy]=toC(L,K,W,H,xR,yR);
-  // Tangent: dK/dL = -MRTS
-  const dx=2;
-  const [tx0,ty0]=toC(Math.max(0.5,L-dx),K+mrts*dx,W,H,xR,yR);
-  const [tx1,ty1]=toC(Math.min(17,L+dx),K-mrts*dx,W,H,xR,yR);
+  // Tangent at (L,K): slope dK/dL = -MRTS = -K/L
+  // Tangent line: K_tangent = K + (-mrts)*(l - L)
+  const dx=Math.min(L-0.5, 17-L, 3.0);
+  const x0=L-dx, x1=L+dx;
+  const k0=K + (-mrts)*(x0-L), k1=K + (-mrts)*(x1-L);
+  const [tx0,ty0]=toC(x0,k0,W,H,xR,yR);
+  const [tx1,ty1]=toC(x1,k1,W,H,xR,yR);
   ctx.setLineDash([5,4]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
   dot5(ctx,cx,cy,8,'#2e8b57','#fff');
-  ctx.fillStyle='#2e8b57'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`(L=${L.toFixed(1)}, K=${K.toFixed(1)})`,cx+10,cy-6);
+  ctx.fillStyle='#2e8b57'; ctx.font='bold 10px DM Sans,sans-serif';
+  const lx=cx>W-MR-130?cx-140:cx+12;
+  ctx.textAlign='left';
+  ctx.fillText(`L=${L.toFixed(1)}, K=${K.toFixed(1)}`,lx,cy-8);
+  ctx.fillStyle='#e74c3c'; ctx.fillText(`MRTS = ${mrts.toFixed(2)}`,lx,cy+8);
 
   document.getElementById('v53-readout').innerHTML=
     `<div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val" style="color:#2e8b57">${L.toFixed(2)}</div></div>
@@ -721,18 +781,17 @@ function v53Draw() {
 
 function v53Init() {
   const cvs=document.getElementById('cvs53'); if(!cvs) return;
-  function pyToL(py) {
+  // Snap mouse to nearest point on isoquant: just use L from mouse x
+  function mouseToL(e) {
+    const r=cvs.getBoundingClientRect();
     const dpr=window.devicePixelRatio||1;
+    const px=(e.clientX-r.left)*(cvs.width/r.width)/dpr;
     const W=cvs.width/dpr, H=cvs.height/dpr;
-    const [L]=fromC(py,0,W,H,[0,18],[0,18]);
-    return Math.max(0.5,Math.min(16,L));
+    const [Lm]=fromC(px,0,W,H,[0,18],[0,18]);
+    return Math.max(0.5,Math.min(16,Lm));
   }
   cvs.addEventListener('mousedown',e=>{
-    v53drag=true;
-    const r=cvs.getBoundingClientRect();
-    const px=(e.clientX-r.left)*(cvs.width/r.width)/(window.devicePixelRatio||1);
-    v53L=Math.max(0.5,Math.min(16,fromC(px,0,cvs.width/(window.devicePixelRatio||1),cvs.height/(window.devicePixelRatio||1),[0,18],[0,18])[0]));
-    v53Draw();
+    v53drag=true; v53L=mouseToL(e); v53Draw();
   });
   cvs.addEventListener('mousemove',e=>{
     if(!v53drag)return;
@@ -756,25 +815,31 @@ function v54Draw() {
   const b=parseFloat(document.getElementById('v54-b').value);
   const Kfix=4;
 
-  // Left panel: MPL vs L (K fixed)
+  // Left panel: MPL vs L (K fixed) — dynamic y-axis
   const cvA=document.getElementById('cvs54a'); if(!cvA) return;
   const dpr=window.devicePixelRatio||1;
   const W=cvA.clientWidth||300;
-  if(cvA.width!==W*dpr){cvA.width=W*dpr;cvA.height=220*dpr;cvA.style.height='220px';}
+  if(cvA.width!==W*dpr){cvA.width=W*dpr;cvA.height=240*dpr;cvA.style.height='240px';}
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
-  ctxA.clearRect(0,0,W,220);
-  const xRa=[0,12],yRa=[0,2];
-  drawAxesSt(ctxA,W,220,xRa,yRa,'L','MPL');
+  ctxA.clearRect(0,0,W,240);
+  // Compute max MPL to set y axis dynamically
+  const mplAt1=b*v54CD(Kfix,1,a,b)/1;
+  const yMaxMPL=Math.ceil(mplAt1*1.2*2)/2;
+  const xRa=[0,12],yRa=[0,yMaxMPL];
+  drawAxesSt(ctxA,W,240,xRa,yRa,'L (workers)','MPL');
   ctxA.beginPath(); let first=true; ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=2.5;
   for(let l=0.2;l<=12;l+=0.1){
     const mpl=b*v54CD(Kfix,l,a,b)/l;
-    const [cx,cy]=toC(l,mpl,W,220,xRa,yRa);
-    if(cy<MT-5||cy>220-MB+5){first=true;continue;}
+    const [cx,cy]=toC(l,mpl,W,240,xRa,yRa);
+    if(cy<MT-5||cy>240-MB+5){first=true;continue;}
     first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
   }
   ctxA.stroke();
-  ctxA.fillStyle='#e74c3c'; ctxA.font='10px DM Sans,sans-serif'; ctxA.textAlign='left';
-  ctxA.fillText('MPL falls as L rises (K fixed)',ML+4,MT+12);
+  // Label: placed at right edge, above the curve endpoint
+  const mplAt12=b*v54CD(Kfix,12,a,b)/12;
+  const [lx12,ly12]=toC(12,mplAt12,W,240,xRa,yRa);
+  ctxA.fillStyle='#e74c3c'; ctxA.font='10px DM Sans,sans-serif'; ctxA.textAlign='right';
+  ctxA.fillText('MPL falls as L rises (K='+Kfix+' fixed)',W-MR-4,MT+12);
 
   // Right panel: scale both inputs
   const cvB=document.getElementById('cvs54b'); if(!cvB) return;
@@ -799,9 +864,11 @@ function v54Draw() {
   const [dx2,dy2]=toC(2,q2,W,220,xRb,yRb);
   dot5(ctxB,dx1,dy1,6,'#2e8b57','#fff');
   dot5(ctxB,dx2,dy2,6,'#2e8b57','#fff');
-  ctxB.fillStyle='#2e8b57'; ctxB.font='9px DM Sans,sans-serif'; ctxB.textAlign='left';
-  ctxB.fillText(`Q(1)=${q1.toFixed(2)}`,dx1+6,dy1-3);
-  ctxB.fillText(`Q(2)=${q2.toFixed(2)}`,dx2+6,dy2-3);
+  ctxB.fillStyle='#2e8b57'; ctxB.font='9px DM Sans,sans-serif';
+  // Labels: offset clearly ABOVE the dots to avoid line overlap
+  ctxB.textAlign='center';
+  ctxB.fillText(`Q(λ=1)=${q1.toFixed(2)}`,dx1,dy1-14);
+  ctxB.fillText(`Q(λ=2)=${q2.toFixed(2)}`,dx2,dy2-14);
 
   const rts=a+b;
   const rtsLabel=rts>1.01?'IRS':rts<0.99?'DRS':'CRS';
@@ -861,8 +928,10 @@ function v55Draw() {
       rayPts.push({q,l:lRay,col:cols[qi]});
       const [rx,ry]=toC(lRay,lRay,W,H,xR,yR);
       dot5(ctx,rx,ry,6,cols[qi],'#fff');
-      ctx.fillStyle=cols[qi]; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-      ctx.fillText(`Q=${q}`,rx+6,ry-4);
+      ctx.fillStyle=cols[qi]; ctx.font='10px DM Sans,sans-serif';
+      // Place labels PERPENDICULAR to the 45° ray: shift upper-left to avoid it
+      ctx.textAlign='right';
+      ctx.fillText(`Q=${q}`,rx-10,ry-8);
     }
   });
 
@@ -957,9 +1026,18 @@ function v56SubstituteInputs() {
 
 function v56ImproveTechnology() {
   v56TechShift=Math.min(2,v56TechShift+0.5);
+  // Move the dot: same Q as before but with new technology requires fewer inputs
+  // Original Q = v56Q(v56L, v56K, 0) = K^0.5 * L^0.5
+  // On new isoquant: same Q but produced with less K for same L
+  // New K = Q_orig² / L with new A: Q = A*K^0.5*L^0.5, K_new = (Q_orig/A)² / L
+  const qOrig = Math.pow(v56K,0.5)*Math.pow(v56L,0.5); // original Q at base tech
+  const A = Math.pow(1.4, v56TechShift);
+  // New optimal point (same ratio K/L = 1 maintained): L_new = v56L, K_new = (qOrig/A)^2/v56L
+  const K_new = Math.pow(qOrig/A, 2) / v56L;
+  v56K = Math.max(0.1, K_new);
   v56Draw();
   document.getElementById('v56-readout').innerHTML=
-    `<strong>Technology improved</strong>: The isoquant has shifted <em>inward</em>. The same inputs (L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}) now produce more output: Q = ${v56Q(v56L,v56K,v56TechShift).toFixed(2)}. The whole isoquant map shifted.`;
+    `<strong>Technology improved</strong>: The isoquant has shifted <em>inward</em> toward the origin. The same output Q=${qOrig.toFixed(2)} now requires less capital: K dropped from ${(v56K/Math.pow(1.4,0.5)).toFixed(1)} to ${v56K.toFixed(1)} at L=${v56L.toFixed(1)}. The dot has moved to the new, cost-minimising bundle on the improved isoquant.`;
 }
 
 function v56Reset() {
@@ -1057,6 +1135,13 @@ function v58Draw() {
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
 
+  // Show CD equation prominently in top-left corner of canvas
+  const eqStr = `Q = ${A.toFixed(1)} · K^${a.toFixed(2)} · L^${b.toFixed(2)}`;
+  ctx.fillStyle='#1a56db'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillRect(ML+2, MT+2, eqStr.length*6.8+8, 18);
+  ctx.fillStyle='#fff';
+  ctx.fillText(eqStr, ML+6, MT+14);
+
   // Isoquant map at Q=A*(Kpt*lam)^a*(Lpt*lam)^b base values
   const qBase=v58Q(Kpt,Lpt,A,a,b);
   [qBase*0.5,qBase,qBase*2].forEach((q,qi)=>{
@@ -1078,8 +1163,11 @@ function v58Draw() {
     dot5(ctx,spx,spy,7,'#e74c3c','#fff');
     ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(spx,spy); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText(`lambda=${lam.toFixed(1)} point`,spx+6,spy-4);
+    ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif';
+    // Label above and to the right of the lambda dot, not on the dashed line
+    const lamLblX = spx > W-MR-80 ? spx-90 : spx+8;
+    ctx.textAlign='left';
+    ctx.fillText(`λ=${lam.toFixed(1)} scaled point`,lamLblX,spy-14);
   }
 
   const q0=v58Q(Kpt,Lpt,A,a,b);
@@ -1198,8 +1286,10 @@ function v59Update() {
       <div class="readout-col"><div class="readout-label">Total Wage Bill</div><div class="readout-val">$${totalWage}</div></div>
     </div>
     <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
-      ${shouldHire?`Next worker's MPL = ${nextMPL.toFixed(3)} > 0. <strong style="color:#2e8b57">Safe to hire.</strong>`:`Next worker's MPL = ${nextMPL.toFixed(3)} &le; 0. <strong style="color:#e74c3c">Do NOT hire - output would fall.</strong>`}
-      Diminishing returns come from the fixed capital K=${v59K}. Buy a machine to shift the TP curve up.
+      ${shouldHire
+        ?`Next worker's MPL = ${nextMPL.toFixed(3)} > 0. <strong style="color:#2e8b57">Safe to hire (output rises).</strong>`
+        :`Next worker's MPL = ${nextMPL.toFixed(3)} &le; 0. <strong style="color:#e74c3c">Do NOT hire — output would fall.</strong>`}
+      Wage w = $${w}/worker. Total wage bill = $${totalWage}. Note: the TP curve shows physical output and does not depend on the wage — the wage affects costs and profits, not the production function itself. Use "Buy Machine" to raise K and restart diminishing returns.
     </div>`;
 }
 
@@ -1296,9 +1386,13 @@ function quiz510Answer(ans) {
   });
   const fb=document.getElementById('q510-fb');
   fb.style.display='block';
-  fb.innerHTML=`${correct?'Correct!':'Incorrect.'} ${fn.desc}`;
+  fb.innerHTML=`${correct?'✅ Correct!':'❌ Incorrect.'} ${fn.desc}`;
   quiz510DrawResult(fn.type);
-  document.getElementById('q510-next').style.display='inline-block';
+  const nextBtn=document.getElementById('q510-next');
+  nextBtn.style.display='inline-block';
+  nextBtn.style.cssText='font-family:var(--font);font-size:0.88rem;font-weight:600;padding:0.45rem 1.4rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;margin-top:0.5rem;';
+  // Auto-scroll so student sees the next button
+  setTimeout(()=>nextBtn.scrollIntoView({behavior:'smooth',block:'nearest'}),150);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1307,9 +1401,14 @@ function quiz510Answer(ans) {
 function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
+function redrawAll5() {
+  v51Draw(); v52DrawAll(); v53Draw(); v54Draw();
+  v55Draw(); v56Draw(); v57Draw(); v58Draw(); v59Draw();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   v51Update();
-  v52DrawAll();
+  v52DrawAll(); v52InitDrag();
   v53Init();
   v54Update();
   v55Draw();
@@ -1319,19 +1418,18 @@ window.addEventListener('DOMContentLoaded', () => {
   v58Update();
   v59Update();
   quiz510NewRound();
+  // ResizeObserver for zoom-level changes
+  if (window.ResizeObserver) {
+    const obs = new ResizeObserver(redrawAll5);
+    ['cvs51a','cvs51b','cvs52a','cvs52b','cvs52c','cvs53','cvs54a','cvs54b',
+     'cvs55','cvs56','cvs57a','cvs57b','cvs58','cvs59'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el&&el.parentElement) obs.observe(el.parentElement);
+    });
+  }
 });
 
-window.addEventListener('resize', () => {
-  v51Draw();
-  v52DrawAll();
-  v53Draw();
-  v54Draw();
-  v55Draw();
-  v56Draw();
-  v57Draw();
-  v58Draw();
-  v59Draw();
-});
+window.addEventListener('resize', redrawAll5);
 </script>
 </body>
 </html>

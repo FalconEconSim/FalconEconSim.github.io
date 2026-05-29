@@ -306,34 +306,25 @@
       <span class="fig-title">Market Demand: Horizontal Aggregation</span>
     </div>
     <p class="fig-intro">
-      The market demand curve is the <em>horizontal sum</em> of individual demand curves. Below, two consumers with different
-      choke prices combine into a kinked market demand. Drag the price line down to see how each consumer enters the market
-      and how the market curve changes slope at each kink.
+      The market demand curve is the <em>horizontal sum</em> of individual demand curves. The animation below shows
+      Consumer 1 (Q = 30 - P, choke price $30) and Consumer 2 (Q = 24 - 2P, choke price $12). Starting from a high price
+      and moving down, watch each consumer enter the market and see how the kink forms when Consumer 2 begins buying.
     </p>
 
-    <!-- Animation: 3-panel side-by-side -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;margin-bottom:0.75rem;">
-      <div>
-        <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:#e74c3c;padding:0.4rem 0.5rem;background:#fff5f5;border-bottom:1px solid #fcc;">Consumer 1 &nbsp; Q = 30 &minus; P</div>
-        <canvas id="cvs8a" height="220" style="display:block;width:100%;background:#fff;"></canvas>
-      </div>
-      <div>
-        <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:#2980b9;padding:0.4rem 0.5rem;background:#f0f6ff;border-bottom:1px solid #bcd;">Consumer 2 &nbsp; Q = 24 &minus; 2P</div>
-        <canvas id="cvs8b" height="220" style="display:block;width:100%;background:#fff;"></canvas>
-      </div>
-      <div>
-        <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:#1a56db;padding:0.4rem 0.5rem;background:#eff4ff;border-bottom:1px solid #c7d9fd;">Market Demand</div>
-        <canvas id="cvs8c" height="220" style="display:block;width:100%;background:#fff;"></canvas>
-      </div>
+    <!-- Manim animation video -->
+    <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.75rem;line-height:0;">
+      <video id="v48-video" controls playsinline preload="metadata"
+        style="width:100%;display:block;border-radius:10px;">
+        <source src="assets/market-demand.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
     </div>
-    <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Price P = </span>
-        <input type="range" class="viz-slider" id="v8a-p" min="0" max="35" value="35" oninput="v8aUpdate()" style="width:180px;">
-        <span class="viz-slider-val" id="v8a-p-val">$35</span>
-      </div>
+    <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+      <span style="font-family:var(--mono);font-size:0.72rem;color:var(--muted);">Playback speed:</span>
+      <button class="v48-speed-btn" data-rate="0.5" onclick="v48SetRate(0.5)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
+      <button class="v48-speed-btn active-rate" data-rate="1" onclick="v48SetRate(1)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-light);color:var(--accent);cursor:pointer;">1x</button>
+      <button class="v48-speed-btn" data-rate="2" onclick="v48SetRate(2)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
     </div>
-    <div class="viz-readout" id="v8a-readout"></div>
 
     <!-- Builder -->
     <div style="border-top:1px dashed var(--rule);margin-top:2rem;padding-top:1.5rem;">
@@ -397,15 +388,37 @@ const ML=55, MR=25, MT=24, MB=42;
 
 function setupCvs(id) {
   const cvs = document.getElementById(id);
+  if (!cvs) return {ctx:null,W:300,H:260};
   const dpr = window.devicePixelRatio || 1;
-  const W = cvs.clientWidth;
+  const W = cvs.clientWidth || cvs.parentElement?.clientWidth || 300;
   const H = parseInt(cvs.getAttribute('height')) || 260;
-  cvs.width  = W * dpr;
-  cvs.height = H * dpr;
+  const tw = Math.round(W * dpr), th = Math.round(H * dpr);
+  if (cvs.width !== tw || cvs.height !== th) {
+    cvs.width = tw; cvs.height = th;
+  }
   cvs.style.height = H + 'px';
   const ctx = cvs.getContext('2d');
-  ctx.scale(dpr, dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { ctx, W, H };
+}
+
+// ResizeObserver: redraw all canvases when layout changes (handles browser zoom)
+function observeCanvasResize(id, redrawFn) {
+  const cvs = document.getElementById(id);
+  if (!cvs || !window.ResizeObserver) return;
+  new ResizeObserver(() => redrawFn()).observe(cvs.parentElement || cvs);
+}
+
+// Fig 4.8 speed control
+function v48SetRate(r) {
+  const vid = document.getElementById('v48-video');
+  if (vid) vid.playbackRate = r;
+  document.querySelectorAll('.v48-speed-btn').forEach(b => {
+    const on = parseFloat(b.dataset.rate) === r;
+    b.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
+    b.style.background  = on ? 'var(--accent-light)' : '#fff';
+    b.style.color       = on ? 'var(--accent)' : '';
+  });
 }
 
 function toC(Q, P, W, H, xR, yR) {
@@ -572,20 +585,26 @@ function v1Draw() {
     // color each dot
     dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
     dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
-    ctx.fillStyle = '#333'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
-    const ptOff = Math.abs(cy1-cy2) < 24 ? 14 : 4;
-    ctx.fillText('A', cx1, cy1 < cy2 ? cy1-ptOff+4 : cy1+ptOff+4);
-    ctx.fillText('B', cx2, cy2 < cy1 ? cy2-ptOff+4 : cy2+ptOff+4);
+    // Labels: always place ABOVE or to the side, never inside the dot
+    ctx.font='bold 11px DM Sans,sans-serif';
+    // Point A label: shift to upper-right with enough clearance
+    ctx.fillStyle = eColor(e1);
+    ctx.textAlign = 'left';
+    ctx.fillText('A', cx1 + 12, cy1 - 8);
+    // Point B label: shift to upper-right with clearance
+    ctx.fillStyle = eColor(e2);
+    ctx.textAlign = 'left';
+    ctx.fillText('B', cx2 + 12, cy2 - 8);
     return;
   }
 
   dot(ctx, cx1, cy1, 9, color, '#fff');
   dot(ctx, cx2, cy2, 9, color, '#fff');
-  ctx.fillStyle = '#333'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
-  // offset labels away from each other when points are close
-  const lblOff = Math.abs(cy1-cy2) < 24 ? 14 : 4;
-  ctx.fillText('A', cx1, cy1 < cy2 ? cy1-lblOff+4 : cy1+lblOff+4);
-  ctx.fillText('B', cx2, cy2 < cy1 ? cy2-lblOff+4 : cy2+lblOff+4);
+  ctx.fillStyle = '#333'; ctx.font='bold 11px DM Sans,sans-serif';
+  // Always push labels to upper-right, clear of the dot
+  ctx.textAlign = 'left';
+  ctx.fillText('A', cx1 + 12, cy1 - 8);
+  ctx.fillText('B', cx2 + 12, cy2 - 8);
 
   // line between
   ctx.beginPath();
@@ -601,31 +620,39 @@ function v1Init() {
   v1ctx = s.ctx; v1W = s.W; v1H = s.H;
   const cvs = document.getElementById('cvs1');
 
-  function pOnCurve(P) {
-    P = Math.max(1, Math.min(v1.a/v1.b - 0.5, P));
-    return P;
-  }
-  function pyToP(py) {
-    const [, P] = fromC(0, py, v1W, v1H, xR1, yR1);
-    return pOnCurve(P);
+  // Snap mouse (px, py) to nearest point on the demand line
+  function snapToLine(px, py) {
+    const W=v1W, H=v1H;
+    const [Qm, Pm] = fromC(px, py, W, H, xR1, yR1);
+    // For Q = a - bP: project (Qm,Pm) onto the line
+    // Closest P: P_snap = (Pm + b*(Qm - a)*b/b) ... using perpendicular projection
+    const a=v1.a, b=v1.b;
+    // Line direction in (Q,P): (-b, 1). Project mouse offset onto it.
+    const t = ((-b)*(Qm - a) + 1*(Pm - 0)) / (b*b + 1);
+    const P_snap = Math.max(1, Math.min(a/b - 0.5, 0 + t));
+    return P_snap;
   }
 
   cvs.addEventListener('mousedown', e => {
     const r = cvs.getBoundingClientRect();
-    const px = (e.clientX - r.left) * (cvs.width/r.width) / (window.devicePixelRatio||1);
-    const py = (e.clientY - r.top)  * (cvs.height/r.height) / (window.devicePixelRatio||1);
+    const dpr = window.devicePixelRatio || 1;
+    const px = (e.clientX - r.left) * (cvs.width/r.width) / dpr;
+    const py = (e.clientY - r.top)  * (cvs.height/r.height) / dpr;
+    v1W = v1W || cvs.clientWidth; v1H = v1H || parseInt(cvs.getAttribute('height'))||260;
     const Q1=v1Q(v1.P1), Q2=v1Q(v1.P2);
     const [cx1,cy1]=toC(Q1,v1.P1,v1W,v1H,xR1,yR1);
     const [cx2,cy2]=toC(Q2,v1.P2,v1W,v1H,xR1,yR1);
-    if (Math.hypot(px-cx1,py-cy1)<14) v1.drag=1;
-    else if (Math.hypot(px-cx2,py-cy2)<14) v1.drag=2;
+    if (Math.hypot(px-cx1,py-cy1)<18) v1.drag=1;
+    else if (Math.hypot(px-cx2,py-cy2)<18) v1.drag=2;
   });
   cvs.addEventListener('mousemove', e => {
     if (!v1.drag) return;
     const r = cvs.getBoundingClientRect();
-    const py = (e.clientY - r.top) * (cvs.height/r.height) / (window.devicePixelRatio||1);
-    if (v1.drag===1) v1.P1 = pyToP(py);
-    else v1.P2 = pyToP(py);
+    const dpr = window.devicePixelRatio || 1;
+    const px = (e.clientX - r.left) * (cvs.width/r.width) / dpr;
+    const py = (e.clientY - r.top)  * (cvs.height/r.height) / dpr;
+    if (v1.drag===1) v1.P1 = snapToLine(px, py);
+    else v1.P2 = snapToLine(px, py);
     v1Draw();
   });
   cvs.addEventListener('mouseup', () => v1.drag = null);
@@ -722,12 +749,16 @@ function v2Draw() {
   const [dpx,dpy]=toC(Qc,Pc,W,H,xR2,yR2);
   dot(ctx, dpx, dpy, 8, '#f39c12', '#fff');
 
-  // unit-elastic label
+  // unit-elastic label: place near right edge, above the midpoint dot
   const Pu = Pmax/2;
   const Qu = a/2;
   const [ux,uy]=toC(Qu,Pu,W,H,xR2,yR2);
+  // Draw small marker at midpoint
+  ctx.beginPath(); ctx.arc(ux,uy,4,'#e6a817'); ctx.fillStyle='#e6a817aa'; ctx.fill();
+  // Label offset well to the right so it doesn't intersect the curve
   ctx.fillStyle='#888'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('unit elastic', ux+8, uy+4);
+  const lblX = Math.min(ux + 24, W - MR - 55);
+  ctx.fillText('unit elastic midpoint', lblX, uy - 6);
 
   const ae=Math.abs(ed);
   document.getElementById('v2-readout').innerHTML=
@@ -1096,14 +1127,22 @@ function v6ShowCalc() {
   const dRect = (Pn-P)*Qn, dTri = 0.5*(Pn-P)*(Q-Qn);
   const cb = document.getElementById('v6-calc-box');
   if (!cb) return;
-  cb.innerHTML = `<strong>Demand:</strong> Q = ${v6.a} &minus; ${v6.b}P &nbsp; &rarr; &nbsp; Choke price P<sub>max</sub> = ${v6.a}/${v6.b} = <strong>$${Pchoke.toFixed(1)}</strong><br>
-<strong>At P* = $${P}:</strong> Q* = ${v6.a} &minus; ${v6.b}&times;${P} = <strong>${Q.toFixed(1)}</strong><br>
-CS = &frac12; &times; Q* &times; (P<sub>max</sub> &minus; P*) = &frac12; &times; ${Q.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${P}) = <strong>$${CS.toFixed(2)}</strong>
-${Pn>P?`<br><br><strong>At P' = $${Pn}:</strong> Q' = ${v6.a} &minus; ${v6.b}&times;${Pn} = <strong>${Qn.toFixed(1)}</strong><br>
-CS' = &frac12; &times; ${Qn.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${Pn}) = <strong>$${CSnew.toFixed(2)}</strong><br>
-<strong>Lost CS = $${(CS-CSnew).toFixed(2)}</strong><br>
-= Rectangle: Q' &times; (P' &minus; P*) = ${Qn.toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong>$${dRect.toFixed(2)}</strong><br>
-+ Triangle: &frac12; &times; (Q* &minus; Q') &times; (P' &minus; P*) = &frac12; &times; ${(Q-Qn).toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong>$${dTri.toFixed(2)}</strong>`:''}`;
+  cb.style.fontFamily = 'DM Sans, sans-serif';
+  cb.style.fontSize   = '0.92rem';
+  cb.innerHTML = `
+    <strong>Demand:</strong> Q = ${v6.a} &minus; ${v6.b}P &nbsp;&rarr;&nbsp; Choke price P<sub>max</sub> = ${v6.a} / ${v6.b} = <strong>$${Pchoke.toFixed(1)}</strong><br><br>
+    <strong>At P* = $${P}:</strong><br>
+    &nbsp;&nbsp;Q* = ${v6.a} &minus; ${v6.b} &times; ${P} = <strong>${Q.toFixed(1)}</strong><br>
+    &nbsp;&nbsp;CS = (1/2) &times; Q* &times; (P<sub>max</sub> &minus; P*)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (1/2) &times; ${Q.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${P})<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong style="color:#1a56db;">$${CS.toFixed(2)}</strong>
+    ${Pn>P?`<br><br><strong>At P' = $${Pn}:</strong><br>
+    &nbsp;&nbsp;Q' = ${v6.a} &minus; ${v6.b} &times; ${Pn} = <strong>${Qn.toFixed(1)}</strong><br>
+    &nbsp;&nbsp;CS' = (1/2) &times; ${Qn.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${Pn}) = <strong>$${CSnew.toFixed(2)}</strong><br><br>
+    <strong>Lost CS = $${(CS-CSnew).toFixed(2)}</strong><br>
+    &nbsp;&nbsp;= Rectangle (existing buyers pay more): Q' &times; (P' &minus; P*) = ${Qn.toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:#e74c3c;">$${dRect.toFixed(2)}</strong><br>
+    &nbsp;&nbsp;+ Triangle (buyers who exit): (1/2) &times; (Q* &minus; Q') &times; (P' &minus; P*)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;= (1/2) &times; ${(Q-Qn).toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:#e67e22;">$${dTri.toFixed(2)}</strong>` : ''}`;
 }
 
 function v6Init() {
@@ -1493,6 +1532,16 @@ function v8Init() {
 function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
+function redrawAll4() {
+  v1Init(); v1Draw();
+  v2Init(); v2Draw();
+  v3Init(); v3Draw();
+  v4Init(); v4Draw();
+  v6Init(); v6Draw();
+  v7Init(); v7Draw();
+  v8Init();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   v1Init();
   v2Init(); v2ParseEq();
@@ -1500,20 +1549,14 @@ window.addEventListener('DOMContentLoaded', () => {
   v4Init();
   v6Init();
   v7Init();
-  v8aInit();
   v8Init();
+  // ResizeObserver handles zoom-level changes
+  ['cvs1','cvs2','cvs3','cvs4','cvs6','cvs7','cvs8'].forEach(id => {
+    observeCanvasResize(id, redrawAll4);
+  });
 });
 
-window.addEventListener('resize', () => {
-  v1Init(); v1Draw();
-  v2Init(); v2Draw();
-  v3Init(); v3Draw();
-  v4Init(); v4Draw();
-  v6Init(); v6Draw();
-  v7Init(); v7Draw();
-  v8aInit();
-  v8Init();
-});
+window.addEventListener('resize', redrawAll4);
 </script>
 </body>
 </html>

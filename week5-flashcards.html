@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 5: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+    body { background: #f4f7fb; }
+    .fc-wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .fc-hdr { display: flex; align-items: center; justify-content: space-between; }
+    .fc-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; color: #0077C8; }
+    .fc-ctr { font-size: 13px; color: #999; font-weight: 500; }
+    .fc-streak { font-size: 12px; font-weight: 500; color: #854F0B; background: #FAEEDA; padding: 3px 10px; border-radius: 99px; }
+    .fc-prog { width: 100%; height: 4px; background: #E8EFF8; border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: #0077C8; border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid #E2EAF4; border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 500; cursor: pointer; background: #fff; color: #666; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+    .fc-ftag.active { background: #0077C8; color: #fff; border-color: #0077C8; }
+    .fc-badge { display: inline-flex; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 99px; width: fit-content; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: #CBD8EC; }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.5; color: #111; flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: 0.88rem; color: #666; font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid #EEF3FA; margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: 0.88rem; line-height: 1.75; color: #333; white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: 12px; color: #BCC8D8; text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: #F0F4FA; border: 1px solid #DDE6F0; border-radius: 4px; padding: 0 5px; font-size: 10px; color: #888; }
+    .fc-rate-label { font-size: 12px; color: #BCC8D8; text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: 10px; opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: #0077C8; }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: 1.5rem; font-weight: 500; }
+    .fc-stat-l { font-size: 11px; font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: #F0F4FA; border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: #0077C8; color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid #E2EAF4; border-radius: 12px; padding: 0.65rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; font-family: 'DM Sans', sans-serif; color: #0077C8; transition: background 0.15s; }
+    .fc-btn-outline:hover { background: #E6F1FB; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published active"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item upcoming"><span>Week 7</span></li>
+    <li class="left-nav-item upcoming"><span>Week 8</span></li>
+    <li class="left-nav-item upcoming"><span>Week 9</span></li>
+    <li class="left-nav-item upcoming"><span>Week 10</span></li>
+    <li class="left-nav-item upcoming"><span>Week 11</span></li>
+    <li class="left-nav-item upcoming"><span>Week 12</span></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="week5.html">Week 5</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Flashcards</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"Define the production function. What does it represent?",
+    a:"The production function Q = f(K, L) maps all combinations of capital K and labour L to the maximum output Q achievable. It describes the technology available to the firm — the most efficient way to transform inputs into output.\n\nKey: it is a maximum, not just any feasible level." },
+
+  { id:2, type:"Def",
+    q:"What is Total Product (TP) and how is it drawn on a graph?",
+    a:"Total Product (TP) is output Q as a function of one variable input (labour L), holding all other inputs fixed (e.g. K fixed in the short run).\n\nTypically drawn as an S-shaped curve:\n- Rises rapidly at first (increasing MP)\n- Slope decreases (diminishing MP)\n- Eventually may decline (negative MP)" },
+
+  { id:3, type:"Def",
+    q:"Define the Marginal Product of Labour (MPL). What is its geometric interpretation?",
+    a:"\\[MPL = \\frac{\\Delta Q}{\\Delta L} = \\frac{\\partial f(K,L)}{\\partial L}\\]\n\nMPL is the additional output from hiring one more worker, holding K fixed.\n\nGeometrically: MPL = the slope of the Total Product curve at that point. Where TP is steepest, MPL is highest; where TP is flat, MPL = 0." },
+
+  { id:4, type:"Def",
+    q:"State the Law of Diminishing Marginal Product. Why does it occur?",
+    a:"As more units of a variable input (L) are added, holding other inputs (K) fixed, the marginal product of that input eventually falls.\n\nWhy: each additional worker has less capital to work with as L rises (K is fixed). The worker-to-machine ratio rises, reducing the productivity of the marginal worker.\n\nImportant: this is a short-run phenomenon caused by fixing one input." },
+
+  { id:5, type:"Eq",
+    q:"For the Cobb-Douglas production function \\(Q = K^a L^b\\), write the formula for MPL and explain how it changes as L rises.",
+    a:"\\[MPL = \\frac{\\partial Q}{\\partial L} = b \\cdot K^a L^{b-1} = b \\cdot \\frac{Q}{L}\\]\n\nAs L rises (K fixed), \\(L^{b-1}\\) falls when b < 1, so MPL falls. This is diminishing marginal product.\n\nNote: b < 1 gives diminishing MPL; b = 1 gives constant MPL; b > 1 gives increasing MPL (rare)." },
+
+  { id:6, type:"Def",
+    q:"Define an isoquant. What are its three key properties?",
+    a:"An isoquant shows all combinations of (K, L) that produce the same level of output Q.\n\nThree key properties:\n1. Downward-sloping: to produce the same Q, using more L requires less K.\n2. Convex to the origin: MRTS diminishes as you substitute L for K.\n3. Non-intersecting: two isoquants for different Q levels cannot cross (higher = more output)." },
+
+  { id:7, type:"Def",
+    q:"Describe the three types of isoquant shapes and the production technology each represents.",
+    a:"1. Smooth convex (Cobb-Douglas): Perfect substitutability between inputs. MRTS diminishes. Example: Q = K^0.5 L^0.5.\n\n2. Straight line (linear / perfect substitutes): Inputs are perfect substitutes. Constant MRTS. Example: Q = 2L + K.\n\n3. L-shaped (Leontief / fixed proportions): Zero substitutability. Must use inputs in a fixed ratio. Example: Q = min(L, K/2)." },
+
+  { id:8, type:"Def",
+    q:"Define the Marginal Rate of Technical Substitution (MRTS). How is it related to marginal products?",
+    a:"MRTS is the rate at which the firm can substitute labour for capital while maintaining the same output level.\n\n\\[MRTS_{LK} = -\\frac{\\Delta K}{\\Delta L}\\bigg|_{Q=\\bar{Q}} = \\frac{MPL}{MPK}\\]\n\nFor Cobb-Douglas \\(Q = K^a L^b\\): \\(MRTS = \\frac{b}{a} \\cdot \\frac{K}{L}\\)\n\nAs we move right along an isoquant (more L, less K), both K/L and MPL/MPK fall, so MRTS diminishes." },
+
+  { id:9, type:"Graph",
+    q:"Why does MRTS diminish as we move along an isoquant from northwest to southeast?",
+    a:"As we substitute labour for capital (moving right along the isoquant):\n\n- K decreases: each machine becomes more productive (MPK rises)\n- L increases: each worker becomes less productive (MPL falls)\n\nSo MRTS = MPL/MPK falls.\n\nIntuition: when you have lots of labour and little capital, one more machine is worth many workers. When you have little labour and lots of capital, one more worker is worth many machines." },
+
+  { id:10, type:"Eq",
+    q:"Define returns to scale and state the Cobb-Douglas criterion. What does it mean for isoquant spacing?",
+    a:"Returns to scale describes how output responds when ALL inputs are scaled by the same factor \\(\\lambda > 1\\).\n\nFor \\(Q = A K^a L^b\\):\n\\[f(\\lambda K, \\lambda L) = A(\\lambda K)^a(\\lambda L)^b = \\lambda^{a+b} \\cdot Q\\]\n\n- a + b > 1: Increasing Returns to Scale (IRS) — isoquants bunch up\n- a + b = 1: Constant Returns to Scale (CRS) — isoquants equally spaced\n- a + b < 1: Decreasing Returns to Scale (DRS) — isoquants spread out" },
+
+  { id:11, type:"Mistake",
+    q:"Common exam mistake: 'If MPL is diminishing, the firm has decreasing returns to scale.' Is this correct?",
+    a:"FALSE. Diminishing marginal product and returns to scale are entirely different concepts.\n\nDiminishing MPL: holds K FIXED, varies L only. MPL falls as L rises.\n\nReturns to scale: varies BOTH K and L proportionally.\n\nExample: Q = K^0.6 L^0.6 has a + b = 1.2 > 1 (IRS) AND exhibits diminishing MPL (since b = 0.6 < 1). The same function can show both simultaneously." },
+
+  { id:12, type:"Def",
+    q:"Distinguish between input substitution and technological improvement. How do they differ on an isoquant map?",
+    a:"Input substitution: Moving ALONG an existing isoquant. The firm substitutes one input for another while keeping output constant. Technology is unchanged. Example: replacing workers with machines to make the same number of cars.\n\nTechnological improvement: Shifting the entire isoquant INWARD (toward the origin). The same output now requires fewer inputs. Example: a new algorithm that cuts production costs for the same output." },
+
+  { id:13, type:"Def",
+    q:"What is the short run vs. the long run in production theory?",
+    a:"Short run: At least one input is fixed (typically capital K). The firm can only adjust labour L.\n\nLong run: All inputs are variable. The firm can choose any (K, L) combination.\n\nNote: these are not calendar-time periods. The long run is however long it takes to make all inputs variable — could be days (a hot dog stand) or decades (a nuclear power plant)." },
+
+  { id:14, type:"Eq",
+    q:"For Q = min(aL, bK) (Leontief), where is the optimal production bundle? What is MRTS?",
+    a:"The efficient bundles are at the kink: \\(aL = bK\\), i.e. \\(K/L = a/b\\).\n\nAt this kink, neither extra L nor extra K alone raises output. The optimal ratio is L/K = b/a.\n\nMRTS: undefined at the kink. Along the horizontal segment (too much K): MRTS = 0 (extra K worthless). Along the vertical segment (too much L): MRTS = ∞ (extra L worthless)." },
+
+  { id:15, type:"Def",
+    q:"For a linear production function Q = aL + bK (perfect substitutes), what is MRTS and how does the firm choose inputs?",
+    a:"\\[MRTS = \\frac{MPL}{MPK} = \\frac{a}{b}\\]\n\nMRTS is constant along every isoquant (a straight line).\n\nCost minimisation:\n- If a/b > w/v (MPL/MPK > wage/rental): hire only L, no K.\n- If a/b < w/v: hire only K, no L.\n- If a/b = w/v: any mix of K and L is equally cost-efficient.\n\nThe firm specialises completely — a corner solution." },
+
+  { id:16, type:"Graph",
+    q:"Describe the consumer-production analogy. What pairs of concepts mirror each other?",
+    a:"Consumer Theory → Production Theory\n\nIndifference Curve → Isoquant\nBudget line → Isocost line\nGoods X, Y → Inputs L, K\nUtility U → Output Q\nMRS = Px/Py → MRTS = w/v\nIncome I → Cost TC\nPrice ratio Px/Py → Input price ratio w/v\n\nBoth solve the same mathematical problem: maximise a concave function subject to a linear constraint. The tangency condition is identical in structure." },
+
+  { id:17, type:"Eq",
+    q:"For Q = K^a L^b, what are MPL, MPK, and MRTS in terms of K and L?",
+    a:"\\[MPL = \\frac{\\partial Q}{\\partial L} = bK^a L^{b-1} = b\\frac{Q}{L}\\]\n\n\\[MPK = \\frac{\\partial Q}{\\partial K} = aK^{a-1}L^b = a\\frac{Q}{K}\\]\n\n\\[MRTS = \\frac{MPL}{MPK} = \\frac{b}{a}\\cdot\\frac{K}{L}\\]\n\nMRTS depends only on the K/L ratio. As L rises (K falls) along an isoquant, K/L falls, so MRTS diminishes — confirming the convex isoquant shape." },
+
+  { id:18, type:"Def",
+    q:"A factory has K = 4 machines. Give the TP, MPL at L = 4 for Q = K^0.5 L^0.5. Is MPL positive?",
+    a:"\\[TP = K^{0.5}L^{0.5} = 4^{0.5} \\times 4^{0.5} = 2 \\times 2 = 4\\]\n\n\\[MPL = 0.5 \\times K^{0.5} \\times L^{-0.5} = 0.5 \\times 2 \\times 4^{-0.5} = 0.5 \\times 2 \\times 0.5 = 0.5\\]\n\nYes, MPL = 0.5 > 0. Adding the 5th worker raises output from 4 to approximately 4.5 units. MPL is always positive for Cobb-Douglas." },
+
+  { id:19, type:"Graph",
+    q:"Sketch what happens to the isoquant map when technology improves (e.g. a new, more efficient process is discovered).",
+    a:"When technology improves, the ENTIRE isoquant map shifts INWARD toward the origin.\n\nEach isoquant for a given Q level requires fewer inputs.\n\nExample: isoquant for Q = 100 shifts from (K=10,L=10) to (K=7,L=7) after improvement.\n\nThis is different from moving along an existing isoquant (which is just substituting inputs). Technological change means the same output is achievable with strictly less of every input." },
+
+  { id:20, type:"Mistake",
+    q:"True or False: 'A firm with CRS (constant returns to scale) always has constant marginal products.'",
+    a:"FALSE. CRS means that scaling all inputs by lambda scales output by lambda — it says nothing about what happens when only one input changes.\n\nExample: Q = K^0.5 L^0.5 has CRS (a+b=1) but diminishing MPL and MPK.\n\nConstant marginal products would require a linear production function (Q = aL + bK). CRS is consistent with diminishing, constant, or increasing marginal products depending on the specific functional form." }
+];
+
+// ─── engine (same as week 4) ───────────────────────────────────────
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'#0077C8',Eq:'#7C3AED',Graph:'#065F46',Mistake:'#B45309'};
+const BG  = {Def:'#EFF8FF',Eq:'#F5F3FF',Graph:'#ECFDF5',Mistake:'#FFFBEB'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All';
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax)MathJax.typesetPromise([root]);return;}
+  const c=deck[idx];const col=COL[c.type]||'#0077C8';const bg=BG[c.type]||'#EFF8FF';
+  const total=deck.length;const done=idx+stats.Easy+stats.Good+stats.Hard;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <span class="fc-title">Week 5 · Production Theory</span>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+            &nbsp;Card ${idx+1}
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:#B45309;border-color:#FDE68A" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:#0077C8;border-color:#BFDBFE" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:#065F46;border-color:#A7F3D0" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(!flipped){}else{requestAnimationFrame(()=>document.getElementById('fc-inner')?.classList.add('flipped'));}
+  if(window.MathJax)MathJax.typesetPromise([root]);
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:#ECFDF5"><div class="fc-stat-n" style="color:#065F46">${stats.Easy}</div><div class="fc-stat-l" style="color:#065F46">Easy</div></div>
+      <div class="fc-stat" style="background:#EFF8FF"><div class="fc-stat-n" style="color:#0077C8">${stats.Good}</div><div class="fc-stat-l" style="color:#0077C8">Good</div></div>
+      <div class="fc-stat" style="background:#FFFBEB"><div class="fc-stat-n" style="color:#B45309">${stats.Hard}</div><div class="fc-stat-l" style="color:#B45309">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:#34D399"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:#60A5FA"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:#FBBF24"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){deck=shuffle(CARDS.filter(c=>c.type===filter||filter==='All'));idx=0;stats={Easy:0,Good:0,Hard:0};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+</body>
+</html>
