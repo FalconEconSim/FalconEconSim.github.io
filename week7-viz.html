@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 7: Interactive Visualizations - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
+    .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;}
+    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;}
+    .viz-instructor{font-size:0.9rem;color:var(--muted);}
+    .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .toc ol{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.28rem;}
+    .toc li{font-size:0.855rem;color:var(--muted);}
+    .toc a{color:var(--accent);text-decoration:none;}
+    .toc a:hover{text-decoration:underline;}
+    .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
+    .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
+    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
+    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
+    .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
+    canvas{display:block;width:100%;cursor:default;}
+    .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
+    .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
+    .viz-slider-label{font-family:var(--mono);font-size:0.75rem;color:var(--muted);white-space:nowrap;}
+    .viz-slider{width:130px;accent-color:var(--accent);}
+    .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:36px;}
+    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:#c0392b;}
+    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
+    .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
+    .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
+    .readout-col{flex:1;min-width:110px;}
+    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+    .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
+    .two-col-panels{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+    .panel-label{font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule);}
+    .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
+    .step-box{background:#f8fafb;border:1px solid var(--rule);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;display:none;}
+    .step-box.visible{display:block;}
+    .scenario-tabs{display:flex;gap:0.5rem;margin-bottom:1rem;}
+    .scenario-tab{font-size:0.78rem;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--rule);background:var(--off-white);color:var(--muted);cursor:pointer;}
+    .scenario-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .hub-footer{border-top:1px solid var(--rule);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
+    .hub-footer-left{font-size:0.82rem;color:var(--muted);}
+    .hub-footer-left a{color:var(--muted);text-decoration:none;}
+    .hub-footer-left a:hover{color:var(--accent);}
+    .footer-logo{height:22px;opacity:0.5;}
+    @media(max-width:580px){.two-col-panels{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published active"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item upcoming"><span>Week 8</span></li>
+    <li class="left-nav-item upcoming"><span>Week 9</span></li>
+    <li class="left-nav-item upcoming"><span>Week 10</span></li>
+    <li class="left-nav-item upcoming"><span>Week 11</span></li>
+    <li class="left-nav-item upcoming"><span>Week 12</span></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <a href="week7.html">Week 7</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <span>Visualizations</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main class="main">
+  <div class="viz-hero">
+    <div class="viz-ghost">07</div>
+    <p class="viz-week-label">Week 7 &middot; Interactive Visualizations</p>
+    <h1 class="viz-title">Profit Maximization &amp; the Competitive Firm</h1>
+    <p class="viz-instructor">Prof. Naveen Sunder</p>
+    <nav class="toc">
+      <div class="toc-title">Ten Tools</div>
+      <ol>
+        <li><a href="#sec-71">Fig 7.1: Profit Landscape (TR vs TC)</a></li>
+        <li><a href="#sec-72">Fig 7.2: Profit Rectangle Anatomy</a></li>
+        <li><a href="#sec-73">Fig 7.3: Shutdown Decision Zone Map</a></li>
+        <li><a href="#sec-74">Fig 7.4: Shutdown Manager Simulation</a></li>
+        <li><a href="#sec-75">Fig 7.5: Supply Curve Emergence</a></li>
+        <li><a href="#sec-76">Fig 7.6: MR Decomposition</a></li>
+        <li><a href="#sec-77">Fig 7.7: Three-Panel Demand Shock</a></li>
+        <li><a href="#sec-78">Fig 7.8: Market Supply Builder</a></li>
+        <li><a href="#sec-79">Fig 7.9: Long-Run Entry/Exit Machine</a></li>
+        <li><a href="#sec-710">Fig 7.10: Cost Shock Comparative Statics</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- FIG 7.1 -->
+  <section class="fig-section" id="sec-71">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.1</span>
+      <span class="fig-title">Profit Landscape (TR vs TC)</span>
+    </div>
+    <p class="fig-intro">
+      The firm earns profit wherever TR &gt; TC. Drag the price slider to change the slope of the TR line (revenue from
+      each unit sold). The vertical gap between TR and TC is shaded green when positive and red when negative. The bottom
+      panel shows the profit curve directly. Drag the vertical cursor to see MR vs MC at any quantity, and find q* where
+      the slopes are equal (MR = MC).
+    </p>
+    <div class="cvs-wrap">
+      <div class="panel-label">Total Revenue (TR) vs Total Cost (TC)</div>
+      <canvas id="cvs71a" height="240"></canvas>
+      <div class="panel-label" style="border-top:1px solid var(--rule);">Profit &pi;(q) = TR &minus; TC</div>
+      <canvas id="cvs71b" height="130"></canvas>
+    </div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Market Price P*:</span>
+        <input type="range" class="viz-slider" id="v71-p" min="3.5" max="15" step="0.5" value="10" oninput="v71Update()">
+        <span class="viz-slider-val" id="v71-p-val">$10.00</span>
+      </div>
+      <button class="viz-btn" onclick="v71Reset()">Reset</button>
+    </div>
+    <div class="viz-readout" id="v71-readout"></div>
+    <div class="insight-box">
+      <strong>Key insight:</strong> The firm maximizes profit where MR = MC -- where the revenue from one more unit exactly equals its cost. To the left of q*, MR &gt; MC (produce more). To the right, MC &gt; MR (cut back).
+    </div>
+  </section>
+
+  <!-- FIG 7.2 -->
+  <section class="fig-section" id="sec-72">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.2</span>
+      <span class="fig-title">Profit Rectangle Anatomy</span>
+    </div>
+    <p class="fig-intro">
+      The profit rectangle has height = P* &minus; SAC(q*) and width = q*. The area = total profit. Use the price slider
+      to change P*. Toggle "Show Common Mistakes" to see ghost rectangles using SAVC or SMC as the bottom edge (both wrong).
+    </p>
+    <div class="cvs-wrap"><canvas id="cvs72" height="300"></canvas></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Market Price P*:</span>
+        <input type="range" class="viz-slider" id="v72-p" min="2" max="12" step="0.25" value="7" oninput="v72Update()">
+        <span class="viz-slider-val" id="v72-p-val">$7.00</span>
+      </div>
+      <button class="viz-btn" id="v72-mistakes-btn" onclick="v72ToggleMistakes()">Show Common Mistakes</button>
+    </div>
+    <div class="viz-readout" id="v72-readout"></div>
+  </section>
+
+  <!-- FIG 7.3 -->
+  <section class="fig-section" id="sec-73">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.3</span>
+      <span class="fig-title">Shutdown Decision Zone Map</span>
+    </div>
+    <p class="fig-intro">
+      Use the price slider to set P*. The colored zone shows whether the firm should shut down, operate at a loss,
+      break even, or earn positive profit. Click "Next Step" to walk through the algebraic proof of the shutdown rule.
+    </p>
+    <div class="two-col-panels">
+      <div class="cvs-wrap"><canvas id="cvs73" height="300"></canvas></div>
+      <div style="padding:1rem;background:#f8fafb;border:1px solid var(--rule);border-radius:10px;display:flex;flex-direction:column;gap:0.5rem;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Algebraic Proof: When to Produce</div>
+        <div id="v73-proof-step0" style="font-size:0.88rem;line-height:1.7;color:var(--text);">Produce if operating loss &lt; shutdown loss:</div>
+        <div id="v73-proof-step1" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 1:</strong> Profits &gt; &minus;TFC &nbsp;&rarr;&nbsp; keep producing</div>
+        <div id="v73-proof-step2" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 2:</strong> TR &minus; TVC &minus; TFC &gt; &minus;TFC</div>
+        <div id="v73-proof-step3" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 3:</strong> TR &minus; TVC &gt; 0 &nbsp;&rarr;&nbsp; TR &gt; TVC</div>
+        <div id="v73-proof-step4" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 4:</strong> P&middot;q &gt; AVC&middot;q</div>
+        <div id="v73-proof-step5" style="font-size:0.88rem;line-height:1.7;color:var(--accent);font-weight:700;display:none;"><strong>Conclusion: P &gt; AVC</strong> &nbsp;&#10003;</div>
+        <div style="margin-top:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="viz-btn" id="v73-next-btn" onclick="v73NextStep()">Next Step &rarr;</button>
+          <button class="viz-btn" onclick="v73ResetProof()">Reset Proof</button>
+        </div>
+        <div id="v73-zone-label" style="margin-top:0.5rem;padding:0.6rem 0.9rem;border-radius:7px;font-size:0.85rem;font-weight:600;background:#f0fdf4;color:#16a34a;"></div>
+      </div>
+    </div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Market Price P*:</span>
+        <input type="range" class="viz-slider" id="v73-p" min="0" max="10" step="0.25" value="6" oninput="v73Update()">
+        <span class="viz-slider-val" id="v73-p-val">$6.00</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIG 7.4 -->
+  <section class="fig-section" id="sec-74">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.4</span>
+      <span class="fig-title">Shutdown Manager Simulation</span>
+    </div>
+    <p class="fig-intro">
+      You are the firm manager. Review the scenario, then decide: keep operating or shut down? After choosing, see the
+      correct answer and the full economic reasoning.
+    </p>
+    <div class="scenario-tabs">
+      <button class="scenario-tab active" onclick="v74SetScenario(0,this)">Restaurant</button>
+      <button class="scenario-tab" onclick="v74SetScenario(1,this)">Airline</button>
+      <button class="scenario-tab" onclick="v74SetScenario(2,this)">Farmer</button>
+    </div>
+    <div id="v74-scenario-card" style="background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.2rem 1.4rem;"></div>
+    <div class="viz-ctrl-row" style="margin-top:1rem;">
+      <button class="viz-btn green" onclick="v74Decide('operate')">Keep Operating</button>
+      <button class="viz-btn red" onclick="v74Decide('shutdown')">Shut Down</button>
+    </div>
+    <div id="v74-result" style="display:none;margin-top:1rem;padding:1rem 1.2rem;border-radius:10px;font-size:0.88rem;line-height:1.75;"></div>
+  </section>
+
+  <!-- FIG 7.5 -->
+  <section class="fig-section" id="sec-75">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.5</span>
+      <span class="fig-title">Supply Curve Emergence</span>
+    </div>
+    <p class="fig-intro">
+      Watch the price sweep upward. Below the shutdown price (min SAVC = $4), the firm supplies nothing. Above it, the
+      SMC curve lights up and each supply point traces out in the right panel, building the supply curve in real time.
+    </p>
+    <div class="two-col-panels">
+      <div class="cvs-wrap">
+        <div class="panel-label">Firm: SMC and SAVC</div>
+        <canvas id="cvs75a" height="280"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Supply Curve (builds as P rises)</div>
+        <canvas id="cvs75b" height="280"></canvas>
+      </div>
+    </div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" id="v75-anim-btn" onclick="v75ToggleAnim()">Animate Price Sweep</button>
+      <button class="viz-btn" onclick="v75Reset()">Reset</button>
+    </div>
+    <div class="viz-readout" id="v75-readout">Press "Animate" to watch the supply curve emerge.</div>
+  </section>
+
+  <!-- FIG 7.6 -->
+  <section class="fig-section" id="sec-76">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.6</span>
+      <span class="fig-title">MR Decomposition</span>
+    </div>
+    <p class="fig-intro">
+      Toggle between a price-taking firm (horizontal demand, MR = P always) and a firm with market power (downward-sloping
+      demand, MR &lt; P). In market power mode, click "+ 1 unit" to see the gain (new unit revenue) and loss (price cut on
+      existing units) that make up MR.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <button class="viz-btn active" id="v76-btn-pt" onclick="v76SetMode('pricetaker')">Price Taker</button>
+      <button class="viz-btn" id="v76-btn-mp" onclick="v76SetMode('marketpower')">Market Power</button>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs76" height="300"></canvas></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group" id="v76-p-group">
+        <span class="viz-slider-label">Price P*:</span>
+        <input type="range" class="viz-slider" id="v76-p" min="2" max="12" step="0.5" value="8" oninput="v76Update()">
+        <span class="viz-slider-val" id="v76-p-val">$8.00</span>
+      </div>
+      <div id="v76-q-group" style="display:none;align-items:center;gap:0.5rem;">
+        <span class="viz-slider-label">Quantity q:</span>
+        <input type="range" class="viz-slider" id="v76-q" min="0" max="9" step="1" value="3" oninput="v76Update()">
+        <span class="viz-slider-val" id="v76-q-val">3</span>
+      </div>
+      <button id="v76-add-btn" class="viz-btn" style="display:none;" onclick="v76AddUnit()">+ 1 unit</button>
+    </div>
+    <div class="viz-readout" id="v76-readout"></div>
+  </section>
+
+  <!-- FIG 7.7 -->
+  <section class="fig-section" id="sec-77">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.7</span>
+      <span class="fig-title">Three-Panel Demand Shock</span>
+    </div>
+    <p class="fig-intro">
+      The market mechanism has three linked panels: the typical firm (left), the market (center), and the typical consumer
+      (right). Choose a shock scenario and click through the steps to see how causality flows from consumer to market to firm.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <select class="viz-slider" id="v77-scenario" onchange="v77Reset()" style="width:auto;font-size:0.82rem;padding:4px 8px;">
+        <option value="sub">Price of Substitute Rises</option>
+        <option value="income">Consumer Income Rises</option>
+        <option value="input">Input Price Rises</option>
+      </select>
+    </div>
+    <div class="cvs-wrap"><canvas id="cvs77" height="260"></canvas></div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" id="v77-step-btn" onclick="v77NextStep()">Step 1: Consumer Effect &rarr;</button>
+      <button class="viz-btn" onclick="v77Reset()">Reset</button>
+    </div>
+    <div class="viz-readout" id="v77-readout">Choose a scenario and click through the steps to trace the causal chain.</div>
+  </section>
+
+  <!-- FIG 7.8 -->
+  <section class="fig-section" id="sec-78">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.8</span>
+      <span class="fig-title">Market Supply Builder</span>
+    </div>
+    <p class="fig-intro">
+      Market supply is the horizontal sum of all individual firm supply curves. Drag the number-of-firms slider to see
+      how market supply expands and the equilibrium price falls as more firms enter the industry.
+    </p>
+    <div class="two-col-panels">
+      <div class="cvs-wrap">
+        <div class="panel-label">Individual Firm Supply</div>
+        <canvas id="cvs78a" height="260"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Market Supply (horizontal sum)</div>
+        <canvas id="cvs78b" height="260"></canvas>
+      </div>
+    </div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Number of firms n:</span>
+        <input type="range" class="viz-slider" id="v78-n" min="1" max="50" step="1" value="10" oninput="v78Update()">
+        <span class="viz-slider-val" id="v78-n-val">10</span>
+      </div>
+    </div>
+    <div class="viz-readout" id="v78-readout"></div>
+    <div class="insight-box"><strong>Key insight:</strong> At each price, add the quantities across all firms -- never add prices. The market supply curve is steeper than any individual firm's supply curve but shifts right as n grows.</div>
+  </section>
+
+  <!-- FIG 7.9 -->
+  <section class="fig-section" id="sec-79">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.9</span>
+      <span class="fig-title">Long-Run Entry/Exit Machine</span>
+    </div>
+    <p class="fig-intro">
+      Start with 50 firms earning positive profit (P* = $8, green rectangle visible). Click "Run Entry" to watch firms
+      enter, supply shift right, price fall, and the profit rectangle shrink to zero at long-run equilibrium (n = 100, P* = $7).
+      Click "Run Exit" to go the other direction from a loss situation.
+    </p>
+    <div class="two-col-panels">
+      <div class="cvs-wrap">
+        <div class="panel-label">Market (Supply and Demand)</div>
+        <canvas id="cvs79a" height="260"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Firm (Profit Rectangle)</div>
+        <canvas id="cvs79b" height="260"></canvas>
+      </div>
+    </div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn green" onclick="v79RunEntry()">Run Entry (n=50 &rarr; 100)</button>
+      <button class="viz-btn red" onclick="v79RunExit()">Run Exit (n=150 &rarr; 100)</button>
+      <button class="viz-btn" onclick="v79Reset()">Reset to n=50</button>
+    </div>
+    <div class="viz-readout" id="v79-readout"></div>
+    <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly -- just not earning excess returns.</div>
+  </section>
+
+  <!-- FIG 7.10 -->
+  <section class="fig-section" id="sec-710">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 7.10</span>
+      <span class="fig-title">Cost Shock Comparative Statics</span>
+    </div>
+    <p class="fig-intro">
+      Choose a shock type and drag the slider to apply it. Both panels update simultaneously -- the firm panel shows how
+      SMC shifts and the market panel shows how equilibrium changes. The comparison table shows the direction of change
+      for all key variables.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <select class="viz-slider" id="v710-shock" onchange="v710Update()" style="width:auto;font-size:0.82rem;padding:4px 8px;">
+        <option value="wage">Input Price Rise (wage up)</option>
+        <option value="tech">Technology Improves (SMC down)</option>
+      </select>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Shock magnitude:</span>
+        <input type="range" class="viz-slider" id="v710-shock-mag" min="0" max="3" step="0.25" value="0" oninput="v710Update()">
+        <span class="viz-slider-val" id="v710-shock-val">0</span>
+      </div>
+    </div>
+    <div class="two-col-panels">
+      <div class="cvs-wrap">
+        <div class="panel-label">Firm (SMC curves)</div>
+        <canvas id="cvs710a" height="260"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Market (Supply curves)</div>
+        <canvas id="cvs710b" height="260"></canvas>
+      </div>
+    </div>
+    <div class="viz-readout" id="v710-readout"></div>
+  </section>
+
+  <footer class="hub-footer">
+    <div class="hub-footer-left">
+      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
+      &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
+    </div>
+    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
+  </footer>
+</main>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// SHARED UTILITIES
+// ─────────────────────────────────────────────────────────────────────────
+const ML=42,MR=18,MT=18,MB=32;
+
+function setupCvs7(id){
+  const cv=document.getElementById(id); if(!cv)return null;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||500;
+  cv.width=W*dpr; cv.height=parseInt(cv.getAttribute('height')||'260')*dpr;
+  cv.style.height=cv.getAttribute('height')+'px';
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,W,H:parseInt(cv.getAttribute('height')||'260')};
+}
+
+function toC7(x,y,W,H,xR,yR){
+  const pw=W-ML-MR,ph=H-MT-MB;
+  return[ML+(x-xR[0])/(xR[1]-xR[0])*pw, MT+(yR[1]-y)/(yR[1]-yR[0])*ph];
+}
+
+function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
+  ctx.strokeStyle='#ccc';ctx.lineWidth=1;
+  const[ox,oy]=toC7(xR[0],yR[0],W,H,xR,yR);
+  const[x1,y1]=toC7(xR[1],yR[0],W,H,xR,yR);
+  const[x0,y2]=toC7(xR[0],yR[1],W,H,xR,yR);
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(x1,oy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox,y2);ctx.stroke();
+  ctx.fillStyle='#999';ctx.font='10px DM Sans,sans-serif';ctx.textAlign='center';
+  if(xLabel)ctx.fillText(xLabel,W/2,H-4);
+  ctx.textAlign='left';
+  if(yLabel){ctx.save();ctx.translate(12,H/2);ctx.rotate(-Math.PI/2);ctx.fillText(yLabel,0,0);ctx.restore();}
+  // Tick marks
+  const nx=4,ny=4;
+  ctx.fillStyle='#bbb';ctx.font='9px DM Mono,monospace';
+  for(let i=0;i<=nx;i++){
+    const xv=xR[0]+i*(xR[1]-xR[0])/nx;
+    const[cx]=toC7(xv,yR[0],W,H,xR,yR);
+    ctx.fillStyle='#999';ctx.textAlign='center';
+    ctx.fillText(Math.round(xv),cx,oy+14);
+  }
+  for(let i=0;i<=ny;i++){
+    const yv=yR[0]+i*(yR[1]-yR[0])/ny;
+    const[,cy]=toC7(xR[0],yv,W,H,xR,yR);
+    ctx.textAlign='right';ctx.fillText(yv.toFixed(0),ox-4,cy+3);
+  }
+}
+
+function dot7(ctx,x,y,r,fill,stroke){
+  ctx.beginPath();ctx.arc(x,y,r,0,2*Math.PI);
+  ctx.fillStyle=fill||'#1a56db';ctx.fill();
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COST FUNCTIONS (cubic model: TC = (1/3)q^3 - 2q^2 + 7q + 5)
+// ─────────────────────────────────────────────────────────────────────────
+const TFC7=5;
+function TC7(q){return q*q*q/3 - 2*q*q + 7*q + 5;}
+function SMC7(q){return q*q - 4*q + 7;}
+function TVC7(q){return q*q*q/3 - 2*q*q + 7*q;}
+function SAVC7(q){return q>0.01?TVC7(q)/q:7;}
+function SAC7(q){return q>0.01?TC7(q)/q:999;}
+
+// q* = argmax pi(q) given P: SMC = P => q^2 - 4q + 7 = P => q^2 - 4q + (7-P) = 0
+function qStar7(P){
+  const disc=16-4*(7-P);
+  if(disc<0)return 0;
+  return 2+Math.sqrt(disc)/2; // rising portion
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.1: PROFIT LANDSCAPE
+// ─────────────────────────────────────────────────────────────────────────
+let v71cursor=5;
+
+function v71Draw(){
+  const P=parseFloat(document.getElementById('v71-p').value);
+  const cvA=document.getElementById('cvs71a'), cvB=document.getElementById('cvs71b');
+  if(!cvA||!cvB)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvA.clientWidth||500;
+  [cvA,cvB].forEach((cv,i)=>{
+    cv.width=W*dpr;
+    const h=i===0?240:130;
+    cv.height=h*dpr; cv.style.height=h+'px';
+  });
+  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
+  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  const HA=240,HB=130;
+  const xR=[0,9],yRA=[0,30],yRB=[-8,8];
+
+  // TOP: TR and TC
+  ctxA.clearRect(0,0,W,HA);
+  drawAxes7(ctxA,W,HA,xR,yRA,'Quantity q','$');
+
+  // TC curve
+  ctxA.beginPath();let first=true;
+  for(let q=0;q<=9;q+=0.05){
+    const tc=TC7(q);if(tc>30)break;
+    const[cx,cy]=toC7(q,tc,W,HA,xR,yRA);
+    first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
+  }
+  ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2.5;ctxA.stroke();
+  ctxA.fillStyle='#e74c3c';ctxA.font='bold 10px DM Sans';ctxA.textAlign='left';
+  const[tcLx,tcLy]=toC7(8,TC7(8),W,HA,xR,yRA);
+  ctxA.fillText('TC',Math.min(tcLx+4,W-30),Math.max(tcLy-4,12));
+
+  // TR line
+  ctxA.beginPath();
+  const[tx0,ty0]=toC7(0,0,W,HA,xR,yRA);
+  const[tx1,ty1]=toC7(9,P*9,W,HA,xR,yRA);
+  ctxA.moveTo(tx0,ty0);ctxA.lineTo(tx1,Math.max(MT,ty1));
+  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2.5;ctxA.stroke();
+  const[trlx,trly]=toC7(8,P*8,W,HA,xR,yRA);
+  ctxA.fillStyle='#1a56db';ctxA.fillText('TR',trlx+4,Math.max(12,trly-4));
+
+  // Profit shading
+  for(let q=0;q<=9;q+=0.1){
+    const tr=P*q,tc=TC7(q);
+    if(tr>30&&tc>30)break;
+    const[qx,tcy]=toC7(q,Math.min(tc,29.5),W,HA,xR,yRA);
+    const[,try_]=toC7(q,Math.min(P*q,29.5),W,HA,xR,yRA);
+    if(Math.abs(tcy-try_)<0.5)continue;
+    ctxA.fillStyle=tr>tc?'rgba(39,174,96,0.12)':'rgba(231,76,60,0.10)';
+    ctxA.fillRect(qx-0.5,Math.min(tcy,try_),1.0,Math.abs(tcy-try_));
+  }
+
+  // Cursor line
+  const q=Math.min(v71cursor,8.9);
+  const[curX]=toC7(q,0,W,HA,xR,yRA);
+  ctxA.setLineDash([4,4]);ctxA.strokeStyle='#aaa';ctxA.lineWidth=1;
+  ctxA.beginPath();ctxA.moveTo(curX,MT);ctxA.lineTo(curX,HA-MB);ctxA.stroke();
+  ctxA.setLineDash([]);
+  const mc=SMC7(q), tr_val=P*q, tc_val=TC7(q), pi=tr_val-tc_val;
+  dot7(ctxA,curX,toC7(q,Math.min(tc_val,29.5),W,HA,xR,yRA)[1],5,'#e74c3c');
+  dot7(ctxA,curX,toC7(q,Math.min(P*q,29.5),W,HA,xR,yRA)[1],5,'#1a56db');
+  ctxA.fillStyle=mc>P?'#e74c3c':'#27ae60';
+  ctxA.font='bold 10px DM Sans';ctxA.textAlign='left';
+  const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
+  ctxA.fillText(note,curX+6,MT+20);
+
+  // BOTTOM: Profit curve
+  ctxB.clearRect(0,0,W,HB);
+  drawAxes7(ctxB,W,HB,xR,yRB,'Quantity q','Profit');
+  // Zero line
+  const[,zy]=toC7(0,0,W,HB,xR,yRB);
+  ctxB.strokeStyle='#ddd';ctxB.lineWidth=1;
+  ctxB.beginPath();ctxB.moveTo(ML,zy);ctxB.lineTo(W-MR,zy);ctxB.stroke();
+  // Profit curve
+  ctxB.beginPath();first=true;
+  for(let q2=0;q2<=9;q2+=0.05){
+    const pi2=P*q2-TC7(q2);
+    if(Math.abs(pi2)>8)continue;
+    const[cx,cy]=toC7(q2,pi2,W,HB,xR,yRB);
+    first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
+  }
+  ctxB.strokeStyle='#6b52a8';ctxB.lineWidth=2.5;ctxB.stroke();
+  // Current point
+  const pi2=Math.max(-8,Math.min(8,pi));
+  const[piX,piY]=toC7(q,pi2,W,HB,xR,yRB);
+  dot7(ctxB,piX,piY,5,'#6b52a8','#fff');
+  // Vertical cursor in bottom panel
+  ctxB.setLineDash([4,4]);ctxB.strokeStyle='#aaa';ctxB.lineWidth=1;
+  ctxB.beginPath();ctxB.moveTo(curX,MT);ctxB.lineTo(curX,HB-MB);ctxB.stroke();
+  ctxB.setLineDash([]);
+
+  document.getElementById('v71-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Quantity q</div><div class="readout-val">${q.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Price P* = MR</div><div class="readout-val">$${P.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">TC(q)</div><div class="readout-val">$${tc_val.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">TR = P*q</div><div class="readout-val">$${tr_val.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${pi>=0?'#27ae60':'#e74c3c'}">${pi>=0?'+':''}$${pi.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MC</div><div class="readout-val">$${mc.toFixed(2)}</div></div>
+    </div>`;
+}
+
+function v71Update(){
+  const P=parseFloat(document.getElementById('v71-p').value);
+  document.getElementById('v71-p-val').textContent='$'+P.toFixed(2);
+  v71Draw();
+}
+function v71Reset(){document.getElementById('v71-p').value=10;v71Update();}
+
+// Cursor drag on top canvas
+window.addEventListener('DOMContentLoaded',()=>{
+  const cv=document.getElementById('cvs71a');
+  if(!cv)return;
+  let dragging=false;
+  function setQ(e){
+    const r=cv.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    const px=(e.clientX-r.left)*(cv.width/r.width)/dpr;
+    const W=cv.width/dpr;
+    const q=0+(px-ML)/(W-ML-MR)*9;
+    v71cursor=Math.max(0.1,Math.min(8.9,q));
+    v71Draw();
+  }
+  cv.addEventListener('mousedown',e=>{dragging=true;setQ(e);});
+  cv.addEventListener('mousemove',e=>{if(dragging)setQ(e);});
+  cv.addEventListener('mouseup',()=>dragging=false);
+  cv.addEventListener('mouseleave',()=>dragging=false);
+  cv.style.cursor='ew-resize';
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.2: PROFIT RECTANGLE
+// ─────────────────────────────────────────────────────────────────────────
+let v72showMistakes=false;
+function v72Update(){
+  const P=parseFloat(document.getElementById('v72-p').value);
+  document.getElementById('v72-p-val').textContent='$'+P.toFixed(2);
+  v72Draw(P);
+}
+function v72ToggleMistakes(){
+  v72showMistakes=!v72showMistakes;
+  const btn=document.getElementById('v72-mistakes-btn');
+  btn.textContent=v72showMistakes?'Hide Common Mistakes':'Show Common Mistakes';
+  btn.classList.toggle('active',v72showMistakes);
+  v72Update();
+}
+function v72Draw(P){
+  const s=setupCvs7('cvs72'); if(!s)return;
+  const{ctx,W,H}=s;
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,9],yR=[0,14];
+  drawAxes7(ctx,W,H,xR,yR,'Quantity q','$/unit');
+
+  // Draw SAVC, SAC, SMC curves
+  function drawCurve(fn,col,lbl){
+    ctx.beginPath();let fst=true;
+    for(let q=0.3;q<=9;q+=0.05){
+      const v=fn(q);if(v<0||v>14)continue;
+      const[cx,cy]=toC7(q,v,W,H,xR,yR);
+      fst?(ctx.moveTo(cx,cy),fst=false):ctx.lineTo(cx,cy);
+    }
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+    const ql=fn===SMC7?6.5:fn===SAC7?5.5:4.5;
+    const[lx,ly]=toC7(ql,fn(ql),W,H,xR,yR);
+    ctx.fillStyle=col;ctx.font='bold 9px DM Sans';ctx.textAlign='left';
+    ctx.fillText(lbl,lx+3,ly-3);
+  }
+  drawCurve(q=>SAVC7(q),'#f39c12','SAVC');
+  drawCurve(q=>SAC7(q),'#2c3e50','SAC');
+  drawCurve(q=>SMC7(q),'#1a56db','SMC');
+
+  // Price line
+  const qStar=Math.max(0.1,qStar7(P));
+  const sacQ=SAC7(qStar), savcQ=SAVC7(qStar), smcQ=SMC7(qStar);
+  const[,py]=toC7(0,P,W,H,xR,yR);
+  ctx.strokeStyle='#8e44ad';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+  ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#8e44ad';ctx.font='bold 9px DM Sans';ctx.textAlign='left';
+  ctx.fillText('P*='+P.toFixed(2),W-MR-60,py-4);
+
+  const[qx]=toC7(qStar,0,W,H,xR,yR);
+  const[,sacy]=toC7(0,Math.min(sacQ,13.9),W,H,xR,yR);
+  const profit=qStar*(P-sacQ);
+
+  // Ghost mistakes
+  if(v72showMistakes&&P>4){
+    const[,savcy]=toC7(0,Math.min(savcQ,13.9),W,H,xR,yR);
+    ctx.fillStyle='rgba(255,200,0,0.15)';
+    ctx.fillRect(ML,savcy,qx-ML,py-savcy);
+    ctx.strokeStyle='rgba(255,180,0,0.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.strokeRect(ML,savcy,qx-ML,py-savcy);
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(230,130,0,0.7)';ctx.font='9px DM Sans';ctx.textAlign='center';
+    ctx.fillText('Wrong: uses SAVC',ML+(qx-ML)/2,savcy+14);
+  }
+
+  // Correct profit rectangle
+  if(P>sacQ){
+    ctx.fillStyle='rgba(39,174,96,0.25)';
+    ctx.fillRect(ML,sacy,qx-ML,py-sacy);
+    ctx.strokeStyle='#27ae60';ctx.lineWidth=2;
+    ctx.strokeRect(ML,sacy,qx-ML,py-sacy);
+    // Height annotation
+    ctx.fillStyle='#27ae60';ctx.font='bold 10px DM Sans';ctx.textAlign='right';
+    ctx.fillText('Height = P*-SAC',qx-4,(sacy+py)/2);
+  } else if(P<sacQ){
+    const top=Math.min(py,sacy),bot=Math.max(py,sacy);
+    ctx.fillStyle='rgba(231,76,60,0.2)';
+    ctx.fillRect(ML,top,qx-ML,bot-top);
+    ctx.strokeStyle='#e74c3c';ctx.lineWidth=2;
+    ctx.strokeRect(ML,top,qx-ML,bot-top);
+    ctx.fillStyle='#e74c3c';ctx.font='bold 10px DM Sans';ctx.textAlign='center';
+    ctx.fillText('Loss',ML+(qx-ML)/2,(top+bot)/2+4);
+  }
+
+  dot7(ctx,qx,py,6,'#8e44ad','#fff');
+  dot7(ctx,qx,sacy,6,'#2c3e50','#fff');
+
+  document.getElementById('v72-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">P*</div><div class="readout-val">$${P.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">SAC(q*)</div><div class="readout-val">$${sacQ.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit = q*(P*-SAC)</div><div class="readout-val" style="color:${profit>=0?'#27ae60':'#e74c3c'}">${profit>=0?'+':''}$${profit.toFixed(2)}</div></div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.3: SHUTDOWN ZONE MAP
+// ─────────────────────────────────────────────────────────────────────────
+let v73proofStep=0;
+function v73Update(){
+  const P=parseFloat(document.getElementById('v73-p').value);
+  document.getElementById('v73-p-val').textContent='$'+P.toFixed(2);
+  v73Draw(P);
+}
+function v73Draw(P){
+  const s=setupCvs7('cvs73'); if(!s)return;
+  const{ctx,W,H}=s;
+  ctx.clearRect(0,0,W,H);
+  const xR=[0,9],yR=[0,14];
+
+  // Color zones
+  const zones=[
+    {from:0,to:4,color:'rgba(231,76,60,0.12)',label:'Shut down (P < min SAVC)'},
+    {from:4,to:5.5,color:'rgba(230,126,34,0.12)',label:'Operate at loss'},
+    {from:5.5,to:14,color:'rgba(39,174,96,0.1)',label:'Profit'},
+  ];
+  zones.forEach(z=>{
+    const[,y1]=toC7(0,Math.min(z.to,13.9),W,H,xR,yR);
+    const[,y2]=toC7(0,z.from,W,H,xR,yR);
+    ctx.fillStyle=z.color;
+    ctx.fillRect(ML,y1,W-ML-MR,y2-y1);
+  });
+
+  drawAxes7(ctx,W,H,xR,yR,'Quantity q','$/unit');
+
+  function drawCurve(fn,col,lbl,q0=0.5){
+    ctx.beginPath();let fst=true;
+    for(let q=q0;q<=9;q+=0.05){
+      const v=fn(q);if(v<0||v>14)continue;
+      const[cx,cy]=toC7(q,v,W,H,xR,yR);
+      fst?(ctx.moveTo(cx,cy),fst=false):ctx.lineTo(cx,cy);
+    }
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+    const ql=fn===SMC7?7:fn===SAC7?6:5;
+    const[lx,ly]=toC7(ql,fn(ql),W,H,xR,yR);
+    ctx.fillStyle=col;ctx.font='bold 9px DM Sans';ctx.textAlign='left';
+    ctx.fillText(lbl,lx+3,ly-3);
+  }
+  drawCurve(SAVC7,'#f39c12','SAVC');
+  drawCurve(SAC7,'#2c3e50','SAC');
+  drawCurve(SMC7,'#1a56db','SMC');
+
+  // Horizontal price line
+  const[,py]=toC7(0,P,W,H,xR,yR);
+  ctx.strokeStyle='#8e44ad';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#8e44ad';ctx.font='bold 10px DM Sans';ctx.textAlign='right';
+  ctx.fillText('P*=$'+P.toFixed(2),W-MR-4,py-5);
+
+  // Zone label update
+  let zLabel='',zColor='#27ae60',zBg='#f0fdf4';
+  if(P<4){zLabel='Shut down: P < min(SAVC) = $4';zColor='#c0392b';zBg='#fff5f5';}
+  else if(P<5.5){zLabel='Operate at loss: P > min(SAVC) but < min(SAC)';zColor='#c05800';zBg='#fff7ed';}
+  else if(P<6){zLabel='Near break-even: P &approx; min(SAC)';zColor='#a07800';zBg='#fffbeb';}
+  else{zLabel='Positive profit: P > min(SAC)';zColor='#27ae60';zBg='#f0fdf4';}
+  const zl=document.getElementById('v73-zone-label');
+  if(zl){zl.style.background=zBg;zl.style.color=zColor;zl.innerHTML=zLabel;}
+}
+function v73NextStep(){
+  v73proofStep=Math.min(5,v73proofStep+1);
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('v73-proof-step'+i);
+    if(el)el.style.display=i<=v73proofStep?'block':'none';
+  }
+  const btn=document.getElementById('v73-next-btn');
+  if(btn)btn.style.display=v73proofStep>=5?'none':'inline-block';
+}
+function v73ResetProof(){
+  v73proofStep=0;
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('v73-proof-step'+i);
+    if(el)el.style.display='none';
+  }
+  const btn=document.getElementById('v73-next-btn');
+  if(btn)btn.style.display='inline-block';
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.4: SHUTDOWN MANAGER
+// ─────────────────────────────────────────────────────────────────────────
+const v74scenarios=[
+  {name:'Restaurant',TFC:4000,AVC:12,P:14,correct:'operate',
+   explain:'P=$14 > AVC=$12: revenue covers variable costs and contributes $2/meal to fixed costs. Operating loss = 4000*0 - (14-12)*q - 4000... actually TR>TVC so operating beats shutting down. Operate.'},
+  {name:'Airline',TFC:5000,AVC:50,P:45,correct:'shutdown',
+   explain:'P=$45 < AVC=$50: revenue does NOT even cover variable costs. Each flight loses money on top of fixed costs. Shut down and just lose TFC=$5000.'},
+  {name:'Farmer',TFC:2000,AVC:3,P:3.5,correct:'operate',
+   explain:'P=$3.50 > AVC=$3.00: just barely above shutdown threshold. Operating covers variable costs and $0.50/unit toward fixed costs. Operating loss < TFC, so keep producing.'},
+];
+let v74scenario=0;
+function v74SetScenario(i,btn){
+  v74scenario=i;
+  document.querySelectorAll('.scenario-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const sc=v74scenarios[i];
+  document.getElementById('v74-scenario-card').innerHTML=
+    `<div style="font-size:0.88rem;line-height:1.8;">
+      <strong style="font-size:1rem;">${sc.name}</strong><br>
+      <span style="color:var(--muted);">Total Fixed Cost (TFC):</span> <strong>$${sc.TFC.toLocaleString()}</strong><br>
+      <span style="color:var(--muted);">Average Variable Cost (AVC):</span> <strong>$${sc.AVC}</strong> per unit<br>
+      <span style="color:var(--muted);">Market Price P*:</span> <strong>$${sc.P}</strong> per unit<br>
+      <hr style="border:none;border-top:1px solid var(--rule);margin:0.75rem 0">
+      <span style="color:var(--muted);">Shutdown loss (if you stop):</span> <strong style="color:#e74c3c;">&minus;$${sc.TFC.toLocaleString()}</strong><br>
+      <em style="font-size:0.82rem;color:var(--muted);">What do you do?</em>
+    </div>`;
+  document.getElementById('v74-result').style.display='none';
+}
+function v74Decide(choice){
+  const sc=v74scenarios[v74scenario];
+  const correct=choice===sc.correct;
+  const opLoss=sc.TFC*(sc.P<sc.AVC?1:-0.5); // simplified
+  const res=document.getElementById('v74-result');
+  res.style.display='block';
+  res.style.background=correct?'#f0fdf4':'#fff5f5';
+  res.style.border='1px solid '+(correct?'#bbf7d0':'#fcc');
+  res.innerHTML=`<strong style="color:${correct?'#16a34a':'#c0392b'}">${correct?'Correct!':'Not quite.'}</strong><br><br>
+    ${sc.explain}<br><br>
+    <strong>Decision rule:</strong> ${sc.P>=sc.AVC?'P=$'+sc.P+' &ge; AVC=$'+sc.AVC+' &rarr; keep operating':'P=$'+sc.P+' &lt; AVC=$'+sc.AVC+' &rarr; shut down'}.`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.5: SUPPLY CURVE EMERGENCE
+// ─────────────────────────────────────────────────────────────────────────
+let v75P=0, v75animRunning=false, v75animId=null, v75supplyPts=[];
+
+function v75DrawPanels(){
+  const cvA=document.getElementById('cvs75a'), cvB=document.getElementById('cvs75b');
+  if(!cvA||!cvB)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvA.clientWidth||300;
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=280*dpr;cv.style.height='280px';});
+  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
+  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  const xR=[0,9],yR=[0,14];
+
+  // LEFT: Firm curves
+  ctxA.clearRect(0,0,W,280);
+  drawAxes7(ctxA,W,280,xR,yR,'q','$/unit');
+  // Draw SAVC
+  ctxA.beginPath();let fst=true;
+  for(let q=0.3;q<=9;q+=0.05){
+    const v=SAVC7(q);if(v>14)continue;
+    const[cx,cy]=toC7(q,v,W,280,xR,yR);
+    fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
+  }
+  ctxA.strokeStyle='#f39c12';ctxA.lineWidth=1.5;ctxA.stroke();
+  ctxA.fillStyle='#f39c12';ctxA.font='9px DM Sans';ctxA.textAlign='left';
+  ctxA.fillText('SAVC',toC7(5,SAVC7(5),W,280,xR,yR)[0]+3,toC7(5,SAVC7(5),W,280,xR,yR)[1]-3);
+  // Draw SMC (supply portion highlighted if P above PSD)
+  const PSD=4;
+  for(let q=0.3;q<=9;q+=0.05){
+    const smc=SMC7(q);if(smc>14)break;
+    const savc=SAVC7(q);
+    const aboveSD=smc>=PSD && v75P>=PSD;
+    const[cx,cy]=toC7(q,smc,W,280,xR,yR);
+    if(Math.abs(q-0.3)<0.01){ctxA.beginPath();ctxA.moveTo(cx,cy);continue;}
+    ctxA.lineTo(cx,cy);
+    if((q+0.05)>9||(SMC7(q+0.05)||14)>14){
+      ctxA.strokeStyle=aboveSD?'#1a56db':'#aaa';
+      ctxA.lineWidth=aboveSD?2.5:1.5;ctxA.stroke();
+      ctxA.beginPath();ctxA.moveTo(cx,cy);
+    }
+  }
+  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=1.5;ctxA.stroke();
+  ctxA.fillStyle='#1a56db';ctxA.font='9px DM Sans';
+  ctxA.fillText('SMC',toC7(7,SMC7(7),W,280,xR,yR)[0]+3,toC7(7,SMC7(7),W,280,xR,yR)[1]-3);
+  // Current price line
+  if(v75P>0){
+    const[,py]=toC7(0,Math.min(v75P,13.9),W,280,xR,yR);
+    ctxA.strokeStyle='#8e44ad';ctxA.lineWidth=2;ctxA.setLineDash([5,4]);
+    ctxA.beginPath();ctxA.moveTo(ML,py);ctxA.lineTo(W-MR,py);ctxA.stroke();
+    ctxA.setLineDash([]);
+  }
+
+  // RIGHT: Supply curve
+  ctxB.clearRect(0,0,W,280);
+  drawAxes7(ctxB,W,280,[0,7],[0,14],'q (supply)','P');
+  v75supplyPts.forEach(({q,P})=>{
+    const[cx,cy]=toC7(q,P,W,280,[0,7],[0,14]);
+    dot7(ctxB,cx,cy,3,'#1a56db');
+  });
+  const ro=document.getElementById('v75-readout');
+  if(ro){
+    if(v75P<PSD)ro.innerHTML=`P=$${v75P.toFixed(2)} &lt; P<sub>SD</sub>=$${PSD}: firm shuts down, supplies 0.`;
+    else if(v75P<=13){
+      const q=qStar7(v75P);
+      ro.innerHTML=`P=$${v75P.toFixed(2)} &ge; P<sub>SD</sub>=$${PSD}: firm supplies q=${q.toFixed(2)} where P = SMC.`;
+    }
+  }
+}
+function v75ToggleAnim(){
+  v75animRunning=!v75animRunning;
+  document.getElementById('v75-anim-btn').textContent=v75animRunning?'Pause':'Animate Price Sweep';
+  if(v75animRunning)v75animate();
+}
+function v75animate(){
+  if(!v75animRunning)return;
+  v75P=Math.min(13.5,v75P+0.12);
+  if(v75P>=4){const q=qStar7(v75P); v75supplyPts.push({q,P:v75P});}
+  v75DrawPanels();
+  if(v75P<13.5)requestAnimationFrame(v75animate);
+  else{v75animRunning=false;document.getElementById('v75-anim-btn').textContent='Animate Price Sweep';}
+}
+function v75Reset(){
+  v75P=0;v75supplyPts=[];v75animRunning=false;
+  document.getElementById('v75-anim-btn').textContent='Animate Price Sweep';
+  v75DrawPanels();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.6: MR DECOMPOSITION
+// ─────────────────────────────────────────────────────────────────────────
+let v76mode='pricetaker', v76showGainLoss=false, v76prevQ=3;
+function v76SetMode(m){
+  v76mode=m;
+  document.getElementById('v76-btn-pt').classList.toggle('active',m==='pricetaker');
+  document.getElementById('v76-btn-mp').classList.toggle('active',m==='marketpower');
+  document.getElementById('v76-p-group').style.display=m==='pricetaker'?'flex':'none';
+  document.getElementById('v76-q-group').style.display=m==='marketpower'?'flex':'none';
+  document.getElementById('v76-add-btn').style.display=m==='marketpower'?'inline-block':'none';
+  v76showGainLoss=false; v76prevQ=3;
+  document.getElementById('v76-q').value=3;
+  v76Update();
+}
+function v76AddUnit(){
+  const q=parseInt(document.getElementById('v76-q').value);
+  v76prevQ=q;
+  document.getElementById('v76-q').value=Math.min(9,q+1);
+  document.getElementById('v76-q-val').textContent=Math.min(9,q+1);
+  v76showGainLoss=true;
+  v76Update();
+}
+function v76Update(){
+  const P=parseFloat(document.getElementById('v76-p').value);
+  document.getElementById('v76-p-val').textContent='$'+P.toFixed(2);
+  const q=parseInt(document.getElementById('v76-q').value);
+  document.getElementById('v76-q-val').textContent=q;
+  v76Draw(P,q);
+}
+function v76Draw(P,q){
+  const s=setupCvs7('cvs76'); if(!s)return;
+  const{ctx,W,H}=s;
+  ctx.clearRect(0,0,W,H);
+  const a=10,b=1; // P = 10 - q (market power demand)
+
+  if(v76mode==='pricetaker'){
+    const xR=[0,14],yR=[0,P+2];
+    drawAxes7(ctx,W,H,xR,yR,'Quantity q','$/unit');
+    const[,py]=toC7(0,P,W,H,xR,yR);
+    ctx.strokeStyle='#1a56db';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
+    ctx.fillStyle='#1a56db';ctx.font='bold 10px DM Sans';ctx.textAlign='left';
+    ctx.fillText('Demand = MR = P = $'+P.toFixed(2),ML+8,py-6);
+    const qPT=parseFloat(document.getElementById('v76-p').value)*1.5;
+    for(let i=0;i<Math.min(12,qPT);i++){
+      const[x0]=toC7(i,0,W,H,xR,yR);
+      const[x1,py2]=toC7(i+1,P,W,H,xR,yR);
+      ctx.fillStyle='rgba(39,174,96,0.3)';
+      ctx.fillRect(x0,py2,x1-x0,toC7(0,0,W,H,xR,yR)[1]-py2);
+    }
+    document.getElementById('v76-readout').innerHTML=
+      `<strong>Price Taker:</strong> MR = P = $${P.toFixed(2)} at every unit. Each additional unit adds exactly P* to revenue. No red bar -- no price effect.`;
+  } else {
+    // Market power: P = 10 - q
+    const xR=[0,11],yR=[-4,11];
+    drawAxes7(ctx,W,H,xR,yR,'Quantity q','$/unit');
+    // Demand curve
+    ctx.beginPath();
+    const[dx0,dy0]=toC7(0,10,W,H,xR,yR);
+    const[dx1,dy1]=toC7(10,0,W,H,xR,yR);
+    ctx.moveTo(dx0,dy0);ctx.lineTo(dx1,dy1);
+    ctx.strokeStyle='#1a56db';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#1a56db';ctx.font='9px DM Sans';ctx.textAlign='left';
+    ctx.fillText('D: P=10-q',ML+4,dy0+14);
+    // MR curve P = 10 - 2q
+    ctx.beginPath();
+    const[mx0,my0]=toC7(0,10,W,H,xR,yR);
+    const[mx1,my1]=toC7(5,0,W,H,xR,yR);
+    ctx.moveTo(mx0,my0);ctx.lineTo(mx1,my1);
+    ctx.strokeStyle='#e74c3c';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#e74c3c';ctx.textAlign='left';
+    ctx.fillText('MR=10-2q',ML+4,my0+26);
+
+    // Rectangles
+    if(v76showGainLoss && v76prevQ<9){
+      const Pnew=10-q, Pold=10-v76prevQ;
+      const dP=Pold-Pnew; // price fell by dP
+      const gain=Pnew; // gain from new unit at new price
+      const loss=dP*v76prevQ; // loss on existing units
+      const MR=gain-loss;
+      // Green gain rectangle: [q-1..q] x [0..Pnew]
+      const[gx0]=toC7(v76prevQ,0,W,H,xR,yR);
+      const[gx1,gy1]=toC7(q,Pnew,W,H,xR,yR);
+      const[,gy0]=toC7(0,0,W,H,xR,yR);
+      ctx.fillStyle='rgba(39,174,96,0.3)';
+      ctx.fillRect(gx0,gy1,gx1-gx0,gy0-gy1);
+      ctx.strokeStyle='#27ae60';ctx.lineWidth=1.5;
+      ctx.strokeRect(gx0,gy1,gx1-gx0,gy0-gy1);
+      ctx.fillStyle='#27ae60';ctx.font='9px DM Sans';ctx.textAlign='center';
+      ctx.fillText('+$'+gain.toFixed(2),(gx0+gx1)/2,(gy0+gy1)/2+4);
+      // Red loss rectangle: [0..q-1] x [Pnew..Pold]
+      const[,rpy0]=toC7(0,Pnew,W,H,xR,yR);
+      const[,rpy1]=toC7(0,Pold,W,H,xR,yR);
+      ctx.fillStyle='rgba(231,76,60,0.2)';
+      ctx.fillRect(ML,rpy1,gx0-ML,rpy0-rpy1);
+      ctx.strokeStyle='#e74c3c';ctx.lineWidth=1.5;
+      ctx.strokeRect(ML,rpy1,gx0-ML,rpy0-rpy1);
+      ctx.fillStyle='#e74c3c';ctx.textAlign='center';
+      ctx.fillText('-$'+loss.toFixed(2),(ML+gx0)/2,(rpy0+rpy1)/2+4);
+      document.getElementById('v76-readout').innerHTML=
+        `At q=${v76prevQ}&rarr;${q}: Gain (new unit) = $${gain.toFixed(2)}, Loss (price cut on ${v76prevQ} existing units) = $${loss.toFixed(2)}. <strong>MR = $${MR.toFixed(2)}</strong>. Formula: MR = 10 - 2&times;${q} = $${(10-2*q).toFixed(2)}.`;
+    } else {
+      const Pq=10-q, MRq=10-2*q;
+      dot7(ctx,...toC7(q,Pq,W,H,xR,yR),5,'#1a56db','#fff');
+      dot7(ctx,...toC7(q,MRq,W,H,xR,yR),5,'#e74c3c','#fff');
+      document.getElementById('v76-readout').innerHTML=
+        `At q=${q}: P = $${Pq.toFixed(2)}, MR = 10 - 2&times;${q} = $${MRq.toFixed(2)}. MR &lt; P because selling more requires cutting price on ALL existing units.`;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.7: THREE-PANEL DEMAND SHOCK
+// ─────────────────────────────────────────────────────────────────────────
+let v77step=0;
+const v77scenarios_data={
+  sub:{steps:['Choose: "Price of Substitute Rises"','Step 1: Consumer demand shifts right (d to d\'). Consumers want more of this good now.','Step 2: Market demand D shifts right to D\'. New equilibrium: higher price P2 and quantity Q2.','Step 3: Firm sees higher price P2. Moves up SMC to new q2. Profit rectangle appears.'],labels:['','Consumer','Market','Firm']},
+  income:{steps:['Choose: "Consumer Income Rises"','Step 1: Consumer demand shifts right (normal good). Higher income means more spending.','Step 2: Market demand D shifts right. Price and quantity both rise to new equilibrium.','Step 3: Firm earns positive profit at new higher price. Supply expands.'],labels:['','Consumer','Market','Firm']},
+  input:{steps:['Choose: "Input Price Rises"','Step 1: Firm SMC shifts up (higher marginal cost). Firm panel shows SMC1 and SMC2.','Step 2: Market supply S shifts left. New equilibrium: higher price, lower quantity.','Step 3: Consumer sees higher price. Demand curve unchanged but consumer buys less.'],labels:['','Firm','Market','Consumer']},
+};
+function v77Reset(){
+  v77step=0;
+  document.getElementById('v77-step-btn').textContent='Step 1: Consumer Effect →';
+  document.getElementById('v77-readout').innerHTML='Choose a scenario and click through the steps to trace the causal chain.';
+  v77Draw();
+}
+function v77NextStep(){
+  v77step=Math.min(3,v77step+1);
+  const sc=document.getElementById('v77-scenario').value;
+  const data=v77scenarios_data[sc];
+  document.getElementById('v77-readout').innerHTML=`<strong>${data.labels[v77step] || 'Result'}:</strong> ${data.steps[v77step]}`;
+  const stepLabels=['Step 1 →','Step 2 →','Step 3 →','Reset'];
+  const btn=document.getElementById('v77-step-btn');
+  if(v77step<3){btn.textContent='Step '+(v77step+1)+': '+data.labels[v77step+1]+' Effect →';}
+  else{btn.textContent='Reset';btn.onclick=()=>{v77step=0;btn.textContent='Step 1: Consumer Effect →';btn.onclick=v77NextStep;v77Reset();};}
+  v77Draw();
+}
+function v77Draw(){
+  const s=setupCvs7('cvs77'); if(!s)return;
+  const{ctx,W,H}=s;
+  ctx.clearRect(0,0,W,H);
+  // Three panels
+  const pw=(W-ML-MR-20)/3;
+  const sc=document.getElementById('v77-scenario')?.value||'sub';
+  const panels=['Firm','Market','Consumer'];
+  panels.forEach((label,i)=>{
+    const ox=ML+i*(pw+10), oy=MT;
+    ctx.strokeStyle='#e0e4f0';ctx.lineWidth=1;
+    ctx.strokeRect(ox,oy,pw,H-MT-MB);
+    ctx.fillStyle='#888';ctx.font='bold 9px DM Sans';ctx.textAlign='center';
+    ctx.fillText(label,ox+pw/2,oy+14);
+    // Simple supply and demand lines in each panel
+    ctx.strokeStyle='#1a56db';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ox+10,oy+20);ctx.lineTo(ox+pw-10,H-MB-10);ctx.stroke();
+    ctx.strokeStyle='#e74c3c';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ox+10,H-MB-10);ctx.lineTo(ox+pw-10,oy+20);ctx.stroke();
+    // Shifted curves based on step
+    if(v77step>0&&((sc==='sub'||sc==='income')&&i===2||(sc==='input'&&i===0))){
+      ctx.strokeStyle='#27ae60';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      const shift=v77step>=1?20:0;
+      ctx.beginPath();ctx.moveTo(ox+10+shift,oy+20);ctx.lineTo(ox+pw-10+shift,H-MB-10);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    if(v77step>1&&i===1){
+      ctx.strokeStyle='#27ae60';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      const shift2=v77step>=2?18:0;
+      ctx.beginPath();ctx.moveTo(ox+10+shift2,oy+20);ctx.lineTo(ox+pw-10+shift2,H-MB-10);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  });
+  // Causality arrows between panels
+  if(v77step>=1){
+    ctx.strokeStyle='rgba(100,100,200,0.5)';ctx.lineWidth=2;
+    const x1=ML+pw+10, y1=(MT+H-MB)/2;
+    ctx.beginPath();ctx.moveTo(x1-5,y1);ctx.lineTo(x1+5,y1);ctx.stroke();
+  }
+  if(v77step>=2){
+    ctx.strokeStyle='rgba(100,100,200,0.5)';ctx.lineWidth=2;
+    const x2=ML+pw*2+20, y2=(MT+H-MB)/2;
+    ctx.beginPath();ctx.moveTo(x2-5,y2);ctx.lineTo(x2+5,y2);ctx.stroke();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.8: MARKET SUPPLY BUILDER
+// ─────────────────────────────────────────────────────────────────────────
+function v78Update(){
+  const n=parseInt(document.getElementById('v78-n').value);
+  document.getElementById('v78-n-val').textContent=n;
+  v78Draw(n);
+}
+function v78Draw(n){
+  const cvA=document.getElementById('cvs78a'), cvB=document.getElementById('cvs78b');
+  if(!cvA||!cvB)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvA.clientWidth||300;
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=260*dpr;cv.style.height='260px';});
+  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
+  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  const xR1=[0,8],yR=[0,14], xR2=[0,n*5+5],yR2=[0,14];
+
+  // Firm supply (SMC above PSD=4): q = (P-4)/2 for P>=4
+  ctxA.clearRect(0,0,W,260);
+  drawAxes7(ctxA,W,260,xR1,yR,'q (firm)','P');
+  ctxA.beginPath();let fst=true;
+  for(let P=4;P<=14;P+=0.2){
+    const q=(P-4)/2;if(q>8)break;
+    const[cx,cy]=toC7(q,P,W,260,xR1,yR);
+    fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
+  }
+  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2.5;ctxA.stroke();
+  ctxA.fillStyle='#1a56db';ctxA.font='9px DM Sans';ctxA.textAlign='left';
+  ctxA.fillText('Firm supply',toC7(1,6,W,260,xR1,yR)[0]+3,toC7(1,6,W,260,xR1,yR)[1]-3);
+
+  // Market supply: Q = n*(P-4)/2 for P>=4
+  ctxB.clearRect(0,0,W,260);
+  drawAxes7(ctxB,W,260,xR2,yR2,'Q (market)','P');
+  ctxB.beginPath();fst=true;
+  for(let P=4;P<=14;P+=0.2){
+    const Q=n*(P-4)/2;if(Q>xR2[1])break;
+    const[cx,cy]=toC7(Q,P,W,260,xR2,yR2);
+    fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
+  }
+  ctxB.strokeStyle='#27ae60';ctxB.lineWidth=2.5;ctxB.stroke();
+  ctxB.fillStyle='#27ae60';ctxB.font='9px DM Sans';ctxB.textAlign='left';
+  const Qex=n*(8-4)/2;
+  ctxB.fillText('Market supply ('+n+' firms)',toC7(Qex*0.3,8,W,260,xR2,yR2)[0]+3,toC7(Qex*0.3,8,W,260,xR2,yR2)[1]-3);
+
+  // Add demand in market panel for equilibrium: Q_D = 1000 - 50P (simplified)
+  const Qd=P=>Math.max(0,200-10*P);
+  const Peq=(200+4*n/2)/(50+n/2); // simplified equilibrium
+  const Qeq=Qd(Peq);
+  if(Qeq>0&&Qeq<xR2[1]){
+    ctxB.setLineDash([5,4]);ctxB.strokeStyle='#e74c3c';ctxB.lineWidth=1.5;
+    ctxB.beginPath();
+    const[deq_x0,deq_y0]=toC7(0,20,W,260,xR2,yR2);
+    const[deq_x1,deq_y1]=toC7(Math.min(xR2[1],200),0,W,260,xR2,yR2);
+    ctxB.moveTo(deq_x0,deq_y0);ctxB.lineTo(deq_x1,deq_y1);ctxB.stroke();
+    ctxB.setLineDash([]);
+    dot7(ctxB,...toC7(Qeq,Peq,W,260,xR2,yR2),5,'#8e44ad','#fff');
+  }
+
+  document.getElementById('v78-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Firms (n)</div><div class="readout-val">${n}</div></div>
+      <div class="readout-col"><div class="readout-label">Market Supply at P=$8</div><div class="readout-val">Q=${(n*(8-4)/2).toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Firm Supply at P=$8</div><div class="readout-val">q=2</div></div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.9: LONG-RUN ENTRY/EXIT
+// ─────────────────────────────────────────────────────────────────────────
+let v79n=50, v79animId=null;
+function v79PofN(n){return(1000+4*n)/(n+100);}
+function v79Draw(){
+  const cvA=document.getElementById('cvs79a'), cvB=document.getElementById('cvs79b');
+  if(!cvA||!cvB)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvA.clientWidth||300;
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=260*dpr;cv.style.height='260px';});
+  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
+  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  const n=v79n, P=v79PofN(n);
+  const xRM=[0,300],yRM=[0,14];
+  const xRF=[0,9],yRF=[0,14];
+
+  // MARKET
+  ctxA.clearRect(0,0,W,260);
+  drawAxes7(ctxA,W,260,xRM,yRM,'Q','P');
+  // Demand: Q = 1000-50P => P = 20-Q/50
+  ctxA.beginPath();
+  ctxA.moveTo(...toC7(0,20,W,260,xRM,yRM));
+  ctxA.lineTo(...toC7(300,14,W,260,xRM,yRM));
+  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2;ctxA.stroke();
+  ctxA.fillStyle='#1a56db';ctxA.font='9px DM Sans';ctxA.textAlign='left';
+  ctxA.fillText('D',toC7(280,14.4,W,260,xRM,yRM)[0],toC7(280,14.4,W,260,xRM,yRM)[1]-3);
+  // Supply: Q = n*(P-4)/2 => P = 4+2Q/n
+  const Qs=P=>n*(P-4)/2;
+  ctxA.beginPath();let fst=true;
+  for(let P2=4;P2<=14;P2+=0.2){
+    const Q2=Qs(P2);if(Q2<0||Q2>300)continue;
+    const[cx,cy]=toC7(Q2,P2,W,260,xRM,yRM);
+    fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
+  }
+  ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2;ctxA.stroke();
+  // Equilibrium point
+  const Qeq=Qs(P);
+  dot7(ctxA,...toC7(Math.min(299,Qeq),Math.min(13.5,P),W,260,xRM,yRM),5,'#8e44ad','#fff');
+  ctxA.fillStyle='#8e44ad';ctxA.font='bold 9px DM Sans';ctxA.textAlign='left';
+  ctxA.fillText('n='+n+', P*=$'+P.toFixed(2),ML+4,MT+14);
+
+  // FIRM
+  ctxB.clearRect(0,0,W,260);
+  drawAxes7(ctxB,W,260,xRF,yRF,'q','$/unit');
+  // SAC curve
+  ctxB.beginPath();fst=true;
+  for(let q=0.5;q<=9;q+=0.05){
+    const v=SAC7(q);if(v>14)continue;
+    const[cx,cy]=toC7(q,v,W,260,xRF,yRF);
+    fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
+  }
+  ctxB.strokeStyle='#2c3e50';ctxB.lineWidth=2;ctxB.stroke();
+  ctxB.fillStyle='#2c3e50';ctxB.font='9px DM Sans';ctxB.textAlign='left';
+  ctxB.fillText('SAC',toC7(7.5,SAC7(7.5),W,260,xRF,yRF)[0]+3,toC7(7.5,SAC7(7.5),W,260,xRF,yRF)[1]-3);
+  // SMC curve
+  ctxB.beginPath();fst=true;
+  for(let q=0.5;q<=9;q+=0.05){
+    const v=SMC7(q);if(v>14)continue;
+    const[cx,cy]=toC7(q,v,W,260,xRF,yRF);
+    fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
+  }
+  ctxB.strokeStyle='#1a56db';ctxB.lineWidth=1.5;ctxB.stroke();
+  // Price line and profit rectangle
+  const Pc=Math.min(13.9,P);
+  const[,py]=toC7(0,Pc,W,260,xRF,yRF);
+  ctxB.strokeStyle='#8e44ad';ctxB.lineWidth=1.5;ctxB.setLineDash([5,4]);
+  ctxB.beginPath();ctxB.moveTo(ML,py);ctxB.lineTo(W-MR,py);ctxB.stroke();
+  ctxB.setLineDash([]);
+  if(P>0.5){
+    const qf=qStar7(P);const sacF=SAC7(qf);
+    const profit=qf*(P-sacF);
+    const[qfx]=toC7(qf,0,W,260,xRF,yRF);
+    const[,sacy]=toC7(0,Math.min(sacF,13.9),W,260,xRF,yRF);
+    if(Math.abs(py-sacy)>2){
+      ctx2=ctxB;
+      ctx2.fillStyle=profit>0?'rgba(39,174,96,0.25)':'rgba(231,76,60,0.2)';
+      ctx2.fillRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
+      ctx2.strokeStyle=profit>0?'#27ae60':'#e74c3c';ctx2.lineWidth=1.5;
+      ctx2.strokeRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
+    }
+    ctxB.fillStyle='#8e44ad';ctxB.font='bold 9px DM Sans';ctxB.textAlign='left';
+    ctxB.fillText('P*=$'+P.toFixed(2)+', &pi;='+(profit>0?'+':'')+profit.toFixed(2),ML+4,MT+14);
+  }
+
+  document.getElementById('v79-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Firms (n)</div><div class="readout-val">${n}</div></div>
+      <div class="readout-col"><div class="readout-label">P*(n)</div><div class="readout-val">$${P.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar7(P).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'#27ae60':'#e74c3c'}">${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'+':''}$${(qStar7(P)*(P-SAC7(qStar7(P)))).toFixed(2)}</div></div>
+    </div>`;
+}
+function v79RunEntry(){
+  if(v79animId)clearInterval(v79animId);
+  v79animId=setInterval(()=>{
+    if(v79n>=100){clearInterval(v79animId);v79animId=null;return;}
+    v79n++;v79Draw();
+  },60);
+}
+function v79RunExit(){
+  v79n=150;v79Draw();
+  if(v79animId)clearInterval(v79animId);
+  v79animId=setInterval(()=>{
+    if(v79n<=100){clearInterval(v79animId);v79animId=null;return;}
+    v79n--;v79Draw();
+  },60);
+}
+function v79Reset(){
+  if(v79animId){clearInterval(v79animId);v79animId=null;}
+  v79n=50;v79Draw();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIG 7.10: COST SHOCK COMPARATIVE STATICS
+// ─────────────────────────────────────────────────────────────────────────
+function v710Update(){
+  const shock=document.getElementById('v710-shock').value;
+  const dw=parseFloat(document.getElementById('v710-shock-mag').value);
+  document.getElementById('v710-shock-val').textContent=dw.toFixed(2);
+  v710Draw(shock,dw);
+}
+function v710Draw(shock,dw){
+  const cvA=document.getElementById('cvs710a'), cvB=document.getElementById('cvs710b');
+  if(!cvA||!cvB)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvA.clientWidth||300;
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=260*dpr;cv.style.height='260px';});
+  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
+  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  const xR=[0,9],yR=[0,14];
+  const shiftD=shock==='tech'?-dw:dw;
+
+  // FIRM
+  ctxA.clearRect(0,0,W,260);
+  drawAxes7(ctxA,W,260,xR,yR,'q','$/unit');
+  // Original SMC
+  ctxA.beginPath();let fst=true;
+  for(let q=0.5;q<=9;q+=0.05){
+    const v=SMC7(q);if(v>14)continue;
+    const[cx,cy]=toC7(q,v,W,260,xR,yR);
+    fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
+  }
+  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2;ctxA.stroke();
+  ctxA.fillStyle='#1a56db';ctxA.font='9px DM Sans';ctxA.textAlign='left';
+  ctxA.fillText('SMC',toC7(7,SMC7(7),W,260,xR,yR)[0]+3,toC7(7,SMC7(7),W,260,xR,yR)[1]-3);
+  // Shifted SMC (if shock > 0)
+  if(dw>0){
+    ctxA.beginPath();fst=true;
+    for(let q=0.5;q<=9;q+=0.05){
+      const v=SMC7(q)+shiftD;if(v<0||v>14)continue;
+      const[cx,cy]=toC7(q,v,W,260,xR,yR);
+      fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
+    }
+    ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2;ctxA.setLineDash([5,4]);ctxA.stroke();ctxA.setLineDash([]);
+    ctxA.fillStyle='#e74c3c';
+    ctxA.fillText("SMC'",toC7(7,SMC7(7)+shiftD,W,260,xR,yR)[0]+3,toC7(7,SMC7(7)+shiftD,W,260,xR,yR)[1]-3);
+  }
+
+  // MARKET (simplified: S = 50*(P-4), D = 300-50P => P* = 7)
+  ctxB.clearRect(0,0,W,260);
+  const xRM=[0,200],yRM=[0,14];
+  drawAxes7(ctxB,W,260,xRM,yRM,'Q','P');
+  // Demand
+  ctxB.beginPath();
+  ctxB.moveTo(...toC7(0,14,W,260,xRM,yRM));
+  ctxB.lineTo(...toC7(200,10,W,260,xRM,yRM));
+  ctxB.strokeStyle='#1a56db';ctxB.lineWidth=2;ctxB.stroke();
+  ctxB.fillStyle='#1a56db';ctxB.font='9px DM Sans';ctxB.textAlign='left';
+  ctxB.fillText('D',toC7(185,10.1,W,260,xRM,yRM)[0],toC7(185,10.1,W,260,xRM,yRM)[1]-3);
+  // Original supply
+  const PSD_new=4+shiftD;
+  const SatP=P=>50*Math.max(0,P-4);
+  ctxB.beginPath();fst=true;
+  for(let P2=4;P2<=14;P2+=0.2){
+    const Q2=SatP(P2);if(Q2>200)break;
+    const[cx,cy]=toC7(Q2,P2,W,260,xRM,yRM);
+    fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
+  }
+  ctxB.strokeStyle='#27ae60';ctxB.lineWidth=2;ctxB.stroke();
+  ctxB.fillStyle='#27ae60';ctxB.font='9px DM Sans';ctxB.textAlign='left';
+  ctxB.fillText('S',toC7(50,5,W,260,xRM,yRM)[0]+3,toC7(50,5,W,260,xRM,yRM)[1]-3);
+  // Shifted supply if shock
+  if(dw>0){
+    const SatP2=P=>50*Math.max(0,P-PSD_new);
+    ctxB.beginPath();fst=true;
+    for(let P2=PSD_new;P2<=14;P2+=0.2){
+      const Q2=SatP2(P2);if(Q2>200)break;
+      const[cx,cy]=toC7(Q2,P2,W,260,xRM,yRM);
+      fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
+    }
+    ctxB.strokeStyle='#e74c3c';ctxB.lineWidth=2;ctxB.setLineDash([5,4]);ctxB.stroke();ctxB.setLineDash([]);
+    ctxB.fillStyle='#e74c3c';
+    ctxB.fillText("S'",toC7(20,PSD_new+0.5,W,260,xRM,yRM)[0]+3,toC7(20,PSD_new+0.5,W,260,xRM,yRM)[1]-3);
+  }
+  // Equilibrium dots (before and after)
+  const PeqBefore=7, QeqBefore=150; // simplified
+  const PeqAfter=7+0.5*dw, QeqAfter=150-25*dw;
+  dot7(ctxB,...toC7(Math.max(0,QeqBefore),Math.min(13.9,PeqBefore),W,260,xRM,yRM),5,'#27ae60','#fff');
+  if(dw>0)dot7(ctxB,...toC7(Math.max(0,QeqAfter),Math.min(13.9,PeqAfter),W,260,xRM,yRM),5,'#e74c3c','#fff');
+
+  const dir=shock==='tech'?-1:1;
+  document.getElementById('v710-readout').innerHTML=
+    `<table style="width:100%;font-size:0.84rem;border-collapse:collapse;">
+      <tr style="border-bottom:1px solid var(--rule);"><th style="text-align:left;padding:4px;">Variable</th><th>Before</th><th>After</th><th>Change</th></tr>
+      <tr><td>Market P*</td><td>$${PeqBefore.toFixed(2)}</td><td>$${PeqAfter.toFixed(2)}</td><td style="color:${dir>0?'#e74c3c':'#27ae60'}">${dir>0&&dw>0?'&uarr;':'&darr;'}</td></tr>
+      <tr><td>Market Q*</td><td>${QeqBefore.toFixed(0)}</td><td>${Math.max(0,QeqAfter).toFixed(0)}</td><td style="color:${dir>0?'#e74c3c':'#27ae60'}">${dir>0&&dw>0?'&darr;':'&uarr;'}</td></tr>
+    </table>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  v71Update();
+  v72Draw(7);
+  v73Draw(6);
+  v73Update();
+  v74SetScenario(0, document.querySelector('.scenario-tab'));
+  v75DrawPanels();
+  v76Update();
+  v77Draw();
+  v78Draw(10);
+  v79Draw();
+  v710Draw('wage',0);
+
+  // ResizeObserver for all canvases
+  const ro=new ResizeObserver(()=>{
+    v71Draw();
+    v72Draw(parseFloat(document.getElementById('v72-p').value));
+    v73Draw(parseFloat(document.getElementById('v73-p').value));
+    v75DrawPanels();
+    v76Update();
+    v77Draw();
+    v78Draw(parseInt(document.getElementById('v78-n').value));
+    v79Draw();
+    v710Update();
+  });
+  document.querySelectorAll('.cvs-wrap').forEach(el=>ro.observe(el));
+
+  function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+  function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+  window.openLN=openLN; window.closeLN=closeLN;
+});
+
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+</body>
+</html>
