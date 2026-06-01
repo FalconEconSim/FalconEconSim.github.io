@@ -1024,9 +1024,9 @@ function v76Draw(P,q){
       const[gx1,gy1]=toC7(q,Pnew,W,H,xR,yR);
       const[,gy0]=toC7(0,0,W,H,xR,yR);
       ctx.fillStyle='rgba(39,174,96,0.3)';
-      ctx.fillRect(gx0,gy1,gx1-gx0,gy0-gy1);
+      ctx.fillRect(gx0,Math.min(gy1,gy0),gx1-gx0,Math.abs(gy0-gy1));
       ctx.strokeStyle='#27ae60';ctx.lineWidth=1.5;
-      ctx.strokeRect(gx0,gy1,gx1-gx0,gy0-gy1);
+      ctx.strokeRect(gx0,Math.min(gy1,gy0),gx1-gx0,Math.abs(gy0-gy1));
       ctx.fillStyle='#27ae60';ctx.font='9px DM Sans';ctx.textAlign='center';
       ctx.fillText('+$'+gain.toFixed(2),(gx0+gx1)/2,(gy0+gy1)/2+4);
       // Red loss rectangle: [0..q-1] x [Pnew..Pold]
@@ -1264,14 +1264,13 @@ function v79Draw(){
     const[qfx]=toC7(qf,0,W,260,xRF,yRF);
     const[,sacy]=toC7(0,Math.min(sacF,13.9),W,260,xRF,yRF);
     if(Math.abs(py-sacy)>2){
-      ctx2=ctxB;
-      ctx2.fillStyle=profit>0?'rgba(39,174,96,0.25)':'rgba(231,76,60,0.2)';
-      ctx2.fillRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
-      ctx2.strokeStyle=profit>0?'#27ae60':'#e74c3c';ctx2.lineWidth=1.5;
-      ctx2.strokeRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
+      ctxB.fillStyle=profit>0?'rgba(39,174,96,0.25)':'rgba(231,76,60,0.2)';
+      ctxB.fillRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
+      ctxB.strokeStyle=profit>0?'#27ae60':'#e74c3c';ctxB.lineWidth=1.5;
+      ctxB.strokeRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
     }
     ctxB.fillStyle='#8e44ad';ctxB.font='bold 9px DM Sans';ctxB.textAlign='left';
-    ctxB.fillText('P*=$'+P.toFixed(2)+', &pi;='+(profit>0?'+':'')+profit.toFixed(2),ML+4,MT+14);
+    ctxB.fillText('P*=$'+P.toFixed(2)+', π='+(profit>0?'+':'')+profit.toFixed(2),ML+4,MT+14);
   }
 
   document.getElementById('v79-readout').innerHTML=
@@ -1386,16 +1385,16 @@ function v710Draw(shock,dw){
   }
   // Equilibrium dots (before and after)
   const PeqBefore=7, QeqBefore=150; // simplified
-  const PeqAfter=7+0.5*dw, QeqAfter=150-25*dw;
+  const sign=shock==='tech'?-1:1;
+  const PeqAfter=7+sign*0.5*dw, QeqAfter=150-sign*25*dw;
   dot7(ctxB,...toC7(Math.max(0,QeqBefore),Math.min(13.9,PeqBefore),W,260,xRM,yRM),5,'#27ae60','#fff');
   if(dw>0)dot7(ctxB,...toC7(Math.max(0,QeqAfter),Math.min(13.9,PeqAfter),W,260,xRM,yRM),5,'#e74c3c','#fff');
 
-  const dir=shock==='tech'?-1:1;
   document.getElementById('v710-readout').innerHTML=
     `<table style="width:100%;font-size:0.84rem;border-collapse:collapse;">
       <tr style="border-bottom:1px solid var(--rule);"><th style="text-align:left;padding:4px;">Variable</th><th>Before</th><th>After</th><th>Change</th></tr>
-      <tr><td>Market P*</td><td>$${PeqBefore.toFixed(2)}</td><td>$${PeqAfter.toFixed(2)}</td><td style="color:${dir>0?'#e74c3c':'#27ae60'}">${dir>0&&dw>0?'&uarr;':'&darr;'}</td></tr>
-      <tr><td>Market Q*</td><td>${QeqBefore.toFixed(0)}</td><td>${Math.max(0,QeqAfter).toFixed(0)}</td><td style="color:${dir>0?'#e74c3c':'#27ae60'}">${dir>0&&dw>0?'&darr;':'&uarr;'}</td></tr>
+      <tr><td>Market P*</td><td>$${PeqBefore.toFixed(2)}</td><td>$${PeqAfter.toFixed(2)}</td><td style="color:${sign>0&&dw>0?'#e74c3c':'#27ae60'}">${sign>0&&dw>0?'up':sign<0&&dw>0?'down':'n/a'}</td></tr>
+      <tr><td>Market Q*</td><td>${QeqBefore.toFixed(0)}</td><td>${Math.max(0,QeqAfter).toFixed(0)}</td><td style="color:${sign>0&&dw>0?'#e74c3c':'#27ae60'}">${sign>0&&dw>0?'down':sign<0&&dw>0?'up':'n/a'}</td></tr>
     </table>`;
 }
 
@@ -1428,10 +1427,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     v710Update();
   });
   document.querySelectorAll('.cvs-wrap').forEach(el=>ro.observe(el));
-
-  function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
-  function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
-  window.openLN=openLN; window.closeLN=closeLN;
 });
 
 function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
