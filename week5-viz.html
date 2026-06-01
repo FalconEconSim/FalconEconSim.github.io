@@ -71,7 +71,7 @@
     <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
     <li class="left-nav-item published active"><a href="week5.html">Week 5</a></li>
     <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
-    <li class="left-nav-item upcoming"><span>Week 7</span></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
     <li class="left-nav-item upcoming"><span>Week 8</span></li>
     <li class="left-nav-item upcoming"><span>Week 9</span></li>
     <li class="left-nav-item upcoming"><span>Week 10</span></li>
@@ -129,8 +129,24 @@
     <p class="fig-intro">
       Drag the worker slider to move simultaneously on both panels. The top panel draws a tangent line on the TP curve
       (whose slope is MPL); the bottom panel lights up the corresponding MPL point. This makes the
-      "MPL = slope of TP" relationship viscerally clear.
+      "MPL = slope of TP" relationship viscerally clear. Notice that as you increase the number of workers, the marginal
+      product of labor falls -- this is the <strong>Law of Diminishing Marginal Product</strong>: each additional worker
+      adds less to total output than the previous one (assuming capital is held fixed).
     </p>
+
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;align-items:center;">
+      <span class="viz-slider-label" style="white-space:nowrap;">Production function:</span>
+      <select class="viz-select" id="v51-form" onchange="v51ChangeForm()" style="font-size:0.84rem;padding:4px 10px;">
+        <option value="cobb">Cobb-Douglas: Q = K&#x00B2;&#x00B2; &middot; L&#x00B2;&#x00B2;</option>
+        <option value="scurve">S-Curve (Cubic): Q = 1.5L&#x00B2; &minus; 0.1L&#x00B3;</option>
+        <option value="quad">Quadratic: Q = 3L &minus; 0.15L&#x00B2;</option>
+        <option value="linear">Linear: Q = 2.5L</option>
+      </select>
+    </div>
+    <div id="v51-form-desc" style="background:var(--accent-light);border:1px solid #c7d9f8;border-radius:7px;padding:0.7rem 1rem;font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;line-height:1.65;">
+      <strong>Cobb-Douglas:</strong> Q = K<sup>0.5</sup> &middot; L<sup>0.5</sup>. Output is always positive and always increasing in L, but at a decreasing rate. This is the most common textbook production function. MPL falls as L rises (diminishing returns), but never reaches zero.
+    </div>
+
     <div class="cvs-wrap">
       <div class="panel-label">Total Product (TP)</div>
       <canvas id="cvs51a" height="200"></canvas>
@@ -143,7 +159,7 @@
         <input type="range" class="viz-slider" id="v51-l" min="0.1" max="9.9" step="0.1" value="3" oninput="v51Update()" style="width:200px;">
         <span class="viz-slider-val" id="v51-l-val">3.0</span>
       </div>
-      <div class="viz-slider-group">
+      <div id="v51-k-group" class="viz-slider-group">
         <span class="viz-slider-label">Capital K:</span>
         <input type="range" class="viz-slider" id="v51-k" min="1" max="16" step="1" value="4" oninput="v51Update()">
         <span class="viz-slider-val" id="v51-k-val">4</span>
@@ -444,6 +460,56 @@ function dot5(ctx, x, y, r, fill, stroke) {
 // ══════════════════════════════════════════════════════════════════════
 let v51W, v51H, v51Ha, v51ctxA, v51ctxB;
 
+const V51_FORMS = {
+  cobb: {
+    tp:  (L,K)=>Math.pow(K,0.5)*Math.pow(Math.max(0.001,L),0.5),
+    mpl: (L,K)=>0.5*Math.pow(K,0.5)*Math.pow(Math.max(0.001,L),-0.5),
+    yRA: [0,5], yRB: [-0.1,1.3],
+    desc: '<strong>Cobb-Douglas:</strong> Q = K<sup>0.5</sup> &middot; L<sup>0.5</sup>. Output always increases in L but at a decreasing rate. MPL falls as L rises (diminishing returns), never reaching zero. The most common textbook production function.',
+    phase: mpl=>mpl>0.5?'Rising fast':mpl>0.2?'Slowing':mpl>0?'Near peak':'Declining',
+    showK: true,
+  },
+  scurve: {
+    tp:  (L,K)=>Math.max(0, 1.5*L*L - 0.1*L*L*L),
+    mpl: (L,K)=>Math.max(0, 3*L - 0.3*L*L),
+    yRA: [0,14], yRB: [-0.5,8],
+    desc: '<strong>S-Curve (Cubic):</strong> Q = 1.5L<sup>2</sup> &minus; 0.1L<sup>3</sup>. The classic S-shaped total product curve. MPL first rises (increasing returns), then falls after reaching a maximum (diminishing returns), and eventually reaches zero. This matches the standard textbook diagram.',
+    phase: mpl=>mpl>6?'Increasing returns':mpl>3?'Peak MP':mpl>0?'Diminishing returns':'Zero/Negative',
+    showK: false,
+  },
+  quad: {
+    tp:  (L,K)=>Math.max(0, 3*L - 0.15*L*L),
+    mpl: (L,K)=>Math.max(0, 3 - 0.3*L),
+    yRA: [0,16], yRB: [-0.2,3.5],
+    desc: '<strong>Quadratic:</strong> Q = 3L &minus; 0.15L<sup>2</sup>. Total product rises then falls. MPL is linear and decreasing -- diminishing returns begin immediately. Output eventually falls if too many workers are hired (negative MPL). Think of overcrowded workspace.',
+    phase: mpl=>mpl>2?'Strong returns':mpl>1?'Moderate':mpl>0?'Weak returns':'Negative MP',
+    showK: false,
+  },
+  linear: {
+    tp:  (L,K)=>2.5*L,
+    mpl: (L,K)=>2.5,
+    yRA: [0,26], yRB: [-0.5,4],
+    desc: '<strong>Linear:</strong> Q = 2.5L. Each worker adds the same amount to output -- there are no diminishing returns. The MPL is constant (flat line in the bottom panel). This is unrealistic for most production but illustrates what "constant returns to labor" looks like.',
+    phase: mpl=>'Constant MPL',
+    showK: false,
+  },
+};
+
+function v51GetForm() {
+  const sel=document.getElementById('v51-form');
+  return sel ? (V51_FORMS[sel.value]||V51_FORMS.cobb) : V51_FORMS.cobb;
+}
+
+function v51ChangeForm() {
+  const sel=document.getElementById('v51-form');
+  const form=V51_FORMS[sel.value]||V51_FORMS.cobb;
+  const desc=document.getElementById('v51-form-desc');
+  if(desc) desc.innerHTML=form.desc;
+  const kg=document.getElementById('v51-k-group');
+  if(kg) kg.style.display=form.showK?'':'none';
+  v51Update();
+}
+
 function v51TP(L, K, a, b) { return Math.pow(K, a) * Math.pow(Math.max(0.001,L), b); }
 function v51MPL(L, K, a, b) { return b * Math.pow(K, a) * Math.pow(Math.max(0.001,L), b-1); }
 
@@ -463,11 +529,11 @@ function v51Draw() {
 
   const L = parseFloat(document.getElementById('v51-l').value);
   const K = parseInt(document.getElementById('v51-k').value);
-  const a=0.5, b=0.5;
-  const xR=[0,10], yRA=[0,5], yRB=[-0.2,1.2];
+  const form = v51GetForm();
+  const xR=[0,10], yRA=form.yRA, yRB=form.yRB;
 
-  const tp=L=>v51TP(L,K,a,b);
-  const mpl=L=>v51MPL(L,K,a,b);
+  const tp=l=>form.tp(l,K);
+  const mpl=l=>form.mpl(l,K);
 
   // ─ TOP PANEL (TP) ─
   ctxA.clearRect(0,0,W,HA);
@@ -483,7 +549,7 @@ function v51Draw() {
   ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2.5; ctxA.stroke();
 
   // Current point on TP
-  const tpL=v51TP(L,K,a,b), mplL=v51MPL(L,K,a,b);
+  const tpL=tp(L), mplL=mpl(L);
   const [cx,cy]=toC(L,tpL,W,HA,xR,yRA);
   // Tangent line: y = tpL + mplL*(x - L), always through the current point
   const dx=Math.min(L-0.1, 10-L, 2.0);
@@ -503,9 +569,9 @@ function v51Draw() {
   ctxA.fillText(`slope = MPL = ${mplL.toFixed(3)}`, lblX2, lblY2 + 13);
 
   // Phase label
-  const phase=mplL>0.5?'Rising fast':mplL>0.2?'Slowing':mplL>0?'Near peak':'Declining';
+  const phaseLabel=form.phase(mplL);
   ctxA.fillStyle='#6b52a8'; ctxA.textAlign='right';
-  ctxA.fillText(phase,W-MR-4,MT+16);
+  ctxA.fillText(phaseLabel,W-MR-4,MT+16);
 
   // Drop line
   const [axL]=toC(L,0,W,HA,xR,yRA);
@@ -544,16 +610,16 @@ function v51Update() {
   const K=parseInt(document.getElementById('v51-k').value);
   document.getElementById('v51-l-val').textContent=L.toFixed(1);
   document.getElementById('v51-k-val').textContent=K;
-  const a=0.5,b=0.5;
-  const tp=Math.pow(K,a)*Math.pow(L,b);
-  const mpl=b*Math.pow(K,a)*Math.pow(L,b-1);
-  const mpl2=a*(a-1)*Math.pow(K,a-1)*Math.pow(L,b);
-  const phase=mpl>0.5?'Rising fast':mpl>0.2?'Slowing':mpl>0?'Near peak':'Declining';
+  const form=v51GetForm();
+  const tp=form.tp(L,K);
+  const mpl=form.mpl(L,K);
+  const phase=form.phase(mpl);
+  const showK=form.showK;
   document.getElementById('v51-readout').innerHTML=
     `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">L</div><div class="readout-val">${L.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">K (fixed)</div><div class="readout-val">${K}</div></div>
-      <div class="readout-col"><div class="readout-label">TP</div><div class="readout-val">${tp.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val">${L.toFixed(1)}</div></div>
+      ${showK?`<div class="readout-col"><div class="readout-label">K (fixed)</div><div class="readout-val">${K}</div></div>`:''}
+      <div class="readout-col"><div class="readout-label">TP (output)</div><div class="readout-val">${tp.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">MPL = slope of TP</div><div class="readout-val" style="color:#e74c3c">${mpl.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">Phase</div><div class="readout-val" style="color:#6b52a8;font-size:0.82rem;">${phase}</div></div>
     </div>`;
@@ -774,27 +840,38 @@ function v53Draw() {
 
 function v53Init() {
   const cvs=document.getElementById('cvs53'); if(!cvs) return;
-  // Snap mouse to nearest point on isoquant: just use L from mouse x
-  function mouseToL(e) {
+  // Find L that gives the closest point on isoquant K=16/L to cursor (px,py) in canvas pixels
+  function closestLOnCurve(px, py) {
+    const dpr=window.devicePixelRatio||1;
+    const W=cvs.width/dpr, H=cvs.height/dpr;
+    let bestL=v53L, bestDist=Infinity;
+    for(let l=0.4; l<=16; l+=0.08) {
+      const k=16/l;
+      const [sx,sy]=toC(l,k,W,H,[0,18],[0,18]);
+      const d=Math.hypot(sx-px,sy-py);
+      if(d<bestDist){bestDist=d;bestL=l;}
+    }
+    return Math.max(0.4,Math.min(16,bestL));
+  }
+  function getCanvasXY(e) {
     const r=cvs.getBoundingClientRect();
     const dpr=window.devicePixelRatio||1;
-    const px=(e.clientX-r.left)*(cvs.width/r.width)/dpr;
-    const W=cvs.width/dpr, H=cvs.height/dpr;
-    const [Lm]=fromC(px,0,W,H,[0,18],[0,18]);
-    return Math.max(0.5,Math.min(16,Lm));
+    return [(e.clientX-r.left)*(cvs.width/r.width)/dpr, (e.clientY-r.top)*(cvs.height/r.height)/dpr];
   }
   cvs.addEventListener('mousedown',e=>{
-    v53drag=true; v53L=mouseToL(e); v53Draw();
+    const [px,py]=getCanvasXY(e);
+    v53drag=true; v53L=closestLOnCurve(px,py); v53Draw();
   });
   cvs.addEventListener('mousemove',e=>{
     if(!v53drag)return;
-    const r=cvs.getBoundingClientRect();
-    const px=(e.clientX-r.left)*(cvs.width/r.width)/(window.devicePixelRatio||1);
-    v53L=Math.max(0.5,Math.min(16,fromC(px,0,cvs.width/(window.devicePixelRatio||1),cvs.height/(window.devicePixelRatio||1),[0,18],[0,18])[0]));
-    v53Draw();
+    const [px,py]=getCanvasXY(e);
+    v53L=closestLOnCurve(px,py); v53Draw();
   });
   cvs.addEventListener('mouseup',()=>v53drag=false);
   cvs.addEventListener('mouseleave',()=>v53drag=false);
+  cvs.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v53drag=true;v53L=closestLOnCurve(px,py);v53Draw();},{passive:false});
+  cvs.addEventListener('touchmove',e=>{if(!v53drag)return;e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v53L=closestLOnCurve(px,py);v53Draw();},{passive:false});
+  cvs.addEventListener('touchend',()=>v53drag=false);
   v53Draw();
 }
 

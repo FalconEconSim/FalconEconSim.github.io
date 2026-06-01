@@ -77,7 +77,7 @@
     <li class="left-nav-item published active"><a href="week4.html">Week 4</a></li>
     <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
     <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
@@ -255,7 +255,7 @@
     <p class="fig-intro">
       Consumer surplus (CS) is the area of the triangle between the demand curve and the market price. Use the first slider
       to set the initial price, then raise it with the second slider to see how CS shrinks, decomposed into the
-      <strong style="color:#e74c3c">rectangle</strong> (existing buyers now paying more) and the <strong style="color:#e67e22">exit triangle</strong>
+      <strong style="color:#27ae60">rectangle</strong> (existing buyers now paying more) and the <strong style="color:#e6ac17">exit triangle</strong>
       (buyers priced out of the market). Click <strong>Show Calculation</strong> to see the step-by-step formula.
     </p>
     <div class="cvs-wrap"><canvas id="cvs6" height="260"></canvas></div>
@@ -324,6 +324,17 @@
       <button class="v48-speed-btn" data-rate="0.5" onclick="v48SetRate(0.5)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
       <button class="v48-speed-btn active-rate" data-rate="1" onclick="v48SetRate(1)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-light);color:var(--accent);cursor:pointer;">1x</button>
       <button class="v48-speed-btn" data-rate="2" onclick="v48SetRate(2)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
+    </div>
+
+    <!-- Market demand formula box -->
+    <div style="background:var(--off-white);border:1px solid var(--rule);border-radius:9px;padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:0.88rem;line-height:1.95;">
+      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.55rem;">Market Demand Formula by Price Range</div>
+      <div style="display:flex;flex-direction:column;gap:0.3rem;font-family:var(--mono);">
+        <div><span style="display:inline-block;min-width:140px;color:var(--muted);">P &gt; $30:</span><strong style="color:var(--muted);">Q<sub>m</sub> = 0</strong> &nbsp;<span style="color:var(--muted);font-size:0.82rem;">(neither consumer buys; choke price of Consumer 1 not yet reached)</span></div>
+        <div><span style="display:inline-block;min-width:140px;color:#c0392b;">$12 &lt; P &le; $30:</span><strong style="color:#c0392b;">Q<sub>m</sub> = 30 &minus; P</strong> &nbsp;<span style="color:var(--muted);font-size:0.82rem;">(Consumer 1 only; Consumer 2's choke price $12 not yet reached)</span></div>
+        <div><span style="display:inline-block;min-width:140px;color:#27ae60;">P &le; $12:</span><strong style="color:#27ae60;">Q<sub>m</sub> = (30 &minus; P) + (24 &minus; 2P) = 54 &minus; 3P</strong> &nbsp;<span style="color:var(--muted);font-size:0.82rem;">(both consumers buy; sum of demand curves)</span></div>
+      </div>
+      <div style="margin-top:0.6rem;font-size:0.8rem;color:var(--muted);">The <em>choke price</em> is the price at which a consumer's demand falls to zero. Consumer 1: choke price = $30 (sets 30 &minus; P = 0). Consumer 2: choke price = $12 (sets 24 &minus; 2P = 0).</div>
     </div>
 
     <!-- Builder -->
@@ -674,9 +685,10 @@ function v1Init() {
     if (!v1.drag) return;
     const t = e.touches[0];
     const r = cvs.getBoundingClientRect();
+    const px = (t.clientX - r.left) * (cvs.width/r.width) / (window.devicePixelRatio||1);
     const py = (t.clientY - r.top) * (cvs.height/r.height) / (window.devicePixelRatio||1);
-    if (v1.drag===1) v1.P1 = pyToP(py);
-    else v1.P2 = pyToP(py);
+    if (v1.drag===1) v1.P1 = snapToLine(px, py);
+    else v1.P2 = snapToLine(px, py);
     v1Draw();
   }, {passive:false});
   cvs.addEventListener('touchend', () => v1.drag = null);
@@ -1060,14 +1072,14 @@ function v6Draw() {
   ctx.fill();
 
   if (Pn > P) {
-    // rectangle (red): (0..Qn) × (P..Pn)
-    ctx.fillStyle='rgba(231,76,60,0.3)';
+    // rectangle (green): (0..Qn) × (P..Pn)
+    ctx.fillStyle='rgba(39,174,96,0.3)';
     ctx.fillRect(ML, py0n, qnx-ML, py0-py0n);
 
-    // exit triangle (orange): Qn..Q, P..Pn
+    // exit triangle (yellow/gold): Qn..Q, P..Pn
     ctx.beginPath();
     ctx.moveTo(qnx,py0n); ctx.lineTo(qx,py0); ctx.lineTo(qnx,py0); ctx.closePath();
-    ctx.fillStyle='rgba(230,126,34,0.35)';
+    ctx.fillStyle='rgba(230,172,23,0.45)';
     ctx.fill();
   }
 
@@ -1082,17 +1094,17 @@ function v6Draw() {
   ctx.setLineDash([]);
 
   dot(ctx,qx,py0,7,'#1a56db','#fff');
-  if(Pn>P) dot(ctx,qnx,py0n,7,'#e74c3c','#fff');
+  if(Pn>P) dot(ctx,qnx,py0n,7,'#27ae60','#fff');
 
   document.getElementById('v6-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">CS at P*=$${P}</div><div class="readout-val" style="color:#1a56db">$${CS.toFixed(1)}</div></div>
       ${Pn>P?`<div class="readout-col"><div class="readout-label">CS at P'=$${Pn}</div><div class="readout-val" style="color:#888">$${CSnew.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">ΔCS</div><div class="readout-val" style="color:#e74c3c">−$${(CS-CSnew).toFixed(1)}</div></div>` : ''}
+      <div class="readout-col"><div class="readout-label">ΔCS</div><div class="readout-val" style="color:#e05252">−$${(CS-CSnew).toFixed(1)}</div></div>` : ''}
     </div>
     ${Pn>P?`<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--muted)">
-      Lost CS = <span style="color:#e74c3c">rectangle $${deltaRect.toFixed(1)}</span> (existing buyers overpay)
-      + <span style="color:#e67e22">triangle $${deltaTri.toFixed(1)}</span> (buyers who exit)
+      Lost CS = <span style="color:#27ae60">rectangle $${deltaRect.toFixed(1)}</span> (existing buyers overpay)
+      + <span style="color:#c89500">triangle $${deltaTri.toFixed(1)}</span> (buyers who exit)
     </div>`:'<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--muted)">Raise P\' above P* to see how CS decomposes.</div>'}`;
 }
 
@@ -1140,9 +1152,9 @@ function v6ShowCalc() {
     &nbsp;&nbsp;Q' = ${v6.a} &minus; ${v6.b} &times; ${Pn} = <strong>${Qn.toFixed(1)}</strong><br>
     &nbsp;&nbsp;CS' = (1/2) &times; ${Qn.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${Pn}) = <strong>$${CSnew.toFixed(2)}</strong><br><br>
     <strong>Lost CS = $${(CS-CSnew).toFixed(2)}</strong><br>
-    &nbsp;&nbsp;= Rectangle (existing buyers pay more): Q' &times; (P' &minus; P*) = ${Qn.toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:#e74c3c;">$${dRect.toFixed(2)}</strong><br>
+    &nbsp;&nbsp;= Rectangle (existing buyers pay more): Q' &times; (P' &minus; P*) = ${Qn.toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:#27ae60;">$${dRect.toFixed(2)}</strong><br>
     &nbsp;&nbsp;+ Triangle (buyers who exit): (1/2) &times; (Q* &minus; Q') &times; (P' &minus; P*)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;= (1/2) &times; ${(Q-Qn).toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:#e67e22;">$${dTri.toFixed(2)}</strong>` : ''}`;
+    &nbsp;&nbsp;&nbsp;&nbsp;= (1/2) &times; ${(Q-Qn).toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:#c89500;">$${dTri.toFixed(2)}</strong>` : ''}`;
 }
 
 function v6Init() {

@@ -46,6 +46,12 @@
     .hub-footer-left a { color:var(--muted); text-decoration:none; }
     .hub-footer-left a:hover { color:var(--accent); }
     .footer-logo { height:22px; opacity:0.5; }
+    .v61-steps { background:#f8fafb; border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.1rem; margin-top:0.75rem; font-size:0.875rem; line-height:1.8; display:none; }
+    .v61-steps.visible { display:block; }
+    .v61-step { margin-bottom:0.35rem; }
+    .v61-step-num { font-family:var(--mono); font-size:0.72rem; font-weight:600; color:var(--accent); background:var(--accent-light); padding:1px 6px; border-radius:3px; margin-right:0.4rem; }
+    .v62-form-note { font-size:0.84rem; color:var(--muted); line-height:1.65; margin-top:0.6rem; padding:0.65rem 0.9rem; background:var(--off-white); border:1px solid var(--rule); border-radius:7px; }
+    .viz-select { font-family:var(--mono); font-size:0.82rem; border:1px solid var(--rule); border-radius:6px; padding:4px 8px; background:var(--off-white); color:var(--text); cursor:pointer; }
     @media(max-width:580px){ .two-col { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -61,7 +67,7 @@
     <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
     <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
     <li class="left-nav-item published active"><a href="week6.html">Week 6</a></li>
-    <li class="left-nav-item upcoming"><span>Week 7</span></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
     <li class="left-nav-item upcoming"><span>Week 8</span></li>
     <li class="left-nav-item upcoming"><span>Week 9</span></li>
     <li class="left-nav-item upcoming"><span>Week 10</span></li>
@@ -78,9 +84,9 @@
     <div class="top-bar-divider"></div>
     <div class="breadcrumb">
       <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">›</span>
+      <span class="breadcrumb-sep">&#8250;</span>
       <a href="week6.html">Week 6</a>
-      <span class="breadcrumb-sep">›</span>
+      <span class="breadcrumb-sep">&#8250;</span>
       <span>Visualizations</span>
     </div>
   </div>
@@ -91,15 +97,14 @@
 
   <div class="viz-hero">
     <div class="viz-ghost">06</div>
-    <p class="viz-week-label">Week 6 · Interactive Visualizations</p>
+    <p class="viz-week-label">Week 6 &middot; Interactive Visualizations</p>
     <h1 class="viz-title">Cost Theory</h1>
     <p class="viz-instructor">Prof. Naveen Sunder</p>
     <nav class="toc">
-      <div class="toc-title">Seven Figures</div>
+      <div class="toc-title">Six Figures</div>
       <ol>
         <li><a href="#sec-6-1">Fig 6.1: Cost Minimisation Sandbox</a></li>
         <li><a href="#sec-6-2">Fig 6.2: Two-Panel Cost Derivation</a></li>
-        <li><a href="#sec-6-4">Fig 6.4: Bang-for-the-Buck Reallocation Engine</a></li>
         <li><a href="#sec-6-5">Fig 6.5: SR vs LR Cost Curves</a></li>
         <li><a href="#sec-6-6">Fig 6.6: LRAC Envelope Builder</a></li>
         <li><a href="#sec-6-8">Fig 6.8: Minimum Wage Automation Simulator</a></li>
@@ -108,14 +113,14 @@
     </nav>
   </div>
 
-  <!-- ═══ FIG 6.1 - COST MINIMISATION SANDBOX ═══ -->
+  <!-- Fig 6.1 - COST MINIMISATION SANDBOX -->
   <section class="fig-section" id="sec-6-1">
     <div class="fig-hdr">
       <span class="fig-label">Fig 6.1</span>
       <span class="fig-title">Cost Minimisation Sandbox</span>
     </div>
     <p class="fig-intro">
-      Set the wage w, capital rental rate v, and target output q. The isoquant and isocost family appear. Drag the bundle and watch MRTS vs w/v update in real time. The bundle turns green when you hit the tangency condition MRTS = w/v.
+      Set the wage w, rental rate v, and target output q using the sliders. Then drag the dot on the graph to your best guess for the cost-minimising bundle (L, K). The dot turns green when you find the tangency. When you are ready to check your work, click "Show Optimal Bundle" to see the step-by-step solution.
     </p>
     <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
       <div class="viz-slider-group">
@@ -133,13 +138,16 @@
         <input type="range" class="viz-slider" id="v61-q" min="1" max="6" step="0.5" value="3" oninput="v61Update()">
         <span class="viz-slider-val" id="v61-q-val">3</span>
       </div>
-      <button class="viz-btn" onclick="v61ShowOptimal()">Show Optimal</button>
+      <button class="viz-btn" id="v61-show-btn" onclick="v61ShowOptimal()">Show Optimal Bundle</button>
     </div>
     <div class="cvs-wrap"><canvas id="cvs61" height="280"></canvas></div>
     <div class="viz-readout" id="v61-readout"></div>
+    <div class="v61-steps" id="v61-steps">
+      <div id="v61-steps-content"></div>
+    </div>
   </section>
 
-  <!-- ═══ FIG 6.2 - TWO-PANEL COST DERIVATION ═══ -->
+  <!-- Fig 6.2 - TWO-PANEL COST DERIVATION -->
   <section class="fig-section" id="sec-6-2">
     <div class="fig-hdr">
       <span class="fig-label">Fig 6.2</span>
@@ -148,7 +156,18 @@
     <p class="fig-intro">
       Left panel: isoquant map with the expanding isocost sweeping across output levels. Right panel: TC(q) curve building itself point by point. Step through output levels to watch each cost-minimising bundle map to a TC value.
     </p>
-    <div class="two-col">
+    <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
+      <span class="viz-slider-label">Production function:</span>
+      <select class="viz-select" id="v62-form" onchange="v62FormChange()">
+        <option value="cd">Cobb-Douglas: Q = K^(1/2) &middot; L^(1/2)</option>
+        <option value="subs">Perfect Substitutes: Q = L + K</option>
+        <option value="comp">Perfect Complements: Q = min(L, K)</option>
+      </select>
+    </div>
+    <div class="v62-form-note" id="v62-form-note">
+      Cobb-Douglas production: each input is imperfectly substitutable. The expansion path is a ray through the origin, meaning the firm scales both inputs proportionally as output rises. The TC curve is linear in q (constant returns to scale here).
+    </div>
+    <div class="two-col" style="margin-top:0.75rem;">
       <div class="cvs-wrap">
         <div class="panel-label">Isoquant map + isocost</div>
         <canvas id="cvs62a" height="260"></canvas>
@@ -168,42 +187,7 @@
     <div class="viz-readout" id="v62-readout"></div>
   </section>
 
-  <!-- ═══ FIG 6.4 - BANG-FOR-THE-BUCK ENGINE ═══ -->
-  <section class="fig-section" id="sec-6-4">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 6.4</span>
-      <span class="fig-title">Bang-for-the-Buck Reallocation Engine</span>
-    </div>
-    <p class="fig-intro">
-      Set MPL, MPK, w, v. The two bars show MPL/w vs MPK/v. An animated dollar flows from the overpaid input to the underpaid one, and the bars converge to the optimum. This directly addresses the most common exam error: students forget to equalise the marginal products per dollar.
-    </p>
-    <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">MPL:</span>
-        <input type="range" class="viz-slider" id="v64-mpl" min="1" max="20" step="1" value="12" oninput="v64Update()">
-        <span class="viz-slider-val" id="v64-mpl-val">12</span>
-      </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">MPK:</span>
-        <input type="range" class="viz-slider" id="v64-mpk" min="1" max="20" step="1" value="8" oninput="v64Update()">
-        <span class="viz-slider-val" id="v64-mpk-val">8</span>
-      </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Wage w:</span>
-        <input type="range" class="viz-slider" id="v64-w" min="1" max="10" step="1" value="4" oninput="v64Update()">
-        <span class="viz-slider-val" id="v64-w-val">4</span>
-      </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Rental v:</span>
-        <input type="range" class="viz-slider" id="v64-v" min="1" max="10" step="1" value="4" oninput="v64Update()">
-        <span class="viz-slider-val" id="v64-v-val">4</span>
-      </div>
-    </div>
-    <div class="cvs-wrap"><canvas id="cvs64" height="240"></canvas></div>
-    <div class="viz-readout" id="v64-readout"></div>
-  </section>
-
-  <!-- ═══ FIG 6.5 - SR vs LR COST CURVES ═══ -->
+  <!-- Fig 6.5 - SR vs LR COST CURVES -->
   <section class="fig-section" id="sec-6-5">
     <div class="fig-hdr">
       <span class="fig-label">Fig 6.5</span>
@@ -224,32 +208,40 @@
     <div class="viz-readout" id="v65-readout"></div>
   </section>
 
-  <!-- ═══ FIG 6.6 - LRAC ENVELOPE BUILDER ═══ -->
+  <!-- Fig 6.6 - LRAC ENVELOPE BUILDER -->
   <section class="fig-section" id="sec-6-6">
     <div class="fig-hdr">
       <span class="fig-label">Fig 6.6</span>
       <span class="fig-title">LRAC Envelope Builder</span>
     </div>
     <p class="fig-intro">
-      Add SRAC curves (each corresponding to a different plant size K). The LRAC envelope redraws after each addition, always hugging from below. The tangency point for each SRAC is highlighted. Watch the "lower envelope" concept build itself live.
+      Each SRAC curve corresponds to a different fixed level of capital (K = 1, 2, 3, 4, ...). Use the slider to show more capital options. The LRAC is the lower envelope of all SRAC curves: at each output level, the long-run optimum is whichever fixed-capital option is cheapest. Watch the LRAC approach a smooth curve as you add more plant sizes.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs66" height="280"></canvas></div>
-    <div class="viz-ctrl-row">
-      <button class="viz-btn" onclick="v66AddCurve()">+ Add Plant Size</button>
-      <button class="viz-btn" onclick="v66Reset()">&#8635; Reset</button>
-      <span id="v66-count" style="font-family:var(--mono);font-size:0.78rem;color:var(--muted);"></span>
+    <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Number of SRAC curves:</span>
+        <input type="range" class="viz-slider" id="v66-nk" min="1" max="8" step="1" value="4" oninput="v66Update()" style="width:160px;">
+        <span class="viz-slider-val" id="v66-nk-val">4</span>
+      </div>
     </div>
+    <div class="cvs-wrap"><canvas id="cvs66" height="300"></canvas></div>
     <div class="viz-readout" id="v66-readout"></div>
   </section>
 
-  <!-- ═══ FIG 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR ═══ -->
+  <!-- Fig 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR -->
   <section class="fig-section" id="sec-6-8">
     <div class="fig-hdr">
       <span class="fig-label">Fig 6.8</span>
       <span class="fig-title">Minimum Wage Automation Simulator</span>
     </div>
     <p class="fig-intro">
-      A firm is at cost-minimising (L*, K*) on an isoquant. Raise the minimum wage w. The isocost rotates, the old optimum turns red ("no longer optimal"), and the new tangency animates to a more capital-intensive point. Watch K/L and TC update live.
+      Imagine you manage a firm. Currently, the government's minimum wage is exactly what you're paying your workers. Now the government passes a law raising the minimum wage. What do you think happens?
+    </p>
+    <p class="fig-intro" style="margin-top:-0.75rem;">
+      Think about it: if labor suddenly costs more, what would a cost-conscious manager do? Would you use the same amount of labor? Or would you try to use less labor and substitute toward capital?
+    </p>
+    <p class="fig-intro" style="margin-top:-0.75rem;">
+      Use the wage slider below to see the effect. Watch how the isocost line rotates, and see where the new cost-minimising bundle lands. Does it match your intuition?
     </p>
     <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
       <div class="viz-slider-group">
@@ -267,26 +259,32 @@
     <div class="viz-readout" id="v68-readout"></div>
   </section>
 
-  <!-- ═══ FIG 6.10 - EFFICIENT SCALE FINDER ═══ -->
+  <!-- Fig 6.10 - EFFICIENT SCALE FINDER -->
   <section class="fig-section" id="sec-6-10">
     <div class="fig-hdr">
       <span class="fig-label">Fig 6.10</span>
       <span class="fig-title">Efficient Scale Finder</span>
     </div>
     <p class="fig-intro">
-      Enter any AC function (pre-loaded with AC = 100/q + q). The tool plots AC, marks q* where dAC/dq = 0 (the efficient scale), shades economies of scale in green and diseconomies in red. A second panel shows the implied industry structure.
+      Choose a preset average cost function from the dropdown. The tool plots AC, marks q* (the efficient scale), and shades economies of scale in green and diseconomies in red. Toggle "Show Marginal Cost" to overlay the MC curve and see where it crosses AC at the minimum.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;flex-wrap:wrap;gap:0.75rem;">
       <div style="display:flex;flex-direction:column;gap:0.3rem;">
-        <span class="viz-slider-label">AC function (type a, b for AC = a/q + b*q):</span>
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">AC =</span>
-          <input type="number" id="v610-a" value="100" min="1" max="500" step="10" style="width:65px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v610Draw()"/>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">/q +</span>
-          <input type="number" id="v610-b" value="1" min="0.1" max="10" step="0.1" style="width:55px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v610Draw()"/>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">q</span>
-        </div>
+        <span class="viz-slider-label">AC function:</span>
+        <select class="viz-select" id="v610-preset" onchange="v610Draw()" style="max-width:320px;">
+          <option value="0">Constant AC: AC = 5</option>
+          <option value="1">Linear AC: AC = 2q + 3</option>
+          <option value="2" selected>Classic U-shape: AC = q - 6 + 36/q</option>
+          <option value="3">Flatter U-shape: AC = 0.5q - 4 + 32/q</option>
+          <option value="4">Steep U-shape: AC = 2q - 8 + 16/q</option>
+          <option value="5">Fixed cost heavy: AC = q + 100/q</option>
+          <option value="6">Cubic: AC = q&sup2; - 8q + 20 + 64/q</option>
+          <option value="7">Economies of scale: AC = 20/q + 2</option>
+          <option value="8">Diseconomies: AC = 3q + 2</option>
+          <option value="9">Textbook standard: AC = q&sup2; - 10q + 40</option>
+        </select>
       </div>
+      <button class="viz-btn" id="v610-mc-btn" onclick="v610ToggleMC()">Show Marginal Cost</button>
     </div>
     <div class="cvs-wrap"><canvas id="cvs610" height="280"></canvas></div>
     <div class="viz-readout" id="v610-readout"></div>
@@ -295,8 +293,8 @@
   <footer class="hub-footer">
     <div class="hub-footer-left">
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
-      &nbsp;·&nbsp; EC224 Intermediate Microeconomics
-      &nbsp;·&nbsp; <a href="week6.html">Back to Week 6</a>
+      &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
+      &nbsp;&middot;&nbsp; <a href="week6.html">Back to Week 6</a>
     </div>
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
@@ -304,9 +302,9 @@
 </main>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
 // SHARED UTILITIES
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
 const ML=50, MR=20, MT=20, MB=40;
 
 function setupCvs(id) {
@@ -349,10 +347,12 @@ function dot6(ctx,x,y,r,fill,stroke){
   ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke||'#fff'; ctx.lineWidth=2; ctx.stroke();
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// FIG 6.1 - COST MINIMISATION SANDBOX
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
+// FIG 6.1 - COST MINIMISATION SANDBOX (self-discovery mode)
+// ======================================================================
 let v61DragL=null, v61DragK=null, v61W=300, v61H=280;
+let v61OptimalShown=false;
+let v61CurL=null, v61CurK=null;
 
 function v61Opt(w,v,q){
   // Q = K^0.5*L^0.5 => cost min: L* = q*sqrt(v/w), K* = q*sqrt(w/v)
@@ -365,18 +365,24 @@ function v61Draw(Lcur,Kcur){
   const v=parseFloat(document.getElementById('v61-v').value);
   const q=parseFloat(document.getElementById('v61-q').value);
   const opt=v61Opt(w,v,q);
-  if(Lcur===undefined) Lcur=opt.Ls; if(Kcur===undefined) Kcur=opt.Ks;
+
+  // Default starting position: somewhere visible but not optimal
+  if(Lcur===undefined){
+    Lcur = v61CurL !== null ? v61CurL : Math.max(0.5, opt.Ls * 1.8);
+  }
+  if(Kcur===undefined){
+    Kcur = v61CurK !== null ? v61CurK : Math.max(0.5, opt.Ks * 0.5);
+  }
+  v61CurL=Lcur; v61CurK=Kcur;
+
   const cvs=document.getElementById('cvs61'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
   const W=cvs.clientWidth||400;
-  // Will be made square below
   const ctx=cvs.getContext('2d');
   ctx.clearRect(0,0,cvs.width,cvs.height);
-  // Square canvas: both axes go [0,16] so equal visual scale
   const H=W;
   if(cvs.height!==Math.round(H*dpr)){cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   v61W=W; v61H=H;
-  // Fixed axes - do not change with slider values
   const AXIS_MAX=16;
   const xR=[0,AXIS_MAX],yR=[0,AXIS_MAX];
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
@@ -390,7 +396,7 @@ function v61Draw(Lcur,Kcur){
   }
   ctx.stroke();
   ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`Isoquant Q = ${q}`,W-MR-80,MT+14);
+  ctx.fillText('Isoquant Q = '+q, W-MR-80, MT+14);
 
   // Isocost family
   const TCopt=opt.TC;
@@ -402,47 +408,62 @@ function v61Draw(Lcur,Kcur){
     ctx.beginPath(); ctx.strokeStyle=i===2?'#e74c3c':'#ddd'; ctx.lineWidth=i===2?1.5:1;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
   });
-  // Isocost label
   const [icLx,icLy]=toC(0,Math.min(TCopt/v,AXIS_MAX),W,H,xR,yR);
   ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`Isocost TC* = ${opt.TC.toFixed(1)}`,icLx+4,icLy-4);
+  ctx.fillText('Isocost TC* = '+opt.TC.toFixed(1), icLx+4, icLy-4);
 
-  // Current bundle - only show "optimal" if near the isoquant AND near the tangency
+  // If optimal is shown, draw the green dot at the optimal location
+  if(v61OptimalShown){
+    const [ox,oy]=toC(opt.Ls,opt.Ks,W,H,xR,yR);
+    dot6(ctx,ox,oy,9,'#2e8b57','#fff');
+    ctx.fillStyle='#2e8b57'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+    const lblX=ox>W-MR-130?ox-140:ox+12;
+    ctx.fillText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')', lblX, oy-6);
+    ctx.fillText('Cost minimised!', lblX, oy+10);
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
+    ctx.setLineDash([]);
+    document.getElementById('v61-readout').innerHTML=
+      '<div class="readout-row">' +
+      '<div class="readout-col"><div class="readout-label">L*</div><div class="readout-val">'+opt.Ls.toFixed(2)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">K*</div><div class="readout-val">'+opt.Ks.toFixed(2)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">MRTS = K/L at optimum</div><div class="readout-val" style="color:#2e8b57">'+(opt.Ks/opt.Ls).toFixed(3)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(w/v).toFixed(3)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">Min TC = wL* + vK*</div><div class="readout-val" style="color:#2e8b57">'+opt.TC.toFixed(2)+'</div></div>' +
+      '</div>';
+    return;
+  }
+
+  // Student-draggable dot
   const MRTS=Kcur/Lcur, wv=w/v;
-  // Check on isoquant: Q_at_bundle ≈ q
-  const Q_bundle = Math.pow(Lcur,0.5)*Math.pow(Kcur,0.5);
-  const onIsoquant = Math.abs(Q_bundle/q - 1) < 0.12;
-  const atTangency = Math.abs(MRTS/wv - 1) < 0.10;
-  const atOpt = onIsoquant && atTangency;
+  const Q_bundle=Math.pow(Lcur,0.5)*Math.pow(Kcur,0.5);
+  const onIsoquant=Math.abs(Q_bundle/q-1)<0.12;
+  const atTangency=Math.abs(MRTS/wv-1)<0.10;
+  const atOpt=onIsoquant&&atTangency;
   const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
   dot6(ctx,bx,by,8,atOpt?'#2e8b57':'#e74c3c','#fff');
   const lblX=bx>W-MR-130?bx-140:bx+10;
   ctx.fillStyle=atOpt?'#2e8b57':'#e74c3c'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`(L=${Lcur.toFixed(1)}, K=${Kcur.toFixed(1)})`,lblX,by-6);
-  if(atOpt) ctx.fillText('Cost minimised!',lblX,by+10);
-  else if(!onIsoquant) { ctx.fillStyle='#888'; ctx.fillText('Not on isoquant yet - drag near the blue curve',lblX,by+22); }
-  else { ctx.fillStyle='#888'; ctx.fillText(`MRTS=${MRTS.toFixed(2)} vs w/v=${wv.toFixed(2)}, keep adjusting`,lblX,by+22); }
-
-  // Optimal point
-  const [ox,oy]=toC(opt.Ls,opt.Ks,W,H,xR,yR);
-  ctx.setLineDash([3,3]); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.fillText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')', lblX, by-6);
+  if(atOpt) ctx.fillText('Cost minimised!', lblX, by+10);
+  else if(!onIsoquant){ ctx.fillStyle='#888'; ctx.fillText('Not on isoquant yet - drag near the blue curve', lblX, by+22); }
+  else { ctx.fillStyle='#888'; ctx.fillText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)+', keep adjusting', lblX, by+22); }
 
   const TC=w*Lcur+v*Kcur;
   document.getElementById('v61-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">L (drag)</div><div class="readout-val">${Lcur.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">K (drag)</div><div class="readout-val">${Kcur.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">MRTS (marginal rate of tech. sub.) = K/L</div><div class="readout-val" style="color:#e74c3c">${MRTS.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Input price ratio w/v</div><div class="readout-val">${(wv).toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Total Cost (TC) = wL + vK</div><div class="readout-val">${TC.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Minimum TC*</div><div class="readout-val" style="color:#2e8b57">${opt.TC.toFixed(2)}</div></div>
-    </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
-      ${atOpt?'Cost minimised: MRTS = w/v. This is the cheapest way to produce Q='+q+'.':'Not optimal. Drag the point toward the tangency where MRTS = w/v = '+(wv).toFixed(2)+'.'}
-    </div>`;
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">L (drag)</div><div class="readout-val">'+Lcur.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">K (drag)</div><div class="readout-val">'+Kcur.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:#e74c3c">'+MRTS.toFixed(3)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(wv).toFixed(3)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">TC = wL + vK</div><div class="readout-val">'+TC.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2e8b57">'+opt.TC.toFixed(2)+'</div></div>' +
+    '</div>' +
+    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">' +
+    (atOpt?'Cost minimised: MRTS = w/v. This is the cheapest way to produce Q='+q+'.':
+      'Not optimal. Drag the dot toward the tangency where MRTS = w/v = '+(wv).toFixed(2)+'. Click "Show Optimal Bundle" when ready.') +
+    '</div>';
 }
 
 function v61Update() {
@@ -452,8 +473,13 @@ function v61Update() {
   document.getElementById('v61-w-val').textContent=w;
   document.getElementById('v61-v-val').textContent=v;
   document.getElementById('v61-q-val').textContent=q;
+  // When sliders change, reset the optimal reveal and start the dot at a non-optimal position
+  v61OptimalShown=false;
+  document.getElementById('v61-steps').classList.remove('visible');
   const opt=v61Opt(w,v,q);
-  v61Draw(opt.Ls, opt.Ks);
+  v61CurL=Math.max(0.5, opt.Ls*1.8);
+  v61CurK=Math.max(0.5, opt.Ks*0.5);
+  v61Draw(v61CurL, v61CurK);
 }
 
 function v61ShowOptimal() {
@@ -461,7 +487,19 @@ function v61ShowOptimal() {
   const v=parseFloat(document.getElementById('v61-v').value);
   const q=parseFloat(document.getElementById('v61-q').value);
   const opt=v61Opt(w,v,q);
+  v61OptimalShown=true;
   v61Draw(opt.Ls, opt.Ks);
+
+  // Show step-by-step solution
+  const wvRatio=(w/v).toFixed(3);
+  const Lstar=opt.Ls.toFixed(3), Kstar=opt.Ks.toFixed(3), TCstar=opt.TC.toFixed(2);
+  document.getElementById('v61-steps-content').innerHTML=
+    '<strong style="font-size:0.9rem;color:var(--text);">Step-by-step solution (Q = K^0.5 * L^0.5, w='+w+', v='+v+', q='+q+')</strong>' +
+    '<div class="v61-step" style="margin-top:0.5rem;"><span class="v61-step-num">Step 1</span> Set MRTS = w/v. For Q = K^0.5 * L^0.5, MRTS = K/L, so: K/L = w/v = '+w+'/'+v+' = '+wvRatio+'. This gives K = (w/v)*L.</div>' +
+    '<div class="v61-step"><span class="v61-step-num">Step 2</span> Substitute into Q = K^0.5 * L^0.5. Replacing K = (w/v)*L: Q = ((w/v)*L)^0.5 * L^0.5 = (w/v)^0.5 * L. Solving: L* = Q / (w/v)^0.5 = '+q+' / '+(w/v).toFixed(4)+'^0.5 = '+Lstar+'.</div>' +
+    '<div class="v61-step"><span class="v61-step-num">Step 3</span> Find K*: K* = (w/v) * L* = '+wvRatio+' * '+Lstar+' = '+Kstar+'.</div>' +
+    '<div class="v61-step"><span class="v61-step-num">Step 4</span> Minimum cost: TC* = w*L* + v*K* = '+w+'*'+Lstar+' + '+v+'*'+Kstar+' = $'+TCstar+'.</div>';
+  document.getElementById('v61-steps').classList.add('visible');
 }
 
 function v61Init(){
@@ -476,30 +514,73 @@ function v61Init(){
     const W=cvs.width/dpr,H=cvs.height/dpr;
     const AXIS_MAX=16;
     const pw=W-ML-MR,ph=H-MT-MB;
-    const L=Math.max(0.1,Math.min(AXIS_MAX, (px-ML)/pw*AXIS_MAX));
-    const K=Math.max(0.1,Math.min(AXIS_MAX, AXIS_MAX - (py-MT)/ph*AXIS_MAX));
+    const L=Math.max(0.1,Math.min(AXIS_MAX,(px-ML)/pw*AXIS_MAX));
+    const K=Math.max(0.1,Math.min(AXIS_MAX,AXIS_MAX-(py-MT)/ph*AXIS_MAX));
     return {L,K};
   }
-  cvs.addEventListener('mousedown',e=>{drag=true; const {L,K}=getBundle(e); v61Draw(L,K);});
-  cvs.addEventListener('mousemove',e=>{if(!drag)return; const {L,K}=getBundle(e); v61Draw(L,K);});
+  cvs.addEventListener('mousedown',e=>{
+    if(v61OptimalShown) return;
+    drag=true; const {L,K}=getBundle(e); v61Draw(L,K);
+  });
+  cvs.addEventListener('mousemove',e=>{
+    if(!drag||v61OptimalShown) return;
+    const {L,K}=getBundle(e); v61Draw(L,K);
+  });
   cvs.addEventListener('mouseup',()=>drag=false);
   cvs.addEventListener('mouseleave',()=>drag=false);
+  // Touch support
+  cvs.addEventListener('touchstart',e=>{
+    if(v61OptimalShown) return;
+    e.preventDefault(); drag=true;
+    const {L,K}=getBundle(e.touches[0]); v61Draw(L,K);
+  },{passive:false});
+  cvs.addEventListener('touchmove',e=>{
+    if(!drag||v61OptimalShown) return;
+    e.preventDefault(); const {L,K}=getBundle(e.touches[0]); v61Draw(L,K);
+  },{passive:false});
+  cvs.addEventListener('touchend',()=>drag=false);
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// FIG 6.2 - TWO-PANEL COST DERIVATION
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
+// FIG 6.2 - TWO-PANEL COST DERIVATION (with functional form dropdown)
+// ======================================================================
 const V62_W=4,V62_V=4;
 const V62_Q_STEPS=[0.5,1,1.5,2,2.5,3,3.5,4,4.5,5];
 let v62CurrStep=0, v62Timer=null;
 
-function v62TC(q){
-  const Ls=q*Math.sqrt(V62_V/V62_W), Ks=q*Math.sqrt(V62_W/V62_V);
-  return V62_W*Ls+V62_V*Ks;
+// Returns {Ls, Ks, TC} for cost-minimising bundle given q, form
+function v62Bundle(q, form){
+  if(form==='cd'){
+    // Q=K^0.5*L^0.5, MRTS=K/L=w/v => L*=q*sqrt(v/w), K*=q*sqrt(w/v)
+    const Ls=q*Math.sqrt(V62_V/V62_W), Ks=q*Math.sqrt(V62_W/V62_V);
+    return {Ls, Ks, TC:V62_W*Ls+V62_V*Ks};
+  } else if(form==='subs'){
+    // Q=L+K, cost min: use only cheaper input
+    // w=4, v=4 => same price, so any combo on isoquant is optimal; use midpoint
+    if(V62_W < V62_V){ return {Ls:q, Ks:0, TC:V62_W*q}; }
+    else if(V62_V < V62_W){ return {Ls:0, Ks:q, TC:V62_V*q}; }
+    else { return {Ls:q/2, Ks:q/2, TC:V62_W*q}; }
+  } else {
+    // comp: Q=min(L,K) => L*=K*=q
+    return {Ls:q, Ks:q, TC:V62_W*q+V62_V*q};
+  }
+}
+
+const V62_FORM_NOTES={
+  cd: 'Cobb-Douglas production: each input is imperfectly substitutable. The expansion path is a ray through the origin, meaning the firm scales both inputs proportionally as output rises. The TC curve is linear in q (constant returns to scale here).',
+  subs: 'Perfect substitutes: Q = L + K. The two inputs are interchangeable, so the firm uses only the cheaper one. With equal prices (w = v = 4), any combination works; the expansion path is the entire isoquant. TC is linear in q with slope equal to the input price.',
+  comp: 'Perfect complements (Leontief): Q = min(L, K). Inputs must be used in a fixed 1:1 ratio; substitution is impossible. The expansion path is the 45-degree ray L = K. Each isoquant is L-shaped. Adding more of one input beyond the ratio yields zero extra output.'
+};
+
+function v62FormChange(){
+  const form=document.getElementById('v62-form').value;
+  document.getElementById('v62-form-note').textContent=V62_FORM_NOTES[form]||'';
+  v62CurrStep=0; clearTimeout(v62Timer); v62Timer=null; v62Draw();
 }
 
 function v62Draw(){
-  const drawPanel=(id,isLeft)=>{
+  const form=(document.getElementById('v62-form')||{value:'cd'}).value||'cd';
+  const drawPanel=(id)=>{
     const cvs=document.getElementById(id); if(!cvs) return null;
     const dpr=window.devicePixelRatio||1;
     const W=cvs.clientWidth||300, H=260;
@@ -509,40 +590,54 @@ function v62Draw(){
     return {ctx,W,H};
   };
 
-  const pA=drawPanel('cvs62a',true), pB=drawPanel('cvs62b',false);
+  const pA=drawPanel('cvs62a'), pB=drawPanel('cvs62b');
   if(!pA||!pB) return;
   const {ctx:ctxA,W:WA,H:HA}=pA, {ctx:ctxB,W:WB,H:HB}=pB;
 
   const xRA=[0,10],yRA=[0,10];
   drawAxesSt(ctxA,WA,HA,xRA,yRA,'L','K');
-  const maxTC=v62TC(V62_Q_STEPS[V62_Q_STEPS.length-1])*1.15;
-  const xRB=[0,6],yRB=[0,maxTC];
+  const maxTCval=v62Bundle(V62_Q_STEPS[V62_Q_STEPS.length-1],form).TC*1.2;
+  const xRB=[0,6],yRB=[0,maxTCval];
   drawAxesSt(ctxB,WB,HB,xRB,yRB,'q','TC');
 
   const colors=['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80','#c0392b','#d4813a','#2e8b57','#1a56db'];
 
-  // Draw all completed steps
   for(let i=0;i<v62CurrStep;i++){
     const q=V62_Q_STEPS[i], col=colors[i%colors.length];
     const isLast=(i===v62CurrStep-1);
+    const bun=v62Bundle(q,form);
 
     // Left: isoquant
-    ctxA.beginPath(); let first=true;
+    ctxA.beginPath(); let firstA=true;
     ctxA.strokeStyle=col+(isLast?'':'99'); ctxA.lineWidth=isLast?2:1.2;
-    for(let l=0.1;l<=10;l+=0.1){
-      const k=q*q/l; if(k>10){first=true;continue;}
-      const [cx,cy]=toC(l,k,WA,HA,xRA,yRA);
-      first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
+    if(form==='cd'){
+      for(let l=0.1;l<=10;l+=0.1){
+        const k=q*q/l; if(k>10){firstA=true;continue;}
+        const [cx,cy]=toC(l,k,WA,HA,xRA,yRA);
+        firstA?(ctxA.moveTo(cx,cy),firstA=false):ctxA.lineTo(cx,cy);
+      }
+    } else if(form==='subs'){
+      // Q=L+K => K=Q-L, L from 0 to Q
+      for(let l=0;l<=q;l+=0.05){
+        const k=q-l; if(k<0||k>10||l>10){firstA=true;continue;}
+        const [cx,cy]=toC(l,k,WA,HA,xRA,yRA);
+        firstA?(ctxA.moveTo(cx,cy),firstA=false):ctxA.lineTo(cx,cy);
+      }
+    } else {
+      // Perfect complements: L-shape at L=q, K=q
+      const [x1,y1]=toC(q,10,WA,HA,xRA,yRA);
+      const [x2,y2]=toC(q,q,WA,HA,xRA,yRA);
+      const [x3,y3]=toC(10,q,WA,HA,xRA,yRA);
+      ctxA.moveTo(x1,y1); ctxA.lineTo(x2,y2); ctxA.lineTo(x3,y3); firstA=false;
     }
     ctxA.stroke();
 
     // Left: optimal bundle
-    const Ls=q*Math.sqrt(V62_V/V62_W), Ks=q*Math.sqrt(V62_W/V62_V);
-    const [bx,by]=toC(Ls,Ks,WA,HA,xRA,yRA);
+    const [bx,by]=toC(bun.Ls,bun.Ks,WA,HA,xRA,yRA);
     dot6(ctxA,bx,by,isLast?7:4,col,'#fff');
 
     // Left: isocost at optimal
-    const TC=v62TC(q);
+    const TC=bun.TC;
     const Lint=TC/V62_W, Kint=TC/V62_V;
     if(Lint<=10&&Kint<=10){
       ctxA.beginPath(); ctxA.strokeStyle=col+(isLast?'':'66'); ctxA.lineWidth=isLast?1.5:1;
@@ -558,19 +653,20 @@ function v62Draw(){
   }
 
   // Right: TC curve (full, gray)
-  ctxB.beginPath(); let fp=true; ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1.5;
+  ctxB.beginPath(); let fpB=true; ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1.5;
   for(let q=0.1;q<=5.5;q+=0.05){
-    const tc=v62TC(q);
+    const tc=v62Bundle(q,form).TC;
     const [cx,cy]=toC(q,tc,WB,HB,xRB,yRB);
-    fp?(ctxB.moveTo(cx,cy),fp=false):ctxB.lineTo(cx,cy);
+    fpB?(ctxB.moveTo(cx,cy),fpB=false):ctxB.lineTo(cx,cy);
   }
   ctxB.stroke();
 
   const step=v62CurrStep>0?V62_Q_STEPS[v62CurrStep-1]:null;
-  document.getElementById('v62-status').textContent=`Step ${v62CurrStep}/${V62_Q_STEPS.length}${step?` · q=${step} · TC=$${v62TC(step).toFixed(2)}`:''}`;
+  document.getElementById('v62-status').textContent='Step '+v62CurrStep+'/'+V62_Q_STEPS.length+(step?' · q='+step+' · TC=$'+v62Bundle(step,form).TC.toFixed(2):'');
+  const bstep=step?v62Bundle(step,form):null;
   document.getElementById('v62-readout').innerHTML=v62CurrStep===0?
     'Step through output levels to watch the TC curve build from the isoquant map.':
-    `At q=${step}: L* = ${(step*Math.sqrt(V62_V/V62_W)).toFixed(2)}, K* = ${(step*Math.sqrt(V62_W/V62_V)).toFixed(2)}, TC = $${v62TC(step).toFixed(2)}`;
+    'At q='+step+': L* = '+bstep.Ls.toFixed(2)+', K* = '+bstep.Ks.toFixed(2)+', TC = $'+bstep.TC.toFixed(2);
 }
 
 function v62CtrlStep(d){
@@ -585,93 +681,10 @@ function v62CtrlPlay(){
   v62Timer=setTimeout(tick,400);
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// FIG 6.4 - BANG-FOR-THE-BUCK REALLOCATION
-// ══════════════════════════════════════════════════════════════════════
-function v64Draw(){
-  const mpl=parseFloat(document.getElementById('v64-mpl').value);
-  const mpk=parseFloat(document.getElementById('v64-mpk').value);
-  const w=parseFloat(document.getElementById('v64-w').value);
-  const v=parseFloat(document.getElementById('v64-v').value);
-  const bpl=mpl/w, bpk=mpk/v;
-  const optimal=Math.abs(bpl/bpk-1)<0.05;
-
-  const cvs=document.getElementById('cvs64'); if(!cvs) return;
-  const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=240;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
-  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-
-  const maxBP=Math.max(bpl,bpk)*1.35;
-  const barW=80, spacing=80, leftX=W/2-spacing-barW, rightX=W/2+spacing;
-  const barMaxH=H-80;
-
-  // Left bar: MPL/w
-  const lH=Math.min(barMaxH,(bpl/maxBP)*barMaxH);
-  ctx.fillStyle=bpl>bpk?'#2e8b57':'rgba(26,86,219,0.5)';
-  ctx.fillRect(leftX, H-40-lH, barW, lH);
-  ctx.fillStyle='#1a1a1a'; ctx.font='bold 12px DM Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('MPL/w',leftX+barW/2,H-22);
-  ctx.fillStyle=bpl>bpk?'#2e8b57':'#1a56db'; ctx.font='bold 14px DM Mono,monospace';
-  ctx.fillText(bpl.toFixed(2),leftX+barW/2,H-40-lH-8);
-
-  // Right bar: MPK/v
-  const rH=Math.min(barMaxH,(bpk/maxBP)*barMaxH);
-  ctx.fillStyle=bpk>bpl?'#2e8b57':'rgba(231,76,60,0.5)';
-  ctx.fillRect(rightX, H-40-rH, barW, rH);
-  ctx.fillStyle='#1a1a1a'; ctx.font='bold 12px DM Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('MPK/v',rightX+barW/2,H-22);
-  ctx.fillStyle=bpk>bpl?'#2e8b57':'#e74c3c';  ctx.font='bold 14px DM Mono,monospace';
-  ctx.fillText(bpk.toFixed(2),rightX+barW/2,H-40-rH-8);
-
-  // Arrow
-  if(!optimal){
-    const from=bpl>bpk?leftX+barW:rightX;
-    const to=bpl>bpk?rightX:leftX+barW;
-    const ay=H/2;
-    ctx.beginPath(); ctx.strokeStyle='#f39c12'; ctx.lineWidth=3;
-    ctx.moveTo(from,ay); ctx.lineTo(to,ay); ctx.stroke();
-    ctx.fillStyle='#f39c12';
-    const dir=bpl>bpk?1:-1;
-    ctx.beginPath(); ctx.moveTo(to,ay); ctx.lineTo(to-dir*12,ay-6); ctx.lineTo(to-dir*12,ay+6); ctx.closePath(); ctx.fill();
-    ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('reallocate',W/2,ay-10);
-  } else {
-    ctx.fillStyle='#2e8b57'; ctx.font='bold 13px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('Cost Minimised!',W/2,H/2);
-  }
-
-  // Baseline
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(ML,H-40); ctx.lineTo(W-MR,H-40); ctx.stroke();
-
-  document.getElementById('v64-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">MPL/w</div><div class="readout-val" style="color:${bpl>bpk?'#2e8b57':'#1a56db'}">${bpl.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">MPK/v</div><div class="readout-val" style="color:${bpk>bpl?'#2e8b57':'#e74c3c'}">${bpk.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Condition</div><div class="readout-val" style="color:${optimal?'#2e8b57':'#e74c3c'};font-size:0.85rem;">${optimal?'MPL/w = MPK/v':'Not equalised'}</div></div>
-    </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
-      ${optimal?'At the cost minimum: the last dollar spent on either input yields the same marginal product.':
-        bpl>bpk?`MPL/w > MPK/v: hire more L and use less K. Each dollar shifted to labor produces ${(bpl-bpk).toFixed(3)} extra units.`:
-        `MPK/v > MPL/w: use more K and less L. Each dollar shifted to capital produces ${(bpk-bpl).toFixed(3)} extra units.`}
-    </div>`;
-}
-
-function v64Update(){
-  document.getElementById('v64-mpl-val').textContent=parseFloat(document.getElementById('v64-mpl').value);
-  document.getElementById('v64-mpk-val').textContent=parseFloat(document.getElementById('v64-mpk').value);
-  document.getElementById('v64-w-val').textContent=parseFloat(document.getElementById('v64-w').value);
-  document.getElementById('v64-v-val').textContent=parseFloat(document.getElementById('v64-v').value);
-  v64Draw();
-}
-
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
 // FIG 6.5 - SR vs LR COST CURVES
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
 let v65ShowLR=false;
-// TC = TFC + TVC; TVC = q^2 (simple quadratic)
 function v65TC(q,tfc){return tfc+q*q;}
 function v65MC(q){return 2*q;}
 function v65ATC(q,tfc){return v65TC(q,tfc)/q;}
@@ -701,19 +714,17 @@ function v65Draw(){
     ctx.stroke(); ctx.setLineDash([]);
   };
 
-  drawCurve(q=>v65MC(q),'#e74c3c',2.5);            // SMC
-  drawCurve(q=>v65ATC(q,tfc),'#1a56db',2.5);        // ATC
-  drawCurve(q=>v65AVC(q),'#2e8b57',2);              // AVC
-  drawCurve(q=>v65AFC(q,tfc),'#888',1.5,[4,3]);     // AFC
+  drawCurve(q=>v65MC(q),'#e74c3c',2.5);
+  drawCurve(q=>v65ATC(q,tfc),'#1a56db',2.5);
+  drawCurve(q=>v65AVC(q),'#2e8b57',2);
+  drawCurve(q=>v65AFC(q,tfc),'#888',1.5,[4,3]);
 
   if(v65ShowLR){
-    // LRAC: for CD production, LRTC = 2q (w=v=1, Q=K^0.5L^0.5 => LRTC = 2q*sqrt(wv)=2q)
     drawCurve(q=>2,'#c0392b',2.5,[5,3]);
     ctx.fillStyle='#c0392b'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
     ctx.fillText('LRAC = $2 (CRS)',ML+4,MT+12);
   }
 
-  // Legend
   const leg=[['SMC','#e74c3c'],['ATC','#1a56db'],['AVC','#2e8b57'],['AFC','#888']];
   leg.forEach(([lbl,col],i)=>{
     ctx.fillStyle=col; ctx.fillRect(W-MR-80,MT+4+i*16,16,3);
@@ -721,24 +732,21 @@ function v65Draw(){
     ctx.fillText(lbl,W-MR-60,MT+10+i*16);
   });
 
-  // Min ATC
   const qminATC=Math.sqrt(tfc); const minATC=v65ATC(qminATC,tfc);
   if(qminATC<=15&&minATC<=yR[1]){
     const [mx,my]=toC(qminATC,minATC,W,H,xR,yR);
     dot6(ctx,mx,my,5,'#1a56db','#fff');
     ctx.fillStyle='#1a56db'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(`min ATC: q*=${qminATC.toFixed(1)}`,mx,my-8);
+    ctx.fillText('min ATC: q*='+qminATC.toFixed(1),mx,my-8);
   }
 
   document.getElementById('v65-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">Total Fixed Cost (TFC)</div><div class="readout-val">$${tfc}</div></div>
-      <div class="readout-col"><div class="readout-label">Efficient scale q* (min ATC)</div><div class="readout-val">q*=${Math.sqrt(tfc).toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">Variable cost (TVC) formula</div><div class="readout-val" style="font-size:0.75rem;">q&sup2;</div></div>
-    </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
-      Key property: SMC (Short-run Marginal Cost) always passes through the minimum of ATC (Average Total Cost) and AVC (Average Variable Cost). Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.
-    </div>`;
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Total Fixed Cost (TFC)</div><div class="readout-val">$'+tfc+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Efficient scale q* (min ATC)</div><div class="readout-val">q*='+Math.sqrt(tfc).toFixed(1)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Variable cost (TVC) formula</div><div class="readout-val" style="font-size:0.75rem;">q&sup2;</div></div>' +
+    '</div>' +
+    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">Key property: SMC always passes through the minimum of ATC and AVC. Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.</div>';
 }
 
 function v65Update(){
@@ -753,90 +761,114 @@ function v65ToggleLR(){
   v65Draw();
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// FIG 6.6 - LRAC ENVELOPE BUILDER
-// ══════════════════════════════════════════════════════════════════════
-let v66Curves=[];
-const V66_K_SIZES=[2,4,6,8,10,12,14];
+// ======================================================================
+// FIG 6.6 - LRAC ENVELOPE BUILDER (redesigned with K=1..N SRAC curves)
+// ======================================================================
+// Production: Q = K^0.5 * L^0.5 => L(q,K) = q^2/K
+// SRAC(q,K) = w*q/K + v*K/q  (with w=4, v=6)
+const V66_W=4, V66_V=6;
 
 function v66SRAC(q,K){
-  const w=4, r=4;
-  const Ls=q/Math.sqrt(K), TVC=w*Ls;
-  const TFC=r*K;
-  return (TVC+TFC)/q;
+  return V66_W*q/K + V66_V*K/q;
 }
 
-function v66Draw(){
-  const cvs=document.getElementById('cvs66'); if(!cvs) return;
-  const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=280;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
-  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-  const xR=[0,12],yR=[0,30];
-  drawAxesSt(ctx,W,H,xR,yR,'q','AC ($)');
-
-  const cols=['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80','#e74c3c'];
-
-  v66Curves.forEach((K,i)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[i%cols.length]; ctx.lineWidth=1.8;
-    for(let q=0.2;q<=11;q+=0.1){
-      const ac=v66SRAC(q,K); if(ac>yR[1]){first=true;continue;}
-      const [cx,cy]=toC(q,ac,W,H,xR,yR);
-      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
-    }
-    ctx.stroke();
-    // Tangency point (optimal q for this K)
-    const qOpt=K; const acOpt=v66SRAC(qOpt,K);
-    if(qOpt<=11&&acOpt<=yR[1]){
-      const [tx,ty]=toC(qOpt,acOpt,W,H,xR,yR);
-      dot6(ctx,tx,ty,4,cols[i%cols.length],'#fff');
-    }
-    ctx.fillStyle=cols[i%cols.length]; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-    const [lx,ly]=toC(Math.min(K*0.3+0.2,10),v66SRAC(K*0.3+0.2,K),W,H,xR,yR);
-    ctx.fillText(`K=${K}`,lx+3,ly-4);
-  });
-
-  // LRAC envelope
-  if(v66Curves.length>=2){
-    ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
-    for(let q=0.2;q<=11;q+=0.1){
-      const ac=Math.min(...v66Curves.map(K=>v66SRAC(q,K)));
-      if(ac>yR[1]){first=true;continue;}
-      const [cx,cy]=toC(q,ac,W,H,xR,yR);
-      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
-    }
-    ctx.stroke();
-    // LRAC label: place at q=1 level, BELOW the envelope curve to avoid overlap
-    const lrac_at_q1 = Math.min(...v66Curves.map(K=>v66SRAC(1,K)));
-    const [lx_lrac,ly_lrac]=toC(1.2, lrac_at_q1, W, H, xR, yR);
-    ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('LRAC (envelope)', lx_lrac, ly_lrac + 16);
-  }
-
-  document.getElementById('v66-count').textContent=`${v66Curves.length} plant size${v66Curves.length!==1?'s':''} added`;
-  document.getElementById('v66-readout').innerHTML=v66Curves.length===0?
-    'Press "+ Add Plant Size" to add SRAC curves. The LRAC envelope appears after 2+ curves.':
-    `${v66Curves.length} SRAC curve${v66Curves.length>1?'s are':' is'} shown. The LRAC (thick blue) is the lower envelope, tangent to each SRAC at its optimal output. Each tangency point represents the lowest cost for that output level in the long run.`;
-}
-
-function v66AddCurve(){
-  if(v66Curves.length>=V66_K_SIZES.length) return;
-  v66Curves.push(V66_K_SIZES[v66Curves.length]);
+function v66Update(){
+  const nk=parseInt(document.getElementById('v66-nk').value)||4;
+  document.getElementById('v66-nk-val').textContent=nk;
   v66Draw();
 }
 
-function v66Reset(){
-  v66Curves=[]; v66Draw();
+function v66Draw(){
+  const nkEl=document.getElementById('v66-nk');
+  const nk=nkEl?parseInt(nkEl.value)||4:4;
+  const cvs=document.getElementById('cvs66'); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.clientWidth||400, H=300;
+  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const xR=[0,14], yR=[0,36];
+  drawAxesSt(ctx,W,H,xR,yR,'q (output)','AC ($)');
+
+  const cols=['#c0392b','#d4813a','#2e8b57','#6b52a8','#3d5a80','#e67e22','#16a085','#8e44ad'];
+  const subs=['1','2','3','4','5','6','7','8'];
+
+  // Draw SRAC curves for K = 1, 2, ..., nk
+  for(let ki=0;ki<nk;ki++){
+    const K=ki+1;
+    const col=cols[ki%cols.length];
+    ctx.beginPath(); let first=true; ctx.strokeStyle=col; ctx.lineWidth=1.8;
+    for(let q=0.2;q<=13;q+=0.08){
+      const ac=v66SRAC(q,K); if(ac>yR[1]||ac<0){first=true;continue;}
+      const [cx,cy]=toC(q,ac,W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+
+    // Minimum of this SRAC: d/dq (w*q/K + v*K/q) = w/K - v*K/q^2 = 0 => q* = K*sqrt(v/w)
+    const qOpt=K*Math.sqrt(V66_V/V66_W);
+    const acOpt=v66SRAC(qOpt,K);
+    if(qOpt<=13&&acOpt<=yR[1]){
+      const [tx,ty]=toC(qOpt,acOpt,W,H,xR,yR);
+      dot6(ctx,tx,ty,4,col,'#fff');
+    }
+
+    // Label: find a position near the left arm of the curve
+    const qLbl=Math.max(0.4, qOpt*0.35);
+    const acLbl=v66SRAC(qLbl,K);
+    if(acLbl<=yR[1]){
+      const [lx,ly]=toC(qLbl,acLbl,W,H,xR,yR);
+      ctx.fillStyle=col; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
+      ctx.fillText('SRAC'+subs[ki], lx+2, ly-4);
+    }
+  }
+
+  // LRAC: lower envelope
+  ctx.beginPath(); let firstLR=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
+  for(let q=0.2;q<=13;q+=0.06){
+    let minAC=Infinity;
+    for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(q,ki+1); if(ac<minAC) minAC=ac; }
+    if(minAC>yR[1]||minAC<0){firstLR=true;continue;}
+    const [cx,cy]=toC(q,minAC,W,H,xR,yR);
+    firstLR?(ctx.moveTo(cx,cy),firstLR=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+
+  // LRAC label
+  const lracQ=7;
+  let lracAC=Infinity;
+  for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(lracQ,ki+1); if(ac<lracAC) lracAC=ac; }
+  if(lracAC<=yR[1]){
+    const [llx,lly]=toC(lracQ,lracAC,W,H,xR,yR);
+    ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('LRAC (lower envelope)', llx, lly+16);
+  }
+
+  // LRAC minimum: for SRAC(q,K) = w*q/K + v*K/q, the LRAC = 2*sqrt(w*v) (constant)
+  const lracMin=2*Math.sqrt(V66_W*V66_V);
+  if(lracMin<=yR[1]){
+    const [,ly0]=toC(0,lracMin,W,H,xR,yR);
+    ctx.setLineDash([5,4]); ctx.strokeStyle='#1a56dba0'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ML,ly0); ctx.lineTo(W-MR,ly0); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#1a56db'; ctx.font='9px DM Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText('LRAC min = $'+lracMin.toFixed(2), W-MR-2, ly0-3);
+  }
+
+  document.getElementById('v66-readout').innerHTML=
+    '<div style="font-size:0.84rem;color:var(--muted);line-height:1.7;">' +
+    'In the long run, we can choose any capital level. At each output level, we pick whichever fixed-capital option is cheapest. The LRAC (thick blue) is the lower envelope of all SRAC curves. ' +
+    'With Q = K^0.5*L^0.5, w = '+V66_W+', v = '+V66_V+': SRAC(q,K) = '+V66_W+'q/K + '+V66_V+'K/q. ' +
+    'The analytical LRAC = 2*sqrt(w*v) = $'+lracMin.toFixed(2)+' (constant). Add more curves to see the discrete envelope approach this smooth floor.' +
+    '</div>';
 }
 
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
 // FIG 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR
-// ══════════════════════════════════════════════════════════════════════
-const V68_Q=4; // fixed output target
+// ======================================================================
+const V68_Q=4;
 
 function v68Opt(w,v){
-  // Q = K^0.5*L^0.5 = 4 => L* = 4*sqrt(v/w), K* = 4*sqrt(w/v)
   const q=V68_Q;
   const Ls=q*Math.sqrt(v/w), Ks=q*Math.sqrt(w/v);
   return {Ls,Ks,TC:w*Ls+v*Ks};
@@ -856,7 +888,6 @@ function v68Draw(){
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
 
-  // Fixed axes - do not change when sliders move
   const AXIS_MAX6=18;
   const xR=[0,AXIS_MAX6],yR=[0,AXIS_MAX6];
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
@@ -870,7 +901,7 @@ function v68Draw(){
   }
   ctx.stroke();
   ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`Q=${V68_Q}`,W-MR-35,MT+14);
+  ctx.fillText('Q='+V68_Q, W-MR-35, MT+14);
 
   // Old isocost (w=wBase)
   const TCold=optBase.TC;
@@ -890,13 +921,12 @@ function v68Draw(){
   ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
   ctx.moveTo(nx0,ny0); ctx.lineTo(nx1,ny1); ctx.stroke();
   ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`New isocost (w=$${w})`,nx0+4,ny0-5);
+  ctx.fillText('New isocost (w=$'+w+')', nx0+4, ny0-5);
 
   // Old optimal (red X)
   const [ox,oy]=toC(optBase.Ls,optBase.Ks,W,H,xR,yR);
   ctx.fillStyle='#e74c3c'; ctx.font='bold 16px DM Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('✕',ox,oy+6);
-  // Label: above and slightly left, clear of the isoquant
+  ctx.fillText('X',ox,oy+6);
   ctx.font='10px DM Sans,sans-serif';
   const olx=ox>W/2?ox-6:ox+6;
   ctx.textAlign=ox>W/2?'right':'left';
@@ -916,17 +946,17 @@ function v68Draw(){
 
   const kl_old=optBase.Ks/optBase.Ls, kl_new=optNew.Ks/optNew.Ls;
   document.getElementById('v68-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">Old K/L ratio</div><div class="readout-val">${kl_old.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">New K/L ratio</div><div class="readout-val" style="color:${kl_new>kl_old?'#e74c3c':'#2e8b57'}">${kl_new.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Old TC</div><div class="readout-val">$${optBase.TC.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">New TC</div><div class="readout-val" style="color:#e74c3c">$${optNew.TC.toFixed(2)}</div></div>
-    </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
-      ${w>wBase?`Wage rose from $${wBase} to $${w}. The firm substitutes capital for labor: K/L rises from ${kl_old.toFixed(2)} to ${kl_new.toFixed(2)}. Total cost rises to $${optNew.TC.toFixed(2)}.`:
-        w<wBase?`Wage fell below baseline. The firm substitutes labor for capital: K/L falls from ${kl_old.toFixed(2)} to ${kl_new.toFixed(2)}.`:
-        `Wage at baseline $${wBase}. The firm is at the original optimum.`}
-    </div>`;
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Old K/L ratio</div><div class="readout-val">'+kl_old.toFixed(3)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">New K/L ratio</div><div class="readout-val" style="color:'+(kl_new>kl_old?'#e74c3c':'#2e8b57')+'">'+kl_new.toFixed(3)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Old TC</div><div class="readout-val">$'+optBase.TC.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">New TC</div><div class="readout-val" style="color:#e74c3c">$'+optNew.TC.toFixed(2)+'</div></div>' +
+    '</div>' +
+    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">' +
+    (w>wBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
+      w<wBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
+      'Wage at baseline $'+wBase+'. The firm is at the original optimum.') +
+    '</div>';
 }
 
 function v68Update(){
@@ -935,15 +965,101 @@ function v68Update(){
   v68Draw();
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// FIG 6.10 - EFFICIENT SCALE FINDER
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
+// FIG 6.10 - EFFICIENT SCALE FINDER (dropdown + MC toggle)
+// ======================================================================
+let v610ShowMC=false;
+
+// Preset definitions: {label, ac(q), tc(q), mc(q), desc}
+const V610_PRESETS=[
+  {
+    label:'Constant AC: AC = 5',
+    ac: q=>5,
+    tc: q=>5*q,
+    mc: q=>5,
+    desc:'Constant average cost: AC = MC = 5. No economies or diseconomies of scale. TC is linear. Every output level is equally efficient.'
+  },
+  {
+    label:'Linear AC: AC = 2q + 3',
+    ac: q=>2*q+3,
+    tc: q=>2*q*q+3*q,
+    mc: q=>4*q+3,
+    desc:'AC is rising everywhere: AC = 2q + 3, TC = 2q^2 + 3q. This represents a firm with pure diseconomies of scale from the start. MC = 4q + 3 > AC for all q > 0.'
+  },
+  {
+    label:'Classic U-shape: AC = q - 6 + 36/q',
+    ac: q=>q-6+36/q,
+    tc: q=>q*q-6*q+36,
+    mc: q=>2*q-6,
+    desc:'Classic textbook U-shaped AC: AC = q - 6 + 36/q, TC = q^2 - 6q + 36. Minimum AC at q* = 6 where MC crosses AC. Economies of scale for q < 6, diseconomies for q > 6.'
+  },
+  {
+    label:'Flatter U-shape: AC = 0.5q - 4 + 32/q',
+    ac: q=>0.5*q-4+32/q,
+    tc: q=>0.5*q*q-4*q+32,
+    mc: q=>q-4,
+    desc:'A wider, flatter U-shape. The minimum AC occurs at a higher q and the curve rises more gradually. Firms with this cost structure can efficiently serve a wider range of output.'
+  },
+  {
+    label:'Steep U-shape: AC = 2q - 8 + 16/q',
+    ac: q=>2*q-8+16/q,
+    tc: q=>2*q*q-8*q+16,
+    mc: q=>4*q-8,
+    desc:'A steep U-shape with sharp diseconomies beyond the efficient scale. The minimum is at a relatively small q, suggesting this technology does not scale well.'
+  },
+  {
+    label:'Fixed cost heavy: AC = q + 100/q',
+    ac: q=>q+100/q,
+    tc: q=>q*q+100,
+    mc: q=>2*q,
+    desc:'High fixed cost (100) dominates at low output, driving steeply falling AC. At large q, variable costs dominate. TC = q^2 + 100. Efficient scale at q* = 10.'
+  },
+  {
+    label:'Cubic: AC = q^2 - 8q + 20 + 64/q',
+    ac: q=>q*q-8*q+20+64/q,
+    tc: q=>q*q*q-8*q*q+20*q+64,
+    mc: q=>3*q*q-16*q+20,
+    desc:'Cubic total cost TC = q^3 - 8q^2 + 20q + 64. This is the most general textbook form, generating a proper S-shaped TC curve and a U-shaped AC with a distinct minimum.'
+  },
+  {
+    label:'Economies of scale: AC = 20/q + 2',
+    ac: q=>20/q+2,
+    tc: q=>20+2*q,
+    mc: q=>2,
+    desc:'Pure economies of scale: AC = 20/q + 2 is always falling. TC = 20 + 2q (fixed cost 20, constant MC = 2). AC never has a minimum, suggesting a natural monopoly tendency.'
+  },
+  {
+    label:'Diseconomies: AC = 3q + 2',
+    ac: q=>3*q+2,
+    tc: q=>3*q*q+2*q,
+    mc: q=>6*q+2,
+    desc:'Pure diseconomies of scale: AC = 3q + 2 is always rising. TC = 3q^2 + 2q. MC = 6q + 2 > AC always. Each additional unit produced is more expensive on average.'
+  },
+  {
+    label:'Textbook standard: AC = q^2 - 10q + 40',
+    ac: q=>q*q-10*q+40,
+    tc: q=>q*q*q-10*q*q+40*q,
+    mc: q=>3*q*q-20*q+40,
+    desc:'A common textbook form: AC = q^2 - 10q + 40 with minimum at q* = 5, min AC = 15. TC = q^3 - 10q^2 + 40q (no fixed cost). MC = 3q^2 - 20q + 40 crosses AC at its minimum.'
+  }
+];
+
+function v610GetPreset(){
+  const idx=parseInt((document.getElementById('v610-preset')||{value:'2'}).value)||0;
+  return V610_PRESETS[idx]||V610_PRESETS[2];
+}
+
+function v610ToggleMC(){
+  v610ShowMC=!v610ShowMC;
+  const btn=document.getElementById('v610-mc-btn');
+  btn.classList.toggle('active',v610ShowMC);
+  btn.textContent=v610ShowMC?'Hide Marginal Cost':'Show Marginal Cost';
+  v610Draw();
+}
+
 function v610Draw(){
-  const a=parseFloat(document.getElementById('v610-a').value)||100;
-  const b=parseFloat(document.getElementById('v610-b').value)||1;
-  // AC = a/q + b*q => dAC/dq = -a/q^2 + b = 0 => q* = sqrt(a/b)
-  const qstar=Math.sqrt(a/b);
-  const acstar=a/qstar+b*qstar;
+  const preset=v610GetPreset();
+  const acFn=preset.ac, mcFn=preset.mc;
 
   const cvs=document.getElementById('cvs610'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
@@ -952,109 +1068,143 @@ function v610Draw(){
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
 
-  // Fixed axes
-  const qmax=50, acmax=Math.max(acstar*3, 80);
-  const xR=[0,qmax],yR=[0,acmax];
-  drawAxesSt(ctx,W,H,xR,yR,'q (output)','AC per unit ($)');
+  // Find q range and AC range
+  const qmax=20;
+  let acmax=0, qstar=null, acstar=Infinity;
+  for(let q=0.5;q<=qmax;q+=0.1){
+    const ac=acFn(q);
+    if(isFinite(ac)&&ac>0) acmax=Math.max(acmax,ac);
+    if(v610ShowMC){ const mc=mcFn(q); if(isFinite(mc)&&mc>0) acmax=Math.max(acmax,mc); }
+  }
+  // Find minimum of AC numerically
+  for(let q=0.5;q<=qmax;q+=0.05){
+    const ac=acFn(q);
+    if(isFinite(ac)&&ac>0&&ac<acstar){ acstar=ac; qstar=q; }
+  }
+  acmax=Math.min(acmax*1.15, acstar*5, 200);
+  if(acmax<10) acmax=10;
+
+  const xR=[0,qmax], yR=[0,acmax];
+  drawAxesSt(ctx,W,H,xR,yR,'q (output)','$ per unit');
 
   const [,oy]=toC(0,0,W,H,xR,yR);
-  const [ex,ey]=toC(Math.min(qstar,qmax),Math.min(acstar,acmax),W,H,xR,yR);
 
-  // Shade economies of scale (q < q*): use canvas clip to keep within graph area
+  // Shade economies (q < q*) and diseconomies (q > q*)
+  if(qstar){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
+    // Green: economies
+    ctx.beginPath(); let first=true;
+    for(let q=0.3;q<=Math.min(qstar,qmax)+0.1;q+=0.15){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax*1.05){first=true;continue;}
+      const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    const [ex,ey]=toC(Math.min(qstar,qmax),Math.min(acstar,acmax),W,H,xR,yR);
+    ctx.lineTo(ex,oy); ctx.lineTo(ML,oy); ctx.closePath();
+    ctx.fillStyle='rgba(46,139,87,0.13)'; ctx.fill();
+    // Red: diseconomies
+    ctx.beginPath(); first=true;
+    for(let q=Math.max(0.3,qstar);q<=qmax;q+=0.15){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax*1.05){first=true;continue;}
+      const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
+      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    }
+    const [qmx]=toC(qmax,0,W,H,xR,yR);
+    ctx.lineTo(qmx,oy); ctx.lineTo(ex,oy); ctx.closePath();
+    ctx.fillStyle='rgba(231,76,60,0.11)'; ctx.fill();
+    ctx.restore();
+  }
+
+  // AC curve
   ctx.save();
   ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
-
-  // Green: economies (q < q*)
-  ctx.beginPath(); let first=true;
-  for(let q=0.5;q<=Math.min(qstar,qmax)+0.1;q+=0.2){
-    const ac=a/q+b*q;
+  ctx.beginPath(); let firstAC=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  for(let q=0.3;q<=qmax;q+=0.15){
+    const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax*1.05){firstAC=true;continue;}
     const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
-  }
-  ctx.lineTo(ex,oy); ctx.lineTo(ML,oy); ctx.closePath();
-  ctx.fillStyle='rgba(46,139,87,0.15)'; ctx.fill();
-
-  // Red: diseconomies (q > q*)
-  ctx.beginPath(); first=true;
-  for(let q=Math.min(qstar,qmax);q<=qmax+0.2;q+=0.2){
-    const ac=a/q+b*q;
-    const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
-  }
-  const [qmx]=toC(qmax,0,W,H,xR,yR);
-  ctx.lineTo(qmx,oy); ctx.lineTo(ex,oy); ctx.closePath();
-  ctx.fillStyle='rgba(231,76,60,0.12)'; ctx.fill();
-
-  ctx.restore();
-
-  // AC curve - clip to graph boundary
-  ctx.save();
-  ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
-  ctx.beginPath(); first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
-  for(let q=0.5;q<=qmax;q+=0.2){
-    const ac=a/q+b*q; if(ac>acmax*1.05){first=true;continue;}
-    const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    firstAC?(ctx.moveTo(cx,cy),firstAC=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
+
+  // MC curve (toggle)
+  if(v610ShowMC){
+    ctx.beginPath(); let firstMC=true; ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
+    for(let q=0.3;q<=qmax;q+=0.15){
+      const mc=mcFn(q); if(!isFinite(mc)||mc<0||mc>acmax*1.05){firstMC=true;continue;}
+      const [cx,cy]=toC(q,Math.min(mc,acmax),W,H,xR,yR);
+      firstMC?(ctx.moveTo(cx,cy),firstMC=false):ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+  }
   ctx.restore();
 
-  // q* marker - only if within graph bounds
-  if(qstar <= qmax && acstar <= acmax){
+  // q* marker and MC=AC crossing dot
+  if(qstar&&acstar<=acmax){
     const [qsx,qsy]=toC(qstar,acstar,W,H,xR,yR);
     const [,qsy0]=toC(qstar,0,W,H,xR,yR);
     ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(qsx,qsy); ctx.lineTo(qsx,qsy0); ctx.stroke(); ctx.setLineDash([]);
     dot6(ctx,qsx,qsy,7,'#1a56db','#fff');
     ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(`q* = ${qstar.toFixed(2)}`,qsx,qsy-10);
-    ctx.fillStyle='#888'; ctx.fillText(`AC* = $${acstar.toFixed(2)}`,qsx,qsy0+14);
+    ctx.fillText('q* = '+qstar.toFixed(1), qsx, qsy-10);
+    ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif';
+    ctx.fillText('AC* = $'+acstar.toFixed(2), qsx, qsy0+14);
 
-    // Region labels: green=bottom-left (economies), red=bottom-right (diseconomies)
+    if(v610ShowMC){
+      // Mark MC=AC crossing (at min AC)
+      const mcAtStar=mcFn(qstar);
+      if(isFinite(mcAtStar)&&Math.abs(mcAtStar-acstar)/acstar<0.15){
+        dot6(ctx,qsx,qsy,5,'#e74c3c','#fff');
+        ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+        ctx.fillText('MC = AC here', qsx+8, qsy+4);
+      }
+    }
+
     ctx.font='10px DM Sans,sans-serif';
     ctx.fillStyle='rgba(46,139,87,0.85)'; ctx.textAlign='left';
     ctx.fillText('Economies of scale', ML+6, H-MB-6);
     ctx.fillStyle='rgba(231,76,60,0.85)'; ctx.textAlign='right';
     ctx.fillText('Diseconomies of scale', W-MR-4, H-MB-6);
     ctx.textAlign='left';
-  } else {
-    ctx.fillStyle='#e74c3c'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText(`q* = ${qstar.toFixed(1)} is outside graph range. Adjust a or b.`,ML+6,MT+20);
+  }
+
+  // Legend
+  ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillStyle='#1a56db'; ctx.fillRect(W-MR-80,MT+4,16,3); ctx.fillText('AC',W-MR-60,MT+10);
+  if(v610ShowMC){
+    ctx.fillStyle='#e74c3c'; ctx.fillRect(W-MR-80,MT+20,16,3); ctx.fillStyle='#e74c3c'; ctx.fillText('MC',W-MR-60,MT+26);
   }
 
   document.getElementById('v610-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">AC = a/q + bq</div><div class="readout-val" style="font-size:0.78rem;">${a}/q + ${b}q</div></div>
-      <div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val">${qstar.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Min AC</div><div class="readout-val">$${acstar.toFixed(2)}</div></div>
-    </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
-      q* = sqrt(a/b) = sqrt(${a}/${b}) = ${qstar.toFixed(2)}. For q &lt; q*: AC is falling (economies of scale, green). For q &gt; q*: AC is rising (diseconomies, red). Industry structure: ${acstar<10?'very low min cost, likely competitive':'higher min cost, may support fewer firms'}.
-    </div>`;
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val">'+(qstar?qstar.toFixed(2):'n/a')+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Min AC</div><div class="readout-val">$'+(acstar<Infinity?acstar.toFixed(2):'n/a')+'</div></div>' +
+    '</div>' +
+    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">'+preset.desc+'</div>';
 }
 
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
 // BOOT
-// ══════════════════════════════════════════════════════════════════════
+// ======================================================================
 function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
 function redrawAll6() {
-  v61Update(); v62Draw(); v64Draw(); v65Draw();
+  v61Update(); v62Draw(); v65Draw();
   v66Draw(); v68Draw(); v610Draw();
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   v61Init();
   v62Draw();
-  v64Update();
   v65Draw();
   v66Draw();
   v68Draw();
   v610Draw();
   if (window.ResizeObserver) {
     const obs = new ResizeObserver(redrawAll6);
-    ['cvs61','cvs62a','cvs62b','cvs64','cvs65','cvs66','cvs68','cvs610'].forEach(id=>{
+    ['cvs61','cvs62a','cvs62b','cvs65','cvs66','cvs68','cvs610'].forEach(id=>{
       const el=document.getElementById(id);
       if(el&&el.parentElement) obs.observe(el.parentElement);
     });
@@ -1064,7 +1214,6 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('resize', () => {
   v61Update();
   v62Draw();
-  v64Draw();
   v65Draw();
   v66Draw();
   v68Draw();
