@@ -16,7 +16,7 @@
     .viz-instructor { font-size:0.9rem; color:var(--muted); }
     .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
     .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
-    .toc ol { margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:0.28rem; }
+    .toc ol { margin:0; padding-left:0.5rem; display:flex; flex-direction:column; gap:0.28rem; }
     .toc li { font-size:0.855rem; color:var(--muted); }
     .toc a { color:var(--accent); text-decoration:none; }
     .toc a:hover { text-decoration:underline; }
@@ -93,7 +93,7 @@
   <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
 </div>
 
-<main class="main" style="max-width:800px;">
+<main class="main" style="max-width:1100px;">
 
   <div class="viz-hero">
     <div class="viz-ghost">06</div>
@@ -378,10 +378,14 @@ function v61Draw(Lcur,Kcur){
   const cvs=document.getElementById('cvs61'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
   const W=cvs.clientWidth||400;
+  const H=W; // square canvas
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){
+    cvs.width=Math.round(W*dpr); cvs.height=Math.round(H*dpr);
+    cvs.style.height=H+'px';
+  }
   const ctx=cvs.getContext('2d');
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  const H=W;
-  if(cvs.height!==Math.round(H*dpr)){cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
   v61W=W; v61H=H;
   const AXIS_MAX=16;
   const xR=[0,AXIS_MAX],yR=[0,AXIS_MAX];
@@ -1093,25 +1097,27 @@ function v610Draw(){
   if(qstar){
     ctx.save();
     ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
-    // Green: economies
-    ctx.beginPath(); let first=true;
-    for(let q=0.3;q<=Math.min(qstar,qmax)+0.1;q+=0.15){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax*1.05){first=true;continue;}
+    const [ex,] = toC(Math.min(qstar,qmax), Math.min(acstar,acmax), W,H,xR,yR);
+    // Green: economies -- path starts at bottom-left corner so close-path traces x-axis
+    ctx.beginPath();
+    ctx.moveTo(ML,oy);
+    for(let q=0.3;q<=Math.min(qstar,qmax)+0.05;q+=0.1){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
       const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+      ctx.lineTo(cx,cy);
     }
-    const [ex,ey]=toC(Math.min(qstar,qmax),Math.min(acstar,acmax),W,H,xR,yR);
-    ctx.lineTo(ex,oy); ctx.lineTo(ML,oy); ctx.closePath();
+    ctx.lineTo(ex,oy); ctx.closePath();
     ctx.fillStyle='rgba(46,139,87,0.13)'; ctx.fill();
-    // Red: diseconomies
-    ctx.beginPath(); first=true;
-    for(let q=Math.max(0.3,qstar);q<=qmax;q+=0.15){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax*1.05){first=true;continue;}
+    // Red: diseconomies -- path starts at qstar on x-axis
+    ctx.beginPath();
+    ctx.moveTo(ex,oy);
+    for(let q=Math.max(0.3,qstar);q<=qmax;q+=0.1){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
       const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+      ctx.lineTo(cx,cy);
     }
     const [qmx]=toC(qmax,0,W,H,xR,yR);
-    ctx.lineTo(qmx,oy); ctx.lineTo(ex,oy); ctx.closePath();
+    ctx.lineTo(qmx,oy); ctx.closePath();
     ctx.fillStyle='rgba(231,76,60,0.11)'; ctx.fill();
     ctx.restore();
   }

@@ -16,7 +16,7 @@
     .viz-instructor { font-size:0.9rem; color:var(--muted); }
     .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
     .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
-    .toc ol { margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:0.28rem; }
+    .toc ol { margin:0; padding-left:0.5rem; display:flex; flex-direction:column; gap:0.28rem; }
     .toc li { font-size:0.855rem; color:var(--muted); }
     .toc a { color:var(--accent); text-decoration:none; }
     .toc a:hover { text-decoration:underline; }
@@ -97,7 +97,7 @@
   <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
 </div>
 
-<main class="main" style="max-width:800px;">
+<main class="main" style="max-width:1100px;">
 
   <div class="viz-hero">
     <div class="viz-ghost">05</div>
@@ -108,6 +108,7 @@
       <div class="toc-title">Ten Figures</div>
       <ol>
         <li><a href="#sec-5-1">Fig 5.1: Total Product &amp; Marginal Product Animator</a></li>
+        <li><a href="#sec-5-2">Fig 5.2: Isoquant &amp; Indifference Curve Explorer</a></li>
         <li><a href="#sec-5-3">Fig 5.3: MRTS Live Calculator</a></li>
         <li><a href="#sec-5-4">Fig 5.4: Diminishing MP vs Decreasing Returns to Scale</a></li>
         <li><a href="#sec-5-5">Fig 5.5: Returns to Scale Isoquant Spacer</a></li>
@@ -169,6 +170,39 @@
   </section>
 
   <!-- ═══ FIG 5.2 - ISOQUANT EXPLORER ═══ -->
+  <section class="fig-section" id="sec-5-2">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 5.2</span>
+      <span class="fig-title">Isoquant &amp; Indifference Curve Explorer</span>
+    </div>
+    <p class="fig-intro">
+      Compare three production technologies side by side: Cobb-Douglas (smooth convex curves), Perfect Substitutes
+      (straight lines), and Leontief / Perfect Complements (right-angle L-shapes). Toggle between
+      <strong>Isoquant mode</strong> (firm -- axes L and K) and <strong>Indifference Curve mode</strong>
+      (consumer -- axes X and Y). The math is identical; only the economic interpretation changes.
+      Drag the red dot on the Cobb-Douglas panel to see how MRTS changes along a curve.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <button class="viz-btn active" id="v52-mode-iq" onclick="v52SetMode('iq')">Isoquant (Firm)</button>
+      <button class="viz-btn" id="v52-mode-ic" onclick="v52SetMode('ic')">Indifference Curve (Consumer)</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
+      <div class="cvs-wrap">
+        <div class="panel-label">Cobb-Douglas</div>
+        <canvas id="cvs52a" style="width:100%;"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Perfect Substitutes (Linear)</div>
+        <canvas id="cvs52b" style="width:100%;"></canvas>
+      </div>
+      <div class="cvs-wrap">
+        <div class="panel-label">Perfect Complements (Leontief)</div>
+        <canvas id="cvs52c" style="width:100%;"></canvas>
+      </div>
+    </div>
+    <div class="viz-readout" id="v52-readout" style="margin-top:0.75rem;"></div>
+  </section>
+
   <!-- ═══ FIG 5.3 - MRTS LIVE CALCULATOR ═══ -->
   <section class="fig-section" id="sec-5-3">
     <div class="fig-hdr">
@@ -466,7 +500,7 @@ const V51_FORMS = {
     mpl: (L,K)=>0.5*Math.pow(K,0.5)*Math.pow(Math.max(0.001,L),-0.5),
     yRA: [0,5], yRB: [-0.1,1.3],
     desc: '<strong>Cobb-Douglas:</strong> Q = K<sup>0.5</sup> &middot; L<sup>0.5</sup>. Output always increases in L but at a decreasing rate. MPL falls as L rises (diminishing returns), never reaching zero. The most common textbook production function.',
-    phase: mpl=>mpl>0.5?'Rising fast':mpl>0.2?'Slowing':mpl>0?'Near peak':'Declining',
+    phase: (mpl,L)=>mpl>0.6?'Rapid diminishing returns':mpl>0.25?'Moderate diminishing':mpl>0.05?'Slow diminishing':'Near-zero MPL',
     showK: true,
   },
   scurve: {
@@ -474,7 +508,7 @@ const V51_FORMS = {
     mpl: (L,K)=>Math.max(0, 3*L - 0.3*L*L),
     yRA: [0,14], yRB: [-0.5,8],
     desc: '<strong>S-Curve (Cubic):</strong> Q = 1.5L<sup>2</sup> &minus; 0.1L<sup>3</sup>. The classic S-shaped total product curve. MPL first rises (increasing returns), then falls after reaching a maximum (diminishing returns), and eventually reaches zero. This matches the standard textbook diagram.',
-    phase: mpl=>mpl>6?'Increasing returns':mpl>3?'Peak MP':mpl>0?'Diminishing returns':'Zero/Negative',
+    phase: (mpl,L)=>L<5?'Increasing returns (MPL rising)':L<5.5?'Peak MPL':L<10?'Diminishing returns (MPL falling)':'Zero / Negative MP',
     showK: false,
   },
   quad: {
@@ -482,7 +516,7 @@ const V51_FORMS = {
     mpl: (L,K)=>Math.max(0, 3 - 0.3*L),
     yRA: [0,16], yRB: [-0.2,3.5],
     desc: '<strong>Quadratic:</strong> Q = 3L &minus; 0.15L<sup>2</sup>. Total product rises then falls. MPL is linear and decreasing; diminishing returns begin immediately. Output eventually falls if too many workers are hired (negative MPL). Think of an overcrowded workspace.',
-    phase: mpl=>mpl>2?'Strong returns':mpl>1?'Moderate':mpl>0?'Weak returns':'Negative MP',
+    phase: (mpl,L)=>mpl>2?'Strong diminishing returns':mpl>1?'Moderate diminishing':mpl>0?'Weak returns':'Negative MPL',
     showK: false,
   },
   linear: {
@@ -490,7 +524,7 @@ const V51_FORMS = {
     mpl: (L,K)=>2.5,
     yRA: [0,26], yRB: [-0.5,4],
     desc: '<strong>Linear:</strong> Q = 2.5L. Each worker adds the same amount to output, so there are no diminishing returns. The MPL is constant (flat line in the bottom panel). This is unrealistic for most production but illustrates what "constant returns to labor" looks like.',
-    phase: mpl=>'Constant MPL',
+    phase: (mpl,L)=>'Constant MPL (no diminishing returns)',
     showK: false,
   },
 };
@@ -568,10 +602,10 @@ function v51Draw() {
   ctxA.fillStyle='#e74c3c';
   ctxA.fillText(`slope = MPL = ${mplL.toFixed(3)}`, lblX2, lblY2 + 13);
 
-  // Phase label
-  const phaseLabel=form.phase(mplL);
+  // Phase label (bottom-right)
+  const phaseLabel=form.phase(mplL,L);
   ctxA.fillStyle='#6b52a8'; ctxA.textAlign='right';
-  ctxA.fillText(phaseLabel,W-MR-4,MT+16);
+  ctxA.fillText(phaseLabel,W-MR-4,HA-MB-6);
 
   // Drop line
   const [axL]=toC(L,0,W,HA,xR,yRA);
@@ -613,7 +647,7 @@ function v51Update() {
   const form=v51GetForm();
   const tp=form.tp(L,K);
   const mpl=form.mpl(L,K);
-  const phase=form.phase(mpl);
+  const phase=form.phase(mpl,L);
   const showK=form.showK;
   document.getElementById('v51-readout').innerHTML=
     `<div class="readout-row">
@@ -724,11 +758,13 @@ function v52DrawAll() {
   v52DrawPanel('cvs52a','cd',qL,v52Mode);
   v52DrawPanel('cvs52b','linear',qL,v52Mode);
   v52DrawPanel('cvs52c','leontief',qL,v52Mode);
+  const rdout=document.getElementById('v52-readout');
+  if(!rdout) return;
   const isIQ=v52Mode==='iq';
   const modeText=isIQ
     ?'<strong>Isoquant mode (firm):</strong> Each curve shows all (L, K) combinations that produce the same output Q. The draggable point P on the left panel shows the MRTS at that location.'
     :'<strong>Indifference curve mode (consumer):</strong> Each curve shows all (X, Y) bundles that give the same utility U. The draggable point P shows the MRS. Notice the math is identical - only the economic interpretation changes.';
-  document.getElementById('v52-readout').innerHTML=
+  rdout.innerHTML=
     `${modeText}<br><br>
     <strong>Cobb-Douglas ${isIQ?'(Q = L<sup>0.5</sup>K<sup>0.5</sup>)':'(U = X<sup>0.5</sup>Y<sup>0.5</sup>)'}:</strong> Smooth convex. ${isIQ?'MRTS':'MRS'} diminishes along the curve.<br>
     <strong>Linear ${isIQ?'(Q = 2L + K)':'(U = 2X + Y)'}:</strong> Straight line. Perfect substitutes. Constant ${isIQ?'MRTS = 2':'MRS = 2'}.<br>
