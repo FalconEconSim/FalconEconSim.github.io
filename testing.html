@@ -322,20 +322,57 @@
     </div>
   </div>
 
-  <!-- ── SECTION 8: Draggable Price Handle ─────────────── -->
+  <!-- ── SECTION 8: Draggable Equilibrium Point ───────── -->
   <div class="approach-section" id="sec-s8">
     <div class="approach-hdr">
       <span class="approach-num">Section 8</span>
-      <span class="approach-title">Draggable Price Handle &mdash; no slider needed</span>
+      <span class="approach-title">Draggable Equilibrium Point &mdash; drag directly on the diagram</span>
     </div>
-    <p class="approach-desc">Instead of a slider, grab the purple handle at the right end of the MR&thinsp;=&thinsp;P line and drag it up or down to change the price level. The line moves with your cursor, the MR label glides to its new equilibrium via the same D3 force simulation, and all other labels stay settled. Regular label-dragging still works too.</p>
+    <p class="approach-desc">Drag the <span style="color:#7d3c98;font-weight:700;">&#9679;</span> dot at the MC&thinsp;=&thinsp;MR intersection up or down. It slides along the MC curve, Q&thinsp;* updates automatically, and the MR&thinsp;=&thinsp;P line + label follow via the same D3 force simulation. All labels stay draggable too.</p>
     <div class="demo-wrap" id="s8-demo-wrap">
       <div class="demo-toolbar">
-        <span class="demo-toolbar-label">Drag the <span style="color:#7d3c98;font-weight:700;">&#9679;</span> handle on the MR&thinsp;=&thinsp;P line to change price</span>
-        <span class="sv" id="s8-val" style="margin-left:auto;">$9</span>
+        <span class="demo-toolbar-label">Drag the <span style="color:#7d3c98;font-weight:700;">&#9679;</span> point on the MC curve up or down</span>
+        <span class="sv" id="s8-val" style="margin-left:auto;">P&thinsp;=&thinsp;$9</span>
         <button class="viz-btn" onclick="resetS8()">Reset labels</button>
       </div>
       <div class="demo-svg-wrap" id="s8-svg-wrap"></div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 9: D3 Labels + Line Repulsion (slider) ── -->
+  <div class="approach-section" id="sec-s9">
+    <div class="approach-hdr">
+      <span class="approach-num">Section 9</span>
+      <span class="approach-title">Section 6 &plus; Line Repulsion &mdash; labels avoid curves too</span>
+    </div>
+    <p class="approach-desc">Same slider-controlled diagram as Section&nbsp;6 but adds a custom D3 force that repels labels away from the MC, ATC, AVC, and MR&thinsp;=&thinsp;P lines &mdash; not just other labels. Labels should never overlap a curve.</p>
+    <div class="slider-row">
+      <label>MR&thinsp;=&thinsp;P&thinsp;=&thinsp;</label><span class="sv" id="s9-val">$9</span>
+      <input type="range" id="s9-slider" min="2" max="14" step="0.1" value="9">
+    </div>
+    <div class="demo-wrap">
+      <div class="demo-toolbar">
+        <span class="demo-toolbar-label">Drag labels &mdash; connector lines follow</span>
+        <button class="viz-btn" onclick="resetS9()">Reset labels</button>
+      </div>
+      <div class="demo-svg-wrap" id="s9-svg-wrap"></div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 10: D3 Labels + Line Repulsion (draggable point) ── -->
+  <div class="approach-section" id="sec-s10">
+    <div class="approach-hdr">
+      <span class="approach-num">Section 10</span>
+      <span class="approach-title">Section 8 &plus; Line Repulsion &mdash; draggable point, curves repel labels</span>
+    </div>
+    <p class="approach-desc">Same draggable MC&thinsp;=&thinsp;MR equilibrium point as Section&nbsp;8, with the line-repulsion force added. Drag the point and watch every label adjust to stay clear of all moving lines, not just each other.</p>
+    <div class="demo-wrap" id="s10-demo-wrap">
+      <div class="demo-toolbar">
+        <span class="demo-toolbar-label">Drag the <span style="color:#7d3c98;font-weight:700;">&#9679;</span> point on the MC curve up or down</span>
+        <span class="sv" id="s10-val" style="margin-left:auto;">P&thinsp;=&thinsp;$9</span>
+        <button class="viz-btn" onclick="resetS10()">Reset labels</button>
+      </div>
+      <div class="demo-svg-wrap" id="s10-svg-wrap"></div>
     </div>
   </div>
 
@@ -1287,28 +1324,31 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
 })();
 
 // ================================================================
-// SECTION 8: D3 FORCE LABELS — DRAGGABLE PRICE HANDLE
+// SECTION 8: D3 FORCE LABELS — DRAGGABLE EQUILIBRIUM POINT ON MC
 // ================================================================
 (function initS8() {
   if (typeof d3 === 'undefined') return;
 
   const W=680, H=320, PAD={top:28,right:36,bottom:44,left:54};
   const yMax=16;
-  const scX=d3.scaleLinear().domain([0,10]).range([PAD.left, W-PAD.right]);
-  const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom, PAD.top]);
-  const HANDLE_X = W-PAD.right-8;
+  const scX=d3.scaleLinear().domain([0,10]).range([PAD.left,W-PAD.right]);
+  const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
 
   const svg=d3.select('#s8-svg-wrap').append('svg')
     .attr('viewBox',`0 0 ${W} ${H}`)
     .style('width','100%').style('display','block')
     .style('font-family',"'DM Sans',system-ui,sans-serif");
 
+  // Grid
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
-    .append('line')
-    .attr('x1',PAD.left).attr('x2',W-PAD.right)
-    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d))
-    .attr('stroke','#f0f0f0').attr('stroke-width',1);
+    .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
 
+  // Axis projection lines (behind curves)
+  const projV=svg.append('line').attr('stroke','#ddd').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+  const projH=svg.append('line').attr('stroke','#ddd').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+
+  // Cost curves
   function addCurve(fn,color){
     const pts=[];
     for(let q=0.4;q<=9.9;q+=0.04){const v=fn(q);if(!isFinite(v)||v<0||v>yMax)continue;pts.push([scX(q),scY(v)]);}
@@ -1316,20 +1356,11 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
   }
   addCurve(MC_fn,'#c0392b'); addCurve(ATC_fn,'#1a56db'); addCurve(AVC_fn,'#1e8449');
 
-  let s8P=9;
+  // MR=P line
   const mrLineEl=svg.append('line')
     .attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
 
-  function s8MrAnchor(){
-    const q=bisect(MC_fn,Math.max(2,Math.min(s8P,yMax-0.5)),3,9.5);
-    return{x:scX(q),y:scY(s8P)};
-  }
-  function s8UpdateMrLine(){
-    const y=scY(Math.max(0.5,Math.min(s8P,yMax-0.5)));
-    mrLineEl.attr('x1',scX(0.3)).attr('x2',HANDLE_X).attr('y1',y).attr('y2',y);
-  }
-  s8UpdateMrLine();
-
+  // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(10).tickSize(4)
   ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
@@ -1341,14 +1372,18 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('$ per unit');
 
+  // Initial state
+  let s8P=9;
+  let s8Q=bisect(MC_fn,s8P,3,9.5);
+
+  // Label nodes
   const LABEL_H=15;
-  const initMrA=s8MrAnchor();
   const s8Nodes=[
     {id:'MC',    color:'#c0392b',label:'MC',    lw:40,ax:scX(6.5),ay:scY(MC_fn(6.5))},
     {id:'ATC',   color:'#1a56db',label:'ATC',   lw:40,ax:scX(8.0),ay:scY(ATC_fn(8.0))},
     {id:'AVC',   color:'#1e8449',label:'AVC',   lw:40,ax:scX(8.0),ay:scY(AVC_fn(8.0))},
     {id:'minATC',color:'#1a56db',label:'min ATC',lw:66,ax:scX(6.4),ay:scY(ATC_fn(6.4))},
-    {id:'MR',    color:'#7d3c98',label:'MR = P', lw:66,ax:initMrA.x,ay:initMrA.y,isMR:true},
+    {id:'MR',    color:'#7d3c98',label:'MR = P', lw:66,ax:scX(s8Q),ay:scY(s8P),isMR:true},
   ].map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*50,y:n.ay+(Math.random()-0.5)*50}));
 
   const s8Dots=svg.selectAll('.s8dot').data(s8Nodes).enter()
@@ -1390,47 +1425,333 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
       s8MrDot.attr('cx',s8MrNode.fx_anchor).attr('cy',s8MrNode.fy_anchor);
     });
 
-  // ── Draggable price handle ──
-  const handle=svg.append('circle')
-    .attr('cx',HANDLE_X).attr('cy',scY(s8P)).attr('r',9)
+  // Draggable equilibrium dot — appended LAST so it's always on top
+  const eqDot=svg.append('circle')
+    .attr('cx',scX(s8Q)).attr('cy',scY(s8P)).attr('r',8)
     .attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',2)
     .style('cursor','ns-resize');
 
-  // Grip lines drawn on top of handle (pointer-events: none)
-  const grip=svg.append('g').style('pointer-events','none');
-  grip.selectAll('line').data([-2.5,2.5]).enter().append('line')
-    .attr('x1',HANDLE_X-4).attr('x2',HANDLE_X+4)
-    .attr('stroke','white').attr('stroke-width',1.5).attr('stroke-linecap','round');
-
-  function updateHandle(){
-    const y=scY(s8P);
-    handle.attr('cy',y);
-    grip.selectAll('line').data([-2.5,2.5]).attr('y1',d=>y+d).attr('y2',d=>y+d);
-    document.getElementById('s8-val').textContent=fmtP(s8P);
+  function updateChart(){
+    s8Q=bisect(MC_fn,Math.max(2,Math.min(s8P,yMax-0.5)),3,9.5);
+    const ex=scX(s8Q), ey=scY(s8P);
+    mrLineEl.attr('x1',scX(0.3)).attr('x2',scX(9.7)).attr('y1',ey).attr('y2',ey);
+    projV.attr('x1',ex).attr('x2',ex).attr('y1',ey).attr('y2',scY(0));
+    projH.attr('x1',scX(0)).attr('x2',ex).attr('y1',ey).attr('y2',ey);
+    eqDot.attr('cx',ex).attr('cy',ey);
+    s8MrNode.fx_anchor=ex; s8MrNode.fy_anchor=ey;
+    document.getElementById('s8-val').textContent='P = '+fmtP(s8P);
   }
-  updateHandle();
+  updateChart();
 
-  handle.call(d3.drag()
+  eqDot.call(d3.drag()
     .on('start',()=>{ s8Sim.alphaTarget(0.3).restart(); })
     .on('drag',(e)=>{
-      const clampedY=Math.max(PAD.top+5,Math.min(H-PAD.bottom-5,e.y));
-      s8P=Math.max(2,Math.min(14,scY.invert(clampedY)));
-      s8UpdateMrLine();
-      const a=s8MrAnchor();
-      s8MrNode.fx_anchor=a.x; s8MrNode.fy_anchor=a.y;
-      updateHandle();
+      s8P=Math.max(2,Math.min(14,scY.invert(Math.max(PAD.top+5,Math.min(H-PAD.bottom-5,e.y)))));
+      updateChart();
     })
     .on('end',()=>{ s8Sim.alphaTarget(0); })
   );
 
   window.resetS8=function(){
-    const a=s8MrAnchor();
     s8Nodes.forEach(d=>{
-      if(d.isMR){d.fx_anchor=a.x;d.fy_anchor=a.y;}
       d.x=d.fx_anchor+(Math.random()-0.5)*60; d.y=d.fy_anchor+(Math.random()-0.5)*60;
       d.vx=0;d.vy=0;d.fx=null;d.fy=null;
     });
     s8Sim.alpha(0.5).restart();
+  };
+})();
+
+// ================================================================
+// SHARED: custom D3 force — repels label nodes from sampled curve points
+// curvePtsArr is a mutable array; update it in-place when lines move.
+// ================================================================
+function makeLineRepelForce(curvePtsArr,LABEL_H,{pad=10,str=0.35}={}){
+  let nodes;
+  function force(alpha){
+    for(const d of nodes){
+      const cx=d.x+d.lw/2, cy=d.y+LABEL_H/2;
+      const hw=d.lw/2+pad, hh=LABEL_H/2+pad;
+      for(const [px,py] of curvePtsArr){
+        const dx=cx-px, dy=cy-py;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+          d.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*str*alpha;
+          d.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*str*alpha;
+        }
+      }
+    }
+  }
+  force.initialize=_nodes=>{nodes=_nodes;};
+  return force;
+}
+
+// ================================================================
+// SECTION 9: SLIDER + LINE REPULSION
+// ================================================================
+(function initS9() {
+  if (typeof d3 === 'undefined') return;
+
+  const W=680, H=320, PAD={top:28,right:36,bottom:44,left:54};
+  const yMax=16;
+  const scX=d3.scaleLinear().domain([0,10]).range([PAD.left,W-PAD.right]);
+  const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
+
+  const svg=d3.select('#s9-svg-wrap').append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
+
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
+    .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
+
+  function addCurve(fn,color){
+    const pts=[];
+    for(let q=0.4;q<=9.9;q+=0.04){const v=fn(q);if(!isFinite(v)||v<0||v>yMax)continue;pts.push([scX(q),scY(v)]);}
+    svg.append('path').attr('fill','none').attr('stroke',color).attr('stroke-width',2).attr('d',d3.line()(pts));
+  }
+  addCurve(MC_fn,'#c0392b'); addCurve(ATC_fn,'#1a56db'); addCurve(AVC_fn,'#1e8449');
+
+  let s9P=9;
+  const mrLineEl=svg.append('line')
+    .attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+
+  function s9MrAnchor(){const q=bisect(MC_fn,Math.max(2,Math.min(s9P,yMax-0.5)),3,9.5);return{x:scX(q),y:scY(s9P)};}
+  function s9UpdateMrLine(){const y=scY(Math.max(0.5,Math.min(s9P,yMax-0.5)));mrLineEl.attr('x1',scX(0.3)).attr('x2',scX(9.7)).attr('y1',y).attr('y2',y);}
+  s9UpdateMrLine();
+
+  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(10).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(8).tickSize(4).tickFormat(d=>'$'+d)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Quantity (q)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('$ per unit');
+
+  const LABEL_H=15;
+  const initA=s9MrAnchor();
+  const s9Nodes=[
+    {id:'MC',    color:'#c0392b',label:'MC',    lw:40,ax:scX(6.5),ay:scY(MC_fn(6.5))},
+    {id:'ATC',   color:'#1a56db',label:'ATC',   lw:40,ax:scX(8.0),ay:scY(ATC_fn(8.0))},
+    {id:'AVC',   color:'#1e8449',label:'AVC',   lw:40,ax:scX(8.0),ay:scY(AVC_fn(8.0))},
+    {id:'minATC',color:'#1a56db',label:'min ATC',lw:66,ax:scX(6.4),ay:scY(ATC_fn(6.4))},
+    {id:'MR',    color:'#7d3c98',label:'MR = P', lw:66,ax:initA.x,ay:initA.y,isMR:true},
+  ].map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*50,y:n.ay+(Math.random()-0.5)*50}));
+
+  const s9Dots=svg.selectAll('.s9dot').data(s9Nodes).enter()
+    .append('circle').attr('class','s9dot')
+    .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
+    .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
+
+  const s9Conn=svg.selectAll('.s9conn').data(s9Nodes).enter()
+    .append('line').attr('class','s9conn')
+    .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+
+  const s9LblGs=svg.selectAll('.s9lbl').data(s9Nodes).enter()
+    .append('g').attr('class','s9lbl draggable-label')
+    .call(d3.drag()
+      .on('start',(e,d)=>{s9Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',  (e,d)=>{s9Sim.alphaTarget(0);d.fx=null;d.fy=null;})
+    );
+  s9LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+    .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+  s9LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+    .text(d=>d.label);
+
+  const s9MrNode=s9Nodes.find(n=>n.id==='MR');
+  const s9MrDot=s9Dots.filter(d=>d.id==='MR');
+
+  // Mutable curve-point array for line-repulsion force
+  const s9CurvePts=[];
+  function s9RefillCurvePts(P){
+    s9CurvePts.length=0;
+    for(const fn of[MC_fn,ATC_fn,AVC_fn])
+      for(let q=0.4;q<=9.9;q+=0.15){const v=fn(q);if(!isFinite(v)||v<0||v>yMax)continue;s9CurvePts.push([scX(q),scY(v)]);}
+    const y=scY(Math.max(0.5,Math.min(P,yMax-0.5)));
+    for(let x=scX(0.3);x<=scX(9.7);x+=8)s9CurvePts.push([x,y]);
+  }
+  s9RefillCurvePts(s9P);
+
+  const s9Sim=d3.forceSimulation(s9Nodes)
+    .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+    .force('x',d3.forceX(d=>d.fx_anchor).strength(0.07))
+    .force('y',d3.forceY(d=>d.fy_anchor).strength(0.07))
+    .force('lineRepel',makeLineRepelForce(s9CurvePts,LABEL_H))
+    .on('tick',()=>{
+      s9Nodes.forEach(d=>{
+        d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
+        d.y=Math.max(PAD.top,   Math.min(H-PAD.bottom-LABEL_H,d.y));
+      });
+      s9LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
+      s9Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+      s9MrDot.attr('cx',s9MrNode.fx_anchor).attr('cy',s9MrNode.fy_anchor);
+    });
+
+  window.resetS9=function(){
+    const a=s9MrAnchor();
+    s9Nodes.forEach(d=>{
+      if(d.isMR){d.fx_anchor=a.x;d.fy_anchor=a.y;}
+      d.x=d.fx_anchor+(Math.random()-0.5)*60; d.y=d.fy_anchor+(Math.random()-0.5)*60;
+      d.vx=0;d.vy=0;d.fx=null;d.fy=null;
+    });
+    s9Sim.alpha(0.5).restart();
+  };
+
+  window._s9setP=function(newP){
+    s9P=newP;
+    s9UpdateMrLine();
+    s9RefillCurvePts(newP);
+    const a=s9MrAnchor();
+    s9MrNode.fx_anchor=a.x; s9MrNode.fy_anchor=a.y;
+    s9Sim.alpha(0.2).restart();
+  };
+})();
+
+// ================================================================
+// SECTION 10: DRAGGABLE EQUILIBRIUM POINT + LINE REPULSION
+// ================================================================
+(function initS10() {
+  if (typeof d3 === 'undefined') return;
+
+  const W=680, H=320, PAD={top:28,right:36,bottom:44,left:54};
+  const yMax=16;
+  const scX=d3.scaleLinear().domain([0,10]).range([PAD.left,W-PAD.right]);
+  const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
+
+  const svg=d3.select('#s10-svg-wrap').append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
+
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
+    .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
+
+  const projV=svg.append('line').attr('stroke','#ddd').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+  const projH=svg.append('line').attr('stroke','#ddd').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+
+  function addCurve(fn,color){
+    const pts=[];
+    for(let q=0.4;q<=9.9;q+=0.04){const v=fn(q);if(!isFinite(v)||v<0||v>yMax)continue;pts.push([scX(q),scY(v)]);}
+    svg.append('path').attr('fill','none').attr('stroke',color).attr('stroke-width',2).attr('d',d3.line()(pts));
+  }
+  addCurve(MC_fn,'#c0392b'); addCurve(ATC_fn,'#1a56db'); addCurve(AVC_fn,'#1e8449');
+
+  const mrLineEl=svg.append('line')
+    .attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+
+  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(10).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(8).tickSize(4).tickFormat(d=>'$'+d)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Quantity (q)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('$ per unit');
+
+  let s10P=9;
+  let s10Q=bisect(MC_fn,s10P,3,9.5);
+
+  const LABEL_H=15;
+  const s10Nodes=[
+    {id:'MC',    color:'#c0392b',label:'MC',    lw:40,ax:scX(6.5),ay:scY(MC_fn(6.5))},
+    {id:'ATC',   color:'#1a56db',label:'ATC',   lw:40,ax:scX(8.0),ay:scY(ATC_fn(8.0))},
+    {id:'AVC',   color:'#1e8449',label:'AVC',   lw:40,ax:scX(8.0),ay:scY(AVC_fn(8.0))},
+    {id:'minATC',color:'#1a56db',label:'min ATC',lw:66,ax:scX(6.4),ay:scY(ATC_fn(6.4))},
+    {id:'MR',    color:'#7d3c98',label:'MR = P', lw:66,ax:scX(s10Q),ay:scY(s10P),isMR:true},
+  ].map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*50,y:n.ay+(Math.random()-0.5)*50}));
+
+  const s10Dots=svg.selectAll('.s10dot').data(s10Nodes).enter()
+    .append('circle').attr('class','s10dot')
+    .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
+    .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
+
+  const s10Conn=svg.selectAll('.s10conn').data(s10Nodes).enter()
+    .append('line').attr('class','s10conn')
+    .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+
+  const s10LblGs=svg.selectAll('.s10lbl').data(s10Nodes).enter()
+    .append('g').attr('class','s10lbl draggable-label')
+    .call(d3.drag()
+      .on('start',(e,d)=>{s10Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',  (e,d)=>{s10Sim.alphaTarget(0);d.fx=null;d.fy=null;})
+    );
+  s10LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+    .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+  s10LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+    .text(d=>d.label);
+
+  const s10MrNode=s10Nodes.find(n=>n.id==='MR');
+  const s10MrDot=s10Dots.filter(d=>d.id==='MR');
+
+  // Mutable curve-point array for line-repulsion force
+  const s10CurvePts=[];
+  function s10RefillCurvePts(P){
+    s10CurvePts.length=0;
+    for(const fn of[MC_fn,ATC_fn,AVC_fn])
+      for(let q=0.4;q<=9.9;q+=0.15){const v=fn(q);if(!isFinite(v)||v<0||v>yMax)continue;s10CurvePts.push([scX(q),scY(v)]);}
+    const y=scY(Math.max(0.5,Math.min(P,yMax-0.5)));
+    for(let x=scX(0.3);x<=scX(9.7);x+=8)s10CurvePts.push([x,y]);
+  }
+  s10RefillCurvePts(s10P);
+
+  const s10Sim=d3.forceSimulation(s10Nodes)
+    .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+    .force('x',d3.forceX(d=>d.fx_anchor).strength(0.07))
+    .force('y',d3.forceY(d=>d.fy_anchor).strength(0.07))
+    .force('lineRepel',makeLineRepelForce(s10CurvePts,LABEL_H))
+    .on('tick',()=>{
+      s10Nodes.forEach(d=>{
+        d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
+        d.y=Math.max(PAD.top,   Math.min(H-PAD.bottom-LABEL_H,d.y));
+      });
+      s10LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
+      s10Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+      s10MrDot.attr('cx',s10MrNode.fx_anchor).attr('cy',s10MrNode.fy_anchor);
+    });
+
+  // Draggable equilibrium dot — ON TOP
+  const eqDot=svg.append('circle')
+    .attr('cx',scX(s10Q)).attr('cy',scY(s10P)).attr('r',8)
+    .attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',2)
+    .style('cursor','ns-resize');
+
+  function updateChart(){
+    s10Q=bisect(MC_fn,Math.max(2,Math.min(s10P,yMax-0.5)),3,9.5);
+    const ex=scX(s10Q), ey=scY(s10P);
+    mrLineEl.attr('x1',scX(0.3)).attr('x2',scX(9.7)).attr('y1',ey).attr('y2',ey);
+    projV.attr('x1',ex).attr('x2',ex).attr('y1',ey).attr('y2',scY(0));
+    projH.attr('x1',scX(0)).attr('x2',ex).attr('y1',ey).attr('y2',ey);
+    eqDot.attr('cx',ex).attr('cy',ey);
+    s10MrNode.fx_anchor=ex; s10MrNode.fy_anchor=ey;
+    s10RefillCurvePts(s10P);
+    document.getElementById('s10-val').textContent='P = '+fmtP(s10P);
+  }
+  updateChart();
+
+  eqDot.call(d3.drag()
+    .on('start',()=>{ s10Sim.alphaTarget(0.3).restart(); })
+    .on('drag',(e)=>{
+      s10P=Math.max(2,Math.min(14,scY.invert(Math.max(PAD.top+5,Math.min(H-PAD.bottom-5,e.y)))));
+      updateChart();
+    })
+    .on('end',()=>{ s10Sim.alphaTarget(0); })
+  );
+
+  window.resetS10=function(){
+    s10Nodes.forEach(d=>{
+      d.x=d.fx_anchor+(Math.random()-0.5)*60; d.y=d.fy_anchor+(Math.random()-0.5)*60;
+      d.vx=0;d.vy=0;d.fx=null;d.fy=null;
+    });
+    s10Sim.alpha(0.5).restart();
   };
 })();
 
@@ -1646,6 +1967,12 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
     const P=parseFloat(this.value);
     document.getElementById('s6-val').textContent=fmtP(P);
     if(window._s6setP) window._s6setP(P);
+  });
+  // Section 9: same but with line repulsion
+  document.getElementById('s9-slider').addEventListener('input',function(){
+    const P=parseFloat(this.value);
+    document.getElementById('s9-val').textContent=fmtP(P);
+    if(window._s9setP) window._s9setP(P);
   });
 
 }));
