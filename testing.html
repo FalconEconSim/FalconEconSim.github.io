@@ -163,6 +163,29 @@
         <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-d"></canvas></div>
       </div>
     </div>
+    <p style="font-size:0.82rem;color:var(--muted);margin:16px 0 12px"><strong>Below: velocity-based approaches</strong> &mdash; labels have inertia (D3-style). Forces shrink via alpha decay so labels settle gradually instead of jumping.</p>
+    <div class="card-grid-2">
+      <div class="test-card">
+        <div class="card-label">E &mdash; Alpha-decay velocity + elliptical collision</div>
+        <div class="card-desc">Labels gain velocity each step; forces scale with alpha (1&rarr;0 over iters). Elliptical collision replaces rectangular bounding-box check. Weak spring to anchor. Closest to D3 feel.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-e"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">F &mdash; Pre-offset + physics, no spring</div>
+        <div class="card-desc">Labels start 32 px from nearest line point, then velocity physics with NO spring &mdash; they float to the clearest region and stay. Strongest line avoidance of all 8.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-f"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">G &mdash; Best-of-8 start + physics settle (D + E hybrid)</div>
+        <div class="card-desc">Compass placement picks a clean starting point (approach D), then alpha-decay physics smooths the result. Combines structured placement with organic settling.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-g"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">H &mdash; Smart pre-place + physics, loose damping</div>
+        <div class="card-desc">Smart directional pre-placement (away from curves), then physics with high damping = 0.88 instead of 0.76 &mdash; velocity persists longer, giving a more &ldquo;floaty&rdquo; feel and wider label spread.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-h"></canvas></div>
+      </div>
+    </div>
   </div>
 
   <!-- ── SECTION 4: Label Visual Styles ────────────────── -->
@@ -447,6 +470,156 @@ function resolveD(items, linePts, iter=70, pad=6){
         }
       }
     }
+  }
+}
+
+// ── shared velocity helpers ──────────────────────────────────
+function _initV(items){ for(const lm of items){lm.vx=0;lm.vy=0;} }
+function _stepV(items,damp){ for(const lm of items){lm.vx*=damp;lm.vy*=damp;lm.x+=lm.vx;lm.y+=lm.vy;} }
+
+// E — D3-style: elliptical collision + alpha decay + weak spring
+// The "smooth" feel comes from velocity + alpha decay: forces shrink as
+// the system cools, so labels settle gradually rather than jumping.
+function resolveE(items, linePts, iter=280, pad=8){
+  _initV(items);
+  const thin=linePts.filter((_,i)=>i%3===0); // thin for perf
+  for(let it=0;it<iter;it++){
+    const a=Math.pow(1-it/iter,1.5); // smooth alpha decay
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const A=items[i],B=items[j];
+        const dx=(A.x-B.x)||0.01, dy=(A.y-B.y)||0.01;
+        const dist=Math.hypot(dx,dy);
+        const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
+        if(dist<minD){
+          const s=(minD-dist)/dist*a*0.55;
+          A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;
+        }
+      }
+      const lm=items[i];
+      lm.vx+=(lm.ax-lm.x)*0.022*a; // weak spring
+      lm.vy+=(lm.ay-lm.y)*0.022*a;
+    }
+    for(const lm of items){
+      const hw=lm.w/2+10,hh=lm.h/2+10;
+      for(const [lx,ly] of thin){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+          lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*a*0.5;
+          lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*a*0.5;
+        }
+      }
+    }
+    _stepV(items,0.76);
+  }
+}
+
+// F — pre-offset + physics, NO spring (labels float to clearest space)
+// Strongest line avoidance; connector line makes offset readable.
+function resolveF(items, linePts, iter=250, pad=8){
+  for(const lm of items){
+    let nx=lm.ax,ny=lm.ay,nd=Infinity;
+    for(const [lx,ly] of linePts){const d=Math.hypot(lx-lm.ax,ly-lm.ay);if(d<nd){nd=d;nx=lx;ny=ly;}}
+    if(nd<80){const dx=lm.ax-nx,dy=lm.ay-ny,len=Math.hypot(dx,dy)||1;lm.x=lm.ax+dx/len*32;lm.y=lm.ay+dy/len*32;}
+  }
+  _initV(items);
+  const thin=linePts.filter((_,i)=>i%3===0);
+  for(let it=0;it<iter;it++){
+    const a=Math.pow(1-it/iter,1.5);
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const A=items[i],B=items[j];
+        const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
+        const dist=Math.hypot(dx,dy);
+        const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
+        if(dist<minD){const s=(minD-dist)/dist*a*0.6;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
+      }
+      // NO spring
+    }
+    for(const lm of items){
+      const hw=lm.w/2+12,hh=lm.h/2+12;
+      for(const [lx,ly] of thin){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+          lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*a*0.65;
+          lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*a*0.65;
+        }
+      }
+    }
+    _stepV(items,0.78);
+  }
+}
+
+// G — best-of-8 start + physics settle (D + E hybrid)
+// Smart compass placement for the starting point, then physics to polish it.
+function resolveG(items, linePts, iter=200, pad=8){
+  const R=42;
+  for(const lm of items){
+    let bx=lm.x,by=lm.y,bs=Infinity;
+    for(let ang=0;ang<8;ang++){
+      const t=ang*Math.PI/4,cx=lm.ax+Math.cos(t)*R,cy=lm.ay+Math.sin(t)*R;
+      let sc=0;
+      for(const o of items){if(o===lm)continue;const gx=(lm.w+o.w)/2+pad,gy=(lm.h+o.h)/2+pad;if(Math.abs(cx-o.x)<gx&&Math.abs(cy-o.y)<gy)sc+=12;}
+      for(const [lx,ly] of linePts){const hw=lm.w/2+7,hh=lm.h/2+7;if(Math.abs(cx-lx)<hw&&Math.abs(cy-ly)<hh)sc+=1;}
+      if(sc<bs){bs=sc;bx=cx;by=cy;}
+    }
+    lm.x=bx;lm.y=by;
+  }
+  _initV(items);
+  const thin=linePts.filter((_,i)=>i%3===0);
+  for(let it=0;it<iter;it++){
+    const a=Math.pow(1-it/iter,2);
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const A=items[i],B=items[j];
+        const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
+        const dist=Math.hypot(dx,dy);
+        const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
+        if(dist<minD){const s=(minD-dist)/dist*a*0.5;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
+      }
+      const lm=items[i];
+      lm.vx+=(lm.ax-lm.x)*0.014*a;lm.vy+=(lm.ay-lm.y)*0.014*a;
+    }
+    for(const lm of items){
+      const hw=lm.w/2+9,hh=lm.h/2+9;
+      for(const [lx,ly] of thin){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*a*0.55;lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*a*0.55;}
+      }
+    }
+    _stepV(items,0.8);
+  }
+}
+
+// H — smart pre-place + physics, stronger line escape + looser damping
+// Low damping (0.88) lets velocity persist longer → more "floaty" feel.
+function resolveH(items, linePts, iter=320, pad=8){
+  const thin=linePts.filter((_,i)=>i%3===0);
+  for(const lm of items){
+    const nearby=linePts.map(([lx,ly])=>({lx,ly,d:Math.hypot(lx-lm.ax,ly-lm.ay)})).filter(p=>p.d<90).sort((a,b)=>a.d-b.d).slice(0,20);
+    if(nearby.length>0){let ax=0,ay=0;for(const p of nearby){ax+=p.lx-lm.ax;ay+=p.ly-lm.ay;}const len=Math.hypot(ax,ay)||1;lm.x=lm.ax-ax/len*42;lm.y=lm.ay-ay/len*42;}
+  }
+  _initV(items);
+  for(let it=0;it<iter;it++){
+    const a=Math.pow(1-it/iter,1.5);
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const A=items[i],B=items[j];
+        const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
+        const dist=Math.hypot(dx,dy);
+        const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
+        if(dist<minD){const s=(minD-dist)/dist*a*0.6;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
+      }
+      const lm=items[i];lm.vx+=(lm.ax-lm.x)*0.018*a;lm.vy+=(lm.ay-lm.y)*0.018*a;
+    }
+    for(const lm of items){
+      const hw=lm.w/2+13,hh=lm.h/2+13;
+      for(const [lx,ly] of thin){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*a*0.72;lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*a*0.72;}
+      }
+    }
+    _stepV(items,0.88); // looser damping = more floaty
   }
 }
 
@@ -750,6 +923,10 @@ function drawAll(){
   drawCostFig('fl-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA});
   drawCostFig('fl-c',{fontSize:12,resolver:resolveC,labelDrawer:drawStyleA});
   drawCostFig('fl-d',{fontSize:12,resolver:resolveD,labelDrawer:drawStyleA});
+  drawCostFig('fl-e',{fontSize:12,resolver:resolveE,labelDrawer:drawStyleA});
+  drawCostFig('fl-f',{fontSize:12,resolver:resolveF,labelDrawer:drawStyleA});
+  drawCostFig('fl-g',{fontSize:12,resolver:resolveG,labelDrawer:drawStyleA});
+  drawCostFig('fl-h',{fontSize:12,resolver:resolveH,labelDrawer:drawStyleA});
 
   // Section 4: label styles (all 12px, approach B)
   drawCostFig('ls-a',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA});
@@ -769,6 +946,10 @@ function redrawS3(P){
   drawCostFig('fl-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA,P});
   drawCostFig('fl-c',{fontSize:12,resolver:resolveC,labelDrawer:drawStyleA,P});
   drawCostFig('fl-d',{fontSize:12,resolver:resolveD,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-e',{fontSize:12,resolver:resolveE,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-f',{fontSize:12,resolver:resolveF,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-g',{fontSize:12,resolver:resolveG,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-h',{fontSize:12,resolver:resolveH,labelDrawer:drawStyleA,P});
 }
 
 // ── Section 4 slider ──────────────────────────────────────────
