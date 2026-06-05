@@ -8,7 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
+    .demo-svg-wrap { padding: 0; }
+    .demo-svg-wrap svg { display: block; width: 100%; }
+    .draggable-label { cursor: move; }
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
     .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
@@ -140,7 +144,7 @@
       </div>
       <button class="viz-btn" id="v61-show-btn" onclick="v61ShowOptimal()">Show Optimal Bundle</button>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs61" height="280"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs61" height="320"></canvas></div>
     <div class="viz-readout" id="v61-readout"></div>
     <div class="v61-steps" id="v61-steps">
       <div id="v61-steps-content"></div>
@@ -203,8 +207,9 @@
         <span class="viz-slider-val" id="v65-tfc-val">100</span>
       </div>
       <button class="viz-btn" id="v65-lr-btn" onclick="v65ToggleLR()">Show LRAC</button>
+      <button class="viz-btn" onclick="window.resetFig65&&window.resetFig65()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs65" height="280"></canvas></div>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs65-wrap"></div></div>
     <div class="viz-readout" id="v65-readout"></div>
   </section>
 
@@ -232,8 +237,9 @@
         <input type="range" class="viz-slider" id="v66-nk" min="1" max="8" step="1" value="4" oninput="v66Update()" style="width:160px;">
         <span class="viz-slider-val" id="v66-nk-val">4</span>
       </div>
+      <button class="viz-btn" onclick="window.resetFig66&&window.resetFig66()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs66" height="300"></canvas></div>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs66-wrap"></div></div>
     <div class="viz-readout" id="v66-readout"></div>
   </section>
 
@@ -263,8 +269,9 @@
         <input type="range" class="viz-slider" id="v68-v" min="1" max="8" step="0.5" value="3" oninput="v68Update()">
         <span class="viz-slider-val" id="v68-v-val">3</span>
       </div>
+      <button class="viz-btn" onclick="window.resetFig68&&window.resetFig68()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs68" height="280"></canvas></div>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs68-wrap"></div></div>
     <div class="viz-readout" id="v68-readout"></div>
   </section>
 
@@ -294,8 +301,9 @@
         </select>
       </div>
       <button class="viz-btn" id="v610-mc-btn" onclick="v610ToggleMC()">Show Marginal Cost</button>
+      <button class="viz-btn" onclick="window.resetFig610&&window.resetFig610()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs610" height="280"></canvas></div>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs610-wrap"></div></div>
     <div class="viz-readout" id="v610-readout"></div>
   </section>
 
@@ -346,21 +354,43 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
   }
 }
 function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
+  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false,w,h} = lbl;
+  const LH=15;
+  const bw=w||ctx.measureText(text).width+10;
+  const bh=h||LH;
   ctx.save();
+  // Connector line: colored, dashed, opacity 0.55
   if (Math.hypot(x-ax,y-ay)>5) {
-    ctx.strokeStyle=color+'80'; ctx.lineWidth=0.8; ctx.setLineDash([2,2]);
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.globalAlpha=0.55;
+    ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x+bw/2,y+bh/2); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha=1;
   }
-  ctx.font=(bold?'bold ':'')+fontSize+'px DM Sans,sans-serif';
+  // Anchor dot r=4
+  ctx.beginPath(); ctx.arc(ax,ay,4,0,2*Math.PI);
+  ctx.fillStyle=color; ctx.fill();
+  ctx.strokeStyle='white'; ctx.lineWidth=1.5; ctx.stroke();
+  // Label box: white fill, colored stroke 0.8px, rx=3 (approximate with rect)
+  ctx.fillStyle='white';
+  ctx.strokeStyle=color; ctx.lineWidth=0.8;
+  // Rounded rect approximation
+  const rx=3, bx=x, by=y;
+  ctx.beginPath();
+  ctx.moveTo(bx+rx,by); ctx.lineTo(bx+bw-rx,by);
+  ctx.quadraticCurveTo(bx+bw,by,bx+bw,by+rx);
+  ctx.lineTo(bx+bw,by+bh-rx);
+  ctx.quadraticCurveTo(bx+bw,by+bh,bx+bw-rx,by+bh);
+  ctx.lineTo(bx+rx,by+bh);
+  ctx.quadraticCurveTo(bx,by+bh,bx,by+bh-rx);
+  ctx.lineTo(bx,by+rx);
+  ctx.quadraticCurveTo(bx,by,bx+rx,by);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // Text: 9px bold DM Sans, colored
+  ctx.font=(bold?'bold ':'bold ')+fontSize+'px DM Sans,sans-serif';
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  const tw=ctx.measureText(text).width;
-  const th=fontSize*1.35;
-  ctx.fillStyle='#ffffffcc';
-  ctx.fillRect(x-tw/2-3,y-th/2,tw+6,th);
   ctx.fillStyle=color;
-  ctx.fillText(text,x,y);
+  ctx.fillText(text,bx+bw/2,by+bh/2);
   ctx.restore();
 }
 
@@ -380,20 +410,31 @@ function toC(x,y,W,H,xR,yR){
 }
 
 function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
-  ctx.save(); ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.save();
+  // Grid lines at 4 y-ticks
+  const ys=(yR[1]-yR[0])/4;
+  for(let i=1;i<=4;i++){
+    const v=yR[0]+i*ys; const [,py]=toC(xR[0],v,W,H,xR,yR);
+    ctx.strokeStyle='#f0f0f0'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(W-MR,py); ctx.stroke();
+  }
+  // Axes
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
-  ctx.fillStyle='#888'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='center';
+  // Tick text
+  ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
   const xs=(xR[1]-xR[0])/4;
   for(let i=0;i<=4;i++){
     const v=xR[0]+i*xs; const [px]=toC(v,yR[0],W,H,xR,yR);
-    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+14);
+    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+12);
   }
-  const ys=(yR[1]-yR[0])/4;
   for(let i=0;i<=4;i++){
     const v=yR[0]+i*ys; const [,py]=toC(xR[0],v,W,H,xR,yR);
-    ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-5,py+4);
+    ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-5,py+3);
   }
+  // Axis labels
+  ctx.fillStyle='#666'; ctx.font='10px DM Sans,sans-serif';
   ctx.textAlign='center'; ctx.fillText(xLbl||'q',W/2,H-4);
   ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'$',0,0); ctx.restore(); ctx.restore();
@@ -450,8 +491,8 @@ function v61Draw(Lcur,Kcur){
 
   // Isoquant for Q=q
   const linePts61=[];
-  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
-  for(let l=0.1;l<=AXIS_MAX;l+=0.05){
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  for(let l=0.4;l<=AXIS_MAX;l+=0.05){
     const k=q*q/l; if(k>AXIS_MAX||k<0.05){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
     if(l%2<0.05) linePts61.push([cx,cy]);
@@ -761,7 +802,7 @@ function v62CtrlPlay(){
 }
 
 // ======================================================================
-// FIG 6.5 - SR vs LR COST CURVES
+// FIG 6.5 - SR vs LR COST CURVES (D3 SVG)
 // ======================================================================
 let v65ShowLR=false;
 function v65TC(q,tfc){return tfc+q*q;}
@@ -770,313 +811,518 @@ function v65ATC(q,tfc){return v65TC(q,tfc)/q;}
 function v65AVC(q){return q;}
 function v65AFC(q,tfc){return tfc/q;}
 
-function v65Draw(){
-  const tfc=parseFloat(document.getElementById('v65-tfc').value);
-  const cvs=document.getElementById('cvs65'); if(!cvs) return;
-  const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=W;
-  if(cvs.width!==W*dpr||cvs.height!==H*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
-  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-  const xR=[0,16], yR=[0,80];
-  drawAxesSt(ctx,W,H,xR,yR,'q','Cost per unit ($)');
+window._initFig65=function initFig65(){
+  if(typeof d3==='undefined') return;
+  const W=680,H=340,PAD={top:28,right:36,bottom:44,left:54};
+  const xMax=16, yMax=80;
+  const scX=d3.scaleLinear().domain([0,xMax]).range([PAD.left,W-PAD.right]);
+  const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
+  const LABEL_H=15;
 
-  const linePts65=[];
-  const drawCurve65=(fn,col,lw,dash)=>{
-    ctx.beginPath(); let first=true;
-    ctx.strokeStyle=col; ctx.lineWidth=lw;
-    if(dash) ctx.setLineDash(dash); else ctx.setLineDash([]);
-    for(let q=0.5;q<=15;q+=0.1){
-      const v=fn(q); if(v>yR[1]||v<0){first=true;continue;}
-      const [cx,cy]=toC(q,v,W,H,xR,yR);
-      if(q%1<0.1) linePts65.push([cx,cy]);
-      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  const svg=d3.select('#cvs65-wrap').append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
+
+  // Grid
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
+    .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d))
+    .attr('stroke','#f0f0f0').attr('stroke-width',1);
+
+  // Curve path elements (ordered: LRAC behind, then others)
+  const lracPath=svg.append('path').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',1.8).attr('stroke-dasharray','5,3').attr('opacity',0);
+  const afcPath=svg.append('path').attr('fill','none').attr('stroke','#888').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
+  const avcPath=svg.append('path').attr('fill','none').attr('stroke','#2e8b57').attr('stroke-width',2);
+  const atcPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
+  const smcPath=svg.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2);
+
+  // min ATC dot
+  const minDot=svg.append('circle').attr('r',5).attr('fill','#1a56db').attr('stroke','white').attr('stroke-width',1.5);
+
+  // Axes
+  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(8).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(6).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Quantity (q)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Cost per unit ($)');
+
+  // Force label nodes: SMC, ATC, AVC, AFC, minATC, (LRAC)
+  function makePts(fn,qlo,qhi,step){
+    const pts=[];
+    for(let q=qlo;q<=qhi;q+=step){
+      const v=fn(q); if(!isFinite(v)||v<0||v>yMax) continue;
+      pts.push([scX(q),scY(v)]);
     }
-    ctx.stroke(); ctx.setLineDash([]);
+    return pts;
+  }
+
+  let f65Nodes, f65Sim, f65LblGs, f65Conn, f65Dots;
+
+  function buildNodes(tfc){
+    const qminATC=Math.sqrt(tfc);
+    const minATC=v65ATC(qminATC,tfc);
+    const nodes=[
+      {id:'SMC',  color:'#e74c3c',label:'SMC',  lw:44,ax:scX(12),  ay:scY(Math.min(v65MC(12),yMax))},
+      {id:'ATC',  color:'#1a56db',label:'ATC',  lw:40, ax:scX(13),  ay:scY(Math.min(v65ATC(13,tfc),yMax))},
+      {id:'AVC',  color:'#2e8b57',label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
+      {id:'AFC',  color:'#888',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
+      {id:'minATC',color:'#1a56db',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
+    ];
+    if(v65ShowLR) nodes.push({id:'LRAC',color:'#c0392b',label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
+    return nodes.filter(n=>isFinite(n.ay)).map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*50,y:n.ay+(Math.random()-0.5)*50}));
+  }
+
+  function initSim(tfc){
+    if(f65Sim) f65Sim.stop();
+    svg.selectAll('.f65dot,.f65conn,.f65lbl').remove();
+    f65Nodes=buildNodes(tfc);
+
+    f65Dots=svg.selectAll('.f65dot').data(f65Nodes).enter()
+      .append('circle').attr('class','f65dot')
+      .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
+      .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
+
+    f65Conn=svg.selectAll('.f65conn').data(f65Nodes).enter()
+      .append('line').attr('class','f65conn')
+      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+
+    f65LblGs=svg.selectAll('.f65lbl').data(f65Nodes).enter()
+      .append('g').attr('class','f65lbl draggable-label')
+      .call(d3.drag()
+        .on('start',(e,d)=>{f65Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+        .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+        .on('end',  (e,d)=>{f65Sim.alphaTarget(0);d.fx=null;d.fy=null;})
+      );
+    f65LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+      .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+    f65LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+      .text(d=>d.label);
+
+    f65Sim=d3.forceSimulation(f65Nodes)
+      .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+      .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
+      .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+      .on('tick',()=>{
+        f65Nodes.forEach(d=>{
+          d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
+          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+        });
+        f65LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
+        f65Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+      });
+  }
+
+  function v65DrawD3(tfc){
+    // Curves
+    smcPath.attr('d', d3.line()(makePts(q=>v65MC(q),   0.4,15.9,0.1)));
+    atcPath.attr('d', d3.line()(makePts(q=>v65ATC(q,tfc),0.4,15.9,0.1)));
+    avcPath.attr('d', d3.line()(makePts(q=>v65AVC(q),   0.4,15.9,0.1)));
+    afcPath.attr('d', d3.line()(makePts(q=>v65AFC(q,tfc),0.4,15.9,0.1)));
+    if(v65ShowLR){
+      lracPath.attr('d',d3.line()([[scX(0.4),scY(2)],[scX(15.9),scY(2)]])).attr('opacity',1);
+    } else {
+      lracPath.attr('opacity',0);
+    }
+    // min ATC dot
+    const qmin=Math.sqrt(tfc), atcMin=v65ATC(qmin,tfc);
+    if(qmin<=15&&atcMin<=yMax){
+      minDot.attr('cx',scX(qmin)).attr('cy',scY(atcMin)).attr('opacity',1);
+    } else { minDot.attr('opacity',0); }
+
+    // Update anchors on existing nodes (don't rebuild sim every draw - only on LR toggle)
+    if(f65Nodes){
+      const qmin2=Math.sqrt(tfc);
+      f65Nodes.forEach(n=>{
+        if(n.id==='ATC')  { n.fx_anchor=scX(13); n.fy_anchor=scY(Math.min(v65ATC(13,tfc),yMax)); }
+        if(n.id==='AFC')  { n.fx_anchor=scX(3);  n.fy_anchor=scY(Math.min(v65AFC(3,tfc),yMax)); }
+        if(n.id==='minATC'){ const ma=v65ATC(qmin2,tfc); n.fx_anchor=scX(qmin2); n.fy_anchor=scY(Math.min(ma,yMax)); }
+      });
+      f65Sim.alphaTarget(0.3).restart();
+      setTimeout(()=>f65Sim.alphaTarget(0),600);
+    }
+
+    document.getElementById('v65-readout').innerHTML=
+      '<div class="readout-row">' +
+      '<div class="readout-col"><div class="readout-label">Total Fixed Cost (TFC)</div><div class="readout-val">$'+tfc+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">Efficient scale q* (min ATC)</div><div class="readout-val">q*='+Math.sqrt(tfc).toFixed(1)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">Variable cost (TVC) formula</div><div class="readout-val" style="font-size:0.75rem;">q²</div></div>' +
+      '</div>' +
+      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">Key property: SMC always passes through the minimum of ATC and AVC. Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.</div>';
+  }
+
+  // Initial build
+  const initTfc=100;
+  initSim(initTfc);
+  v65DrawD3(initTfc);
+
+  window.v65Draw=function(){
+    const tfc=parseFloat(document.getElementById('v65-tfc').value);
+    v65DrawD3(tfc);
   };
-
-  drawCurve65(q=>v65MC(q),'#e74c3c',2.5);
-  drawCurve65(q=>v65ATC(q,tfc),'#1a56db',2.5);
-  drawCurve65(q=>v65AVC(q),'#2e8b57',2);
-  drawCurve65(q=>v65AFC(q,tfc),'#888',1.5,[4,3]);
-
-  // Collect force labels for curve legends + LRAC + min ATC
-  const lbls65=[];
-  ctx.font='9px DM Sans,sans-serif';
-  const legData=[['SMC','#e74c3c'],['ATC','#1a56db'],['AVC','#2e8b57'],['AFC','#888']];
-
-  if(v65ShowLR){
-    drawCurve65(q=>2,'#c0392b',2.5,[5,3]);
-    // LRAC = $2 horizontal line - add to linePts for repulsion
-    const [,lry]=toC(0,2,W,H,xR,yR);
-    for(let x=ML;x<=W-MR;x+=10) linePts65.push([x,lry]);
-    legData.push(['LRAC','#c0392b']);
-  }
-
-  // Legend swatches (fixed position in corner, no collision needed)
-  legData.forEach(([lbl,col],i)=>{
-    ctx.fillStyle=col; ctx.fillRect(W-MR-70,MT+4+i*16,12,3);
-    ctx.fillStyle=col; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText(lbl,W-MR-54,MT+9+i*16);
-  });
-
-  // min ATC dot + force label
-  const qminATC=Math.sqrt(tfc); const minATC=v65ATC(qminATC,tfc);
-  if(qminATC<=15&&minATC<=yR[1]){
-    const [mx,my]=toC(qminATC,minATC,W,H,xR,yR);
-    dot6(ctx,mx,my,5,'#1a56db','#fff');
-    const mAtcTxt='min ATC: q*='+qminATC.toFixed(1);
-    ctx.font='9px DM Sans,sans-serif';
-    lbls65.push({ax:mx,ay:my,x:mx,y:my-12,w:ctx.measureText(mAtcTxt).width+8,h:12,text:mAtcTxt,color:'#1a56db',fontSize:9,bold:false});
-  }
-  if(lbls65.length){ resolveLabels(lbls65,linePts65,100); lbls65.forEach(l=>drawForceLabel(ctx,l)); }
-
-  document.getElementById('v65-readout').innerHTML=
-    '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">Total Fixed Cost (TFC)</div><div class="readout-val">$'+tfc+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Efficient scale q* (min ATC)</div><div class="readout-val">q*='+Math.sqrt(tfc).toFixed(1)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Variable cost (TVC) formula</div><div class="readout-val" style="font-size:0.75rem;">q&sup2;</div></div>' +
-    '</div>' +
-    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">Key property: SMC always passes through the minimum of ATC and AVC. Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.</div>';
-}
-
-function v65Update(){
-  document.getElementById('v65-tfc-val').textContent=parseFloat(document.getElementById('v65-tfc').value);
-  v65Draw();
-}
-
-function v65ToggleLR(){
-  v65ShowLR=!v65ShowLR;
-  document.getElementById('v65-lr-btn').classList.toggle('active',v65ShowLR);
-  document.getElementById('v65-lr-btn').textContent=v65ShowLR?'Hide LRAC':'Show LRAC';
-  v65Draw();
-}
+  window.v65Update=function(){
+    const tfc=parseFloat(document.getElementById('v65-tfc').value);
+    document.getElementById('v65-tfc-val').textContent=tfc;
+    v65DrawD3(tfc);
+  };
+  window.v65ToggleLR=function(){
+    v65ShowLR=!v65ShowLR;
+    document.getElementById('v65-lr-btn').classList.toggle('active',v65ShowLR);
+    document.getElementById('v65-lr-btn').textContent=v65ShowLR?'Hide LRAC':'Show LRAC';
+    const tfc=parseFloat(document.getElementById('v65-tfc').value);
+    initSim(tfc);
+    v65DrawD3(tfc);
+  };
+  window.resetFig65=function(){
+    const tfc=parseFloat(document.getElementById('v65-tfc').value);
+    initSim(tfc);
+    v65DrawD3(tfc);
+  };
+};
 
 // ======================================================================
-// FIG 6.6 - LRAC ENVELOPE BUILDER (redesigned with K=1..N SRAC curves)
+// FIG 6.6 - LRAC ENVELOPE BUILDER (D3 SVG)
 // ======================================================================
-// Production: Q = K^0.5 * L^0.5 => L(q,K) = q^2/K
-// SRAC(q,K) = w*q/K + v*K/q  (with w=4, v=6)
 const V66_W=4, V66_V=6;
+function v66SRAC(q,K){ return V66_W*q/K + V66_V*K/q; }
 
-function v66SRAC(q,K){
-  return V66_W*q/K + V66_V*K/q;
-}
+window._initFig66=function initFig66(){
+  if(typeof d3==='undefined') return;
+  const W=680,H=340,PAD={top:28,right:36,bottom:44,left:54};
+  const xMax=14, yMax=36;
+  const LABEL_H=15;
+  const scX=d3.scaleLinear().domain([0,xMax]).range([PAD.left,W-PAD.right]);
+  const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
+  const COLS=['#c0392b','#d4813a','#2e8b57','#6b52a8','#3d5a80','#e67e22','#16a085','#8e44ad'];
+  const SUBS=['₁','₂','₃','₄','₅','₆','₇','₈'];
 
-function v66Update(){
-  const nk=parseInt(document.getElementById('v66-nk').value)||4;
-  document.getElementById('v66-nk-val').textContent=nk;
-  v66Draw();
-}
+  const svg=d3.select('#cvs66-wrap').append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
 
-function v66Draw(){
-  const nkEl=document.getElementById('v66-nk');
-  const nk=nkEl?parseInt(nkEl.value)||4:4;
-  const cvs=document.getElementById('cvs66'); if(!cvs) return;
-  const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=W;
-  if(cvs.width!==W*dpr||cvs.height!==H*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
-  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
+  // Grid
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
+    .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
 
-  const xR=[0,14], yR=[0,36];
-  drawAxesSt(ctx,W,H,xR,yR,'q (output)','AC ($)');
+  // Layers
+  const sracLayer=svg.append('g');
+  const lracLayer=svg.append('g');
+  const dotLayer=svg.append('g');
+  const labelLayer=svg.append('g');
 
-  const cols=['#c0392b','#d4813a','#2e8b57','#6b52a8','#3d5a80','#e67e22','#16a085','#8e44ad'];
-  const subs=['1','2','3','4','5','6','7','8'];
+  // Axes
+  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(7).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(6).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('q (output)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('AC ($)');
 
-  // Draw SRAC curves for K = 1, 2, ..., nk
-  const sracLabels = [];
-  const linePts66=[];
-  for(let ki=0;ki<nk;ki++){
-    const K=ki+1;
-    const col=cols[ki%cols.length];
-    ctx.beginPath(); let first=true; ctx.strokeStyle=col; ctx.lineWidth=1.8;
-    for(let q=0.2;q<=13;q+=0.08){
-      const ac=v66SRAC(q,K); if(ac>yR[1]||ac<0){first=true;continue;}
-      const [cx,cy]=toC(q,ac,W,H,xR,yR);
-      if(q%1<0.08) linePts66.push([cx,cy]);
-      first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  let f66Sim, f66Nodes, f66LblGs, f66Conn, f66Dots;
+
+  function makeSracPts(K){
+    const pts=[];
+    for(let q=0.4;q<=13;q+=0.08){
+      const ac=v66SRAC(q,K); if(!isFinite(ac)||ac<0||ac>yMax) continue;
+      pts.push([scX(q),scY(ac)]);
     }
-    ctx.stroke();
+    return pts;
+  }
 
-    // Minimum of this SRAC
-    const qOpt=K*Math.sqrt(V66_V/V66_W);
-    const acOpt=v66SRAC(qOpt,K);
-    if(qOpt<=13&&acOpt<=yR[1]){
-      const [tx,ty]=toC(qOpt,acOpt,W,H,xR,yR);
-      dot6(ctx,tx,ty,4,col,'#fff');
+  function makeLracPts(nk){
+    const pts=[];
+    for(let q=0.4;q<=13;q+=0.06){
+      let minAC=Infinity;
+      for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(q,ki+1); if(ac<minAC) minAC=ac; }
+      if(!isFinite(minAC)||minAC<0||minAC>yMax) continue;
+      pts.push([scX(q),scY(minAC)]);
+    }
+    return pts;
+  }
+
+  function buildF66(nk){
+    if(f66Sim) f66Sim.stop();
+    sracLayer.selectAll('*').remove();
+    lracLayer.selectAll('*').remove();
+    dotLayer.selectAll('*').remove();
+    labelLayer.selectAll('.f66dot,.f66conn,.f66lbl').remove();
+
+    const nodeList=[];
+
+    for(let ki=0;ki<nk;ki++){
+      const K=ki+1, col=COLS[ki%COLS.length];
+      sracLayer.append('path').attr('fill','none').attr('stroke',col).attr('stroke-width',1.8)
+        .attr('d',d3.line()(makeSracPts(K)));
+      const qOpt=K*Math.sqrt(V66_V/V66_W), acOpt=v66SRAC(qOpt,K);
+      if(qOpt<=13&&acOpt<=yMax){
+        dotLayer.append('circle').attr('cx',scX(qOpt)).attr('cy',scY(acOpt))
+          .attr('r',4).attr('fill',col).attr('stroke','white').attr('stroke-width',1.5);
+      }
+      const qLbl=Math.max(0.5,qOpt*0.35), acLbl=v66SRAC(qLbl,K);
+      if(acLbl<=yMax){
+        const txt='SRAC'+SUBS[ki];
+        nodeList.push({id:'SRAC'+K,color:col,label:txt,lw:txt.length*6+10,
+          ax:scX(qLbl),ay:scY(acLbl),fx_anchor:scX(qLbl),fy_anchor:scY(acLbl),
+          x:scX(qLbl)+(Math.random()-0.5)*40,y:scY(acLbl)+(Math.random()-0.5)*40});
+      }
     }
 
-    // Collect label near left arm for force resolution
-    const qLbl=Math.max(0.4, qOpt*0.35);
-    const acLbl=v66SRAC(qLbl,K);
-    if(acLbl<=yR[1]){
-      const [lx,ly]=toC(qLbl,acLbl,W,H,xR,yR);
-      ctx.font='bold 9px DM Sans,sans-serif';
-      const txt='SRAC'+subs[ki];
-      const tw=ctx.measureText(txt).width;
-      sracLabels.push({x:lx,y:ly-6,ax:lx,ay:ly,text:txt,color:col,fontSize:9,bold:true,w:tw+6,h:13});
+    // LRAC
+    const lracMin=2*Math.sqrt(V66_W*V66_V);
+    lracLayer.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',3)
+      .attr('d',d3.line()(makeLracPts(nk)));
+    if(lracMin<=yMax){
+      lracLayer.append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+        .attr('y1',scY(lracMin)).attr('y2',scY(lracMin))
+        .attr('stroke','#1a56db').attr('stroke-width',1).attr('stroke-dasharray','5,4').attr('opacity',0.6);
     }
-  }
-  // Resolve SRAC label collisions with line repulsion
-  resolveLabels(sracLabels, linePts66, 120, 5);
-  sracLabels.forEach(lbl=>drawForceLabel(ctx,lbl));
+    const lracQ=7; let lracAC=Infinity;
+    for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(lracQ,ki+1); if(ac<lracAC) lracAC=ac; }
+    if(lracAC<=yMax){
+      const lw=160;
+      nodeList.push({id:'LRAC',color:'#1a56db',label:'LRAC (envelope)',lw,
+        ax:scX(lracQ),ay:scY(lracAC),fx_anchor:scX(lracQ),fy_anchor:scY(lracAC),
+        x:scX(lracQ)+(Math.random()-0.5)*40,y:scY(lracAC)+(Math.random()-0.5)*40});
+    }
 
-  // LRAC: lower envelope -- collect for repulsion
-  const lracPts=[];
-  ctx.beginPath(); let firstLR=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
-  for(let q=0.2;q<=13;q+=0.06){
-    let minAC=Infinity;
-    for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(q,ki+1); if(ac<minAC) minAC=ac; }
-    if(minAC>yR[1]||minAC<0){firstLR=true;continue;}
-    const [cx,cy]=toC(q,minAC,W,H,xR,yR);
-    if(q%1<0.06) lracPts.push([cx,cy]);
-    firstLR?(ctx.moveTo(cx,cy),firstLR=false):ctx.lineTo(cx,cy);
-  }
-  ctx.stroke();
+    f66Nodes=nodeList;
 
-  // LRAC min dashed line
-  const lracMin=2*Math.sqrt(V66_W*V66_V);
-  if(lracMin<=yR[1]){
-    const [,ly0]=toC(0,lracMin,W,H,xR,yR);
-    ctx.setLineDash([5,4]); ctx.strokeStyle='#1a56dba0'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(ML,ly0); ctx.lineTo(W-MR,ly0); ctx.stroke(); ctx.setLineDash([]);
-    for(let x=ML;x<=W-MR;x+=10) lracPts.push([x,ly0]);
+    f66Dots=labelLayer.selectAll('.f66dot').data(f66Nodes).enter()
+      .append('circle').attr('class','f66dot')
+      .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
+      .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
+
+    f66Conn=labelLayer.selectAll('.f66conn').data(f66Nodes).enter()
+      .append('line').attr('class','f66conn')
+      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+
+    f66LblGs=labelLayer.selectAll('.f66lbl').data(f66Nodes).enter()
+      .append('g').attr('class','f66lbl draggable-label')
+      .call(d3.drag()
+        .on('start',(e,d)=>{f66Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+        .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+        .on('end',  (e,d)=>{f66Sim.alphaTarget(0);d.fx=null;d.fy=null;})
+      );
+    f66LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+      .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+    f66LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+      .text(d=>d.label);
+
+    f66Sim=d3.forceSimulation(f66Nodes)
+      .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+      .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
+      .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+      .on('tick',()=>{
+        f66Nodes.forEach(d=>{
+          d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
+          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+        });
+        f66LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
+        f66Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+      });
+
+    const lracMin2=2*Math.sqrt(V66_W*V66_V);
+    document.getElementById('v66-readout').innerHTML=
+      '<div style="font-size:0.84rem;color:var(--muted);line-height:1.7;">' +
+      'In the long run, we can choose any capital level. At each output level, we pick whichever fixed-capital option is cheapest. The LRAC (thick blue) is the lower envelope of all SRAC curves. ' +
+      'With Q = K^0.5·L^0.5, w = '+V66_W+', v = '+V66_V+': SRAC(q,K) = '+V66_W+'q/K + '+V66_V+'K/q. ' +
+      'The analytical LRAC = 2·sqrt(w·v) = $'+lracMin2.toFixed(2)+' (constant). Add more curves to see the discrete envelope approach this smooth floor.' +
+      '</div>';
   }
 
-  // Force labels: LRAC label + LRAC min label
-  const lbls66=[];
-  const lracQ=7; let lracAC=Infinity;
-  for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(lracQ,ki+1); if(ac<lracAC) lracAC=ac; }
-  ctx.font='bold 10px DM Sans,sans-serif';
-  if(lracAC<=yR[1]){
-    const [llx,lly]=toC(lracQ,lracAC,W,H,xR,yR);
-    const lt='LRAC (lower envelope)';
-    lbls66.push({ax:llx,ay:lly,x:llx,y:lly+18,w:ctx.measureText(lt).width+8,h:13,text:lt,color:'#1a56db',fontSize:10,bold:true});
-  }
-  if(lracMin<=yR[1]){
-    const [,ly0]=toC(0,lracMin,W,H,xR,yR);
-    ctx.font='9px DM Mono,monospace';
-    const mt='LRAC min = $'+lracMin.toFixed(2);
-    lbls66.push({ax:W-MR-2,ay:ly0,x:W-MR-2-ctx.measureText(mt).width/2-4,y:ly0-8,w:ctx.measureText(mt).width+8,h:12,text:mt,color:'#1a56db',fontSize:9,bold:false});
-  }
-  resolveLabels(lbls66,lracPts,80);
-  lbls66.forEach(l=>drawForceLabel(ctx,l));
+  buildF66(4);
 
-  document.getElementById('v66-readout').innerHTML=
-    '<div style="font-size:0.84rem;color:var(--muted);line-height:1.7;">' +
-    'In the long run, we can choose any capital level. At each output level, we pick whichever fixed-capital option is cheapest. The LRAC (thick blue) is the lower envelope of all SRAC curves. ' +
-    'With Q = K^0.5*L^0.5, w = '+V66_W+', v = '+V66_V+': SRAC(q,K) = '+V66_W+'q/K + '+V66_V+'K/q. ' +
-    'The analytical LRAC = 2*sqrt(w*v) = $'+lracMin.toFixed(2)+' (constant). Add more curves to see the discrete envelope approach this smooth floor.' +
-    '</div>';
-}
+  window.v66Update=function(){
+    const nk=parseInt(document.getElementById('v66-nk').value)||4;
+    document.getElementById('v66-nk-val').textContent=nk;
+    buildF66(nk);
+  };
+  window.v66Draw=function(){
+    const nk=parseInt((document.getElementById('v66-nk')||{value:'4'}).value)||4;
+    buildF66(nk);
+  };
+  window.resetFig66=function(){
+    const nk=parseInt((document.getElementById('v66-nk')||{value:'4'}).value)||4;
+    buildF66(nk);
+  };
+};
 
 // ======================================================================
-// FIG 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR
+// FIG 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR (D3 SVG)
 // ======================================================================
 const V68_Q=4;
+function v68Opt(w,v){ const q=V68_Q; const Ls=q*Math.sqrt(v/w),Ks=q*Math.sqrt(w/v); return {Ls,Ks,TC:w*Ls+v*Ks}; }
 
-function v68Opt(w,v){
-  const q=V68_Q;
-  const Ls=q*Math.sqrt(v/w), Ks=q*Math.sqrt(w/v);
-  return {Ls,Ks,TC:w*Ls+v*Ks};
-}
+window._initFig68=function initFig68(){
+  if(typeof d3==='undefined') return;
+  const W=680,H=360,PAD={top:28,right:36,bottom:44,left:54};
+  const AXIS_MAX=18;
+  const LABEL_H=15;
+  const scX=d3.scaleLinear().domain([0,AXIS_MAX]).range([PAD.left,W-PAD.right]);
+  const scY=d3.scaleLinear().domain([0,AXIS_MAX]).range([H-PAD.bottom,PAD.top]);
 
-function v68Draw(){
-  const w=parseFloat(document.getElementById('v68-w').value);
-  const v=parseFloat(document.getElementById('v68-v').value);
-  const wBase=3, vBase=3;
-  const optBase=v68Opt(wBase,vBase);
-  const optNew=v68Opt(w,v);
+  const svg=d3.select('#cvs68-wrap').append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
 
-  const cvs=document.getElementById('cvs68'); if(!cvs) return;
-  const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=W;
-  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
-  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
+  // Grid
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
+    .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
 
-  const AXIS_MAX6=18;
-  const xR=[0,AXIS_MAX6],yR=[0,AXIS_MAX6];
-  drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
-  const linePts68=[];
-
-  // Isoquant Q=4
-  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
-  for(let l=0.1;l<=AXIS_MAX6;l+=0.05){
-    const k=V68_Q*V68_Q/l; if(k>AXIS_MAX6||k<0.05){first=true;continue;}
-    const [cx,cy]=toC(l,k,W,H,xR,yR);
-    if(l%2<0.05) linePts68.push([cx,cy]);
-    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  // Isoquant (static)
+  const iqPts=[];
+  for(let l=0.4;l<=AXIS_MAX;l+=0.05){
+    const k=V68_Q*V68_Q/l; if(k>AXIS_MAX||k<0.05) continue;
+    iqPts.push([scX(l),scY(k)]);
   }
-  ctx.stroke();
+  svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2)
+    .attr('d',d3.line()(iqPts));
 
-  // Old isocost (w=wBase)
-  const TCold=optBase.TC;
-  const Lold=TCold/wBase, Kold=TCold/vBase;
-  {
-    const [ix0,iy0]=toC(0,Math.min(Kold,AXIS_MAX6),W,H,xR,yR);
-    const [ix1,iy1]=toC(Math.min(Lold,AXIS_MAX6),0,W,H,xR,yR);
-    for(let t=0;t<=1;t+=0.25) linePts68.push([ix0+(ix1-ix0)*t,iy0+(iy1-iy0)*t]);
-    ctx.beginPath(); ctx.strokeStyle='#aaa'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
-    ctx.moveTo(ix0,iy0); ctx.lineTo(ix1,iy1); ctx.stroke(); ctx.setLineDash([]);
+  // Old isocost (dashed, grey)
+  const oldIsocost=svg.append('line').attr('stroke','#aaa').attr('stroke-width',1.5).attr('stroke-dasharray','4,3');
+  // New isocost (red)
+  const newIsocost=svg.append('line').attr('stroke','#e74c3c').attr('stroke-width',2);
+  // Arrow old→new
+  const arrow=svg.append('line').attr('stroke','#2e8b57').attr('stroke-width',1.5).attr('opacity',0.65);
+  // Old optimum X marker
+  const oldOptTxt=svg.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle')
+    .attr('fill','#e74c3c').attr('font-size',18).attr('font-weight',700).text('✕');
+  // New optimum dot
+  const newOptDot=svg.append('circle').attr('r',8).attr('fill','#2e8b57').attr('stroke','white').attr('stroke-width',2);
+
+  // Axes
+  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(9).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(9).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('L (labor)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('K (capital)');
+
+  let f68Nodes, f68Sim, f68LblGs, f68Conn, f68Dots;
+
+  function buildLabels(w, v, optBase, optNew){
+    const wBase=3,vBase=3;
+    const TCold=optBase.TC, Lold=TCold/wBase, Kold=TCold/vBase;
+    const TCnew=optNew.TC, Lnew=TCnew/w, Knew=TCnew/v;
+    const iqL=AXIS_MAX*0.78, iqK=V68_Q*V68_Q/iqL;
+    const nodes=[
+      {id:'IQ', color:'#1a56db',label:'Q = '+V68_Q,   lw:54,
+        ax:scX(Math.min(iqL,AXIS_MAX)),ay:scY(Math.min(iqK,AXIS_MAX))},
+      {id:'oldIC',color:'#aaa',label:'old isocost',lw:82,
+        ax:(scX(0)+scX(Math.min(Lold,AXIS_MAX)))/2, ay:(scY(Math.min(Kold,AXIS_MAX))+scY(0))/2},
+      {id:'newIC',color:'#e74c3c',label:'new isocost (w=$'+w+')',lw:w.toString().length>1?160:146,
+        ax:(scX(0)+scX(Math.min(Lnew,AXIS_MAX)))/2, ay:(scY(Math.min(Knew,AXIS_MAX))+scY(0))/2},
+      {id:'oldOpt',color:'#e74c3c',label:'old optimum',lw:90,
+        ax:scX(optBase.Ls),ay:scY(optBase.Ks)},
+      {id:'newOpt',color:'#2e8b57',label:'new optimum',lw:90,
+        ax:scX(optNew.Ls),ay:scY(optNew.Ks)},
+    ];
+    return nodes.filter(n=>isFinite(n.ax)&&isFinite(n.ay))
+      .map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*50,y:n.ay+(Math.random()-0.5)*50}));
   }
 
-  // New isocost (current w)
-  const TCnew=optNew.TC;
-  const Lnew=TCnew/w, Knew=TCnew/v;
-  const [nx0,ny0]=toC(0,Math.min(Knew,AXIS_MAX6),W,H,xR,yR);
-  const [nx1,ny1]=toC(Math.min(Lnew,AXIS_MAX6),0,W,H,xR,yR);
-  for(let t=0;t<=1;t+=0.25) linePts68.push([nx0+(nx1-nx0)*t,ny0+(ny1-ny0)*t]);
-  ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
-  ctx.moveTo(nx0,ny0); ctx.lineTo(nx1,ny1); ctx.stroke();
+  function v68DrawD3(){
+    const w=parseFloat(document.getElementById('v68-w').value);
+    const v=parseFloat(document.getElementById('v68-v').value);
+    const wBase=3, vBase=3;
+    const optBase=v68Opt(wBase,vBase);
+    const optNew=v68Opt(w,v);
+    const TCold=optBase.TC, Lold=TCold/wBase, Kold=TCold/vBase;
+    const TCnew=optNew.TC, Lnew=TCnew/w, Knew=TCnew/v;
 
-  // Old optimal (red X)
-  const [ox,oy]=toC(optBase.Ls,optBase.Ks,W,H,xR,yR);
-  ctx.fillStyle='#e74c3c'; ctx.font='bold 16px DM Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('X',ox,oy+6);
+    oldIsocost.attr('x1',scX(0)).attr('y1',scY(Math.min(Kold,AXIS_MAX)))
+      .attr('x2',scX(Math.min(Lold,AXIS_MAX))).attr('y2',scY(0));
+    newIsocost.attr('x1',scX(0)).attr('y1',scY(Math.min(Knew,AXIS_MAX)))
+      .attr('x2',scX(Math.min(Lnew,AXIS_MAX))).attr('y2',scY(0));
+    oldOptTxt.attr('x',scX(optBase.Ls)).attr('y',scY(optBase.Ks));
+    newOptDot.attr('cx',scX(optNew.Ls)).attr('cy',scY(optNew.Ks));
+    arrow.attr('x1',scX(optBase.Ls)).attr('y1',scY(optBase.Ks))
+         .attr('x2',scX(optNew.Ls)).attr('y2',scY(optNew.Ks));
 
-  // New optimal (green dot)
-  const [bx,by]=toC(optNew.Ls,optNew.Ks,W,H,xR,yR);
-  dot6(ctx,bx,by,8,'#2e8b57','#fff');
+    // Rebuild labels
+    if(f68Sim) f68Sim.stop();
+    svg.selectAll('.f68dot,.f68conn,.f68lbl').remove();
+    f68Nodes=buildLabels(w,v,optBase,optNew);
 
-  // Arrow
-  ctx.beginPath(); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1.5;
-  ctx.moveTo(ox,oy); ctx.lineTo(bx,by); ctx.stroke();
+    f68Dots=svg.selectAll('.f68dot').data(f68Nodes).enter()
+      .append('circle').attr('class','f68dot')
+      .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
+      .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
 
-  // Force labels: Q=N isoquant, new isocost, old optimum, new optimum
-  ctx.font='9px DM Sans,sans-serif';
-  const[qlx,qly]=toC(AXIS_MAX6*0.8,V68_Q*V68_Q/(AXIS_MAX6*0.8),W,H,xR,yR);
-  const v68Lbls=[
-    {ax:qlx,ay:qly,x:qlx+16,y:qly-8,w:ctx.measureText('Q='+V68_Q).width+8,h:12,text:'Q='+V68_Q,color:'#1a56db',fontSize:9,bold:false},
-    {ax:(nx0+nx1)/2,ay:(ny0+ny1)/2,x:(nx0+nx1)/2+8,y:(ny0+ny1)/2-10,w:ctx.measureText('New isocost (w=$'+w+')').width+8,h:12,text:'New isocost (w=$'+w+')',color:'#e74c3c',fontSize:9,bold:false},
-    {ax:ox,ay:oy,x:ox+8,y:oy-18,w:ctx.measureText('old optimum').width+8,h:12,text:'old optimum',color:'#e74c3c',fontSize:9,bold:false},
-    {ax:bx,ay:by,x:bx+8,y:by-18,w:ctx.measureText('new optimum').width+8,h:12,text:'new optimum',color:'#2e8b57',fontSize:9,bold:false},
-  ];
-  resolveLabels(v68Lbls,linePts68,80,5);
-  v68Lbls.forEach(l=>drawForceLabel(ctx,l));
+    f68Conn=svg.selectAll('.f68conn').data(f68Nodes).enter()
+      .append('line').attr('class','f68conn')
+      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
 
-  const kl_old=optBase.Ks/optBase.Ls, kl_new=optNew.Ks/optNew.Ls;
-  document.getElementById('v68-readout').innerHTML=
-    '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">Old K/L ratio</div><div class="readout-val">'+kl_old.toFixed(3)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">New K/L ratio</div><div class="readout-val" style="color:'+(kl_new>kl_old?'#e74c3c':'#2e8b57')+'">'+kl_new.toFixed(3)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Old TC</div><div class="readout-val">$'+optBase.TC.toFixed(2)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">New TC</div><div class="readout-val" style="color:#e74c3c">$'+optNew.TC.toFixed(2)+'</div></div>' +
-    '</div>' +
-    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">' +
-    (w>wBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
-      w<wBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
-      'Wage at baseline $'+wBase+'. The firm is at the original optimum.') +
-    '</div>';
-}
+    f68LblGs=svg.selectAll('.f68lbl').data(f68Nodes).enter()
+      .append('g').attr('class','f68lbl draggable-label')
+      .call(d3.drag()
+        .on('start',(e,d)=>{f68Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+        .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+        .on('end',  (e,d)=>{f68Sim.alphaTarget(0);d.fx=null;d.fy=null;})
+      );
+    f68LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+      .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+    f68LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+      .text(d=>d.label);
 
-function v68Update(){
-  document.getElementById('v68-w-val').textContent=parseFloat(document.getElementById('v68-w').value);
-  document.getElementById('v68-v-val').textContent=parseFloat(document.getElementById('v68-v').value);
-  v68Draw();
-}
+    f68Sim=d3.forceSimulation(f68Nodes)
+      .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+      .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
+      .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+      .on('tick',()=>{
+        f68Nodes.forEach(d=>{
+          d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
+          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+        });
+        f68LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
+        f68Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+      });
+
+    const kl_old=optBase.Ks/optBase.Ls, kl_new=optNew.Ks/optNew.Ls;
+    document.getElementById('v68-readout').innerHTML=
+      '<div class="readout-row">' +
+      '<div class="readout-col"><div class="readout-label">Old K/L ratio</div><div class="readout-val">'+kl_old.toFixed(3)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">New K/L ratio</div><div class="readout-val" style="color:'+(kl_new>kl_old?'#e74c3c':'#2e8b57')+'">'+kl_new.toFixed(3)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">Old TC</div><div class="readout-val">$'+optBase.TC.toFixed(2)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">New TC</div><div class="readout-val" style="color:#e74c3c">$'+optNew.TC.toFixed(2)+'</div></div>' +
+      '</div>' +
+      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">' +
+      (w>wBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
+        w<wBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
+        'Wage at baseline $'+wBase+'. The firm is at the original optimum.') +
+      '</div>';
+  }
+
+  v68DrawD3();
+
+  window.v68Draw=v68DrawD3;
+  window.v68Update=function(){
+    document.getElementById('v68-w-val').textContent=parseFloat(document.getElementById('v68-w').value);
+    document.getElementById('v68-v-val').textContent=parseFloat(document.getElementById('v68-v').value);
+    v68DrawD3();
+  };
+  window.resetFig68=function(){ v68DrawD3(); };
+};
 
 // ======================================================================
 // FIG 6.10 - EFFICIENT SCALE FINDER (dropdown + MC toggle)
@@ -1167,154 +1413,218 @@ function v610ToggleMC(){
   const btn=document.getElementById('v610-mc-btn');
   btn.classList.toggle('active',v610ShowMC);
   btn.textContent=v610ShowMC?'Hide Marginal Cost':'Show Marginal Cost';
-  v610Draw();
+  window.v610Draw&&window.v610Draw();
 }
 
-function v610Draw(){
-  const preset=v610GetPreset();
-  const acFn=preset.ac, mcFn=preset.mc;
+window._initFig610=function initFig610(){
+  if(typeof d3==='undefined') return;
+  const W=680,H=340,PAD={top:28,right:36,bottom:44,left:54};
+  const LABEL_H=15;
 
-  const cvs=document.getElementById('cvs610'); if(!cvs) return;
-  const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=W;
-  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
-  const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
+  const svg=d3.select('#cvs610-wrap').append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
 
-  // Find q range and AC range
-  const qmax=20;
-  let acmax=0, qstar=null, acstar=Infinity;
-  for(let q=0.5;q<=qmax;q+=0.1){
-    const ac=acFn(q);
-    if(isFinite(ac)&&ac>0) acmax=Math.max(acmax,ac);
-    if(v610ShowMC){ const mc=mcFn(q); if(isFinite(mc)&&mc>0) acmax=Math.max(acmax,mc); }
-  }
-  // Find minimum of AC numerically
-  for(let q=0.5;q<=qmax;q+=0.05){
-    const ac=acFn(q);
-    if(isFinite(ac)&&ac>0&&ac<acstar){ acstar=ac; qstar=q; }
-  }
-  acmax=Math.min(acmax*1.15, acstar*5, 200);
-  if(acmax<10) acmax=10;
+  // clip path
+  svg.append('defs').append('clipPath').attr('id','clip610')
+    .append('rect').attr('x',PAD.left).attr('y',PAD.top)
+    .attr('width',W-PAD.left-PAD.right).attr('height',H-PAD.top-PAD.bottom);
 
-  const xR=[0,qmax], yR=[0,acmax];
-  drawAxesSt(ctx,W,H,xR,yR,'q (output)','$ per unit');
+  // Grid placeholder (rebuilt each draw)
+  const gridG=svg.append('g');
 
-  const [,oy]=toC(0,0,W,H,xR,yR);
+  // Shading
+  const econShade=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','rgba(46,139,87,0.13)');
+  const diseconShade=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','rgba(231,76,60,0.11)');
 
-  // Shade economies (q < q*) and diseconomies (q > q*)
-  if(qstar){
-    ctx.save();
-    ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
-    const [ex,] = toC(Math.min(qstar,qmax), Math.min(acstar,acmax), W,H,xR,yR);
-    // Green: economies (q < q*) -- clamp AC to acmax so left region is fully shaded
-    const gPts=[];
-    for(let q=0.3;q<=Math.min(qstar,qmax)+0.05;q+=0.05){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
-      gPts.push(toC(q,Math.min(ac,acmax),W,H,xR,yR));
+  // Curves
+  const acCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
+  const mcCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2);
+
+  // q* dashed drop line
+  const qstarLine=svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,3');
+  // q* dot
+  const qstarDot=svg.append('circle').attr('r',7).attr('fill','#1a56db').attr('stroke','white').attr('stroke-width',1.5);
+
+  // Shading labels
+  const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',10).attr('font-family',"'DM Sans',sans-serif");
+  const diseconLbl=svg.append('text').attr('fill','rgba(231,76,60,0.85)').attr('font-size',10).attr('font-family',"'DM Sans',sans-serif");
+
+  // Axes groups (rebuilt per draw via scales)
+  const xAxisG=svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`);
+  const yAxisG=svg.append('g').attr('transform',`translate(${PAD.left},0)`);
+  const xLblEl=svg.append('text').attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).attr('y',H-6).text('q (output)');
+  svg.append('text').attr('transform','rotate(-90)').attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).attr('y',14).text('$ per unit');
+
+  // Force label group
+  const labelG=svg.append('g');
+
+  let f610Sim, f610Nodes, f610LblGs, f610Conn, f610Dots;
+
+  function draw610(){
+    const preset=v610GetPreset();
+    const acFn=preset.ac, mcFn=preset.mc;
+    const qmax=20;
+    let acmax=0, qstar=null, acstar=Infinity;
+    for(let q=0.5;q<=qmax;q+=0.1){
+      const ac=acFn(q);
+      if(isFinite(ac)&&ac>0) acmax=Math.max(acmax,ac);
+      if(v610ShowMC){const mc=mcFn(q); if(isFinite(mc)&&mc>0) acmax=Math.max(acmax,mc);}
     }
-    if(gPts.length>0){
-      ctx.beginPath();
-      ctx.moveTo(gPts[0][0],oy);
-      for(const [cx,cy] of gPts) ctx.lineTo(cx,cy);
-      ctx.lineTo(ex,oy); ctx.closePath();
-      ctx.fillStyle='rgba(46,139,87,0.13)'; ctx.fill();
+    for(let q=0.5;q<=qmax;q+=0.05){
+      const ac=acFn(q);
+      if(isFinite(ac)&&ac>0&&ac<acstar){acstar=ac;qstar=q;}
     }
-    // Red: diseconomies (q > q*) -- clamp and extend full width to qmax
-    const [xRight,]=toC(qmax,0,W,H,xR,yR);
-    const rPts=[];
-    for(let q=Math.max(0.3,qstar);q<=qmax+0.05;q+=0.05){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
-      rPts.push(toC(q,Math.min(ac,acmax),W,H,xR,yR));
+    acmax=Math.min(acmax*1.15,acstar*5,200);
+    if(acmax<10) acmax=10;
+
+    const scX=d3.scaleLinear().domain([0,qmax]).range([PAD.left,W-PAD.right]);
+    const scY=d3.scaleLinear().domain([0,acmax]).range([H-PAD.bottom,PAD.top]);
+
+    // Grid
+    gridG.selectAll('line').remove();
+    gridG.selectAll('line').data(scY.ticks(4)).enter()
+      .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+      .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
+
+    // Axes
+    xAxisG.call(d3.axisBottom(scX).ticks(10).tickSize(4))
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+    yAxisG.call(d3.axisLeft(scY).ticks(6).tickSize(4))
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+    xLblEl.attr('x',PAD.left+(W-PAD.left-PAD.right)/2);
+
+    // AC curve points
+    const acPts=[];
+    for(let q=0.4;q<=qmax;q+=0.15){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax*1.05) continue;
+      acPts.push([scX(q),scY(Math.min(ac,acmax))]);
     }
-    if(rPts.length>0){
-      ctx.beginPath();
-      ctx.moveTo(rPts[0][0],oy);
-      for(const [cx,cy] of rPts) ctx.lineTo(cx,cy);
-      const lastY=rPts[rPts.length-1][1];
-      ctx.lineTo(xRight,lastY); ctx.lineTo(xRight,oy); ctx.closePath();
-      ctx.fillStyle='rgba(231,76,60,0.11)'; ctx.fill();
-    }
-    ctx.restore();
-  }
+    acCurve.attr('d',d3.line()(acPts));
 
-  // AC curve
-  ctx.save();
-  ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
-  ctx.beginPath(); let firstAC=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
-  for(let q=0.3;q<=qmax;q+=0.15){
-    const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax*1.05){firstAC=true;continue;}
-    const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-    firstAC?(ctx.moveTo(cx,cy),firstAC=false):ctx.lineTo(cx,cy);
-  }
-  ctx.stroke();
-
-  // MC curve (toggle)
-  if(v610ShowMC){
-    ctx.beginPath(); let firstMC=true; ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
-    for(let q=0.3;q<=qmax;q+=0.15){
-      const mc=mcFn(q); if(!isFinite(mc)||mc<0||mc>acmax*1.05){firstMC=true;continue;}
-      const [cx,cy]=toC(q,Math.min(mc,acmax),W,H,xR,yR);
-      firstMC?(ctx.moveTo(cx,cy),firstMC=false):ctx.lineTo(cx,cy);
-    }
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // q* marker and MC=AC crossing dot
-  if(qstar&&acstar<=acmax){
-    const [qsx,qsy]=toC(qstar,acstar,W,H,xR,yR);
-    const [,qsy0]=toC(qstar,0,W,H,xR,yR);
-    ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(qsx,qsy); ctx.lineTo(qsx,qsy0); ctx.stroke(); ctx.setLineDash([]);
-    dot6(ctx,qsx,qsy,7,'#1a56db','#fff');
-
-    // Collect AC and MC line points for repulsion
-    const linePts610=[];
-    for(let q=0.3;q<=qmax;q+=1){
-      const ac=acFn(q); if(isFinite(ac)&&ac>0&&ac<=acmax) linePts610.push([...toC(q,Math.min(ac,acmax),W,H,xR,yR)]);
-      if(v610ShowMC){const mc=mcFn(q); if(isFinite(mc)&&mc>=0&&mc<=acmax) linePts610.push([...toC(q,Math.min(mc,acmax),W,H,xR,yR)]);}
-    }
-    linePts610.push([qsx,qsy0]); // dashed vertical line
-
-    ctx.font='bold 10px DM Sans,sans-serif';
-    const lbl610=[
-      {ax:qsx,ay:qsy,x:qsx,y:qsy-14,w:ctx.measureText('q* = '+qstar.toFixed(1)).width+8,h:13,text:'q* = '+qstar.toFixed(1),color:'#1a56db',fontSize:10,bold:true},
-      {ax:qsx,ay:qsy0,x:qsx,y:qsy0+18,w:ctx.measureText('AC* = $'+acstar.toFixed(2)).width+8,h:12,text:'AC* = $'+acstar.toFixed(2),color:'#888',fontSize:9,bold:false},
-    ];
+    // MC curve
     if(v610ShowMC){
-      const mcAtStar=mcFn(qstar);
-      if(isFinite(mcAtStar)&&Math.abs(mcAtStar-acstar)/acstar<0.15){
-        dot6(ctx,qsx,qsy,5,'#e74c3c','#fff');
-        ctx.font='9px DM Sans,sans-serif';
-        lbl610.push({ax:qsx,ay:qsy,x:qsx+14,y:qsy+8,w:ctx.measureText('MC = AC here').width+8,h:12,text:'MC = AC here',color:'#e74c3c',fontSize:9,bold:false});
+      const mcPts=[];
+      for(let q=0.4;q<=qmax;q+=0.15){
+        const mc=mcFn(q); if(!isFinite(mc)||mc<0||mc>acmax*1.05) continue;
+        mcPts.push([scX(q),scY(Math.min(mc,acmax))]);
+      }
+      mcCurve.attr('d',d3.line()(mcPts)).attr('opacity',1);
+    } else {
+      mcCurve.attr('opacity',0);
+    }
+
+    // Shading — Section 5B approach: green region extends from chart left edge to q*
+    if(qstar){
+      const yBot=scY(0);
+      const yTop=PAD.top;
+      const xLeft=PAD.left;
+      const xStar=scX(Math.min(qstar,qmax));
+
+      // Build green path: left edge of chart → up to top-left corner → follow clamped AC to q* → down to bottom
+      let gPath='M'+xLeft+','+yBot+' L'+xLeft+','+yTop;
+      // Walk AC from q=0.4 to qstar, clamping to chart top
+      for(let q=0.4;q<=qstar+0.05;q+=0.05){
+        const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
+        const cy=Math.max(yTop,scY(Math.min(ac,acmax)));
+        gPath+=' L'+scX(q)+','+cy;
+      }
+      gPath+=' L'+xStar+','+yBot+' Z';
+      econShade.attr('d',gPath);
+
+      // Red region: from q* to qmax
+      const xRight=scX(qmax);
+      let rPath='M'+xStar+','+yBot;
+      for(let q=qstar;q<=qmax+0.05;q+=0.05){
+        const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
+        rPath+=' L'+scX(q)+','+Math.max(yTop,scY(Math.min(ac,acmax)));
+      }
+      rPath+=' L'+xRight+','+yBot+' Z';
+      diseconShade.attr('d',rPath);
+
+      // q* drop line & dot
+      qstarLine.attr('x1',scX(qstar)).attr('x2',scX(qstar)).attr('y1',scY(acstar)).attr('y2',scY(0)).attr('opacity',1);
+      qstarDot.attr('cx',scX(qstar)).attr('cy',scY(acstar)).attr('opacity',1);
+
+      // Shading labels
+      econLbl.attr('x',xLeft+6).attr('y',H-PAD.bottom-6).attr('text-anchor','start').text('Economies of scale');
+      diseconLbl.attr('x',W-PAD.right-4).attr('y',H-PAD.bottom-6).attr('text-anchor','end').text('Diseconomies of scale');
+    } else {
+      econShade.attr('d',''); diseconShade.attr('d','');
+      qstarLine.attr('opacity',0); qstarDot.attr('opacity',0);
+      econLbl.text(''); diseconLbl.text('');
+    }
+
+    // Force labels
+    if(f610Sim) f610Sim.stop();
+    labelG.selectAll('.f610dot,.f610conn,.f610lbl').remove();
+    const nodeList=[];
+    if(qstar&&acstar<=acmax){
+      nodeList.push({id:'qstar',color:'#1a56db',label:'q* = '+qstar.toFixed(1),lw:80,
+        ax:scX(qstar),ay:scY(acstar)});
+      nodeList.push({id:'acstar',color:'#888',label:'AC* = $'+acstar.toFixed(2),lw:90,
+        ax:scX(qstar),ay:scY(0)});
+      if(v610ShowMC){
+        const acQ=Math.min(13,qmax*0.75);
+        const ac=acFn(acQ); if(isFinite(ac)&&ac>0&&ac<=acmax)
+          nodeList.push({id:'AC',color:'#1a56db',label:'AC',lw:36,ax:scX(acQ),ay:scY(Math.min(ac,acmax))});
+        const mcQ=Math.min(13,qmax*0.65);
+        const mc=mcFn(mcQ); if(isFinite(mc)&&mc>=0&&mc<=acmax)
+          nodeList.push({id:'MC',color:'#e74c3c',label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
       }
     }
-    resolveLabels(lbl610,linePts610,80,5);
-    lbl610.forEach(l=>drawForceLabel(ctx,l));
+    f610Nodes=nodeList.map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*40,y:n.ay+(Math.random()-0.5)*40}));
 
-    ctx.font='10px DM Sans,sans-serif';
-    ctx.fillStyle='rgba(46,139,87,0.85)'; ctx.textAlign='left';
-    ctx.fillText('Economies of scale', ML+6, H-MB-6);
-    ctx.fillStyle='rgba(231,76,60,0.85)'; ctx.textAlign='right';
-    ctx.fillText('Diseconomies of scale', W-MR-4, H-MB-6);
-    ctx.textAlign='left';
+    if(f610Nodes.length>0){
+      f610Dots=labelG.selectAll('.f610dot').data(f610Nodes).enter()
+        .append('circle').attr('class','f610dot')
+        .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
+        .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
+
+      f610Conn=labelG.selectAll('.f610conn').data(f610Nodes).enter()
+        .append('line').attr('class','f610conn')
+        .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+
+      f610LblGs=labelG.selectAll('.f610lbl').data(f610Nodes).enter()
+        .append('g').attr('class','f610lbl draggable-label')
+        .call(d3.drag()
+          .on('start',(e,d)=>{f610Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+          .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+          .on('end',  (e,d)=>{f610Sim.alphaTarget(0);d.fx=null;d.fy=null;})
+        );
+      f610LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+        .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+      f610LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+        .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+        .text(d=>d.label);
+
+      f610Sim=d3.forceSimulation(f610Nodes)
+        .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+        .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
+        .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+        .on('tick',()=>{
+          f610Nodes.forEach(d=>{
+            d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
+            d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+          });
+          f610LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
+          f610Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+        });
+    }
+
+    document.getElementById('v610-readout').innerHTML=
+      '<div class="readout-row">' +
+      '<div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val">'+(qstar?qstar.toFixed(2):'n/a')+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">Min AC</div><div class="readout-val">$'+(acstar<Infinity?acstar.toFixed(2):'n/a')+'</div></div>' +
+      '</div>' +
+      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">'+preset.desc+'</div>';
   }
 
-  // Legend
-  ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillStyle='#1a56db'; ctx.fillRect(W-MR-80,MT+4,16,3); ctx.fillText('AC',W-MR-60,MT+10);
-  if(v610ShowMC){
-    ctx.fillStyle='#e74c3c'; ctx.fillRect(W-MR-80,MT+20,16,3); ctx.fillStyle='#e74c3c'; ctx.fillText('MC',W-MR-60,MT+26);
-  }
-
-  document.getElementById('v610-readout').innerHTML=
-    '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val">'+(qstar?qstar.toFixed(2):'n/a')+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Min AC</div><div class="readout-val">$'+(acstar<Infinity?acstar.toFixed(2):'n/a')+'</div></div>' +
-    '</div>' +
-    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">'+preset.desc+'</div>';
-}
+  draw610();
+  window.v610Draw=draw610;
+  window.resetFig610=draw610;
+};
 
 // ======================================================================
 // BOOT
@@ -1323,20 +1633,21 @@ function openLN()  { document.getElementById('leftNav').classList.add('open'); d
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
 function redrawAll6() {
-  v61Update(); v62Draw(); v65Draw();
-  v66Draw(); v68Draw(); v610Draw();
+  v61Update(); v62Draw();
+  // D3 SVG figures are responsive via viewBox — no redraw needed on resize
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   v61Init();
   v62Draw();
-  v65Draw();
-  v66Draw();
-  v68Draw();
-  v610Draw();
+  // Initialize D3 SVG figures
+  if(window._initFig65) window._initFig65();
+  if(window._initFig66) window._initFig66();
+  if(window._initFig68) window._initFig68();
+  if(window._initFig610) window._initFig610();
   if (window.ResizeObserver) {
     const obs = new ResizeObserver(redrawAll6);
-    ['cvs61','cvs62a','cvs62b','cvs65','cvs66','cvs68','cvs610'].forEach(id=>{
+    ['cvs61','cvs62a','cvs62b'].forEach(id=>{
       const el=document.getElementById(id);
       if(el&&el.parentElement) obs.observe(el.parentElement);
     });
@@ -1346,10 +1657,6 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('resize', () => {
   v61Update();
   v62Draw();
-  v65Draw();
-  v66Draw();
-  v68Draw();
-  v610Draw();
 });
 </script>
 </body>

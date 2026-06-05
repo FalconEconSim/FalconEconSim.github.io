@@ -277,7 +277,7 @@
       </div>
       <span id="v55-verdict" style="font-family:var(--mono);font-size:0.82rem;color:var(--accent);font-weight:600;"></span>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs55" height="260"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs55" height="320"></canvas></div>
     <div class="viz-readout" id="v55-readout"></div>
   </section>
 
@@ -291,7 +291,7 @@
       Two fundamentally different actions can change how a firm produces. Pressing "Substitute Inputs" moves the production bundle along the existing isoquant - technology unchanged.
       Pressing "Improve Technology" shifts the entire isoquant inward - fewer inputs can now produce the same output.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs56" height="280"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs56" height="320"></canvas></div>
     <div class="viz-ctrl-row">
       <button class="viz-btn" onclick="v56SubstituteInputs()">Substitute Inputs</button>
       <button class="viz-btn" onclick="v56ImproveTechnology()">Improve Technology</button>
@@ -376,7 +376,7 @@
         <span class="viz-slider-val" id="v58-lam-val">1.0</span>
       </div>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs58" height="280"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs58" height="320"></canvas></div>
     <div class="viz-readout" id="v58-readout"></div>
   </section>
 
@@ -467,16 +467,26 @@ function drawForceLabel(ctx, lbl) {
   const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
   ctx.save();
   if (Math.hypot(x-ax,y-ay)>5) {
-    ctx.strokeStyle=color+'80'; ctx.lineWidth=0.8; ctx.setLineDash([2,2]);
+    ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]); ctx.globalAlpha=0.55;
     ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.setLineDash([]); ctx.globalAlpha=1;
   }
-  ctx.font=(bold?'bold ':'')+fontSize+'px DM Sans,sans-serif';
+  ctx.font='bold 9px DM Sans,sans-serif';
   ctx.textAlign='center'; ctx.textBaseline='middle';
   const tw=ctx.measureText(text).width;
-  const th=fontSize*1.35;
-  ctx.fillStyle='#ffffffcc';
-  ctx.fillRect(x-tw/2-3,y-th/2,tw+6,th);
+  const th=15;
+  const rx=3, rw=tw+8, rh=th, rx0=x-rw/2, ry0=y-rh/2;
+  ctx.fillStyle='white';
+  ctx.strokeStyle=color; ctx.lineWidth=0.8;
+  ctx.beginPath();
+  if(ctx.roundRect){ ctx.roundRect(rx0,ry0,rw,rh,rx); }
+  else {
+    ctx.moveTo(rx0+rx,ry0); ctx.lineTo(rx0+rw-rx,ry0); ctx.arcTo(rx0+rw,ry0,rx0+rw,ry0+rx,rx);
+    ctx.lineTo(rx0+rw,ry0+rh-rx); ctx.arcTo(rx0+rw,ry0+rh,rx0+rw-rx,ry0+rh,rx);
+    ctx.lineTo(rx0+rx,ry0+rh); ctx.arcTo(rx0,ry0+rh,rx0,ry0+rh-rx,rx);
+    ctx.lineTo(rx0,ry0+rx); ctx.arcTo(rx0,ry0,rx0+rx,ry0,rx); ctx.closePath();
+  }
+  ctx.fill(); ctx.stroke();
   ctx.fillStyle=color;
   ctx.fillText(text,x,y);
   ctx.restore();
@@ -508,22 +518,35 @@ function fromC(px, py, W, H, xR, yR) {
 
 function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
   ctx.save();
+  // horizontal grid lines
+  ctx.strokeStyle='#f0f0f0'; ctx.lineWidth=1;
+  const yStepG=(yR[1]-yR[0])/4;
+  for(let i=1;i<=4;i++){
+    const v=yR[0]+i*yStepG;
+    const [,py]=toC(xR[0],v,W,H,xR,yR);
+    ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(W-MR,py); ctx.stroke();
+  }
   ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
-  ctx.fillStyle='#888'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
   const xStep=(xR[1]-xR[0])/4;
   for(let i=0;i<=4;i++){
     const v=xR[0]+i*xStep;
     const [px]=toC(v,yR[0],W,H,xR,yR);
-    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+14);
+    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+13);
+    ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(px,H-MB); ctx.lineTo(px,H-MB+4); ctx.stroke();
   }
   const yStep=(yR[1]-yR[0])/4;
   for(let i=0;i<=4;i++){
     const v=yR[0]+i*yStep;
     const [,py]=toC(xR[0],v,W,H,xR,yR);
-    ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-4,py+4);
+    ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-4,py+3);
+    ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(ML-4,py); ctx.stroke();
   }
+  ctx.fillStyle='#666'; ctx.font='10px DM Sans,sans-serif';
   ctx.textAlign='center'; ctx.fillText(xLbl||'L',W/2,H-2);
   ctx.save(); ctx.translate(10,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'K',0,0); ctx.restore();
@@ -629,7 +652,7 @@ function v51Draw() {
     if(l%0.5<0.05) linePts51.push([cx2,cy2]);
     first?(ctxA.moveTo(cx2,cy2),first=false):ctxA.lineTo(cx2,cy2);
   }
-  ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2.5; ctxA.stroke();
+  ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2; ctxA.stroke();
 
   // Current point on TP
   const tpL=tp(L), mplL=mpl(L);
@@ -682,7 +705,7 @@ function v51Draw() {
     if(l%0.5<0.05) linePts51b.push([cx2,cy2]);
     first?(ctxB.moveTo(cx2,cy2),first=false):ctxB.lineTo(cx2,cy2);
   }
-  ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=2.5; ctxB.stroke();
+  ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=2; ctxB.stroke();
 
   // Current MPL point + force label
   const [mx,my]=toC(L,mplL,W,HB,xR,yRB);
@@ -911,7 +934,7 @@ function v53Draw() {
 
   // Isoquant -- collect line points
   const linePts53=[];
-  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   for(let l=0.5;l<=17;l+=0.1){
     const k=v53K(l); if(k>17||k<0.1){first=true;continue;}
     const [cx2,cy2]=toC(l,k,W,H,xR,yR);
@@ -1038,7 +1061,7 @@ function v54Draw() {
   const xRa=[0,12],yRa=[0,yMaxMPL];
   drawAxesSt(ctxA,W,H54,xRa,yRa,'L (workers)','MPL');
   const linePts54a=[];
-  ctxA.beginPath(); let first=true; ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=2.5;
+  ctxA.beginPath(); let first=true; ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=2;
   for(let l=0.2;l<=12;l+=0.1){
     const mpl=b*v54CD(Kfix,l,a,b)/l;
     const [cx,cy]=toC(l,mpl,W,H54,xRa,yRa);
@@ -1067,7 +1090,7 @@ function v54Draw() {
   drawAxesSt(ctxB,W,H54,xRb,yRb,'Scale λ (lambda)','Output Q');
   const linePts54b=[];
   ctxB.save(); ctxB.beginPath(); ctxB.rect(ML,MT,W-ML-MR,H54-MT-MB); ctxB.clip();
-  ctxB.beginPath(); first=true; ctxB.strokeStyle='#1a56db'; ctxB.lineWidth=2.5;
+  ctxB.beginPath(); first=true; ctxB.strokeStyle='#1a56db'; ctxB.lineWidth=2;
   for(let lam=0.5;lam<=4;lam+=0.05){
     const q=v54CD(lam*Kbase,lam*Lbase,a,b);
     const [cx,cy]=toC(lam,q,W,H54,xRb,yRb);
@@ -1138,7 +1161,7 @@ function v55Draw() {
   ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
 
   qLevels.forEach((q,qi)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2.5;
+    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2;
     for(let l=0.05;l<=10.05;l+=0.04){
       const K=Math.pow(q/Math.pow(Math.max(l,0.01),b),1/a);
       if(K>10||K<0.01){first=true;continue;}
@@ -1214,7 +1237,7 @@ function v56Draw() {
 
   // Active isoquant
   const A=v56TechLevel;
-  ctx.beginPath(); first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.8;
+  ctx.beginPath(); first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   for(let l=0.2;l<=10;l+=0.08){
     const k=Math.pow(V56_Q_TARGET/(A*Math.pow(l,0.5)),2);
     if(k>10||k<0.1){first=true;continue;}
@@ -1462,7 +1485,7 @@ function v59Draw() {
 
   // TP curve + collect for repulsion
   const linePts59=[];
-  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   for(let l=0;l<=Lmax;l+=0.1){
     const tp=v59TP(l,v59K);
     const [cx,cy]=toC(l,tp,W,H,xR,yR);

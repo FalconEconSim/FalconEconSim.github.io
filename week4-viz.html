@@ -33,7 +33,7 @@
 
     /* ── canvas wrapper ── */
     .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
-    canvas { display:block; width:100%; height:260px; cursor:default; }
+    canvas { display:block; width:100%; height:320px; cursor:default; }
 
     /* ── controls ── */
     .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
@@ -136,7 +136,7 @@
       between two points using the midpoint formula. Toggle between modes to compare how the two methods diverge as the
       gap between points widens.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs1" height="260"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs1" height="320"></canvas></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Mode:</span>
@@ -159,7 +159,7 @@
       at the bottom (inelastic, |e|&lt;1). Drag the yellow dot to any point and read off its exact elasticity.
       Type your own linear demand equation below to reshape the curve.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs2" height="260"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs2" height="320"></canvas></div>
     <div class="viz-ctrl-row" style="align-items:center;gap:0.6rem;">
       <div style="display:flex;flex-direction:column;gap:0.28rem;">
         <span class="viz-slider-label" style="font-size:0.73rem;">Enter demand equation (format: Q = a &minus; bP)</span>
@@ -192,7 +192,7 @@
       strip</strong> shows revenue lost from buyers who leave. The live verdict tells you which effect dominates.
       Set the old price, pick the new price, and adjust the demand slope to explore.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs3" height="260"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs3" height="320"></canvas></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Old price P<sub>old</sub>:</span>
@@ -223,7 +223,7 @@
       Select an industry with its real-world empirical elasticity estimate. Then adjust the price change and see the predicted
       change in total revenue. Uses the approximation %&Delta;TR &asymp; %&Delta;P &times; (1&nbsp;+&nbsp;e<sub>d</sub>).
     </p>
-    <div class="cvs-wrap"><canvas id="cvs4" height="260"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs4" height="320"></canvas></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Industry:</span>
@@ -258,7 +258,7 @@
       <strong style="color:#27ae60">rectangle</strong> (existing buyers now paying more) and the <strong style="color:#e6ac17">exit triangle</strong>
       (buyers priced out of the market). Click <strong>Show Calculation</strong> to see the step-by-step formula.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs6" height="260"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs6" height="320"></canvas></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Base price P*:</span>
@@ -288,7 +288,7 @@
       Uber's revenue grows - up to a point. Riders priced out exit the market entirely.
       This illustrates the welfare trade-off between producer revenue and consumer surplus.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs7" height="260"></canvas></div>
+    <div class="cvs-wrap"><canvas id="cvs7" height="320"></canvas></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Surge price:</span>
@@ -372,7 +372,7 @@
         The market demand curve builds itself as the horizontal sum. The functional form at different price ranges
         appears at the bottom.
       </p>
-      <div class="cvs-wrap"><canvas id="cvs8" height="280"></canvas></div>
+      <div class="cvs-wrap"><canvas id="cvs8" height="320"></canvas></div>
       <div class="viz-ctrl-row" style="flex-direction:column;align-items:flex-start;gap:0.6rem;margin-top:0.75rem;">
         <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
           <span style="font-family:var(--mono);font-size:0.78rem;color:#e74c3c;font-weight:600;min-width:80px;">Consumer 1</span>
@@ -453,16 +453,26 @@ function drawForceLabel(ctx, lbl) {
   const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
   ctx.save();
   if (Math.hypot(x-ax,y-ay)>5) {
-    ctx.strokeStyle=color+'80'; ctx.lineWidth=0.8; ctx.setLineDash([2,2]);
+    ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]); ctx.globalAlpha=0.55;
     ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.setLineDash([]); ctx.globalAlpha=1;
   }
-  ctx.font=(bold?'bold ':'')+fontSize+'px DM Sans,sans-serif';
+  ctx.font='bold 9px DM Sans,sans-serif';
   ctx.textAlign='center'; ctx.textBaseline='middle';
   const tw=ctx.measureText(text).width;
-  const th=fontSize*1.35;
-  ctx.fillStyle='#ffffffcc';
-  ctx.fillRect(x-tw/2-3,y-th/2,tw+6,th);
+  const th=15;
+  const rx=3, rw=tw+8, rh=th, rx0=x-rw/2, ry0=y-rh/2;
+  ctx.fillStyle='white';
+  ctx.strokeStyle=color; ctx.lineWidth=0.8;
+  ctx.beginPath();
+  if(ctx.roundRect){ ctx.roundRect(rx0,ry0,rw,rh,rx); }
+  else {
+    ctx.moveTo(rx0+rx,ry0); ctx.lineTo(rx0+rw-rx,ry0); ctx.arcTo(rx0+rw,ry0,rx0+rw,ry0+rx,rx);
+    ctx.lineTo(rx0+rw,ry0+rh-rx); ctx.arcTo(rx0+rw,ry0+rh,rx0+rw-rx,ry0+rh,rx);
+    ctx.lineTo(rx0+rx,ry0+rh); ctx.arcTo(rx0,ry0+rh,rx0,ry0+rh-rx,rx);
+    ctx.lineTo(rx0,ry0+rx); ctx.arcTo(rx0,ry0,rx0+rx,ry0,rx); ctx.closePath();
+  }
+  ctx.fill(); ctx.stroke();
   ctx.fillStyle=color;
   ctx.fillText(text,x,y);
   ctx.restore();
@@ -536,6 +546,14 @@ function eColor(ed) {
 
 function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   ctx.save();
+  // horizontal grid lines
+  ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
+  const yStepG = (yR[1] - yR[0]) / 4;
+  for (let i = 1; i <= 4; i++) {
+    const v = yR[0] + i * yStepG;
+    const [, py] = toC(xR[0], v, W, H, xR, yR);
+    ctx.beginPath(); ctx.moveTo(ML, py); ctx.lineTo(W - MR, py); ctx.stroke();
+  }
   ctx.strokeStyle = '#ccc';
   ctx.lineWidth = 1;
   // x axis
@@ -550,7 +568,7 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   ctx.stroke();
 
   ctx.fillStyle = '#888';
-  ctx.font = '11px DM Sans, sans-serif';
+  ctx.font = '9px DM Sans, sans-serif';
   ctx.textAlign = 'center';
 
   // x ticks
@@ -558,7 +576,8 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   for (let i = 0; i <= 4; i++) {
     const v = xR[0] + i * xStep;
     const [px] = toC(v, yR[0], W, H, xR, yR);
-    ctx.fillText(Math.round(v), px, H - MB + 14);
+    ctx.fillText(Math.round(v), px, H - MB + 13);
+    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(px, H-MB); ctx.lineTo(px, H-MB+4); ctx.stroke();
   }
   // y ticks
@@ -567,11 +586,13 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
     const v = yR[0] + i * yStep;
     const [, py] = toC(xR[0], v, W, H, xR, yR);
     ctx.textAlign = 'right';
-    ctx.fillText(Math.round(v), ML - 6, py + 4);
+    ctx.fillText(Math.round(v), ML - 5, py + 3);
+    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(ML, py); ctx.lineTo(ML-4, py); ctx.stroke();
   }
 
   // axis labels
+  ctx.fillStyle = '#666'; ctx.font = '10px DM Sans, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(xLabel || 'Q', W/2, H - 4);
   ctx.save();
@@ -617,7 +638,7 @@ function v1Draw() {
   const linePts1 = [];
   ctx.beginPath();
   ctx.strokeStyle = '#1a56db';
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 2;
   const P0 = v1.a / v1.b, Q0 = 0;
   const [ax0, ay0] = toC(Q0, P0, W, H, xR1, yR1);
   const [ax1, ay1] = toC(v1.a, 0, W, H, xR1, yR1);
@@ -914,7 +935,7 @@ function v3Draw() {
   const [lx1,ly1]=toC(v3.a,0,W,H,xR3l,yR3l);
   const linePts3 = [];
   for (let t=0; t<=1; t+=0.08) linePts3.push([lx0+(lx1-lx0)*t, ly0+(ly1-ly0)*t]);
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
   const [bx,by]=toC(Qb,Pb,W,H,xR3l,yR3l);
@@ -1134,7 +1155,7 @@ function v6Draw() {
   drawAxes(ctx, W, H, xR6, yR6);
 
   // demand line
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   const [lx0,ly0]=toC(0,Pchoke,W,H,xR6,yR6);
   const [lx1,ly1]=toC(v6.a,0,W,H,xR6,yR6);
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
@@ -1269,7 +1290,7 @@ function v7Draw() {
 
   // demand line -- collect for label repulsion
   const linePts7=[];
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   const [lx0,ly0]=toC(0,Pchoke,W,H,xR7,yR7);
   const [lx1,ly1]=toC(v7.a,0,W,H,xR7,yR7);
   for(let t=0;t<=1;t+=0.08) linePts7.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);

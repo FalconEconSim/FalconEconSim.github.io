@@ -616,7 +616,7 @@ function slVal(id){return parseFloat(document.getElementById(id).value);}
    JSXGraph places the axis name label at the end of the axis automatically
    when you use the `name` attribute on the axis - the label offset just fine-tunes. */
 function mkBoard(id, bbox) {
-  return JXG.JSXGraph.initBoard(id, {
+  var b = JXG.JSXGraph.initBoard(id, {
     boundingbox: bbox,
     axis: true,
     showNavigation: false,
@@ -626,14 +626,23 @@ function mkBoard(id, bbox) {
     defaultAxes: {
       x: {
         withLabel: false,
-        ticks: {strokeColor:'#e8e8e8', label:{fontSize:11, color:'#aaa', offset:[0,-8]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[0,-8]}}
       },
       y: {
         withLabel: false,
-        ticks: {strokeColor:'#e8e8e8', label:{fontSize:11, color:'#aaa', offset:[-8,0]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[-8,0]}}
       }
     }
   });
+  /* Horizontal grid lines */
+  var ylo=bbox[3], yhi=bbox[1], xlo=bbox[0], xhi=bbox[2];
+  var span=yhi-ylo, step=Math.pow(10,Math.floor(Math.log10(span)))/2;
+  var gridY0=Math.ceil(ylo/step)*step;
+  for (var gy=gridY0; gy<=yhi; gy=Math.round((gy+step)*1000)/1000) {
+    if (Math.abs(gy)<step*0.01) continue;
+    b.create('segment',[[xlo,gy],[xhi,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+  }
+  return b;
 }
 
 function mk3DBoard(id, bbox) {
@@ -718,8 +727,8 @@ function initICExplorer() {
     yPlaneRear: {visible:false},
     projection:  'central',
     zAxis: {
-      strokeColor:'#aaa', withLabel:true, name:'U',
-      label:{offset:[5,0], color:C.blue, fontSize:12},
+      strokeColor:'#ccc', withLabel:true, name:'U',
+      label:{offset:[5,0], color:C.blue, fontSize:10},
       ticks:{label:{visible:false}}
     }
   });
@@ -1014,7 +1023,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
           if (gx <= 0.01 || a <= 0 || a >= 1) return '';
           return 'MRS = ' + (a * gy / ((1 - a) * gx)).toFixed(3);
         }
-      ], {fontSize: 13, color: C.amber, fixed: false, highlight: false,
+      ], {fontSize: 9, color: C.amber, fixed: false, highlight: false,
           anchorX: 'left', anchorY: 'bottom'});
     }
     /* Reset glider to equal-goods point (x=y=u0) so MRS=1 by default */
@@ -1065,7 +1074,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
       container.style.position = 'relative';
     }
     var lbl = document.createElement('div');
-    lbl.style.cssText = 'position:absolute;color:#d4813a;font-size:13px;pointer-events:none;'
+    lbl.style.cssText = 'position:absolute;color:#d4813a;font-size:9px;pointer-events:none;'
       + 'font-family:"DM Sans",sans-serif;white-space:nowrap;z-index:20;line-height:1;';
     container.appendChild(lbl);
 
@@ -1161,7 +1170,7 @@ function slVal(id){return parseFloat(document.getElementById(id).value);}
    JSXGraph places the axis name label at the end of the axis automatically
    when you use the `name` attribute on the axis - the label offset just fine-tunes. */
 function mkBoard(id, bbox) {
-  return JXG.JSXGraph.initBoard(id, {
+  var b = JXG.JSXGraph.initBoard(id, {
     boundingbox: bbox,
     axis: true,
     showNavigation: false,
@@ -1171,14 +1180,23 @@ function mkBoard(id, bbox) {
     defaultAxes: {
       x: {
         withLabel: false,
-        ticks: {strokeColor:'#e8e8e8', label:{fontSize:11, color:'#aaa', offset:[0,-8]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[0,-8]}}
       },
       y: {
         withLabel: false,
-        ticks: {strokeColor:'#e8e8e8', label:{fontSize:11, color:'#aaa', offset:[-8,0]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[-8,0]}}
       }
     }
   });
+  /* Horizontal grid lines */
+  var ylo=bbox[3], yhi=bbox[1], xlo=bbox[0], xhi=bbox[2];
+  var span=yhi-ylo, step=Math.pow(10,Math.floor(Math.log10(span)))/2;
+  var gridY0=Math.ceil(ylo/step)*step;
+  for (var gy=gridY0; gy<=yhi; gy=Math.round((gy+step)*1000)/1000) {
+    if (Math.abs(gy)<step*0.01) continue;
+    b.create('segment',[[xlo,gy],[xhi,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+  }
+  return b;
 }
 
 function mk3DBoard(id, bbox) {
@@ -1366,7 +1384,7 @@ function initUtilitySurface() {
     zPlaneRear:{visible:false},
     projection:'central',
     zAxis:{withLabel:true,name:'U',
-      label:{offset:[5,0],color:C.blue,fontSize:13},
+      label:{offset:[5,0],color:C.blue,fontSize:10},
       ticks:{label:{visible:false}}}
   });
 
@@ -1470,7 +1488,7 @@ function buildBudgetBoard() {
   var mx2=xI*0.45, my2=(I-Px*mx2)/Py;
   bcObjects.push(bcBoard.create('text',[mx2+m*0.04,my2+m*0.05,
     'slope = \u2212'+(Px/Py).toFixed(2)
-  ],{fontSize:12,color:C.blue,fixed:true,highlight:false,anchorX:'left'}));
+  ],{fontSize:10,color:C.blue,fixed:true,highlight:false,anchorX:'left'}));
 
   /* Sidebar - no plain P_X text */
   document.getElementById('bc-equation').textContent=Px.toFixed(1)+'X + '+Py.toFixed(1)+'Y = '+I.toFixed(0);
@@ -1566,9 +1584,9 @@ function buildShiftBoard() {
   if (ly1_at_lx >= ly2_at_lx) { off1 = off; off2 = -off; }
   else                          { off1 = -off; off2 = off; }
   var t1 = shiftBoard.create('text', [labelX, ly1_at_lx + off1, 'B\u2080 (original)'],
-    {fontSize:12, color:C.blue, fixed:true, highlight:false, anchorX:'middle'});
+    {fontSize:10, color:C.blue, fixed:true, highlight:false, anchorX:'middle'});
   var t2 = shiftBoard.create('text', [labelX, ly2_at_lx + off2, 'B\u2081 (new)'],
-    {fontSize:12, color:C.red, fixed:true, highlight:false, anchorX:'middle'});
+    {fontSize:10, color:C.red, fixed:true, highlight:false, anchorX:'middle'});
   shiftObjects.push(t1, t2);
 
   /* Orange arrows showing intercept movement; placed just inside the bounding box */
@@ -2176,7 +2194,7 @@ function buildMRSSlider() {
     function(){return glider.X() + triDx/2;},
     function(){return glider.Y() - 0.7;},
     'ΔX'
-  ], {fontSize:10, color:'#2e8b57', fixed:false, highlight:false, anchorX:'middle'});
+  ], {fontSize:9, color:'#2e8b57', fixed:false, highlight:false, anchorX:'middle'});
   mrsObjects.push(lblDx);
 
   /* ΔY label on vertical leg */
@@ -2188,7 +2206,7 @@ function buildMRSSlider() {
       return (gy + y2) / 2;
     },
     'ΔY'
-  ], {fontSize:10, color:'#c0392b', fixed:false, highlight:false, anchorX:'left'});
+  ], {fontSize:9, color:'#c0392b', fixed:false, highlight:false, anchorX:'left'});
   mrsObjects.push(lblDy);
 
   /* Drop lines */
@@ -2254,8 +2272,8 @@ function buildICCross() {
     return x > 0.1 ? Math.pow(u1/Math.pow(x,a),1/b) : NaN;
   }, 0.1, 14], { strokeColor: '#3d5a80', strokeWidth: 3, highlight: false });
   crossObjects.push(ic1);
-  var lbl1 = crossBoard.create('text', [12.5, Math.pow(u1/Math.pow(12.5,a),1/b)+0.4, 'IC₂ (U=7)'],
-    {fontSize:11, color:'#3d5a80', fixed:true, highlight:false});
+  var lbl1 = crossBoard.create('text', [12.5, Math.pow(u1/Math.pow(12.5,a),1/b)+0.35, 'IC₂ (U=7)'],
+    {fontSize:9, color:'#3d5a80', fixed:true, highlight:false});
   crossObjects.push(lbl1);
 
   /* Inner IC (amber, moveable) */
@@ -2264,7 +2282,7 @@ function buildICCross() {
   }, 0.1, 14], { strokeColor: '#d4813a', strokeWidth: 3, highlight: false });
   crossObjects.push(ic2);
   var lbl2 = crossBoard.create('text', [12.5, Math.pow(u2/Math.pow(12.5,a),1/b)+0.4, function(){return 'IC₁ (U='+parseFloat(document.getElementById('iccross-u2').value).toFixed(1)+')';}],
-    {fontSize:11, color:'#d4813a', fixed:true, highlight:false});
+    {fontSize:9, color:'#d4813a', fixed:true, highlight:false});
   crossObjects.push(lbl2);
 
   /* Check for crossing: ICs cross when u2 > u1 (ic2 above ic1) at some x */

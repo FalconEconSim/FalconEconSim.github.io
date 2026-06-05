@@ -615,14 +615,14 @@ function v1DrawAxes(ctx, c) {
   const ox = ML, oy = H - MB;
   const ex = W - MR, ey = MT;
 
-  ctx.strokeStyle = '#c8ccce';
-  ctx.lineWidth = 1.5 * dpr;
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 1 * dpr;
   // X axis
   ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex + 6*dpr, oy); ctx.stroke();
   // Y axis
   ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox, ey - 6*dpr); ctx.stroke();
   // arrowheads
-  ctx.fillStyle = '#c8ccce';
+  ctx.fillStyle = '#ccc';
   ctx.beginPath();
   ctx.moveTo(ex + 6*dpr, oy);
   ctx.lineTo(ex, oy - 4*dpr);
@@ -638,8 +638,8 @@ function v1DrawAxes(ctx, c) {
 function v1DrawLeftAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
-  ctx.fillStyle = '#9aa3b2';
-  ctx.font = (11*dpr) + 'px sans-serif';
+  ctx.fillStyle = '#888';
+  ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
   ctx.textAlign = 'left';
   ctx.fillText('X', W - MR + 3*dpr, oy + 4*dpr);
   ctx.textAlign = 'center';
@@ -650,8 +650,8 @@ function v1DrawLeftAxisLabels(ctx, c) {
 function v1DrawRightAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
-  ctx.fillStyle = '#9aa3b2';
-  ctx.font = (11*dpr) + 'px sans-serif';
+  ctx.fillStyle = '#888';
+  ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
   ctx.textAlign = 'left';
   ctx.fillText('Qty', W - MR + 3*dpr, oy + 4*dpr);
   ctx.textAlign = 'center';
@@ -680,6 +680,21 @@ function v1DrawCanvas(animProg) {
   const origLx = ML, origLy = H - MB;
   const origRx = ML, origRy = H - MB;
 
+  // Horizontal grid lines - left panel (Y axis 0-25, step 5)
+  ctxL.strokeStyle = '#f0f0f0';
+  ctxL.lineWidth = 1 * dpr;
+  for (let gv = 5; gv <= 25; gv += 5) {
+    const [, gy] = toL(0, gv);
+    ctxL.beginPath(); ctxL.moveTo(ML, gy); ctxL.lineTo(W - MR, gy); ctxL.stroke();
+  }
+  // Horizontal grid lines - right panel (P axis 0-8, step 2)
+  ctxR.strokeStyle = '#f0f0f0';
+  ctxR.lineWidth = 1 * dpr;
+  for (let gv = 2; gv <= 8; gv += 2) {
+    const [, gy] = toR(0, gv);
+    ctxR.beginPath(); ctxR.moveTo(ML, gy); ctxR.lineTo(W - MR, gy); ctxR.stroke();
+  }
+
   /* ===== LEFT PANEL ===== */
 
   // Draw all completed steps at full opacity
@@ -689,7 +704,7 @@ function v1DrawCanvas(animProg) {
     const col = V1_COLS[i];
     const isCurrent = (i === v1CurrStep - 1);
     const alpha8 = '';
-    const lw = isCurrent ? 2.5*dpr : 1.5*dpr;
+    const lw = isCurrent ? 2*dpr : 1.5*dpr;
 
     // Budget line: from (0, I/Py) to (I/Px, 0)
     const yInt = V1_I / V1_Py; // = 20
@@ -720,19 +735,19 @@ function v1DrawCanvas(animProg) {
 
     // Optimal bundle dot
     const [ox, oy] = toL(xs, V1_Ystar);
-    const dotR = isCurrent ? 6*dpr : 3.5*dpr;
+    const dotR = isCurrent ? 5*dpr : 3.5*dpr;
     ctxL.beginPath();
     ctxL.arc(ox, oy, dotR, 0, 2*Math.PI);
     ctxL.fillStyle = col;
     ctxL.fill();
     ctxL.strokeStyle = '#fff';
-    ctxL.lineWidth = 1.8*dpr;
+    ctxL.lineWidth = 1.5*dpr;
     ctxL.stroke();
 
     // Label current bundle
     if (isCurrent) {
       ctxL.fillStyle = col;
-      ctxL.font = `bold ${10*dpr}px sans-serif`;
+      ctxL.font = `bold ${9*dpr}px 'DM Sans',system-ui,sans-serif`;
       ctxL.textAlign = 'center';
       const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
       ctxL.fillText('X*=' + xsDisp, ox, oy - 10*dpr);
@@ -758,7 +773,7 @@ function v1DrawCanvas(animProg) {
     ctxR.beginPath(); ctxR.moveTo(rx, origRy + 5*dpr); ctxR.lineTo(rx, origRy - 4*dpr); ctxR.stroke();
 
     ctxR.fillStyle = col;
-    ctxR.font = `bold ${9*dpr}px sans-serif`;
+    ctxR.font = `bold ${9*dpr}px 'DM Sans',system-ui,sans-serif`;
     ctxR.textAlign = 'right';
     ctxR.fillText('$' + px, origRx - 7*dpr, ry + 3*dpr);
     const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
@@ -767,7 +782,7 @@ function v1DrawCanvas(animProg) {
     ctxR.textAlign = 'left';
 
     ctxR.beginPath();
-    ctxR.arc(rx, ry, 5*dpr, 0, 2*Math.PI);
+    ctxR.arc(rx, ry, 4*dpr, 0, 2*Math.PI);
     ctxR.fillStyle = col;
     ctxR.fill();
     ctxR.strokeStyle = '#fff';
@@ -792,7 +807,7 @@ function v1DrawCanvas(animProg) {
     ctxR.beginPath(); ctxR.moveTo(rx, origRy + 8*dpr); ctxR.lineTo(rx, origRy - 6*dpr); ctxR.stroke();
 
     ctxR.fillStyle = col;
-    ctxR.font = `bold ${11*dpr}px sans-serif`;
+    ctxR.font = `bold ${9*dpr}px 'DM Sans',system-ui,sans-serif`;
     ctxR.textAlign = 'right';
     ctxR.fillText('$' + px, origRx - 10*dpr, ry + 4*dpr);
     ctxR.textAlign = 'center';
@@ -828,11 +843,11 @@ function v1DrawCanvas(animProg) {
       const scale = frac < 0.4
         ? (frac / 0.4) * 1.3
         : 1.3 - 0.3 * ((frac - 0.4) / 0.6);
-      const dotR2 = 6 * dpr * Math.max(0, scale);
+      const dotR2 = 4 * dpr * Math.max(0, scale);
       ctxR.globalAlpha = dotAlpha;
       ctxR.beginPath(); ctxR.arc(rx, ry, dotR2, 0, 2*Math.PI);
       ctxR.fillStyle = col; ctxR.fill();
-      ctxR.strokeStyle = '#fff'; ctxR.lineWidth = 2*dpr; ctxR.stroke();
+      ctxR.strokeStyle = '#fff'; ctxR.lineWidth = 1.5*dpr; ctxR.stroke();
       ctxR.globalAlpha = 1;
     }
   }
@@ -849,13 +864,13 @@ function v1DrawCanvas(animProg) {
       else { ctxR.lineTo(cx, cy); }
     }
     ctxR.strokeStyle = '#3d5a80';
-    ctxR.lineWidth = 2.5*dpr;
+    ctxR.lineWidth = 2*dpr;
     ctxR.stroke();
 
     // "D" label
     const [dlx, dly] = toR(26, (V1_alpha * V1_I) / 26);
     ctxR.fillStyle = '#3d5a80';
-    ctxR.font = `italic bold ${13*dpr}px sans-serif`;
+    ctxR.font = `italic bold ${10*dpr}px 'DM Sans',system-ui,sans-serif`;
     ctxR.textAlign = 'left';
     ctxR.fillText('D', dlx + 5*dpr, dly - 6*dpr);
   }
@@ -1025,15 +1040,20 @@ function drawV2() {
     boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.06],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
   });
   const b = v2b;
-  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  // Horizontal grid lines
+  const gridStep2 = Math.max(1, Math.round(ymax / 5));
+  for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
+    b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+  }
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'#888',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#888',fixed:true});
 
   // Budget lines
-  b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2.5,fixed:true});
+  b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
   // "Original" label: place in upper-left region, well away from the red/new line
   b.create('text',[xiA*0.12, yi*0.92, 'Original'],{fontSize:9,color:'#3d5a80',fixed:true});
 
@@ -1041,7 +1061,7 @@ function drawV2() {
   // "Compensated" label: place at lower end of the compensated line, clear of the dashed line
   b.create('text',[xiHicks*0.55, yHicksInt*0.15, 'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
 
-  b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
+  b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
   b.create('text',[xiB*0.5,yi*0.6,'New'],{fontSize:9,color:'#c0392b',fixed:true});
 
   // ICs
@@ -1055,14 +1075,14 @@ function drawV2() {
 
   // Points A, C, B
   [{x:d.XA,y:d.YA,n:'A',c:'#3d5a80'},{x:d.XC,y:d.YC,n:'C',c:'#6b52a8'},{x:d.XB,y:d.YB,n:'B',c:'#c0392b'}]
-    .forEach(p => b.create('point',[p.x,p.y],{size:7,fillColor:p.c,strokeColor:'#fff',strokeWidth:2,fixed:true,
-      name:p.n,withLabel:true,label:{fontSize:12,color:p.c,offset:[7,7]}}));
+    .forEach(p => b.create('point',[p.x,p.y],{size:5,fillColor:p.c,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
+      name:p.n,withLabel:true,label:{fontSize:9,color:p.c,offset:[7,7]}}));
 
   // SE/IE brackets on X axis
   const yBr = -ymax*0.03;
-  b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2.5,fixed:true});
+  b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2,fixed:true});
   b.create('text',[(d.XA+d.XC)/2,yBr*2.5,'SE'],{fontSize:9,color:'#6b52a8',fixed:true});
-  b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2.5,fixed:true});
+  b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
   b.create('text',[(d.XC+d.XB)/2,yBr*2.5,'IE'],{fontSize:9,color:'#c0392b',fixed:true});
 
   // Scoreboard
@@ -1107,22 +1127,30 @@ function initViz3() {
     boundingbox:[-2,ymax,xmax,-2],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
   });
   v3b2 = JXG.JSXGraph.initBoard('jxg-v3-right',{
     boundingbox:[-2,7,xmax,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
   });
 
   const b1 = v3b1, b2 = v3b2;
-  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b2.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  // Horizontal grid lines for b1
+  for (let gy = 5; gy < ymax; gy += 5) {
+    b1.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+  }
+  // Horizontal grid lines for b2 (price axis: 0-7)
+  for (let gy = 1; gy <= 6; gy++) {
+    b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+  }
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'#888',fixed:true});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'#888',fixed:true});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#888',fixed:true});
 
   // Draw expansion path (static dashed line)
   if (v3Type === 'normal') {
@@ -1150,7 +1178,7 @@ function initViz3() {
     const xi = I / V3_Px, yi = I / V3_Py;
 
     if (v3BL) { try{b1.removeObject(v3BL);}catch(e){} }
-    v3BL = b1.create('segment',[[0,yi],[xi,0]],{strokeColor:'#1a1a1a',strokeWidth:2.5,fixed:true});
+    v3BL = b1.create('segment',[[0,yi],[xi,0]],{strokeColor:'#1a1a1a',strokeWidth:2,fixed:true});
 
     if (v3IC) { try{b1.removeObject(v3IC);}catch(e){} }
     if (v3Type === 'normal') {
@@ -1167,8 +1195,8 @@ function initViz3() {
     }
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
-    v3Pt = b1.create('point',[xs,ys],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
-      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:10,color:'#e05252',offset:[14,-18]}});
+    v3Pt = b1.create('point',[xs,ys],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[14,-18]}});
 
     // Right panel: draw demand curve at current I
     if (v3D1) { try{b2.removeObject(v3D1);}catch(e){} }
@@ -1178,18 +1206,18 @@ function initViz3() {
     if (v3Type === 'normal') {
       // X* = 0.5*I/Px => P = 0.5*I/X
       const half = 0.5*I;
-      v3D1 = b2.create('functiongraph',[x=>x>0.1?half/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
+      v3D1 = b2.create('functiongraph',[x=>x>0.1?half/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
       // Reference line at Px=2: X* = 0.5*I/2
       v3D2 = b2.create('segment',[[xs,0],[xs,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
-      v3RefPt = b2.create('point',[xs,V3_Px],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
+      v3RefPt = b2.create('point',[xs,V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
         name:'●',withLabel:false});
     } else {
       // Inferior: X* = 20 - 0.05*I at each Px => shifted demand function (conceptual linear)
       // At Px=2: X* = 20 - 0.05*I; treat other prices as X* = (20-0.05*I) * (2/Px) * adjustment
       const xRef = v3Xstar(I);
-      v3D1 = b2.create('functiongraph',[x=>x>0.1?(V3_Px*xRef)/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
+      v3D1 = b2.create('functiongraph',[x=>x>0.1?(V3_Px*xRef)/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
       v3D2 = b2.create('segment',[[xRef,0],[xRef,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
-      v3RefPt = b2.create('point',[xRef,V3_Px],{size:6,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,name:'●',withLabel:false});
+      v3RefPt = b2.create('point',[xRef,V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,name:'●',withLabel:false});
     }
 
     document.getElementById('v3-xstar').textContent  = nn(xs);
@@ -1319,12 +1347,16 @@ function initViz5() {
     boundingbox:[-2,7,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#e4e4e4',label:{fontSize:9,color:'#9aa3b2'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
   });
   const b = v5b;
-  b.create('text',[76,-0.3,'X'],{fontSize:11,color:'#9aa3b2',fixed:true});
-  b.create('text',[-1.5,6.5,'P'],{fontSize:11,color:'#9aa3b2',fixed:true});
+  // Horizontal grid lines (price 0-7)
+  for (let gy = 1; gy <= 6; gy++) {
+    b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+  }
+  b.create('text',[76,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
+  b.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#888',fixed:true});
 
   redrawV5();
 
@@ -1360,12 +1392,12 @@ function redrawV5() {
   const safAdj = Math.max(adjI, 5);
 
   v5Curve = b.create('functiongraph',[x => x>0.1 ? safAdj/x : NaN, 0.1, 80],
-    {strokeColor:'#1a56db',strokeWidth:2.5,fixed:true});
+    {strokeColor:'#1a56db',strokeWidth:2,fixed:true});
 
   // Current point
   const curX = safAdj / v5Px;
-  v5Pt = b.create('point',[curX,v5Px],{size:7,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:2,fixed:true,
-    name:`(${Xs.toFixed(1)},${v5Px})`,withLabel:true,label:{fontSize:10,color:'#e05252',offset:[7,5]}});
+  v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
+    name:`(${Xs.toFixed(1)},${v5Px})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[7,5]}});
 
   // Update displays
   const fmla = `X* = αI/P<sub>X</sub> = (0.5 × ${v5I}) / ${v5Px} = <strong>${Xs.toFixed(2)}</strong><br>` +
