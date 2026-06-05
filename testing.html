@@ -262,7 +262,8 @@ const MR_P   = 9;
 
 // Bisect to find q* where MC_fn = MR_P
 function bisect(fn,target,lo,hi){
-  for(let i=0;i<60;i++){const m=(lo+hi)/2;(fn(m)<target?lo:hi)=m;if(hi-lo<0.001)break;}return (lo+hi)/2;
+  for(let i=0;i<60;i++){const m=(lo+hi)/2;if(fn(m)<target)lo=m;else hi=m;if(hi-lo<0.001)break;}
+  return (lo+hi)/2;
 }
 const qstar = bisect(MC_fn, MR_P, 3, 10);
 
