@@ -421,6 +421,43 @@
 // ══════════════════════════════════════════════════════════════════════
 const ML=55, MR=25, MT=24, MB=42;
 
+// Force-simulation label collision avoidance (D3-style physics, Canvas version)
+function resolveLabels(items, iter=100, pad=4) {
+  for (let it=0; it<iter; it++) {
+    for (let i=0; i<items.length; i++) {
+      for (let j=i+1; j<items.length; j++) {
+        const a=items[i], b=items[j];
+        const gx=(a.w+b.w)/2+pad, gy=(a.h+b.h)/2+pad;
+        const dx=a.x-b.x, dy=a.y-b.y;
+        if (Math.abs(dx)<gx && Math.abs(dy)<gy) {
+          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.5;
+          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.5;
+          a.x+=sx; a.y+=sy; b.x-=sx; b.y-=sy;
+        }
+      }
+      const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
+    }
+  }
+}
+function drawForceLabel(ctx, lbl) {
+  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
+  ctx.save();
+  if (Math.hypot(x-ax,y-ay)>5) {
+    ctx.strokeStyle=color+'80'; ctx.lineWidth=0.8; ctx.setLineDash([2,2]);
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.font=(bold?'bold ':'')+fontSize+'px DM Sans,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const tw=ctx.measureText(text).width;
+  const th=fontSize*1.35;
+  ctx.fillStyle='#ffffffcc';
+  ctx.fillRect(x-tw/2-3,y-th/2,tw+6,th);
+  ctx.fillStyle=color;
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
 function setupCvs(id) {
   const cvs = document.getElementById(id);
   if (!cvs) return {ctx:null,W:300,H:260};
@@ -724,7 +761,7 @@ function v1Init() {
 // FIG 4.2 - ELASTICITY HEATMAP
 // ══════════════════════════════════════════════════════════════════════
 const v2 = { a:100, b:2, P:25 };
-const xR2=[0,110], yR2=[0,55];
+let xR2=[0,110], yR2=[0,55]; // updated dynamically so demand line stays on screen
 let v2W, v2H, v2ctx, v2drag=false;
 
 function v2Bfloat() {
@@ -750,8 +787,12 @@ function v2Draw() {
   const a = v2.a, b = v2.b > 0 ? v2.b : v2Bfloat();
   ctx.clearRect(0,0,W,H);
 
-  // draw heatmap gradient along curve using segments
+  // Dynamic axis ranges -- scale so the entire demand line stays on screen
   const Pmax = a/b;
+  const xHi = Math.max(110, Math.ceil(a * 1.12 / 10) * 10);
+  const yHi = Math.max(55,  Math.ceil(Pmax * 1.12 / 5) * 5);
+  xR2 = [0, xHi];
+  yR2 = [0, yHi];
   const steps = 80;
   for (let i=0; i<steps; i++) {
     const P1 = Pmax * i/steps;

@@ -307,6 +307,44 @@
 // ======================================================================
 const ML=50, MR=20, MT=20, MB=40;
 
+// Force-simulation label collision avoidance (D3-style physics, Canvas version)
+// items: [{x,y,ax,ay,w,h,text,color,fontSize,bold}] -- x/y are mutable label centers
+function resolveLabels(items, iter=100, pad=4) {
+  for (let it=0; it<iter; it++) {
+    for (let i=0; i<items.length; i++) {
+      for (let j=i+1; j<items.length; j++) {
+        const a=items[i], b=items[j];
+        const gx=(a.w+b.w)/2+pad, gy=(a.h+b.h)/2+pad;
+        const dx=a.x-b.x, dy=a.y-b.y;
+        if (Math.abs(dx)<gx && Math.abs(dy)<gy) {
+          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.5;
+          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.5;
+          a.x+=sx; a.y+=sy; b.x-=sx; b.y-=sy;
+        }
+      }
+      const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
+    }
+  }
+}
+function drawForceLabel(ctx, lbl) {
+  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
+  ctx.save();
+  if (Math.hypot(x-ax,y-ay)>5) {
+    ctx.strokeStyle=color+'80'; ctx.lineWidth=0.8; ctx.setLineDash([2,2]);
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.font=(bold?'bold ':'')+fontSize+'px DM Sans,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const tw=ctx.measureText(text).width;
+  const th=fontSize*1.35;
+  ctx.fillStyle='#ffffffcc';
+  ctx.fillRect(x-tw/2-3,y-th/2,tw+6,th);
+  ctx.fillStyle=color;
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
 function setupCvs(id) {
   const cvs=document.getElementById(id); if(!cvs) return {ctx:null,W:300,H:200};
   const dpr=window.devicePixelRatio||1;
@@ -799,6 +837,7 @@ function v66Draw(){
   const subs=['1','2','3','4','5','6','7','8'];
 
   // Draw SRAC curves for K = 1, 2, ..., nk
+  const sracLabels = [];
   for(let ki=0;ki<nk;ki++){
     const K=ki+1;
     const col=cols[ki%cols.length];
@@ -810,7 +849,7 @@ function v66Draw(){
     }
     ctx.stroke();
 
-    // Minimum of this SRAC: d/dq (w*q/K + v*K/q) = w/K - v*K/q^2 = 0 => q* = K*sqrt(v/w)
+    // Minimum of this SRAC
     const qOpt=K*Math.sqrt(V66_V/V66_W);
     const acOpt=v66SRAC(qOpt,K);
     if(qOpt<=13&&acOpt<=yR[1]){
@@ -818,15 +857,20 @@ function v66Draw(){
       dot6(ctx,tx,ty,4,col,'#fff');
     }
 
-    // Label: find a position near the left arm of the curve
+    // Collect label near left arm for force resolution
     const qLbl=Math.max(0.4, qOpt*0.35);
     const acLbl=v66SRAC(qLbl,K);
     if(acLbl<=yR[1]){
       const [lx,ly]=toC(qLbl,acLbl,W,H,xR,yR);
-      ctx.fillStyle=col; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
-      ctx.fillText('SRAC'+subs[ki], lx+2, ly-4);
+      ctx.font='bold 9px DM Sans,sans-serif';
+      const txt='SRAC'+subs[ki];
+      const tw=ctx.measureText(txt).width;
+      sracLabels.push({x:lx,y:ly-6,ax:lx,ay:ly,text:txt,color:col,fontSize:9,bold:true,w:tw+6,h:13});
     }
   }
+  // Resolve SRAC label collisions then draw with connector lines
+  resolveLabels(sracLabels, 120, 5);
+  sracLabels.forEach(lbl=>drawForceLabel(ctx,lbl));
 
   // LRAC: lower envelope
   ctx.beginPath(); let firstLR=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;

@@ -435,6 +435,43 @@
 // ══════════════════════════════════════════════════════════════════════
 const ML=44, MR=16, MT=16, MB=32;
 
+// Force-simulation label collision avoidance (D3-style physics, Canvas version)
+function resolveLabels(items, iter=100, pad=4) {
+  for (let it=0; it<iter; it++) {
+    for (let i=0; i<items.length; i++) {
+      for (let j=i+1; j<items.length; j++) {
+        const a=items[i], b=items[j];
+        const gx=(a.w+b.w)/2+pad, gy=(a.h+b.h)/2+pad;
+        const dx=a.x-b.x, dy=a.y-b.y;
+        if (Math.abs(dx)<gx && Math.abs(dy)<gy) {
+          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.5;
+          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.5;
+          a.x+=sx; a.y+=sy; b.x-=sx; b.y-=sy;
+        }
+      }
+      const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
+    }
+  }
+}
+function drawForceLabel(ctx, lbl) {
+  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
+  ctx.save();
+  if (Math.hypot(x-ax,y-ay)>5) {
+    ctx.strokeStyle=color+'80'; ctx.lineWidth=0.8; ctx.setLineDash([2,2]);
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.font=(bold?'bold ':'')+fontSize+'px DM Sans,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const tw=ctx.measureText(text).width;
+  const th=fontSize*1.35;
+  ctx.fillStyle='#ffffffcc';
+  ctx.fillRect(x-tw/2-3,y-th/2,tw+6,th);
+  ctx.fillStyle=color;
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
 function setupCvs(id) {
   const cvs = document.getElementById(id);
   if (!cvs) return {ctx:null, W:300, H:200};
@@ -692,6 +729,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
   const label=mode==='iq'?'Q':'U';
   const tangLabel=mode==='iq'?'MRTS':'MRS';
   const colors=['#1a56db','#2e8b57','#c0392b'];
+  const curveLbls=[];
   qLevels.forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=colors[qi]||'#888'; ctx.lineWidth=2;
     if(type==='cd'){
@@ -717,19 +755,31 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
       }
     }
     ctx.stroke();
-    // Curve labels: placed to avoid overlapping curves
-    ctx.fillStyle=colors[qi]||'#888'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
+    // Collect curve labels for force-resolution after all curves drawn
     if(type==='cd'){
-      // Place label near top-right of each curve (at L=1.5, K=q²/1.5)
-      const [tx,ty]=toC(1.5, Math.min(q*q/1.5,9.5),W,H,xR,yR);
-      ctx.fillText(`${label}=${q}`,tx+4,ty-4);
+      const lK=Math.min(q*q/1.5,9.5);
+      const [ax,ay]=toC(1.5,lK,W,H,xR,yR);
+      ctx.font='10px DM Sans,sans-serif';
+      const txt=`${label}=${q}`;
+      const tw=ctx.measureText(txt).width;
+      curveLbls.push({x:ax+tw/2+4,y:ay-6,ax,ay,text:txt,color:colors[qi]||'#888',fontSize:10,bold:false,w:tw+6,h:13});
     } else if(type==='linear'){
+      ctx.fillStyle=colors[qi]||'#888'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
       ctx.fillText(`${label}=${q}`,W-MR-36,MT+12+(qi*14));
     } else if(type==='leontief'){
-      const [tx,ty]=toC(Math.min(q+0.4,9),2*q,W,H,xR,yR);
-      ctx.fillText(`${label}=${q}`,tx+5,ty-4);
+      const kk=2*q;
+      if(q<=xR[1]&&kk<=yR[1]){ // only label if curve was drawn
+        const [ax,ay]=toC(Math.min(q+0.4,9),kk,W,H,xR,yR);
+        ctx.font='10px DM Sans,sans-serif';
+        const txt=`${label}=${q}`;
+        const tw=ctx.measureText(txt).width;
+        curveLbls.push({x:ax+tw/2+5,y:ay-5,ax,ay,text:txt,color:colors[qi]||'#888',fontSize:10,bold:false,w:tw+6,h:13});
+      }
     }
   });
+
+  // Resolve curve label collisions (D3-style force simulation) then draw with connector lines
+  if(curveLbls.length) { resolveLabels(curveLbls,100,5); curveLbls.forEach(l=>drawForceLabel(ctx,l)); }
 
   // Draggable point P only on the Cobb-Douglas panel (cvs52a)
   if(canvasId==='cvs52a' && type==='cd'){
