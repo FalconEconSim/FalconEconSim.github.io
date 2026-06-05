@@ -134,11 +134,15 @@
       panel shows the profit curve directly. Drag the vertical cursor to see MR vs MC at any quantity, and find q* where
       the slopes are equal (MR = MC).
     </p>
-    <div class="cvs-wrap">
-      <div class="panel-label">Total Revenue (TR) vs Total Cost (TC)</div>
-      <canvas id="cvs71a" height="240"></canvas>
-      <div class="panel-label" style="border-top:1px solid var(--rule);">Profit &pi;(q) = TR &minus; TC</div>
-      <canvas id="cvs71b" height="130"></canvas>
+    <div class="two-col-panels">
+      <div class="panel cvs-wrap">
+        <div class="panel-label">Total Revenue (TR) vs Total Cost (TC)</div>
+        <canvas id="cvs71a"></canvas>
+      </div>
+      <div class="panel cvs-wrap">
+        <div class="panel-label">Profit &pi;(q) = TR &minus; TC</div>
+        <canvas id="cvs71b"></canvas>
+      </div>
     </div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
@@ -580,15 +584,15 @@ function v71Draw(){
   const cvA=document.getElementById('cvs71a'), cvB=document.getElementById('cvs71b');
   if(!cvA||!cvB)return;
   const dpr=window.devicePixelRatio||1;
-  const W=Math.min(cvA.clientWidth||500, 680);
-  [cvA,cvB].forEach((cv,i)=>{
+  const W=Math.min(cvA.clientWidth||480, 480);
+  const H=320;
+  [cvA,cvB].forEach(cv=>{
     cv.width=W*dpr; cv.style.width=W+'px';
-    const h=i===0?240:130;
-    cv.height=h*dpr; cv.style.height=h+'px';
+    cv.height=H*dpr; cv.style.height=H+'px';
   });
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
-  const HA=240,HB=130;
+  const HA=H,HB=H;
   const xR=[0,9],yRA=[0,30],yRB=[-8,8];
 
   // TOP: TR and TC
@@ -824,7 +828,8 @@ function d3TickClamp(nodes,gs,conns){
   conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
 }
 function d3Node(id,color,label,lw,ax,ay,extra={}){
-  return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax+(Math.random()-0.5)*80,y:ay+(Math.random()-0.5)*80,...extra};
+  const ang=Math.random()*2*Math.PI,r=110+Math.random()*50;
+  return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax+r*Math.cos(ang),y:ay+r*Math.sin(ang),...extra};
 }
 
 // ── FIG 7.2 D3 SVG ───────────────────────────────────────────────────────
@@ -899,7 +904,6 @@ function v72DrawUpdate(P){
     const dx=nx-pNode.fx_anchor,dy=ny-pNode.fy_anchor;
     pNode.x+=dx;pNode.y+=dy;pNode.vx=0;pNode.vy=0;
     pNode.fx_anchor=nx;pNode.fy_anchor=ny;
-    if(v72sim)v72sim.alpha(0.3).restart();
   }
   document.getElementById('v72-readout').innerHTML=
     `<div class="readout-row">
@@ -912,7 +916,7 @@ function v72DrawUpdate(P){
 function v72Draw(P){v72DrawUpdate(P);}
 window.resetV72Labels=function(){
   if(!v72nodes||!v72sim)return;
-  v72nodes.forEach(d=>{d.x=d.fx_anchor+(Math.random()-0.5)*80;d.y=d.fy_anchor+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
+  v72nodes.forEach(d=>{d.x=d.fx_anchor+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.fy_anchor+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
   v72sim.alpha(0.5).restart();
 };
 
@@ -968,7 +972,6 @@ function v73DrawUpdate(P){
     const dx=nx-pNode.fx_anchor,dy=ny-pNode.fy_anchor;
     pNode.x+=dx;pNode.y+=dy;pNode.vx=0;pNode.vy=0;
     pNode.fx_anchor=nx;pNode.fy_anchor=ny;
-    if(v73sim)v73sim.alpha(0.3).restart();
   }
   let zLabel='',zColor='#27ae60',zBg='#f0fdf4';
   if(P<4){zLabel='Shut down: P < min(SAVC) = $4';zColor='#c0392b';zBg='#fff5f5';}
@@ -981,7 +984,7 @@ function v73DrawUpdate(P){
 function v73Draw(P){v73DrawUpdate(P);}
 window.resetV73Labels=function(){
   if(!v73nodes||!v73sim)return;
-  v73nodes.forEach(d=>{d.x=d.fx_anchor+(Math.random()-0.5)*80;d.y=d.fy_anchor+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
+  v73nodes.forEach(d=>{d.x=d.fx_anchor+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.fy_anchor+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
   v73sim.alpha(0.5).restart();
 };
 
@@ -1170,18 +1173,18 @@ function v75Reset(){
 }
 window.resetV75Labels=function(){
   if(!v75nodes75||!v75sim75)return;
-  v75nodes75.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
+  v75nodes75.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
   v75sim75.alpha(0.5).restart();
 };
 window.resetV78Labels=function(){
-  [v78nodes78a,v78sim78a,v78nodes78b,v78sim78b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
+  [v78nodes78a,v78sim78a,v78nodes78b,v78sim78b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
 };
 window.resetV79Labels=function(){
-  [v79nodesA,v79simA].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
-  [v79nodesB,v79simB].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
+  [v79nodesA,v79simA].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
+  [v79nodesB,v79simB].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
 };
 window.resetV710Labels=function(){
-  [v710nodes710a,v710sim710a,v710nodes710b,v710sim710b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
+  [v710nodes710a,v710sim710a,v710nodes710b,v710sim710b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1259,7 +1262,7 @@ function v76Draw(P,q){
     }
     // Update MR node anchor
     const mrNode=v76nodes76.find(n=>n.id==='MR');
-    if(mrNode){const nx=scX(7),ny=py;const dx=nx-mrNode.fx_anchor,dy=ny-mrNode.fy_anchor;mrNode.x+=dx;mrNode.y+=dy;mrNode.vx=0;mrNode.vy=0;mrNode.fx_anchor=nx;mrNode.fy_anchor=ny;v76sim76.alpha(0.3).restart();}
+    if(mrNode){const nx=scX(7),ny=py;const dx=nx-mrNode.fx_anchor,dy=ny-mrNode.fy_anchor;mrNode.x+=dx;mrNode.y+=dy;mrNode.vx=0;mrNode.vy=0;mrNode.fx_anchor=nx;mrNode.fy_anchor=ny;}
     document.getElementById('v76-readout').innerHTML=`<strong>Price Taker:</strong> MR = P = $${P.toFixed(2)} at every unit. Each additional unit adds exactly P* to revenue. No red bar; no price effect.`;
   } else {
     if(v76showGainLoss && v76prevQ<9){
@@ -1320,12 +1323,24 @@ function v77NextStep(){
   v77Draw();
 }
 // ── FIG 7.7 D3 SVG ───────────────────────────────────────────────────────
-let v77svg=null;
+let v77svg=null,v77sim=null,v77nodes=null;
 function v77InitSvg(){
   v77svg=d3MakeSvg('cvs77-wrap');
   // Grid
   v77svg.append('g').selectAll('line').data([0.25,0.5,0.75]).enter()
     .append('line').attr('x1',0).attr('x2',D3W).attr('y1',d=>D3H*d).attr('y2',d=>D3H*d).attr('stroke','#f0f0f0').attr('stroke-width',1);
+  // Persistent D3 force labels for D and S in each panel (6 labels: D1,S1,D2,S2,D3,S3)
+  const pw=(D3W-D3PAD.left-D3PAD.right-20)/3;
+  const panelBot=D3H-D3PAD.bottom;
+  v77nodes=[];
+  for(let i=0;i<3;i++){
+    const ox=D3PAD.left+i*(pw+10);
+    v77nodes.push(d3Node('D'+i,'#1a56db','D',20,ox+pw-14,panelBot-20));
+    v77nodes.push(d3Node('S'+i,'#e74c3c','S',20,ox+pw-14,D3PAD.top+28));
+  }
+  v77sim=d3MakeSim(v77nodes);
+  const els=d3AddLabels(v77svg,v77nodes,v77sim);
+  v77sim.on('tick',()=>d3TickClamp(v77nodes,els.gs,els.conns));
 }
 function v77Draw(){
   if(!v77svg)v77InitSvg();
@@ -1343,9 +1358,7 @@ function v77Draw(){
     // Demand (down-slope, blue) and Supply (up-slope, red)
     g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1a56db').attr('stroke-width',2);
     g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke','#e74c3c').attr('stroke-width',2);
-    // Labels for D and S
-    g.append('text').attr('x',ox+pw-8).attr('y',bot-14).attr('text-anchor','end').attr('font-size',10).attr('font-weight',600).attr('fill','#1a56db').attr('font-family',"'DM Sans',sans-serif").text('D');
-    g.append('text').attr('x',ox+pw-8).attr('y',oy+30).attr('text-anchor','end').attr('font-size',10).attr('font-weight',600).attr('fill','#e74c3c').attr('font-family',"'DM Sans',sans-serif").text('S');
+    // D and S labels handled by persistent D3 force labels (v77nodes)
     // Shifted curves
     if(v77step>0&&((sc==='sub'||sc==='income')&&i===2||(sc==='input'&&i===0))){
       const sh=20;
@@ -1406,18 +1419,20 @@ function v78InitSvgB(n){
   // Market supply: starts at Q=0 when P=4
   const pts=[];for(let P=4;P<=14;P+=0.2){const Q=n*(P-4)/2;if(Q>qMax)break;pts.push([scX(Q),scY(P)]);}
   v78svgB.append('path').attr('fill','none').attr('stroke','#27ae60').attr('stroke-width',2).attr('d',d3.line()(pts));
-  // Demand: linear line crossing visible area (extends beyond chart boundaries)
-  const Qd=P=>Math.max(0,200-10*P);
-  const Peq=(200+4*n/2)/(50+n/2);
+  // Demand: Qd=100-10*P (P-intercept=10, within yMax=14)
+  const Qd=P=>Math.max(0,100-10*P);
+  const Peq=(200+4*n)/(20+n); // from 100-10P = n*(P-4)/2
   const Qeq=Qd(Peq);
-  v78svgB.append('line').attr('x1',scX(0)).attr('y1',scY(20)).attr('x2',scX(Math.min(qMax,200))).attr('y2',scY(0))
-    .attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4');
-  if(Qeq<qMax){
+  const demPts78=[];
+  for(let P2=10;P2>=0;P2-=0.2){const Q2=100-10*P2;if(Q2<0||Q2>qMax)break;demPts78.push([scX(Q2),scY(P2)]);}
+  if(demPts78.length>1)v78svgB.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(demPts78));
+  if(Qeq>=0&&Qeq<qMax&&Peq>=0&&Peq<=14){
     v78svgB.append('circle').attr('cx',scX(Qeq)).attr('cy',scY(Peq)).attr('r',5).attr('fill','#8e44ad').attr('stroke','white').attr('stroke-width',1.5);
   }
   const lbl='Market supply ('+n+' firms)';
   const lw=lbl.length*5.5+8;
-  v78nodes78b=[d3Node('MS','#27ae60',lbl,lw,scX(n*(8-4)/2*0.3),scY(8))];
+  const msAnchorQ=Math.min(n*2,qMax*0.5); // at P=8, Qs=n*(8-4)/2=2n
+  v78nodes78b=[d3Node('MS','#27ae60',lbl,lw,scX(msAnchorQ),scY(8))];
   v78sim78b=d3MakeSim(v78nodes78b);
   const els=d3AddLabels(v78svgB,v78nodes78b,v78sim78b);
   v78gs78b=els.gs;v78conns78b=els.conns;
@@ -1440,7 +1455,8 @@ function v78Draw(n){
 // FIG 7.9: LONG-RUN ENTRY/EXIT
 // ─────────────────────────────────────────────────────────────────────────
 let v79n=50, v79animId=null;
-function v79PofN(n){return(1000+4*n)/(n+100);}
+// Qd=500-50P, Qs=n*(P-4)/2 => P=(500+2n)/(50+n/2)=(1000+4n)/(100+n)
+function v79PofN(n){return(1000+4*n)/(100+n);}
 // ── FIG 7.9 D3 SVG ───────────────────────────────────────────────────────
 let v79svgA=null,v79svgB=null;
 let v79nodesA=null,v79simA=null,v79gsA=null,v79connsA=null;
@@ -1452,16 +1468,15 @@ function v79InitSvg(){
   const scYM=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
   v79svgA=d3MakeSvg2('cvs79a-wrap');
   d3AddAxes2(v79svgA,scXM,scYM,'Q','P');
-  // Static demand line: Q = 1000-50P; at P=14, Q=300; extends upward off chart
-  v79svgA.append('line').attr('class','v79-demand')
-    .attr('x1',scXM(0)).attr('y1',scYM(20))
-    .attr('x2',scXM(300)).attr('y2',scYM(14))
-    .attr('stroke','#1a56db').attr('stroke-width',2);
+  // Static demand: Qd=500-50P (P-intercept=10 ≤ yMax=14, touches y-axis)
+  const demPts79=[];
+  for(let P2=10;P2>=4;P2-=0.1){const Q2=500-50*P2;if(Q2<0||Q2>300)continue;demPts79.push([scXM(Q2),scYM(P2)]);}
+  if(demPts79.length>1)v79svgA.append('path').attr('class','v79-demand').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(demPts79));
   // Placeholder groups for dynamic supply + equilibrium
   v79svgA.append('g').attr('class','v79-dyn-mkt');
-  // Labels (persistent)
+  // Labels (persistent): D anchor at P=8, Qd=500-400=100
   v79nodesA=[
-    d3Node('D','#1a56db','D',20,scXM(260),scYM(13.8)),
+    d3Node('D','#1a56db','D',20,scXM(100),scYM(8)),
     d3Node('S','#e74c3c','S',20,scXM(100),scYM(10)),
   ];
   v79simA=d3MakeSim(v79nodesA);
@@ -1514,8 +1529,14 @@ function v79Draw(){
   // Update anchor for S label to current supply mid-point
   if(v79nodesA&&v79nodesA[1]){
     const midP=9;const midQ=Qs(midP);
-    if(midQ>0&&midQ<300){v79nodesA[1].ax=scXM(midQ);v79nodesA[1].ay=scYM(midP);}
-    v79simA.alpha(0.3).restart();
+    if(midQ>0&&midQ<300){
+      const oldAx=v79nodesA[1].fx_anchor,oldAy=v79nodesA[1].fy_anchor;
+      const nx=scXM(midQ),ny=scYM(midP);
+      v79nodesA[1].fx_anchor=nx;v79nodesA[1].fy_anchor=ny;
+      v79nodesA[1].ax=nx;v79nodesA[1].ay=ny;
+      v79nodesA[1].x+=nx-oldAx;v79nodesA[1].y+=ny-oldAy;
+      v79nodesA[1].vx=0;v79nodesA[1].vy=0;
+    }
   }
 
   // Update firm: price line + profit rect
@@ -1591,6 +1612,7 @@ function v710InitSvg(){
   // Static original SMC
   d3AddCurve(v710svgA,q=>SMC7(q),scXF,scYF,'#1a56db',14);
   v710svgA.append('g').attr('class','v710-dyn-firm');
+  v710svgA.append('g').attr('class','v710-shifted-labels'); // persistent shifted-curve label layer
   // Firm labels
   v710nodes710a=[d3Node('SMC','#1a56db','SMC',30,scXF(5),scYF(SMC7(5)))];
   v710sim710a=d3MakeSim(v710nodes710a);
@@ -1611,6 +1633,7 @@ function v710InitSvg(){
   {const pts=[];for(let P2=4;P2<=14;P2+=0.2){const Q2=50*(P2-4);if(Q2>200)break;pts.push([scXM(Q2),scYM(P2)]);}
   v710svgB.append('path').attr('fill','none').attr('stroke','#27ae60').attr('stroke-width',2).attr('d',d3.line()(pts));}
   v710svgB.append('g').attr('class','v710-dyn-mkt');
+  v710svgB.append('g').attr('class','v710-shifted-labels-mkt'); // persistent shifted market label layer
   // Market labels
   v710nodes710b=[
     d3Node('D','#1a56db','D',20,scXM(185),scYM(10.1)),
@@ -1632,16 +1655,17 @@ function v710Draw(shock,dw){
   // Update firm panel: shifted SMC if dw>0
   const gF=v710svgA.select('g.v710-dyn-firm');
   gF.selectAll('*').remove();
+  // Persistent shifted-curve label layer (not cleared with gF)
+  const gSL=v710svgA.select('g.v710-shifted-labels');
+  gSL.selectAll('*').remove();
   if(dw>0){
     const pts=[];for(let q=0.4;q<=9;q+=0.05){const v=SMC7(q)+shiftD;if(v<0||v>14)continue;pts.push([scXF(q),scYF(v)]);}
     if(pts.length>1)gF.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(pts));
-    // Add SMC' label node (re-init sim with extra node)
-    const smcPrimeNode=d3Node('SMCp','#e74c3c',"SMC'",35,scXF(5),scYF(Math.min(SMC7(5)+shiftD,13.5)));
-    // Add it as plain label group without simulation (static offset)
-    const g=gF.append('g').attr('class','draggable-label');
-    g.append('rect').attr('x',-35/2-2).attr('y',-LABEL_H/2).attr('width',35+4).attr('height',LABEL_H).attr('rx',3).attr('fill','white').attr('stroke','#e74c3c').attr('stroke-width',0.8);
+    // SMC' label in persistent layer
+    const lx=scXF(5)+20,ly=scYF(Math.min(SMC7(5)+shiftD,13.5))-12;
+    const g=gSL.append('g').attr('class','draggable-label').attr('transform',`translate(${lx},${ly})`);
+    g.append('rect').attr('x',-35/2-2).attr('y',-LABEL_H/2).attr('width',39).attr('height',LABEL_H).attr('rx',3).attr('fill','white').attr('stroke','#e74c3c').attr('stroke-width',0.8);
     g.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle').attr('fill','#e74c3c').attr('font-size',9).attr('font-weight','bold').attr('font-family',"'DM Sans',sans-serif").text("SMC'");
-    g.attr('transform',`translate(${scXF(5)+20},${scYF(Math.min(SMC7(5)+shiftD,13.5))-12})`);
   }
 
   // Update market panel: shifted supply + new equilibrium if dw>0
@@ -1657,12 +1681,17 @@ function v710Draw(shock,dw){
     const pts=[];for(let P2=PSD_new;P2<=14;P2+=0.2){const Q2=50*Math.max(0,P2-PSD_new);if(Q2>200)break;pts.push([scXM(Q2),scYM(P2)]);}
     if(pts.length>1)gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(pts));
     gM.append('circle').attr('cx',scXM(Math.max(0,QeqAfter))).attr('cy',scYM(Math.min(13.9,PeqAfter))).attr('r',5).attr('fill','#e74c3c').attr('stroke','white').attr('stroke-width',1.5);
-    // S' label
-    const g=gM.append('g');
+  }
+  // S' label in persistent layer
+  const gSLM=v710svgB.select('g.v710-shifted-labels-mkt');
+  gSLM.selectAll('*').remove();
+  if(dw>0){
+    const PSD_new2=4+shiftD;
+    const s2Q=50*Math.max(0,6-PSD_new2);
+    const lx=scXM(Math.min(s2Q,190))+8,ly=scYM(Math.min(PSD_new2+0.5,13))-8;
+    const g=gSLM.append('g').attr('class','draggable-label').attr('transform',`translate(${lx},${ly})`);
     g.append('rect').attr('x',-14).attr('y',-LABEL_H/2).attr('width',22).attr('height',LABEL_H).attr('rx',3).attr('fill','white').attr('stroke','#e74c3c').attr('stroke-width',0.8);
     g.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle').attr('fill','#e74c3c').attr('font-size',9).attr('font-weight','bold').attr('font-family',"'DM Sans',sans-serif").text("S'");
-    const s2Q=50*Math.max(0,6-PSD_new);
-    g.attr('transform',`translate(${scXM(Math.min(s2Q,190))+8},${scYM(Math.min(PSD_new+0.5,13))-8})`);
   }
 
   document.getElementById('v710-readout').innerHTML=
@@ -1688,6 +1717,36 @@ window.addEventListener('DOMContentLoaded',()=>{
   v78InitSvgA(); v78Draw(parseInt(document.getElementById('v78-n').value));
   v79InitSvg(); v79Draw();
   v710InitSvg(); v710Draw(document.getElementById('v710-shock').value, parseFloat(document.getElementById('v710-shock-mag').value));
+
+  // S6 alphaTarget smooth-drag pattern for slider-driven sims
+  // Fig 7.2
+  (function(){
+    const sl=document.getElementById('v72-p');
+    sl.addEventListener('mousedown',()=>{ if(v72sim) v72sim.alphaTarget(0.3).restart(); });
+    sl.addEventListener('touchstart',()=>{ if(v72sim) v72sim.alphaTarget(0.3).restart(); },{passive:true});
+  })();
+  // Fig 7.3
+  (function(){
+    const sl=document.getElementById('v73-p');
+    sl.addEventListener('mousedown',()=>{ if(v73sim) v73sim.alphaTarget(0.3).restart(); });
+    sl.addEventListener('touchstart',()=>{ if(v73sim) v73sim.alphaTarget(0.3).restart(); },{passive:true});
+  })();
+  // Fig 7.6
+  (function(){
+    const sl=document.getElementById('v76-p');
+    sl.addEventListener('mousedown',()=>{ if(v76sim76) v76sim76.alphaTarget(0.3).restart(); });
+    sl.addEventListener('touchstart',()=>{ if(v76sim76) v76sim76.alphaTarget(0.3).restart(); },{passive:true});
+  })();
+  window.addEventListener('mouseup',()=>{
+    if(v72sim) v72sim.alphaTarget(0);
+    if(v73sim) v73sim.alphaTarget(0);
+    if(v76sim76) v76sim76.alphaTarget(0);
+  });
+  window.addEventListener('touchend',()=>{
+    if(v72sim) v72sim.alphaTarget(0);
+    if(v73sim) v73sim.alphaTarget(0);
+    if(v76sim76) v76sim76.alphaTarget(0);
+  });
 
   // ResizeObserver only for canvas-based figures (7.1 uses canvas)
   const ro=new ResizeObserver(()=>{

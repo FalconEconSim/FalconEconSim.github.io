@@ -471,8 +471,8 @@ function v61Draw(Lcur,Kcur){
 
   const cvs=document.getElementById('cvs61'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400;
-  const H=Math.round(W-(ML+MR-MT-MB)); // equal pixel-per-unit (xR=yR=[0,16])
+  const W=Math.min(cvs.clientWidth||680, 680);
+  const H=320;
   if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){
     cvs.width=Math.round(W*dpr); cvs.height=Math.round(H*dpr);
     cvs.style.height=H+'px';
@@ -871,7 +871,7 @@ window._initFig65=function initFig65(){
       {id:'minATC',color:'#1a56db',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
     ];
     if(v65ShowLR) nodes.push({id:'LRAC',color:'#c0392b',label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
-    return nodes.filter(n=>isFinite(n.ay)).map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*80,y:n.ay+(Math.random()-0.5)*80}));
+    return nodes.filter(n=>isFinite(n.ay)).map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));
   }
 
   function initSim(tfc){
@@ -931,12 +931,26 @@ window._initFig65=function initFig65(){
     if(f65Nodes){
       const qmin2=Math.sqrt(tfc);
       f65Nodes.forEach(n=>{
-        if(n.id==='ATC')  { n.fx_anchor=scX(13); n.fy_anchor=scY(Math.min(v65ATC(13,tfc),yMax)); }
-        if(n.id==='AFC')  { n.fx_anchor=scX(3);  n.fy_anchor=scY(Math.min(v65AFC(3,tfc),yMax)); }
-        if(n.id==='minATC'){ const ma=v65ATC(qmin2,tfc); n.fx_anchor=scX(qmin2); n.fy_anchor=scY(Math.min(ma,yMax)); }
+        if(n.id==='ATC'){
+          const nx=scX(13), ny=scY(Math.min(v65ATC(13,tfc),yMax));
+          const dx=nx-n.fx_anchor, dy=ny-n.fy_anchor;
+          n.x+=dx; n.y+=dy; n.vx=0; n.vy=0;
+          n.fx_anchor=nx; n.fy_anchor=ny;
+        }
+        if(n.id==='AFC'){
+          const nx=scX(3), ny=scY(Math.min(v65AFC(3,tfc),yMax));
+          const dx=nx-n.fx_anchor, dy=ny-n.fy_anchor;
+          n.x+=dx; n.y+=dy; n.vx=0; n.vy=0;
+          n.fx_anchor=nx; n.fy_anchor=ny;
+        }
+        if(n.id==='minATC'){
+          const ma=v65ATC(qmin2,tfc);
+          const nx=scX(qmin2), ny=scY(Math.min(ma,yMax));
+          const dx=nx-n.fx_anchor, dy=ny-n.fy_anchor;
+          n.x+=dx; n.y+=dy; n.vx=0; n.vy=0;
+          n.fx_anchor=nx; n.fy_anchor=ny;
+        }
       });
-      f65Sim.alphaTarget(0.3).restart();
-      setTimeout(()=>f65Sim.alphaTarget(0),600);
     }
 
     document.getElementById('v65-readout').innerHTML=
@@ -952,6 +966,13 @@ window._initFig65=function initFig65(){
   const initTfc=100;
   initSim(initTfc);
   v65DrawD3(initTfc);
+
+  // Slider jank fix: keep sim warm during drag, stop when released
+  const sl65=document.getElementById('v65-tfc');
+  sl65.addEventListener('mousedown',()=>{ if(f65Sim) f65Sim.alphaTarget(0.3).restart(); });
+  sl65.addEventListener('touchstart',()=>{ if(f65Sim) f65Sim.alphaTarget(0.3).restart(); },{passive:true});
+  window.addEventListener('mouseup',()=>{ if(f65Sim) f65Sim.alphaTarget(0); });
+  window.addEventListener('touchend',()=>{ if(f65Sim) f65Sim.alphaTarget(0); });
 
   window.v65Draw=function(){
     const tfc=parseFloat(document.getElementById('v65-tfc').value);
@@ -969,6 +990,7 @@ window._initFig65=function initFig65(){
     const tfc=parseFloat(document.getElementById('v65-tfc').value);
     initSim(tfc);
     v65DrawD3(tfc);
+    if(f65Sim){ f65Sim.alpha(0.5).restart(); setTimeout(()=>f65Sim.alphaTarget(0),1200); }
   };
   window.resetFig65=function(){
     const tfc=parseFloat(document.getElementById('v65-tfc').value);
@@ -1066,7 +1088,7 @@ window._initFig66=function initFig66(){
         const txt='SRAC'+SUBS[ki];
         nodeList.push({id:'SRAC'+K,color:col,label:txt,lw:txt.length*6+10,
           ax:scX(qLbl),ay:scY(acLbl),fx_anchor:scX(qLbl),fy_anchor:scY(acLbl),
-          x:scX(qLbl)+(Math.random()-0.5)*80,y:scY(acLbl)+(Math.random()-0.5)*80});
+          x:scX(qLbl)+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:scY(acLbl)+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))});
       }
     }
 
@@ -1085,7 +1107,7 @@ window._initFig66=function initFig66(){
       const lw=160;
       nodeList.push({id:'LRAC',color:'#1a56db',label:'LRAC (envelope)',lw,
         ax:scX(lracQ),ay:scY(lracAC),fx_anchor:scX(lracQ),fy_anchor:scY(lracAC),
-        x:scX(lracQ)+(Math.random()-0.5)*80,y:scY(lracAC)+(Math.random()-0.5)*80});
+        x:scX(lracQ)+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:scY(lracAC)+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))});
     }
 
     f66Nodes=nodeList;
@@ -1130,6 +1152,15 @@ window._initFig66=function initFig66(){
   }
 
   buildF66(4);
+
+  // Slider jank fix: keep sim warm during drag, stop when released
+  const sl66=document.getElementById('v66-nk');
+  if(sl66){
+    sl66.addEventListener('mousedown',()=>{ if(f66Sim) f66Sim.alphaTarget(0.3).restart(); });
+    sl66.addEventListener('touchstart',()=>{ if(f66Sim) f66Sim.alphaTarget(0.3).restart(); },{passive:true});
+  }
+  window.addEventListener('mouseup',()=>{ if(f66Sim) f66Sim.alphaTarget(0); });
+  window.addEventListener('touchend',()=>{ if(f66Sim) f66Sim.alphaTarget(0); });
 
   window.v66Update=function(){
     const nk=parseInt(document.getElementById('v66-nk').value)||4;
@@ -1223,7 +1254,7 @@ window._initFig68=function initFig68(){
         ax:scX(optNew.Ls),ay:scY(optNew.Ks)},
     ];
     return nodes.filter(n=>isFinite(n.ax)&&isFinite(n.ay))
-      .map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*80,y:n.ay+(Math.random()-0.5)*80}));
+      .map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));
   }
 
   function v68DrawD3(){
@@ -1295,6 +1326,16 @@ window._initFig68=function initFig68(){
   }
 
   v68DrawD3();
+
+  // Slider jank fix: keep sim warm during drag, stop when released
+  ['v68-w','v68-v'].forEach(function(slId){
+    const sl=document.getElementById(slId);
+    if(!sl) return;
+    sl.addEventListener('mousedown',()=>{ if(f68Sim) f68Sim.alphaTarget(0.3).restart(); });
+    sl.addEventListener('touchstart',()=>{ if(f68Sim) f68Sim.alphaTarget(0.3).restart(); },{passive:true});
+  });
+  window.addEventListener('mouseup',()=>{ if(f68Sim) f68Sim.alphaTarget(0); });
+  window.addEventListener('touchend',()=>{ if(f68Sim) f68Sim.alphaTarget(0); });
 
   window.v68Draw=v68DrawD3;
   window.v68Update=function(){
@@ -1555,7 +1596,7 @@ window._initFig610=function initFig610(){
           nodeList.push({id:'MC',color:'#e74c3c',label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
       }
     }
-    f610Nodes=nodeList.map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*80,y:n.ay+(Math.random()-0.5)*80}));
+    f610Nodes=nodeList.map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));
 
     if(f610Nodes.length>0){
       f610Conn=labelG.selectAll('.f610conn').data(f610Nodes).enter()

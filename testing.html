@@ -339,6 +339,23 @@
     </div>
   </div>
 
+  <!-- ── SECTION 9: Market Equilibrium Line Rendering Test ── -->
+  <div class="approach-section" id="sec-s9">
+    <div class="approach-hdr">
+      <span class="approach-num">Section 9</span>
+      <span class="approach-title">S9 &mdash; Market Equilibrium (line rendering test)</span>
+    </div>
+    <p class="approach-desc">Both supply and demand curves touch the y-axis. Supply: P = 4 + Q/50 (starts at Q=0, P=$4). Demand: P = 12 &minus; Q/50 (starts at Q=0, P=$12). Equilibrium: Q*=200, P*=$8. D3 force labels for S and D are draggable.</p>
+    <div class="demo-wrap" id="s9-demo-wrap">
+      <div class="demo-toolbar">
+        <span class="demo-toolbar-label">Supply touches y-axis at P=$4. Demand touches y-axis at P=$12.</span>
+        <button class="viz-btn" onclick="window.resetS9&&resetS9()">Reset labels</button>
+      </div>
+      <div class="demo-svg-wrap" id="s9-svg-wrap"></div>
+    </div>
+    <div id="s9-readout" style="margin-top:0.75rem;background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.75rem 1rem;font-size:0.84rem;line-height:1.75;">Supply: P = 4 + Q/50 &nbsp;&bull;&nbsp; Demand: P = 12 &minus; Q/50 &nbsp;&bull;&nbsp; Equilibrium: P* = $8, Q* = 200</div>
+  </div>
+
   <div class="test-footer">
     <div class="test-footer-left">
       Developer sandbox &mdash; not linked from course nav &middot;
@@ -1576,6 +1593,101 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
     });
     sim.alpha(0.6).restart();
     if (!simRunning) { simRunning=true; document.getElementById('btn-d3-sim').textContent='Pause simulation'; }
+  };
+})();
+
+// ================================================================
+// SECTION 9: Market Equilibrium (line rendering test)
+// Supply: P = 4 + Q/50  Demand: P = 12 - Q/50  Eq: Q*=200, P*=8
+// Both curves touch y-axis. D3 force labels.
+// ================================================================
+(function initS9(){
+  if(typeof d3==='undefined'){return;}
+  const W=680,H=320,PAD={top:28,right:36,bottom:44,left:54};
+  const LABEL_H=15;
+  const qMax=400,yMax=14;
+  const scX=d3.scaleLinear().domain([0,qMax]).range([PAD.left,W-PAD.right]);
+  const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
+
+  d3.select('#s9-svg-wrap').selectAll('svg').remove();
+  const svg=d3.select('#s9-svg-wrap').append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
+
+  // Grid
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
+    .append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
+
+  // Axes
+  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(8).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9);});
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(6).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9);});
+  svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Quantity Q');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Price P');
+
+  // Supply curve: P = 4 + Q/50  =>  Q = 50*(P-4), starts at Q=0, P=4
+  const supPts=[];
+  for(let P2=4;P2<=yMax;P2+=0.1){const Q2=50*(P2-4);if(Q2>qMax)break;supPts.push([scX(Q2),scY(P2)]);}
+  svg.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('d',d3.line()(supPts));
+
+  // Demand curve: P = 12 - Q/50  =>  Q = 50*(12-P), starts at Q=0, P=12
+  const demPts=[];
+  for(let P2=12;P2>=0;P2-=0.1){const Q2=50*(12-P2);if(Q2>qMax||Q2<0)break;demPts.push([scX(Q2),scY(P2)]);}
+  svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(demPts));
+
+  // Equilibrium dot at Q*=200, P*=8
+  const eqX=scX(200),eqY=scY(8);
+  // Projection lines
+  svg.append('line').attr('x1',PAD.left).attr('x2',eqX).attr('y1',eqY).attr('y2',eqY).attr('stroke','#8e44ad').attr('stroke-width',1).attr('stroke-dasharray','4,3').attr('opacity',0.6);
+  svg.append('line').attr('x1',eqX).attr('x2',eqX).attr('y1',eqY).attr('y2',H-PAD.bottom).attr('stroke','#8e44ad').attr('stroke-width',1).attr('stroke-dasharray','4,3').attr('opacity',0.6);
+  svg.append('circle').attr('cx',eqX).attr('cy',eqY).attr('r',6).attr('fill','#8e44ad').attr('stroke','white').attr('stroke-width',1.5);
+
+  // D3 force labels
+  function mkNode(id,color,label,lw,ax,ay){
+    const ang=Math.random()*2*Math.PI,r=80+Math.random()*40;
+    return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax+r*Math.cos(ang),y:ay+r*Math.sin(ang)};
+  }
+  const s9nodes=[
+    mkNode('S','#e74c3c','S',20,scX(300),scY(10)),  // supply mid-point
+    mkNode('D','#1a56db','D',20,scX(100),scY(10)),  // demand mid-point
+    mkNode('Peq','#8e44ad','P*=$8, Q*=200',112,scX(240),scY(8.8)), // equilibrium label
+  ];
+  const conns=svg.selectAll(null).data(s9nodes).enter()
+    .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+  const gs=svg.selectAll(null).data(s9nodes).enter()
+    .append('g').attr('class','draggable-label')
+    .call(d3.drag()
+      .on('start',(e,d)=>{s9sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',(e,d)=>{s9sim.alphaTarget(0);d.fx=null;d.fy=null;})
+    );
+  gs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+    .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+  gs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+    .text(d=>d.label);
+
+  const s9sim=d3.forceSimulation(s9nodes)
+    .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+    .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
+    .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+    .on('tick',()=>{
+      s9nodes.forEach(d=>{
+        d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
+        d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+      });
+      gs.attr('transform',d=>`translate(${d.x},${d.y})`);
+      conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+    });
+
+  window.resetS9=function(){
+    s9nodes.forEach(d=>{d.x=d.fx_anchor+(Math.random()-0.5)*60;d.y=d.fy_anchor+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
+    s9sim.alpha(0.5).restart();
   };
 })();
 
