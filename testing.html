@@ -30,6 +30,11 @@
     .test-footer-left { font-size: 0.82rem; color: var(--muted); }
     .test-footer-left a { color: var(--muted); text-decoration: none; }
     .test-footer-left a:hover { color: var(--accent); }
+    .slider-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+    .slider-row label { font-size:0.84rem; color:var(--muted); white-space:nowrap; }
+    .slider-row .sv { font-family:var(--mono); font-size:0.84rem; font-weight:600; color:var(--accent); min-width:3.5ch; }
+    .slider-row input[type=range] { flex:1; max-width:280px; accent-color:var(--accent); }
+    .slider-row .hint { font-size:0.72rem; color:#bbb; }
   </style>
 </head>
 <body>
@@ -130,7 +135,12 @@
   <!-- ── SECTION 3: Force Label Approaches ─────────────── -->
   <div class="test-section">
     <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 3</span><span class="test-section-hdr">Force Label Approaches</span></p>
-    <p class="test-desc">4 different collision-avoidance algorithms. All use 12 px font on a 460 px canvas. Which avoids lines and other labels best?</p>
+    <p class="test-desc">4 different collision-avoidance algorithms. All use 12 px font on a 460 px canvas. Drag the slider to move the MR = P price line and watch all four panels re-resolve their labels at once.</p>
+    <div class="slider-row">
+      <label>MR&thinsp;=&thinsp;P&thinsp;=&thinsp;</label><span class="sv" id="s3-val">$9</span>
+      <input type="range" id="s3-slider" min="2" max="14" step="0.5" value="9">
+      <span class="hint">drag &rarr; all 4 panels update</span>
+    </div>
     <div class="card-grid-2">
       <div class="test-card">
         <div class="card-label">A &mdash; Current: spring-back + mild push</div>
@@ -158,7 +168,12 @@
   <!-- ── SECTION 4: Label Visual Styles ────────────────── -->
   <div class="test-section">
     <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 4</span><span class="test-section-hdr">Label Visual Styles</span></p>
-    <p class="test-desc">4 ways to draw the label and connector. All use Approach B forces + 12 px font on 460 px canvas. Which looks cleanest?</p>
+    <p class="test-desc">4 ways to draw the label and connector. All use Approach B forces + 12 px font on 460 px canvas. Drag the slider to stress-test each style at different price levels.</p>
+    <div class="slider-row">
+      <label>MR&thinsp;=&thinsp;P&thinsp;=&thinsp;</label><span class="sv" id="s4-val">$9</span>
+      <input type="range" id="s4-slider" min="2" max="14" step="0.5" value="9">
+      <span class="hint">drag &rarr; all 4 panels update</span>
+    </div>
     <div class="card-grid-2">
       <div class="test-card">
         <div class="card-label">A &mdash; Current: gray leader + white rect</div>
@@ -258,14 +273,13 @@ function drawAxes(ctx,W,H,xR,yR,xl,yl){
 const MC_fn  = q => 0.8*(q-3)**2 + 1.5;
 const ATC_fn = q => 0.14*(q-5.5)**2 + 3.2 + 11/q;
 const AVC_fn = q => 0.14*(q-4.5)**2 + 2.1;
-const MR_P   = 9;
 
-// Bisect to find q* where MC_fn = MR_P
 function bisect(fn,target,lo,hi){
   for(let i=0;i<60;i++){const m=(lo+hi)/2;if(fn(m)<target)lo=m;else hi=m;if(hi-lo<0.001)break;}
   return (lo+hi)/2;
 }
-const qstar = bisect(MC_fn, MR_P, 3, 10);
+
+function fmtP(p){ return '$' + (p%1===0 ? p : p.toFixed(1)); }
 
 // ================================================================
 // LABEL HELPERS
@@ -513,7 +527,7 @@ function drawStyleD(ctx, lbl){
 // ================================================================
 // MAIN COST-CURVES DRAWING FUNCTION
 // ================================================================
-function drawCostFig(cvsId, {fontSize=11, resolver=resolveB, labelDrawer=drawStyleA}={}){
+function drawCostFig(cvsId, {fontSize=11, resolver=resolveB, labelDrawer=drawStyleA, P=9}={}){
   const cvs=document.getElementById(cvsId); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
   const W=cvs.parentElement?.clientWidth||cvs.clientWidth||300;
@@ -547,34 +561,42 @@ function drawCostFig(cvsId, {fontSize=11, resolver=resolveB, labelDrawer=drawSty
   const atcPts = draw(ATC_fn,'#1a56db');
   const avcPts = draw(AVC_fn,'#1e8449');
 
+  // Clamp P to visible yRange
+  const Pc = Math.max(yR[0]+0.5, Math.min(P, yR[1]-0.5));
+
   // Horizontal MR=P line
-  const [mrX0,mrY]=toC(0,MR_P,W,H,xR,yR);
-  const [mrX1]    =toC(10,MR_P,W,H,xR,yR);
+  const [mrX0,mrY]=toC(0,Pc,W,H,xR,yR);
+  const [mrX1]    =toC(10,Pc,W,H,xR,yR);
   ctx.strokeStyle='#7d3c98'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
   ctx.beginPath(); ctx.moveTo(mrX0,mrY); ctx.lineTo(mrX1,mrY); ctx.stroke(); ctx.setLineDash([]);
-  for(let q=0;q<=10;q+=0.25) linePts.push([...toC(q,MR_P,W,H,xR,yR)]);
+  for(let q=0;q<=10;q+=0.25) linePts.push([...toC(q,Pc,W,H,xR,yR)]);
 
-  // q* dashed drop
-  const [qsX,]=toC(qstar,MR_P,W,H,xR,yR);
+  // q* where MC = P (bisect between lo=0.5 and hi=10)
+  const qstar = MC_fn(0.5)<Pc && MC_fn(9.9)>Pc ? bisect(MC_fn,Pc,3,10) : null;
   const [,axY]=toC(0,0,W,H,xR,yR);
-  ctx.strokeStyle='#bbb'; ctx.lineWidth=0.8; ctx.setLineDash([4,3]);
-  ctx.beginPath(); ctx.moveTo(qsX,mrY); ctx.lineTo(qsX,axY); ctx.stroke(); ctx.setLineDash([]);
+  if(qstar){
+    const [qsX]=toC(qstar,Pc,W,H,xR,yR);
+    ctx.strokeStyle='#bbb'; ctx.lineWidth=0.8; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(qsX,mrY); ctx.lineTo(qsX,axY); ctx.stroke(); ctx.setLineDash([]);
+  }
 
-  // Label anchors: pick a point near q=7.5 for each curve (right side, visible)
-  const pick=(pts,qTgt)=>pts.find(([,, q])=>q>=qTgt)||pts[pts.length-1];
-  const [mcAx,mcAy] =pick(mcPts, 7.5);
-  const [atcAx,atcAy]=pick(atcPts,8.0);
-  const [avcAx,avcAy]=pick(avcPts,8.0);
-  // min ATC around q=6.5
+  // Label anchors: pick a visible point near q=7.5 for each curve
+  const pick=(pts,qTgt)=>pts.find(([,,q])=>q>=qTgt)||pts[pts.length-1];
+  const [mcAx,mcAy] = pick(mcPts, 7.0);
+  const [atcAx,atcAy]= pick(atcPts,8.0);
+  const [avcAx,avcAy]= pick(avcPts,8.0);
   const atcMinQ=atcPts.reduce((b,p)=>p[1]<b[1]?p:b,atcPts[0]);
+
+  // MR label: position at 30% along the line so it doesn't crowd the right edge
+  const mrLblX = mrX0 + (mrX1-mrX0)*0.3;
 
   // Build labels
   const fz=fontSize;
   const lbls=[
-    makeLbl(ctx,mcAx, mcAy, 'MC',          '#c0392b',fz,true),
-    makeLbl(ctx,atcAx,atcAy,'ATC',         '#1a56db',fz,true),
-    makeLbl(ctx,avcAx,avcAy,'AVC',         '#1e8449',fz,true),
-    makeLbl(ctx,(mrX0+mrX1)*0.3,mrY,`MR = P = $${MR_P}`,'#7d3c98',fz),
+    makeLbl(ctx,mcAx, mcAy, 'MC',              '#c0392b',fz,true),
+    makeLbl(ctx,atcAx,atcAy,'ATC',             '#1a56db',fz,true),
+    makeLbl(ctx,avcAx,avcAy,'AVC',             '#1e8449',fz,true),
+    makeLbl(ctx,mrLblX,mrY, `MR = P = ${fmtP(P)}`,'#7d3c98',fz),
     makeLbl(ctx,atcMinQ[0],atcMinQ[1],'min ATC','#1a56db',fz),
   ];
 
@@ -740,7 +762,29 @@ function drawAll(){
   drawShadingDemo('sh-b', true);
 }
 
-window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(drawAll));
+// ── Section 3 slider ──────────────────────────────────────────
+function redrawS3(P){
+  document.getElementById('s3-val').textContent = fmtP(P);
+  drawCostFig('fl-a',{fontSize:12,resolver:resolveA,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-c',{fontSize:12,resolver:resolveC,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-d',{fontSize:12,resolver:resolveD,labelDrawer:drawStyleA,P});
+}
+
+// ── Section 4 slider ──────────────────────────────────────────
+function redrawS4(P){
+  document.getElementById('s4-val').textContent = fmtP(P);
+  drawCostFig('ls-a',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA,P});
+  drawCostFig('ls-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleB,P});
+  drawCostFig('ls-c',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleC,P});
+  drawCostFig('ls-d',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleD,P});
+}
+
+window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
+  drawAll();
+  document.getElementById('s3-slider').addEventListener('input', function(){ redrawS3(parseFloat(this.value)); });
+  document.getElementById('s4-slider').addEventListener('input', function(){ redrawS4(parseFloat(this.value)); });
+}));
 window.addEventListener('resize', drawAll);
 </script>
 </body>
