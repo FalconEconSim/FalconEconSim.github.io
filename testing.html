@@ -934,6 +934,8 @@ function drawShadingDemo(cvsId, fixed=false){
 
 // ================================================================
 // LIVE CONTINUOUS PHYSICS (section 6)
+// D3-style alpha decay: forces scale with alpha, simulation stops
+// when alpha < alphaMin, reheats to 0.3 on slider change.
 // ================================================================
 function _liveAnchors(ctx,W,H,xR,yR,P,fz=12){
   const Pc=Math.max(0.5,Math.min(P,yR[1]-0.5));
@@ -960,100 +962,124 @@ function _liveAnchors(ctx,W,H,xR,yR,P,fz=12){
 
 const _liveState={};
 
-function startLive(cvsId,{springK=0.05,damping=0.84,lineStr=0.5,pad=8}={}){
-  const st={P:9,labels:null};
+function startLive(cvsId,{springK=0.08,damping=0.85,lineStr=0.4,pad=8,alphaDecay=0.03}={}){
+  const st={
+    P:9, labels:null,
+    alpha:1.0, alphaTarget:0, alphaDecay, alphaMin:0.001,
+    running:false,
+  };
   _liveState[cvsId]=st;
-  const xR=[0,10],yR=[0,16];
+  const xR=[0,10], yR=[0,16];
+
   function tick(){
-    const cvs=document.getElementById(cvsId); if(!cvs) return;
+    st.running=true;
+    const cvs=document.getElementById(cvsId);
+    if(!cvs){st.running=false;return;}
     const dpr=window.devicePixelRatio||1;
     const W=cvs.parentElement?.clientWidth||300;
     if(!W){requestAnimationFrame(tick);return;}
     const H=W;
     if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){
-      cvs.width=Math.round(W*dpr); cvs.height=Math.round(H*dpr);
-      cvs.style.height=H+'px'; st.labels=null;
+      cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';
+      st.labels=null;
     }
     const ctx=cvs.getContext('2d');
     ctx.setTransform(dpr,0,0,dpr,0,0);
     const P=st.P, Pc=Math.max(0.5,Math.min(P,yR[1]-0.5));
+    const a=st.alpha; // current heat
 
+    // Draw background, axes, curves
     ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
     drawAxes(ctx,W,H,xR,yR,'Output q','$ per unit');
-
     const linePts=[];
     const dC=(fn,col)=>{
-      ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.beginPath(); let f=true;
+      ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.beginPath();let f=true;
       for(let q=0.4;q<=9.9;q+=0.06){
-        const v=fn(q); if(!isFinite(v)||v<0||v>yR[1]) continue;
+        const v=fn(q);if(!isFinite(v)||v<0||v>yR[1])continue;
         const [cx,cy]=toC(q,v,W,H,xR,yR);
-        f?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy); f=false; linePts.push([cx,cy]);
+        f?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);f=false;linePts.push([cx,cy]);
       }
       ctx.stroke();
     };
-    dC(MC_fn,'#c0392b'); dC(ATC_fn,'#1a56db'); dC(AVC_fn,'#1e8449');
+    dC(MC_fn,'#c0392b');dC(ATC_fn,'#1a56db');dC(AVC_fn,'#1e8449');
 
     const [mrX0,mrY]=toC(0,Pc,W,H,xR,yR);
     const [mrX1]    =toC(10,Pc,W,H,xR,yR);
-    ctx.strokeStyle='#7d3c98'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
-    ctx.beginPath(); ctx.moveTo(mrX0,mrY); ctx.lineTo(mrX1,mrY); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle='#7d3c98';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(mrX0,mrY);ctx.lineTo(mrX1,mrY);ctx.stroke();ctx.setLineDash([]);
     for(let q=0;q<=10;q+=0.4) linePts.push([...toC(q,Pc,W,H,xR,yR)]);
 
     if(MC_fn(0.5)<Pc&&MC_fn(9.9)>Pc){
       const qs=bisect(MC_fn,Pc,3,10);
-      const [qsX]=toC(qs,Pc,W,H,xR,yR);
-      const [,aY]=toC(0,0,W,H,xR,yR);
-      ctx.strokeStyle='#ddd'; ctx.lineWidth=0.8; ctx.setLineDash([4,3]);
-      ctx.beginPath(); ctx.moveTo(qsX,mrY); ctx.lineTo(qsX,aY); ctx.stroke(); ctx.setLineDash([]);
+      const [qsX]=toC(qs,Pc,W,H,xR,yR);const[,aY]=toC(0,0,W,H,xR,yR);
+      ctx.strokeStyle='#ddd';ctx.lineWidth=0.8;ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(qsX,mrY);ctx.lineTo(qsX,aY);ctx.stroke();ctx.setLineDash([]);
     }
 
+    // Update anchors
     const anch=_liveAnchors(ctx,W,H,xR,yR,P);
     if(!st.labels){
       st.labels=anch.map(a=>({...a,x:a.ax,y:a.ay,vx:0,vy:0}));
     } else {
       for(let i=0;i<anch.length;i++){
         const lm=st.labels[i];
-        lm.ax=anch[i].ax; lm.ay=anch[i].ay;
-        lm.w=anch[i].w;   lm.h=anch[i].h;
-        lm.text=anch[i].text;
+        lm.ax=anch[i].ax;lm.ay=anch[i].ay;lm.w=anch[i].w;lm.h=anch[i].h;lm.text=anch[i].text;
       }
     }
 
     const items=st.labels;
     const thin=linePts.filter((_,i)=>i%4===0);
 
-    // Elliptical label-label repulsion + spring toward anchor
+    // Label-label collision — NOT alpha-scaled (like D3 forceCollide), always prevents overlap
     for(let i=0;i<items.length;i++){
       for(let j=i+1;j<items.length;j++){
         const A=items[i],B=items[j];
-        const dx=(A.x-B.x)||0.01, dy=(A.y-B.y)||0.01;
+        const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
         const dist=Math.hypot(dx,dy);
         const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
-        if(dist<minD){const s=(minD-dist)/dist*0.45;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
+        if(dist<minD){const s=(minD-dist)/dist*0.5;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
       }
-      const lm=items[i];
-      lm.vx+=(lm.ax-lm.x)*springK;
-      lm.vy+=(lm.ay-lm.y)*springK;
     }
 
-    // Line repulsion (rectangular zone)
+    // Spring to anchor — alpha-scaled (weakens as simulation cools)
     for(const lm of items){
-      const hw=lm.w/2+10, hh=lm.h/2+10;
+      lm.vx+=(lm.ax-lm.x)*springK*a;
+      lm.vy+=(lm.ay-lm.y)*springK*a;
+    }
+
+    // Line repulsion — alpha-scaled (stops fighting spring as alpha→0)
+    for(const lm of items){
+      const hw=lm.w/2+12,hh=lm.h/2+12;
       for(const [lx,ly] of thin){
-        const dx=lm.x-lx, dy=lm.y-ly;
+        const dx=lm.x-lx,dy=lm.y-ly;
         if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
-          lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*lineStr;
-          lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*lineStr;
+          lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*lineStr*a;
+          lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*lineStr*a;
         }
       }
     }
 
-    // Damping + integrate
+    // Velocity decay (D3: velocity *= 1 - velocityDecay) + integrate
     for(const lm of items){lm.vx*=damping;lm.vy*=damping;lm.x+=lm.vx;lm.y+=lm.vy;}
 
+    // D3-style alpha update: interpolate toward alphaTarget then stop
+    st.alpha+=(st.alphaTarget-st.alpha)*st.alphaDecay;
+
     items.forEach(lbl=>drawStyleA(ctx,lbl));
-    requestAnimationFrame(tick);
+
+    if(st.alpha>st.alphaMin){
+      requestAnimationFrame(tick);
+    } else {
+      st.running=false; // simulation cooled — stop until reheated
+    }
   }
+
+  // Reheat to newAlpha and resume (called by slider)
+  st._restart=function(newAlpha=0.3){
+    st.alpha=Math.max(st.alpha,newAlpha);
+    if(!st.running) requestAnimationFrame(tick);
+  };
+
   requestAnimationFrame(tick);
 }
 
@@ -1121,14 +1147,18 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   document.getElementById('s3-slider').addEventListener('input', function(){ redrawS3(parseFloat(this.value)); });
   document.getElementById('s4-slider').addEventListener('input', function(){ redrawS4(parseFloat(this.value)); });
 
-  // Section 6: start live simulations
-  startLive('lv-a',{springK:0.05,damping:0.84,lineStr:0.5});
-  startLive('lv-b',{springK:0.03,damping:0.91,lineStr:0.5});
-  startLive('lv-c',{springK:0.10,damping:0.77,lineStr:0.55});
+  // Section 6: start live simulations with D3-style alpha decay
+  startLive('lv-a',{springK:0.08,damping:0.85,lineStr:0.4,alphaDecay:0.03});   // balanced
+  startLive('lv-b',{springK:0.05,damping:0.91,lineStr:0.4,alphaDecay:0.022});  // floaty
+  startLive('lv-c',{springK:0.14,damping:0.78,lineStr:0.45,alphaDecay:0.04});  // snappy
   document.getElementById('s6-slider').addEventListener('input',function(){
     const P=parseFloat(this.value);
     document.getElementById('s6-val').textContent=fmtP(P);
-    for(const k of['lv-a','lv-b','lv-c']){if(_liveState[k])_liveState[k].P=P;}
+    for(const k of['lv-a','lv-b','lv-c']){
+      const st=_liveState[k]; if(!st) continue;
+      st.P=P;
+      st._restart(0.3); // reheat to 0.3 — labels smoothly glide to new positions
+    }
   });
 }));
 window.addEventListener('resize', drawAll);
