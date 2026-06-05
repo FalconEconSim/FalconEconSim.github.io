@@ -38,6 +38,28 @@
     .slider-row .hint { font-size:0.72rem; color:#bbb; }
     .card-grid-3 { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 700px) { .card-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+
+    /* ── original D3 demo styles (section 7) ── */
+    .approach-section { border-top: 2px solid var(--rule); padding-top: 2.2rem; margin-top: 2.8rem; }
+    .approach-hdr { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .approach-num { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 4px; }
+    .approach-title { font-size: 1.2rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .approach-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1rem; }
+    .tradeoff-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.1rem; }
+    .tradeoff-pill { font-size: 0.72rem; font-weight: 500; border-radius: 99px; padding: 0.18rem 0.65rem; border: 1px solid; }
+    .pill-pro  { color: #16a34a; background: #f0fdf4; border-color: #86efac; }
+    .pill-con  { color: #b91c1c; background: #fef2f2; border-color: #fca5a5; }
+    .pill-note { color: var(--muted); background: var(--off-white); border-color: var(--rule); }
+    .demo-wrap { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: #fff; }
+    .demo-toolbar { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.85rem; background: var(--off-white); border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+    .demo-toolbar-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: auto; }
+    .viz-btn { font-size: 0.76rem; font-weight: 600; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--rule); background: white; color: var(--text); cursor: pointer; font-family: var(--font); }
+    .viz-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+    .demo-svg-wrap { padding: 1rem; }
+    .demo-svg-wrap svg { display: block; width: 100%; }
+    .lib-fallback { display: flex; align-items: center; gap: 0.65rem; background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 7px; padding: 0.75rem 1rem; font-size: 0.83rem; color: #92400e; line-height: 1.5; margin: 1rem 0; }
+    .lib-fallback-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .draggable-label { cursor: move; }
   </style>
 </head>
 <body>
@@ -270,26 +292,44 @@
     </div>
   </div>
 
-  <!-- ── SECTION 7: True D3.js Force Simulation ───────── -->
-  <div class="test-section">
-    <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 7</span><span class="test-section-hdr">True D3.js Force Simulation</span></p>
-    <p class="test-desc">The actual D3.js v7 <code>forceSimulation</code> API &mdash; not our custom re-implementation. D3 runs the tick loop, manages alpha decay, and applies <code>forceX</code>&thinsp;/&thinsp;<code>forceY</code> springs toward label anchors. Our custom rectangular-collision and line-repulsion forces are registered alongside. Canvas redraws on every D3 tick event. On slider change, the MR anchor updates and the simulation is reheated with <code>sim.alpha(0.3).restart()</code>.</p>
-    <div class="slider-row">
-      <label>MR&thinsp;=&thinsp;P&thinsp;=&thinsp;</label><span class="sv" id="s7-val">$9</span>
-      <input type="range" id="s7-slider" min="2" max="14" step="0.1" value="9">
-      <span class="hint">drag and compare smoothness to sections 3 and 6</span>
+  <!-- ── SECTION 7: Original D3 Force Simulation Demo ─── -->
+  <div class="approach-section" id="sec-d3">
+    <div class="approach-hdr">
+      <span class="approach-num">Section 7</span>
+      <span class="approach-title">D3 Force Simulation &mdash; Physics-based collision avoidance</span>
     </div>
-    <div class="card-grid-2">
-      <div class="test-card">
-        <div class="card-label">A &mdash; D3 standard (alphaDecay 0.025, velocityDecay 0.15)</div>
-        <div class="card-desc">Close to D3 defaults. ~240 frames to settle. Slow initial animation but very smooth convergence.</div>
-        <div class="canvas-wrap"><canvas id="d3-a"></canvas></div>
+
+    <p class="approach-desc">
+      D3's force simulation applies physics-like forces to SVG elements. By combining
+      <code style="font-family:var(--mono);font-size:0.82em;color:var(--accent);">d3.forceCollide</code>
+      (labels repel each other) with
+      <code style="font-family:var(--mono);font-size:0.82em;color:var(--accent);">d3.forceX</code> /
+      <code style="font-family:var(--mono);font-size:0.82em;color:var(--accent);">d3.forceY</code>
+      (labels are attracted back toward their data points), you get 2D label placement that works in any
+      direction. Labels in the demo below are also draggable. Connector lines update in real time.
+    </p>
+
+    <div class="tradeoff-row">
+      <span class="tradeoff-pill pill-pro">+ Works in 2D &mdash; any direction</span>
+      <span class="tradeoff-pill pill-pro">+ Fully interactive (drag, animate)</span>
+      <span class="tradeoff-pill pill-pro">+ Highly customisable forces</span>
+      <span class="tradeoff-pill pill-con">- Larger dependency (D3 ~280 kB)</span>
+      <span class="tradeoff-pill pill-con">- Convergence not guaranteed</span>
+      <span class="tradeoff-pill pill-note">Use case: scatter plots, 2D diagrams</span>
+    </div>
+
+    <div id="d3-fallback" class="lib-fallback" style="display:none;">
+      <span class="lib-fallback-icon">&#9888;</span>
+      <span>D3 could not be loaded from CDN. Please check connectivity and reload.</span>
+    </div>
+
+    <div class="demo-wrap" id="d3-demo-wrap">
+      <div class="demo-toolbar">
+        <span class="demo-toolbar-label">Drag labels &mdash; connector lines follow</span>
+        <button class="viz-btn" onclick="resetD3()">Reset positions</button>
+        <button class="viz-btn" id="btn-d3-sim" onclick="toggleD3Sim()">Pause simulation</button>
       </div>
-      <div class="test-card">
-        <div class="card-label">B &mdash; D3 faster (alphaDecay 0.04, velocityDecay 0.1)</div>
-        <div class="card-desc">Faster decay (~140 frames) with less velocity damping. Labels settle faster with a bit more bounce.</div>
-        <div class="canvas-wrap"><canvas id="d3-b"></canvas></div>
-      </div>
+      <div class="demo-svg-wrap" id="d3-svg-wrap"></div>
     </div>
   </div>
 
@@ -1119,119 +1159,147 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
 }
 
 // ================================================================
-// TRUE D3.js FORCE SIMULATION (section 7)
-// Uses the actual D3 forceSimulation — identical physics to the
-// original D3 test that worked well. Canvas renders each tick event.
+// SECTION 7: ORIGINAL D3 FORCE SIMULATION DEMO
+// Exact recreation of the original test — SVG labels, draggable,
+// connector lines, d3.forceCollide + forceX/Y on supply/demand chart.
 // ================================================================
-const _d3State={};
 
-function initD3Sim(cvsId,{alphaDecay=0.025,velocityDecay=0.15}={}){
-  const cvs=document.getElementById(cvsId);if(!cvs)return;
-  const dpr=window.devicePixelRatio||1;
-  const W=cvs.parentElement?.clientWidth||300;if(!W)return;
-  const H=W;
-  cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';
-  const ctx=cvs.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  const xR=[0,10],yR=[0,16];
-  const st={P:9,nodes:null,sim:null,ctx,W,H,dpr,xR,yR};
-  _d3State[cvsId]=st;
-
-  // Static curve line points (MR added dynamically inside force)
-  const curvePts=[];
-  for(const fn of[MC_fn,ATC_fn,AVC_fn]){
-    for(let q=0.4;q<=9.9;q+=0.09){
-      const v=fn(q);if(!isFinite(v)||v<0||v>yR[1])continue;
-      curvePts.push(toC(q,v,W,H,xR,yR));
-    }
+(function initD3() {
+  if (window.d3Failed || typeof d3 === 'undefined') {
+    document.getElementById('d3-fallback').style.display = 'flex';
+    document.getElementById('d3-demo-wrap').style.display = 'none';
+    return;
   }
-  const thinCurve=curvePts.filter((_,i)=>i%3===0);
 
-  // Init D3 nodes from anchors, pre-offset
-  const anch=_liveAnchors(ctx,W,H,xR,yR,st.P);
-  st.nodes=anch.map((a,i)=>({
-    ...a,
-    x:a.ax+_LIVE_PRE[i].dx, y:a.ay+_LIVE_PRE[i].dy,
+  const W = 680, H = 310;
+  const PAD = { top: 28, right: 32, bottom: 42, left: 58 };
+
+  const DATA_POINTS = [
+    { id: 'A', price: 48, qty: 12,  label: 'A: P=48, Q=12'  },
+    { id: 'B', price: 42, qty: 20,  label: 'B: P=42, Q=20'  },
+    { id: 'C', price: 36, qty: 28,  label: 'C: P=36, Q=28'  },
+    { id: 'D', price: 30, qty: 36,  label: 'D: P=30, Q=36'  },
+    { id: 'E', price: 24, qty: 44,  label: 'E: P=24, Q=44'  },
+    { id: 'F', price: 18, qty: 52,  label: 'F: P=18, Q=52'  },
+  ];
+
+  const priceMin = 8, priceMax = 58;
+  const qtyMin = 0, qtyMax = 72;
+  const scX = d3.scaleLinear().domain([qtyMin, qtyMax]).range([PAD.left, W - PAD.right]);
+  const scY = d3.scaleLinear().domain([priceMin, priceMax]).range([H - PAD.bottom, PAD.top]);
+
+  const demandQ = d3.range(0, 71, 5);
+  const demandLine = d3.line().x(q => scX(q)).y(q => scY(Math.max(priceMin, 60 - 0.6 * q)));
+  const supplyLine = d3.line().x(q => scX(q)).y(q => scY(Math.min(priceMax, 6 + 0.6 * q)));
+
+  const svg = d3.select('#d3-svg-wrap').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .style('width', '100%').style('display', 'block')
+    .style('font-family', "'DM Sans', system-ui, sans-serif");
+
+  svg.append('g').selectAll('line').data(scY.ticks(6)).enter()
+    .append('line')
+    .attr('x1', PAD.left).attr('x2', W - PAD.right)
+    .attr('y1', d => scY(d)).attr('y2', d => scY(d))
+    .attr('stroke', '#f0f0f0').attr('stroke-width', 1);
+
+  svg.append('path').datum(demandQ).attr('fill','none').attr('stroke','#1a56db')
+    .attr('stroke-width',2.2).attr('stroke-linejoin','round').attr('d',demandLine);
+  svg.append('path').datum(demandQ).attr('fill','none').attr('stroke','#16a34a')
+    .attr('stroke-width',2.2).attr('stroke-linejoin','round').attr('d',supplyLine);
+
+  svg.append('text').attr('x',scX(5)).attr('y',scY(60-0.6*5)-7)
+    .attr('fill','#1a56db').attr('font-size',11).attr('font-weight',600).text('Demand');
+  svg.append('text').attr('x',scX(60)).attr('y',scY(6+0.6*60)-7)
+    .attr('fill','#16a34a').attr('font-size',11).attr('font-weight',600).text('Supply');
+
+  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(8).tickSize(4)
+  ).call(g => {
+    g.select('.domain').attr('stroke','#e4e4e4');
+    g.selectAll('.tick line').attr('stroke','#e4e4e4');
+    g.selectAll('.tick text').attr('fill','#6b6b6b').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");
+  });
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(6).tickSize(4).tickFormat(d => '$'+d)
+  ).call(g => {
+    g.select('.domain').attr('stroke','#e4e4e4');
+    g.selectAll('.tick line').attr('stroke','#e4e4e4');
+    g.selectAll('.tick text').attr('fill','#6b6b6b').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");
+  });
+
+  svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2)
+    .attr('y',H-8).attr('text-anchor','middle').attr('fill','#6b6b6b').attr('font-size',10).text('Quantity');
+  svg.append('text').attr('transform','rotate(-90)')
+    .attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2))
+    .attr('y',14).attr('text-anchor','middle').attr('fill','#6b6b6b').attr('font-size',10).text('Price ($)');
+
+  const LABEL_W = 100, LABEL_H = 14;
+  const nodes = DATA_POINTS.map(d => ({
+    ...d,
+    fx_anchor: scX(d.qty), fy_anchor: scY(d.price),
+    x: scX(d.qty) + (Math.random()-0.5)*60,
+    y: scY(d.price) + (Math.random()-0.5)*60,
   }));
 
-  // Custom rectangular collision (not alpha-scaled — D3 forceCollide style)
-  function rectCollide(){
-    const pad=8;
-    return function(){
-      for(let i=0;i<st.nodes.length;i++){
-        for(let j=i+1;j<st.nodes.length;j++){
-          const A=st.nodes[i],B=st.nodes[j];
-          const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
-          const dist=Math.hypot(dx,dy);
-          const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
-          if(dist<minD){const s=(minD-dist)/dist*0.5;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
-        }
-      }
-    };
-  }
+  const connectors = svg.selectAll('.connector').data(nodes).enter()
+    .append('line').attr('class','connector')
+    .attr('stroke','#1a56db').attr('stroke-width',0.9)
+    .attr('stroke-dasharray','4,3').attr('opacity',0.5);
 
-  // Line repulsion (alpha-scaled — weakens as simulation cools)
-  function lineRepel(){
-    return function(alpha){
-      const Pc=Math.max(0.5,Math.min(st.P,yR[1]-0.5));
-      const mrPts=[];
-      for(let q=0;q<=10;q+=0.5)mrPts.push(toC(q,Pc,W,H,xR,yR));
-      const thin=[...thinCurve,...mrPts].filter((_,i)=>i%2===0);
-      for(const lm of st.nodes){
-        const hw=lm.w/2+12,hh=lm.h/2+12;
-        for(const[lx,ly] of thin){
-          const dx=lm.x-lx,dy=lm.y-ly;
-          if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
-            lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.45*alpha;
-            lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.45*alpha;
-          }
-        }
-      }
-    };
-  }
+  svg.selectAll('.dot').data(nodes).enter()
+    .append('circle').attr('class','dot')
+    .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
+    .attr('r',5).attr('fill','#1a56db').attr('stroke','white').attr('stroke-width',1.8);
 
-  function redraw(){
-    const P=st.P,Pc=Math.max(0.5,Math.min(P,yR[1]-0.5));
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-    drawAxes(ctx,W,H,xR,yR,'Output q','$ per unit');
-    const dC=(fn,col)=>{
-      ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.beginPath();let f=true;
-      for(let q=0.4;q<=9.9;q+=0.06){
-        const v=fn(q);if(!isFinite(v)||v<0||v>yR[1])continue;
-        const[cx,cy]=toC(q,v,W,H,xR,yR);
-        f?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);f=false;
-      }
-      ctx.stroke();
-    };
-    dC(MC_fn,'#c0392b');dC(ATC_fn,'#1a56db');dC(AVC_fn,'#1e8449');
-    const[mrX0,mrY]=toC(0,Pc,W,H,xR,yR);const[mrX1]=toC(10,Pc,W,H,xR,yR);
-    ctx.strokeStyle='#7d3c98';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
-    ctx.beginPath();ctx.moveTo(mrX0,mrY);ctx.lineTo(mrX1,mrY);ctx.stroke();ctx.setLineDash([]);
-    if(MC_fn(0.5)<Pc&&MC_fn(9.9)>Pc){
-      const qs=bisect(MC_fn,Pc,3,10);
-      const[qsX]=toC(qs,Pc,W,H,xR,yR);const[,aY]=toC(0,0,W,H,xR,yR);
-      ctx.strokeStyle='#ddd';ctx.lineWidth=0.8;ctx.setLineDash([4,3]);
-      ctx.beginPath();ctx.moveTo(qsX,mrY);ctx.lineTo(qsX,aY);ctx.stroke();ctx.setLineDash([]);
-    }
-    // Sync node anchors/text so forceX/Y uses latest positions next tick
-    const anch=_liveAnchors(ctx,W,H,xR,yR,P);
-    for(let i=0;i<st.nodes.length;i++){
-      st.nodes[i].ax=anch[i].ax;st.nodes[i].ay=anch[i].ay;
-      st.nodes[i].w=anch[i].w;st.nodes[i].h=anch[i].h;st.nodes[i].text=anch[i].text;
-    }
-    st.nodes.forEach(lm=>drawStyleA(ctx,lm));
-  }
+  const labelGs = svg.selectAll('.label-g').data(nodes).enter()
+    .append('g').attr('class','label-g draggable-label')
+    .call(d3.drag()
+      .on('start', function(event,d){ sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  function(event,d){ d.fx=event.x; d.fy=event.y; })
+      .on('end',   function(event,d){ sim.alphaTarget(0); d.fx=null; d.fy=null; })
+    );
 
-  st.sim=d3.forceSimulation(st.nodes)
-    .force('x',d3.forceX(d=>d.ax).strength(0.1))
-    .force('y',d3.forceY(d=>d.ay).strength(0.1))
-    .force('collide',rectCollide())
-    .force('lineRepel',lineRepel())
-    .alphaDecay(alphaDecay)
-    .velocityDecay(velocityDecay)
-    .on('tick',redraw);
-}
+  labelGs.append('rect')
+    .attr('width',LABEL_W).attr('height',LABEL_H).attr('rx',3)
+    .attr('fill','white').attr('stroke','#1a56db').attr('stroke-width',0.8).attr('opacity',0.95);
+  labelGs.append('text')
+    .attr('x',5).attr('y',LABEL_H-4)
+    .attr('fill','#1a56db').attr('font-size',9).attr('font-weight',600)
+    .text(d => d.label);
+
+  const sim = d3.forceSimulation(nodes)
+    .force('collide', d3.forceCollide(LABEL_W*0.6).strength(0.85))
+    .force('x', d3.forceX(d => d.fx_anchor).strength(0.07))
+    .force('y', d3.forceY(d => d.fy_anchor).strength(0.07))
+    .on('tick', () => {
+      nodes.forEach(d => {
+        d.x = Math.max(PAD.left-4, Math.min(W-LABEL_W-4, d.x));
+        d.y = Math.max(PAD.top,    Math.min(H-PAD.bottom-LABEL_H, d.y));
+      });
+      labelGs.attr('transform', d => `translate(${d.x},${d.y})`);
+      connectors
+        .attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor)
+        .attr('x2',d=>d.x+LABEL_W/2).attr('y2',d=>d.y+LABEL_H/2);
+    });
+
+  let simRunning = true;
+  window.toggleD3Sim = function() {
+    simRunning = !simRunning;
+    if (simRunning) { sim.alphaTarget(0.05).restart(); }
+    else            { sim.stop(); }
+    document.getElementById('btn-d3-sim').textContent = simRunning ? 'Pause simulation' : 'Resume simulation';
+  };
+  window.resetD3 = function() {
+    nodes.forEach(d => {
+      d.x  = d.fx_anchor + (Math.random()-0.5)*80;
+      d.y  = d.fy_anchor + (Math.random()-0.5)*80;
+      d.vx = 0; d.vy = 0; d.fx = null; d.fy = null;
+    });
+    sim.alpha(0.6).restart();
+    if (!simRunning) { simRunning=true; document.getElementById('btn-d3-sim').textContent='Pause simulation'; }
+  };
+})();
 
 // ================================================================
 // DRAW ALL
@@ -1311,18 +1379,6 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
     }
   });
 
-  // Section 7: real D3 force simulations
-  initD3Sim('d3-a',{alphaDecay:0.025,velocityDecay:0.15});
-  initD3Sim('d3-b',{alphaDecay:0.04, velocityDecay:0.10});
-  document.getElementById('s7-slider').addEventListener('input',function(){
-    const P=parseFloat(this.value);
-    document.getElementById('s7-val').textContent=fmtP(P);
-    for(const k of['d3-a','d3-b']){
-      const st=_d3State[k];if(!st||!st.sim)continue;
-      st.P=P;
-      st.sim.alpha(0.3).restart(); // D3 native reheat
-    }
-  });
 }));
 window.addEventListener('resize', drawAll);
 </script>
