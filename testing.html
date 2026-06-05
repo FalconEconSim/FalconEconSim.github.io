@@ -270,7 +270,7 @@
     <p class="test-desc">The same D3 force simulation from Section&nbsp;7 applied to an economics cost-curve diagram. Drag the slider to move the MR&thinsp;=&thinsp;P line &mdash; only the MR label glides to its new anchor; MC, ATC, and AVC labels stay settled. All labels are also individually draggable.</p>
     <div class="slider-row">
       <label>MR&thinsp;=&thinsp;P&thinsp;=&thinsp;</label><span class="sv" id="s6-val">$9</span>
-      <input type="range" id="s6-slider" min="2" max="14" step="0.1" value="9">
+      <input type="range" id="s6-slider" min="2" max="14" step="any" value="9">
     </div>
     <div class="demo-wrap">
       <div class="demo-toolbar">
@@ -1277,9 +1277,12 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
     s6Sim.alpha(0.5).restart();
   };
 
-  let s6Sliding=false;
-  window._s6dragStart=()=>{ s6Sliding=true;  s6Sim.alphaTarget(0.3).restart(); };
-  window._s6dragEnd  =()=>{ s6Sliding=false; s6Sim.alphaTarget(0); };
+  // Wire slider directly here so s6Sim is in scope — avoids global indirection
+  const s6SlEl=document.getElementById('s6-slider');
+  s6SlEl.addEventListener('mousedown', ()=>s6Sim.alphaTarget(0.3).restart());
+  s6SlEl.addEventListener('touchstart',()=>s6Sim.alphaTarget(0.3).restart(),{passive:true});
+  window.addEventListener('mouseup',   ()=>s6Sim.alphaTarget(0));
+  window.addEventListener('touchend',  ()=>s6Sim.alphaTarget(0));
 
   window._s6setP=function(newP){
     s6P=newP;
@@ -1289,7 +1292,6 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
     s6MrNode.x+=dx; s6MrNode.y+=dy;
     s6MrNode.vx=0; s6MrNode.vy=0;
     s6MrNode.fx_anchor=a.x; s6MrNode.fy_anchor=a.y;
-    if(!s6Sliding) s6Sim.alpha(0.12).restart();
   };
 })();
 
@@ -1642,10 +1644,7 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   document.getElementById('s4-slider').addEventListener('input', function(){ redrawS4(parseFloat(this.value)); });
 
   // Section 6: D3 force labels — slider moves only MR anchor
-  const s6Sl=document.getElementById('s6-slider');
-  ['mousedown','touchstart'].forEach(ev=>s6Sl.addEventListener(ev,()=>{if(window._s6dragStart)_s6dragStart();}));
-  ['mouseup','touchend'].forEach(ev=>s6Sl.addEventListener(ev,()=>{if(window._s6dragEnd)_s6dragEnd();}));
-  s6Sl.addEventListener('input',function(){
+  document.getElementById('s6-slider').addEventListener('input',function(){
     const P=parseFloat(this.value);
     document.getElementById('s6-val').textContent=fmtP(P);
     if(window._s6setP) _s6setP(P);
