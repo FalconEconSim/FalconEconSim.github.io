@@ -93,7 +93,7 @@
   <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
 </div>
 
-<main class="main" style="max-width:1100px;">
+<main class="main" style="max-width:1400px;">
 
   <div class="viz-hero">
     <div class="viz-ghost">06</div>
@@ -215,8 +215,17 @@
       <span class="fig-title">LRAC Envelope Builder</span>
     </div>
     <p class="fig-intro">
-      Each SRAC curve corresponds to a different fixed level of capital (K = 1, 2, 3, 4, ...). Use the slider to show more capital options. The LRAC is the lower envelope of all SRAC curves: at each output level, the long-run optimum is whichever fixed-capital option is cheapest. Watch the LRAC approach a smooth curve as you add more plant sizes.
+      Each SRAC curve corresponds to a different fixed level of capital (K = 1, 2, 3, 4, ...). The LRAC is the lower envelope of all SRAC curves: at each output level, the long-run optimum is whichever fixed-capital option is cheapest. Watch the animation below, then explore the interactive builder.
     </p>
+    <!-- Manim animation -->
+    <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:1rem;line-height:0;">
+      <video controls preload="metadata" style="width:100%;display:block;border-radius:10px;max-height:520px;object-fit:contain;">
+        <source src="media/videos/fig66_lrac_manim/1080p60/LRACEnvelope.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
+    </div>
+    <!-- Interactive canvas -->
+    <p class="fig-intro" style="margin-top:0;font-size:0.9rem;color:var(--ink-light);">Interactive builder: drag the slider to add more plant sizes and see the LRAC approach a smooth curve.</p>
     <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Number of SRAC curves:</span>
@@ -1142,27 +1151,33 @@ function v610Draw(){
     ctx.save();
     ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
     const [ex,] = toC(Math.min(qstar,qmax), Math.min(acstar,acmax), W,H,xR,yR);
-    // Green: economies -- path starts at bottom-left corner so close-path traces x-axis
-    ctx.beginPath();
-    ctx.moveTo(ML,oy);
+    // Green: economies (q < q*)
+    // Collect visible points (where ac <= acmax) so moveTo starts on x-axis under first point
+    const gPts=[];
     for(let q=0.3;q<=Math.min(qstar,qmax)+0.05;q+=0.1){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
-      const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-      ctx.lineTo(cx,cy);
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax) continue;
+      gPts.push(toC(q,ac,W,H,xR,yR));
     }
-    ctx.lineTo(ex,oy); ctx.closePath();
-    ctx.fillStyle='rgba(46,139,87,0.13)'; ctx.fill();
-    // Red: diseconomies -- path starts at qstar on x-axis
-    ctx.beginPath();
-    ctx.moveTo(ex,oy);
+    if(gPts.length>0){
+      ctx.beginPath();
+      ctx.moveTo(gPts[0][0],oy);
+      for(const [cx,cy] of gPts) ctx.lineTo(cx,cy);
+      ctx.lineTo(ex,oy); ctx.closePath();
+      ctx.fillStyle='rgba(46,139,87,0.13)'; ctx.fill();
+    }
+    // Red: diseconomies (q > q*) -- stop shading where AC exits the plot top
+    const rPts=[];
     for(let q=Math.max(0.3,qstar);q<=qmax;q+=0.1){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
-      const [cx,cy]=toC(q,Math.min(ac,acmax),W,H,xR,yR);
-      ctx.lineTo(cx,cy);
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax) break;
+      rPts.push(toC(q,ac,W,H,xR,yR));
     }
-    const [qmx]=toC(qmax,0,W,H,xR,yR);
-    ctx.lineTo(qmx,oy); ctx.closePath();
-    ctx.fillStyle='rgba(231,76,60,0.11)'; ctx.fill();
+    if(rPts.length>0){
+      ctx.beginPath();
+      ctx.moveTo(rPts[0][0],oy);
+      for(const [cx,cy] of rPts) ctx.lineTo(cx,cy);
+      ctx.lineTo(rPts[rPts.length-1][0],oy); ctx.closePath();
+      ctx.fillStyle='rgba(231,76,60,0.11)'; ctx.fill();
+    }
     ctx.restore();
   }
 

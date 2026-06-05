@@ -103,7 +103,7 @@
   <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
 </div>
 
-<main class="main" style="max-width:1100px;">
+<main class="main" style="max-width:1400px;">
 
   <div class="viz-hero">
     <div class="viz-ghost">04</div>
@@ -1442,33 +1442,33 @@ function v8aMarketDraw(P) {
   ctx.stroke();
 
   // Choke price labels on y-axis
-  // P=30: Consumer 1's choke price (above this, Q=0)
   const [,cy30]=toXY(0,30);
   ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2-4,cy30); ctx.lineTo(ML2,cy30); ctx.stroke();
   ctx.fillStyle='#888'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
-  ctx.fillText('Choke $30',ML2-6,cy30+3);
+  ctx.fillText('Choke $30',ML2-2,cy30+3);  // slightly right
 
   // P=12: Consumer 2's choke price (kink)
   const [kx,ky]=toXY(v8aQmarket(12),12);
   const [,cy12]=toXY(0,12);
   ctx.beginPath(); ctx.moveTo(ML2-4,cy12); ctx.lineTo(ML2,cy12); ctx.stroke();
-  ctx.fillText('Kink $12',ML2-6,cy12+3);
+  ctx.fillText('Kink $12',ML2-2,cy12+3);  // slightly right
 
-  // Kink dot and label - moved right and up
+  // Kink dot and label
   dot(ctx,kx,ky,5,'#888','#fff');
   ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('kink P=$12',kx+14,ky-12);
+  ctx.fillText('kink P=$12',kx+20,ky-16);  // further right, further up
 
-  // Formula labels near demand curve segments (not in corner)
-  // Upper segment label Q=30-P: near P=21
-  const [ulx,uly]=toXY(v8aQmarket(21),21);
-  ctx.fillStyle='#1a56db'; ctx.font='bold 8px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('Q = 30 − P',ulx+6,uly-2);
+  // Formula labels near demand curve segments
+  // Upper segment Q=30-P: near P=23, shifted left of curve
+  const [ulx,uly]=toXY(v8aQmarket(23),23);
+  ctx.fillStyle='#1a56db'; ctx.font='bold 8px DM Sans,sans-serif'; ctx.textAlign='right';
+  ctx.fillText('Qm = 30 − P',ulx-4,uly-2);
 
-  // Lower segment label Q=54-3P: near P=6
+  // Lower segment Q=54-3P: near P=6, well left of curve
   const [llx,lly]=toXY(v8aQmarket(6),6);
-  ctx.fillText('Q = 54 − 3P',llx-50,lly-2);
+  ctx.textAlign='right';
+  ctx.fillText('Qm = 54 − 3P',llx-8,lly-2);
 
   // Current price dashed lines
   const Qm=v8aQmarket(P);

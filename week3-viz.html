@@ -254,12 +254,8 @@
             <button class="v1-speed-btn active-rate" data-rate="1" onclick="v1SetRate(1)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
             <button class="v1-speed-btn" data-rate="2" onclick="v1SetRate(2)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
           </div>
-          <div class="callout key-idea">
-            <strong>Key insight:</strong> At each price, the budget line pivots and a new indifference curve is tangent at the new optimal bundle. Each (P<sub>X</sub>, X*) pair marks one point on the right panel. The dashed lines show exactly where the price (from the Y axis) and the quantity (from the X axis) come from before they converge into the demand point. Connecting all six points at the end traces the demand curve D.
-          </div>
-
-          <!-- Narration box -->
-          <div id="v1-narration" style="font-size:1.05rem;font-weight:500;color:var(--ink);background:var(--accent-lt);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;padding:0.85rem 1.1rem;margin-bottom:1rem;line-height:1.65;min-height:3.5rem;"></div>
+          <!-- Narration box: above both panels -->
+          <div id="v1-narration" style="font-size:1.18rem;font-weight:500;color:var(--ink);background:var(--accent-lt);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:1rem 1.3rem;margin-bottom:1rem;line-height:1.65;min-height:3.8rem;"></div>
 
           <!-- Two-panel canvas area -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
@@ -283,7 +279,7 @@
             <button onclick="v1SetSpeed(0.5)" id="v1-sp-05" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
             <button onclick="v1SetSpeed(1)" id="v1-sp-1" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
             <button onclick="v1SetSpeed(2)" id="v1-sp-2" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
-            <span id="v1-step-counter" style="font-family:var(--mono);font-size:0.72rem;color:var(--faint);margin-left:auto;">Step 0 / 6</span>
+            <span id="v1-step-counter" style="font-family:var(--mono);font-size:0.72rem;color:var(--faint);margin-left:auto;">Step 0 / 4</span>
           </div>
         </div>
       </div>
@@ -545,8 +541,8 @@ function v1SetRate(r) {
    VIZ 1: Interactive Canvas Animation
    ============================================================ */
 const V1_I = 60, V1_Py = 3, V1_alpha = 0.5;
-const V1_PX_STEPS = [6, 5, 4, 3, 2, 1];
-const V1_COLS = ['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80'];
+const V1_PX_STEPS = [6, 4, 2, 1];
+const V1_COLS = ['#c0392b','#2e8b57','#6b52a8','#3d5a80'];
 const V1_Ystar = (1 - V1_alpha) * V1_I / V1_Py; // = 10, fixed
 
 let v1CurrStep = 0;
@@ -557,13 +553,11 @@ let v1AnimStart = null;
 let v1IsPlaying = false;
 
 const V1_NARRATION = [
-  'Click <strong>Play</strong> or use the step buttons to watch the demand curve build itself one price at a time.',
-  'P<sub>X</sub> = <strong>$6</strong>. The budget line is steep, reflecting the high price of X. The indifference curve is tangent at <strong>X* = 5 units</strong>. On the right panel, $6 is marked on the price axis and 5 on the quantity axis. The dashed lines converge to reveal the first demand point.',
-  'P<sub>X</sub> = <strong>$5</strong>. The budget line pivots outward as X becomes cheaper. A new indifference curve is tangent at <strong>X* = 6 units</strong>. The budget line pivot and new optimal bundle lead to a second demand point.',
-  'P<sub>X</sub> = <strong>$4</strong>. Another pivot outward. The new optimal bundle gives <strong>X* = 7.5 units</strong>. Each price reduction reveals a new demand point on the right.',
-  'P<sub>X</sub> = <strong>$3</strong>. The optimal bundle gives <strong>X* = 10 units</strong>. Notice Y* = 10 has not changed across any step. With Cobb-Douglas preferences (&alpha; = 0.5), the consumer always spends half of income on each good, so Y* is independent of P<sub>X</sub>.',
-  'P<sub>X</sub> = <strong>$2</strong>. The budget line is now three times as flat as at the start. <strong>X* = 15 units</strong>. As X becomes cheaper, the consumer substitutes strongly toward it.',
-  'P<sub>X</sub> = <strong>$1</strong>. <strong>X* = 30 units</strong>. All six demand points are plotted. Each point tells the optimal consumption of X at a given price. How this changes with price <em>is</em> the demand curve. Joining these points traces the demand curve D.'
+  'Click <strong>Play</strong> or use the step buttons to watch the demand curve build itself one price at a time. Each step drops the price of X, pivots the budget line, and plots the new optimal bundle on the right.',
+  'P<sub>X</sub> = <strong>$6</strong>. The budget line is steep. On the right, we instantly mark <strong>$6 on the price axis</strong> and <strong>X* = 5 on the quantity axis</strong>. The dashed lines then travel inward from both axes to meet at the first demand point.',
+  'P<sub>X</sub> = <strong>$4</strong>. The budget line pivots outward as X gets cheaper. The new optimal bundle shifts to <strong>X* = 7.5 units</strong>. Price and quantity are marked instantly, then the crosshairs converge to the second demand point.',
+  'P<sub>X</sub> = <strong>$2</strong>. X is now three times cheaper than at the start. The consumer substitutes strongly toward X: <strong>X* = 15 units</strong>. Each price reduction traces another point on the right.',
+  'P<sub>X</sub> = <strong>$1</strong>. <strong>X* = 30 units</strong>. All four demand points are now plotted. Each tells the optimal quantity of X at one price. Connecting them traces the demand curve <strong>D</strong> -- showing exactly how quantity demanded responds to price.'
 ];
 
 function v1Xstar(px) { return V1_alpha * V1_I / px; }
@@ -688,14 +682,14 @@ function v1DrawCanvas(animProg) {
 
   /* ===== LEFT PANEL ===== */
 
-  // Draw all completed steps (dim for older, full color for current)
+  // Draw all completed steps at full opacity
   for (let i = 0; i < v1CurrStep; i++) {
     const px = V1_PX_STEPS[i];
     const xs = v1Xstar(px);
     const col = V1_COLS[i];
     const isCurrent = (i === v1CurrStep - 1);
-    const alpha8 = isCurrent ? '' : '55';
-    const lw = isCurrent ? 2.5*dpr : 1.2*dpr;
+    const alpha8 = '';
+    const lw = isCurrent ? 2.5*dpr : 1.5*dpr;
 
     // Budget line: from (0, I/Py) to (I/Px, 0)
     const yInt = V1_I / V1_Py; // = 20
@@ -751,27 +745,27 @@ function v1DrawCanvas(animProg) {
 
   const prog = Math.min(1, animProg);
 
-  // Draw all fully-completed (not current) demand points
+  // Draw all fully-completed demand points (full opacity)
   for (let i = 0; i < v1CurrStep - 1; i++) {
     const px = V1_PX_STEPS[i];
     const xs = v1Xstar(px);
     const col = V1_COLS[i];
     const [rx, ry] = toR(xs, px);
 
-    // Small tick marks on axes
-    ctxR.strokeStyle = col + '88';
-    ctxR.lineWidth = 1.2*dpr;
-    ctxR.beginPath(); ctxR.moveTo(origRx - 4*dpr, ry); ctxR.lineTo(origRx + 3*dpr, ry); ctxR.stroke();
-    ctxR.beginPath(); ctxR.moveTo(rx, origRy + 4*dpr); ctxR.lineTo(rx, origRy - 3*dpr); ctxR.stroke();
+    ctxR.strokeStyle = col;
+    ctxR.lineWidth = 1.5*dpr;
+    ctxR.beginPath(); ctxR.moveTo(origRx - 5*dpr, ry); ctxR.lineTo(origRx + 4*dpr, ry); ctxR.stroke();
+    ctxR.beginPath(); ctxR.moveTo(rx, origRy + 5*dpr); ctxR.lineTo(rx, origRy - 4*dpr); ctxR.stroke();
 
-    // Price label
-    ctxR.fillStyle = col + '88';
-    ctxR.font = (9*dpr) + 'px sans-serif';
+    ctxR.fillStyle = col;
+    ctxR.font = `bold ${9*dpr}px sans-serif`;
     ctxR.textAlign = 'right';
-    ctxR.fillText('$' + px, origRx - 6*dpr, ry + 3*dpr);
+    ctxR.fillText('$' + px, origRx - 7*dpr, ry + 3*dpr);
+    const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
+    ctxR.textAlign = 'center';
+    ctxR.fillText(xsDisp, rx, origRy + 14*dpr);
     ctxR.textAlign = 'left';
 
-    // Demand dot (fully opaque for completed steps)
     ctxR.beginPath();
     ctxR.arc(rx, ry, 5*dpr, 0, 2*Math.PI);
     ctxR.fillStyle = col;
@@ -789,101 +783,61 @@ function v1DrawCanvas(animProg) {
     const col = V1_COLS[i];
     const [rx, ry] = toR(xs, px);
 
-    // Phase boundaries
-    const P1_END = 0.4;  // budget line pivots + horizontal dashed line extends
-    const P2_END = 0.7;  // IC appears + vertical dashed line rises
-    // Phase 3: 0.7-1.0  both lines merge; dot appears
+    const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
 
-    // Always show price tick on Y-axis (instant)
+    // INSTANT: both axis marks appear at prog=0
     ctxR.strokeStyle = col;
-    ctxR.lineWidth = 2*dpr;
-    ctxR.beginPath(); ctxR.moveTo(origRx - 7*dpr, ry); ctxR.lineTo(origRx + 5*dpr, ry); ctxR.stroke();
+    ctxR.lineWidth = 2.2*dpr;
+    ctxR.beginPath(); ctxR.moveTo(origRx - 8*dpr, ry); ctxR.lineTo(origRx + 6*dpr, ry); ctxR.stroke();
+    ctxR.beginPath(); ctxR.moveTo(rx, origRy + 8*dpr); ctxR.lineTo(rx, origRy - 6*dpr); ctxR.stroke();
+
     ctxR.fillStyle = col;
-    ctxR.font = `bold ${10*dpr}px sans-serif`;
+    ctxR.font = `bold ${11*dpr}px sans-serif`;
     ctxR.textAlign = 'right';
-    ctxR.fillText('$' + px, origRx - 9*dpr, ry + 4*dpr);
+    ctxR.fillText('$' + px, origRx - 10*dpr, ry + 4*dpr);
+    ctxR.textAlign = 'center';
+    ctxR.fillText(xsDisp, rx, origRy + 17*dpr);
     ctxR.textAlign = 'left';
 
-    // Phase 1 (0 - P1_END): horizontal dashed line extends from Y-axis rightward
-    if (prog <= P1_END) {
-      const frac = prog / P1_END;
-      const hEnd = origRx + (rx - origRx) * frac;
+    // Phase 1 (0 - 0.65): both dashed lines grow simultaneously toward intersection
+    const CROSS_END = 0.65;
+    if (prog <= CROSS_END) {
+      const frac = prog / CROSS_END;
+      const hEnd = origRx + (rx - origRx) * frac;   // horizontal: leftward from Y-axis
+      const vEnd = origRy - (origRy - ry) * frac;   // vertical: upward from X-axis
       ctxR.setLineDash([4*dpr, 3*dpr]);
-      ctxR.strokeStyle = col + 'bb';
-      ctxR.lineWidth = 1.6*dpr;
+      ctxR.strokeStyle = col + 'cc';
+      ctxR.lineWidth = 1.8*dpr;
       ctxR.beginPath(); ctxR.moveTo(origRx, ry); ctxR.lineTo(hEnd, ry); ctxR.stroke();
-      ctxR.setLineDash([]);
-    }
-
-    // Phase 2 (P1_END - P2_END): full horizontal line + vertical rises from X-axis
-    if (prog > P1_END && prog <= P2_END) {
-      const frac = (prog - P1_END) / (P2_END - P1_END);
-
-      // Show qty tick on X-axis
-      ctxR.strokeStyle = col;
-      ctxR.lineWidth = 2*dpr;
-      ctxR.beginPath(); ctxR.moveTo(rx, origRy + 7*dpr); ctxR.lineTo(rx, origRy - 5*dpr); ctxR.stroke();
-      const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
-      ctxR.fillStyle = col;
-      ctxR.font = `bold ${10*dpr}px sans-serif`;
-      ctxR.textAlign = 'center';
-      ctxR.fillText(xsDisp, rx, origRy + 16*dpr);
-      ctxR.textAlign = 'left';
-
-      // Full horizontal dashed line
-      ctxR.setLineDash([4*dpr, 3*dpr]);
-      ctxR.strokeStyle = col + 'bb';
-      ctxR.lineWidth = 1.6*dpr;
-      ctxR.beginPath(); ctxR.moveTo(origRx, ry); ctxR.lineTo(rx, ry); ctxR.stroke();
-
-      // Vertical dashed line rises
-      const vEnd = origRy - (origRy - ry) * frac;
       ctxR.beginPath(); ctxR.moveTo(rx, origRy); ctxR.lineTo(rx, vEnd); ctxR.stroke();
       ctxR.setLineDash([]);
     }
 
-    // Phase 3 (P2_END - 1.0): both lines fully drawn; dot appears
-    if (prog > P2_END) {
-      const frac = (prog - P2_END) / (1 - P2_END);
+    // Phase 2 (0.65 - 1.0): both lines complete; dot pops in
+    if (prog > CROSS_END) {
+      const frac = (prog - CROSS_END) / (1 - CROSS_END);
 
-      // Show qty tick on X-axis (keep it)
-      ctxR.strokeStyle = col;
-      ctxR.lineWidth = 2*dpr;
-      ctxR.beginPath(); ctxR.moveTo(rx, origRy + 7*dpr); ctxR.lineTo(rx, origRy - 5*dpr); ctxR.stroke();
-      const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
-      ctxR.fillStyle = col;
-      ctxR.font = `bold ${10*dpr}px sans-serif`;
-      ctxR.textAlign = 'center';
-      ctxR.fillText(xsDisp, rx, origRy + 16*dpr);
-      ctxR.textAlign = 'left';
-
-      // Both dashed lines fully drawn
       ctxR.setLineDash([4*dpr, 3*dpr]);
-      ctxR.strokeStyle = col + 'bb';
-      ctxR.lineWidth = 1.6*dpr;
+      ctxR.strokeStyle = col + 'cc';
+      ctxR.lineWidth = 1.8*dpr;
       ctxR.beginPath(); ctxR.moveTo(origRx, ry); ctxR.lineTo(rx, ry); ctxR.stroke();
       ctxR.beginPath(); ctxR.moveTo(rx, origRy); ctxR.lineTo(rx, ry); ctxR.stroke();
       ctxR.setLineDash([]);
 
-      // Dot pops in with scale effect (0 -> 1.3 -> 1.0 radius)
-      const dotAlpha = Math.min(1, frac / 0.5);
-      const scale = frac < 0.5
-        ? (frac / 0.5) * 1.3
-        : 1.3 - 0.3 * ((frac - 0.5) / 0.5);
-      const dotR = 6 * dpr * Math.max(0, scale);
+      const dotAlpha = Math.min(1, frac / 0.4);
+      const scale = frac < 0.4
+        ? (frac / 0.4) * 1.3
+        : 1.3 - 0.3 * ((frac - 0.4) / 0.6);
+      const dotR2 = 6 * dpr * Math.max(0, scale);
       ctxR.globalAlpha = dotAlpha;
-      ctxR.beginPath();
-      ctxR.arc(rx, ry, dotR, 0, 2*Math.PI);
-      ctxR.fillStyle = col;
-      ctxR.fill();
-      ctxR.strokeStyle = '#fff';
-      ctxR.lineWidth = 2*dpr;
-      ctxR.stroke();
+      ctxR.beginPath(); ctxR.arc(rx, ry, dotR2, 0, 2*Math.PI);
+      ctxR.fillStyle = col; ctxR.fill();
+      ctxR.strokeStyle = '#fff'; ctxR.lineWidth = 2*dpr; ctxR.stroke();
       ctxR.globalAlpha = 1;
     }
   }
 
-  // At final step: draw the demand curve through all 6 points
+  // At final step: draw demand curve connecting all 4 points
   if (v1CurrStep === V1_PX_STEPS.length) {
     ctxR.beginPath();
     let firstPt = true;
