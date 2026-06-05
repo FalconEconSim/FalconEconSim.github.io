@@ -1277,6 +1277,10 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
     s6Sim.alpha(0.5).restart();
   };
 
+  let s6Sliding=false;
+  window._s6dragStart=()=>{ s6Sliding=true;  s6Sim.alphaTarget(0.3).restart(); };
+  window._s6dragEnd  =()=>{ s6Sliding=false; s6Sim.alphaTarget(0); };
+
   window._s6setP=function(newP){
     s6P=newP;
     s6UpdateMrLine();
@@ -1285,7 +1289,7 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
     s6MrNode.x+=dx; s6MrNode.y+=dy;
     s6MrNode.vx=0; s6MrNode.vy=0;
     s6MrNode.fx_anchor=a.x; s6MrNode.fy_anchor=a.y;
-    s6Sim.alpha(0.15).restart();
+    if(!s6Sliding) s6Sim.alpha(0.12).restart();
   };
 })();
 
@@ -1638,10 +1642,13 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   document.getElementById('s4-slider').addEventListener('input', function(){ redrawS4(parseFloat(this.value)); });
 
   // Section 6: D3 force labels — slider moves only MR anchor
-  document.getElementById('s6-slider').addEventListener('input',function(){
+  const s6Sl=document.getElementById('s6-slider');
+  ['mousedown','touchstart'].forEach(ev=>s6Sl.addEventListener(ev,()=>{if(window._s6dragStart)_s6dragStart();}));
+  ['mouseup','touchend'].forEach(ev=>s6Sl.addEventListener(ev,()=>{if(window._s6dragEnd)_s6dragEnd();}));
+  s6Sl.addEventListener('input',function(){
     const P=parseFloat(this.value);
     document.getElementById('s6-val').textContent=fmtP(P);
-    if(window._s6setP) window._s6setP(P);
+    if(window._s6setP) _s6setP(P);
   });
 
 }));
