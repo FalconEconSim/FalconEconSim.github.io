@@ -305,9 +305,9 @@
       <span class="fig-label">Fig 4.8</span>
       <span class="fig-title">Market Demand: Horizontal Aggregation</span>
     </div>
-    <p class="fig-intro">
+    <p class="fig-intro" style="font-size:1rem;">
       The market demand curve is the <em>horizontal sum</em> of individual demand curves. The animation below shows
-      Consumer 1 (Q = 30 - P, choke price $30) and Consumer 2 (Q = 24 - 2P, choke price $12). Starting from a high price
+      Consumer 1 (Q = 30 &minus; P, choke price $30) and Consumer 2 (Q = 24 &minus; 2P, choke price $12). Starting from a high price
       and moving down, watch each consumer enter the market and see how the kink forms when Consumer 2 begins buying.
     </p>
 
@@ -324,6 +324,30 @@
       <button class="v48-speed-btn" data-rate="0.5" onclick="v48SetRate(0.5)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
       <button class="v48-speed-btn active-rate" data-rate="1" onclick="v48SetRate(1)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-light);color:var(--accent);cursor:pointer;">1x</button>
       <button class="v48-speed-btn" data-rate="2" onclick="v48SetRate(2)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
+    </div>
+
+    <!-- Three-panel interactive -->
+    <div style="margin-bottom:1.25rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;">
+        <div class="cvs-wrap">
+          <div class="panel-label" style="color:#e74c3c;">Consumer 1 &nbsp; Q = 30 &minus; P</div>
+          <canvas id="cvs8a" style="width:100%;"></canvas>
+        </div>
+        <div class="cvs-wrap">
+          <div class="panel-label" style="color:#2980b9;">Consumer 2 &nbsp; Q = 24 &minus; 2P</div>
+          <canvas id="cvs8b" style="width:100%;"></canvas>
+        </div>
+        <div class="cvs-wrap">
+          <div class="panel-label" style="color:#1a56db;">Market Demand Q<sub>m</sub>(P)</div>
+          <canvas id="cvs8c" style="width:100%;"></canvas>
+        </div>
+      </div>
+      <div class="viz-ctrl-row" style="margin-top:0.75rem;">
+        <span class="viz-slider-label">Price P:</span>
+        <input type="range" class="viz-slider" id="v8a-p" min="0" max="32" step="1" value="20" oninput="v8aUpdate()" style="width:220px;">
+        <span class="viz-slider-val" id="v8a-p-val">$20</span>
+      </div>
+      <div class="viz-readout" id="v8a-readout" style="margin-top:0.5rem;"></div>
     </div>
 
     <!-- Market demand formula box -->
@@ -1269,52 +1293,70 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   const dpr = window.devicePixelRatio || 1;
   const W = cvs.width/dpr, H = cvs.height/dpr;
   const ctx = cvs.getContext('2d');
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  ctx.scale(dpr,dpr);
-  const ML2=38,MR2=10,MT2=12,MB2=28;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const ML2=44,MR2=10,MT2=14,MB2=30;
   const pw=W-ML2-MR2, ph=H-MT2-MB2;
   const toXY=(q,p)=>[ML2+(q/xR8a[1])*pw, MT2+(1-p/yR8a[1])*ph];
-  const choke=a/b;
+  const choke=a/b; // price where Q=0
 
   // Axes
   ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
-  ctx.fillStyle='#bbb'; ctx.font=`${9}px DM Sans,sans-serif`; ctx.textAlign='center';
+  ctx.fillStyle='#bbb'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
   ctx.fillText('Q',W-MR2,H-MB2+3);
   ctx.textAlign='right'; ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
 
   // Demand line
-  const [x0,y0]=toXY(0,Math.min(choke,yR8a[1]));
+  const clampedChoke=Math.min(choke,yR8a[1]);
+  const [x0,y0]=toXY(0,clampedChoke);
   const [x1,y1]=toXY(a,0);
   ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2;
   ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
 
-  // Price line
-  const Q = Math.max(0, a - b*P);
+  // Choke price tick and label on y-axis
+  if (choke <= yR8a[1]) {
+    const [,cy]=toXY(0,choke);
+    ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ML2-4,cy); ctx.lineTo(ML2,cy); ctx.stroke();
+    ctx.fillStyle='#888'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+    ctx.fillText(`Choke $${choke.toFixed(0)}`,ML2-5,cy+3);
+  }
+
+  // Demand formula label near mid-curve, offset right of line
+  const midP=clampedChoke*0.5;
+  const midQ=a-b*midP;
+  const [mlx,mly]=toXY(midQ,midP);
+  const formula=b===1?`Q = ${a} − P`:`Q = ${a} − ${b}P`;
+  ctx.fillStyle=color; ctx.font='bold 8px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(formula,mlx+7,mly-2);
+
+  // Current price dashed lines
+  const Q=Math.max(0,a-b*P);
   const [px,py]=toXY(0,P);
   const [qx,qy]=toXY(Q,P);
-  const [qxb,qyb]=toXY(Q,0);
   ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
-  if (Q > 0) {
+  if (Q>0) {
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(qx,py); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(qx,py); ctx.lineTo(qx,H-MB2); ctx.stroke();
   } else {
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(W-MR2,py); ctx.stroke();
   }
   ctx.setLineDash([]);
-  ctx.fillStyle=color; ctx.font=`bold ${9}px DM Sans,sans-serif`;
-  ctx.textAlign='right';
-  if (P > 0.5) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
+
+  // P label on y-axis (skip if too close to choke label)
+  ctx.fillStyle=color; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='right';
+  if (P>0.5 && Math.abs(P-choke)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
+
+  // Q label on x-axis
   ctx.textAlign='center';
-  if (Q > 0.5) ctx.fillText(`Q=${Q.toFixed(0)}`,qx,H-MB2+12);
+  if (Q>0.5) ctx.fillText(`Q=${Q.toFixed(0)}`,qx,H-MB2+12);
   else ctx.fillText('Q=0',ML2+pw*0.5,H-MB2+12);
 
   // Dot on demand curve at price level
-  if (Q > 0) {
-    dot(ctx, qx, qy, 5, color, '#fff');
-  }
-  ctx.resetTransform ? ctx.resetTransform() : ctx.setTransform(1,0,0,1,0,0);
+  if (Q>0) dot(ctx,qx,qy,5,color,'#fff');
+  ctx.setTransform(1,0,0,1,0,0);
 }
 
 function v8aMarketDraw(P) {
@@ -1323,9 +1365,9 @@ function v8aMarketDraw(P) {
   const dpr = window.devicePixelRatio || 1;
   const W = cvs.width/dpr, H = cvs.height/dpr;
   const ctx = cvs.getContext('2d');
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  ctx.scale(dpr,dpr);
-  const ML2=38,MR2=10,MT2=12,MB2=28;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const ML2=44,MR2=10,MT2=14,MB2=30;
   const pw=W-ML2-MR2, ph=H-MT2-MB2;
   const xMmax=60, yMmax=36;
   const toXY=(q,p)=>[ML2+(q/xMmax)*pw, MT2+(1-p/yMmax)*ph];
@@ -1338,9 +1380,19 @@ function v8aMarketDraw(P) {
   ctx.fillText('Q',W-MR2,H-MB2+3); ctx.textAlign='right';
   ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
 
-  // Market demand curve (draw up to current price P)
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  // Market demand curve (draw full curve then highlight up to current P)
+  ctx.beginPath(); ctx.strokeStyle='#dde'; ctx.lineWidth=1.5;
   let first=true;
+  for(let p=yMmax;p>=0;p-=0.5){
+    const q=v8aQmarket(p);
+    const [cx,cy]=toXY(q,p);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+
+  // Active portion of curve up to current P
+  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  first=true;
   for(let p=yMmax;p>=P;p-=0.5){
     const q=v8aQmarket(p);
     const [cx,cy]=toXY(q,p);
@@ -1348,16 +1400,37 @@ function v8aMarketDraw(P) {
   }
   ctx.stroke();
 
-  // Kink at P=12
-  if (P < 12) {
-    const [kx,ky]=toXY(v8aQmarket(12),12);
-    dot(ctx,kx,ky,5,'#888','#fff');
-    ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('kink P=$12',kx+5,ky-3);
-  }
+  // Choke price labels on y-axis
+  // P=30: Consumer 1's choke price (above this, Q=0)
+  const [,cy30]=toXY(0,30);
+  ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML2-4,cy30); ctx.lineTo(ML2,cy30); ctx.stroke();
+  ctx.fillStyle='#888'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+  ctx.fillText('Choke $30',ML2-6,cy30+3);
 
-  // Current price line
-  const Qm = v8aQmarket(P);
+  // P=12: Consumer 2's choke price (kink)
+  const [kx,ky]=toXY(v8aQmarket(12),12);
+  const [,cy12]=toXY(0,12);
+  ctx.beginPath(); ctx.moveTo(ML2-4,cy12); ctx.lineTo(ML2,cy12); ctx.stroke();
+  ctx.fillText('Kink $12',ML2-6,cy12+3);
+
+  // Kink dot and label - moved right and up
+  dot(ctx,kx,ky,5,'#888','#fff');
+  ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText('kink P=$12',kx+14,ky-12);
+
+  // Formula labels near demand curve segments (not in corner)
+  // Upper segment label Q=30-P: near P=21
+  const [ulx,uly]=toXY(v8aQmarket(21),21);
+  ctx.fillStyle='#1a56db'; ctx.font='bold 8px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText('Q = 30 − P',ulx+6,uly-2);
+
+  // Lower segment label Q=54-3P: near P=6
+  const [llx,lly]=toXY(v8aQmarket(6),6);
+  ctx.fillText('Q = 54 − 3P',llx-50,lly-2);
+
+  // Current price dashed lines
+  const Qm=v8aQmarket(P);
   const [px,py]=toXY(0,P);
   const [qx,qy]=toXY(Qm,P);
   ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
@@ -1366,18 +1439,12 @@ function v8aMarketDraw(P) {
   ctx.setLineDash([]);
 
   ctx.fillStyle='#1a56db'; ctx.font='bold 9px DM Sans,sans-serif';
-  ctx.textAlign='right'; if(P>0.5) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
+  ctx.textAlign='right'; if(P>0.5 && Math.abs(P-30)>3 && Math.abs(P-12)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
   ctx.textAlign='center';
   if(Qm>0.5) ctx.fillText(`Q=${Qm.toFixed(0)}`,qx,H-MB2+12);
   if(Qm>0) dot(ctx,qx,qy,5,'#1a56db','#fff');
 
-  // Labels
-  ctx.fillStyle='#1a56db'; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
-  if(P<12) ctx.fillText('Q = 54 - 3P',ML2+4,MT2+16);
-  else if(P<=30) ctx.fillText('Q = 30 - P',ML2+4,MT2+16);
-  else ctx.fillText('Q = 0 (P>30)',ML2+4,MT2+16);
-
-  ctx.resetTransform ? ctx.resetTransform() : ctx.setTransform(1,0,0,1,0,0);
+  ctx.setTransform(1,0,0,1,0,0);
 }
 
 function v8aUpdate() {
@@ -1551,6 +1618,7 @@ function redrawAll4() {
   v4Init(); v4Draw();
   v6Init(); v6Draw();
   v7Init(); v7Draw();
+  v8aInit();
   v8Init();
 }
 
@@ -1561,9 +1629,10 @@ window.addEventListener('DOMContentLoaded', () => {
   v4Init();
   v6Init();
   v7Init();
+  v8aInit();
   v8Init();
   // ResizeObserver handles zoom-level changes
-  ['cvs1','cvs2','cvs3','cvs4','cvs6','cvs7','cvs8'].forEach(id => {
+  ['cvs1','cvs2','cvs3','cvs4','cvs6','cvs7','cvs8','cvs8a','cvs8b','cvs8c'].forEach(id => {
     observeCanvasResize(id, redrawAll4);
   });
 });
