@@ -367,7 +367,7 @@ function drawForceLabel(ctx, lbl) {
 function setupCvs(id) {
   const cvs=document.getElementById(id); if(!cvs) return {ctx:null,W:300,H:300};
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400;
+  const W=Math.min(cvs.clientWidth||400, 480);
   const H=W;
   cvs.width=W*dpr; cvs.height=H*dpr; cvs.style.height=H+'px';
   const ctx=cvs.getContext('2d'); ctx.scale(dpr,dpr);
@@ -1207,12 +1207,11 @@ function v610Draw(){
     ctx.save();
     ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
     const [ex,] = toC(Math.min(qstar,qmax), Math.min(acstar,acmax), W,H,xR,yR);
-    // Green: economies (q < q*)
-    // Collect visible points (where ac <= acmax) so moveTo starts on x-axis under first point
+    // Green: economies (q < q*) -- clamp AC to acmax so left region is fully shaded
     const gPts=[];
-    for(let q=0.3;q<=Math.min(qstar,qmax)+0.05;q+=0.1){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax) continue;
-      gPts.push(toC(q,ac,W,H,xR,yR));
+    for(let q=0.3;q<=Math.min(qstar,qmax)+0.05;q+=0.05){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
+      gPts.push(toC(q,Math.min(ac,acmax),W,H,xR,yR));
     }
     if(gPts.length>0){
       ctx.beginPath();
@@ -1221,17 +1220,19 @@ function v610Draw(){
       ctx.lineTo(ex,oy); ctx.closePath();
       ctx.fillStyle='rgba(46,139,87,0.13)'; ctx.fill();
     }
-    // Red: diseconomies (q > q*) -- stop shading where AC exits the plot top
+    // Red: diseconomies (q > q*) -- clamp and extend full width to qmax
+    const [xRight,]=toC(qmax,0,W,H,xR,yR);
     const rPts=[];
-    for(let q=Math.max(0.3,qstar);q<=qmax;q+=0.1){
-      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax) break;
-      rPts.push(toC(q,ac,W,H,xR,yR));
+    for(let q=Math.max(0.3,qstar);q<=qmax+0.05;q+=0.05){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
+      rPts.push(toC(q,Math.min(ac,acmax),W,H,xR,yR));
     }
     if(rPts.length>0){
       ctx.beginPath();
       ctx.moveTo(rPts[0][0],oy);
       for(const [cx,cy] of rPts) ctx.lineTo(cx,cy);
-      ctx.lineTo(rPts[rPts.length-1][0],oy); ctx.closePath();
+      const lastY=rPts[rPts.length-1][1];
+      ctx.lineTo(xRight,lastY); ctx.lineTo(xRight,oy); ctx.closePath();
       ctx.fillStyle='rgba(231,76,60,0.11)'; ctx.fill();
     }
     ctx.restore();

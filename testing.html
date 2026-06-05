@@ -3,149 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Testing: Label Collision Experiments &middot; EC224 Dev</title>
+  <title>Testing: Visual Experiments &middot; EC224 Dev</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
-
-  <!-- CDN libraries loaded with fallback detection -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/labella/1.2.0/labella.min.js"
-          onerror="window.labellaFailed=true"></script>
-  <script src="https://d3js.org/d3.v7.min.js"
-          onerror="window.d3Failed=true"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ag-charts-community@9.3.0/dist/umd/ag-charts-community.js"
-          onerror="window.agFailed=true"></script>
-
   <style>
-    /* ── page layout ── */
-    .test-hero {
-      padding: 2.4rem 0 1.6rem;
-      border-bottom: 1px solid var(--rule);
-      position: relative;
-    }
-    .test-ghost {
-      position: absolute; right: 0; top: 0.8rem;
-      font-size: 5rem; font-weight: 700; color: #f0f0f0;
-      line-height: 1; user-select: none; pointer-events: none;
-      font-family: var(--mono);
-    }
-    .dev-badge {
-      display: inline-flex; align-items: center; gap: 0.4rem;
-      background: #fef3c7; border: 1px solid #d97706;
-      color: #92400e; border-radius: 5px;
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em;
-      text-transform: uppercase; padding: 0.15rem 0.55rem;
-      margin-bottom: 0.65rem;
-    }
+    .test-hero { padding: 2.4rem 0 1.6rem; border-bottom: 1px solid var(--rule); position: relative; }
+    .test-ghost { position: absolute; right: 0; top: 0.8rem; font-size: 5rem; font-weight: 700; color: #f0f0f0; line-height: 1; user-select: none; pointer-events: none; font-family: var(--mono); }
+    .dev-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #fef3c7; border: 1px solid #d97706; color: #92400e; border-radius: 5px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.15rem 0.55rem; margin-bottom: 0.65rem; }
     .test-title { font-size: 1.9rem; font-weight: 600; line-height: 1.2; color: var(--text); margin-bottom: 0.3rem; }
-    .test-subtitle { font-size: 0.92rem; color: var(--muted); line-height: 1.6; max-width: 640px; margin-bottom: 0.9rem; }
-
-    /* ── approach sections ── */
-    .approach-section {
-      border-top: 2px solid var(--rule);
-      padding-top: 2.2rem;
-      margin-top: 2.8rem;
-    }
-    .approach-hdr { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-    .approach-num {
-      font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--accent); background: var(--accent-light);
-      padding: 3px 8px; border-radius: 4px; white-space: nowrap;
-    }
-    .approach-title { font-size: 1.2rem; font-weight: 600; color: var(--text); line-height: 1.3; }
-    .approach-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1rem; }
-
-    /* trade-offs pill row */
-    .tradeoff-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.1rem; }
-    .tradeoff-pill {
-      font-size: 0.72rem; font-weight: 500; border-radius: 99px;
-      padding: 0.18rem 0.65rem; border: 1px solid;
-    }
-    .pill-pro  { color: #16a34a; background: #f0fdf4; border-color: #86efac; }
-    .pill-con  { color: #b91c1c; background: #fef2f2; border-color: #fca5a5; }
-    .pill-note { color: var(--muted); background: var(--off-white); border-color: var(--rule); }
-
-    /* demo containers */
-    .demo-wrap {
-      border: 1px solid var(--rule); border-radius: 10px;
-      overflow: hidden; background: #fff;
-      position: relative;
-    }
-    .demo-toolbar {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.55rem 0.85rem; background: var(--off-white);
-      border-bottom: 1px solid var(--rule); flex-wrap: wrap;
-    }
-    .demo-toolbar-label {
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; color: var(--muted); margin-right: auto;
-    }
-    .viz-btn {
-      font-size: 0.76rem; font-weight: 600; padding: 4px 12px;
-      border-radius: 6px; border: 1px solid var(--rule);
-      background: white; color: var(--text); cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      font-family: var(--font);
-    }
-    .viz-btn.active, .viz-btn:hover {
-      background: var(--accent-light); border-color: var(--accent); color: var(--accent);
-    }
-    .demo-svg-wrap { padding: 1rem; }
-    .demo-svg-wrap svg { display: block; width: 100%; }
-
-    /* fallback message */
-    .lib-fallback {
-      display: flex; align-items: center; gap: 0.65rem;
-      background: var(--warn-bg); border: 1px solid var(--warn-border);
-      border-radius: 7px; padding: 0.75rem 1rem;
-      font-size: 0.83rem; color: #92400e; line-height: 1.5;
-      margin: 1rem 0;
-    }
-    .lib-fallback-icon { font-size: 1.1rem; flex-shrink: 0; }
-
-    /* AG Charts container */
-    #ag-demo-container { height: 340px; }
-
-    /* ── comparison table ── */
-    .compare-section { border-top: 2px solid var(--rule); padding-top: 2rem; margin-top: 2.8rem; }
-    .compare-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 0.85rem; }
-    .compare-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    .compare-table th {
-      text-align: left; font-size: 0.67rem; font-weight: 600;
-      letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted);
-      padding: 0.38rem 0.75rem 0.38rem 0; border-bottom: 2px solid var(--rule);
-    }
-    .compare-table td {
-      padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--rule);
-      vertical-align: top; line-height: 1.5;
-    }
-    .compare-table tr:last-child td { border-bottom: none; }
-    .compare-table td:first-child { font-weight: 500; color: var(--text); }
-    .rating { display: inline-flex; gap: 2px; }
-    .dot-filled { color: var(--accent); font-size: 0.7rem; }
-    .dot-empty  { color: var(--rule);   font-size: 0.7rem; }
-
-    /* footer */
-    .test-footer {
-      border-top: 1px solid var(--rule); padding: 1.6rem 0 0;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 0.5rem; margin-top: 2.8rem;
-    }
+    .test-subtitle { font-size: 0.92rem; color: var(--muted); line-height: 1.6; max-width: 720px; margin-bottom: 0.9rem; }
+    .test-section { border-top: 2px solid var(--rule); padding-top: 2.2rem; margin-top: 2.8rem; }
+    .test-section-hdr { font-size: 1.15rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+    .test-section-num { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 4px; margin-right: 0.55rem; }
+    .test-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.2rem; }
+    .card-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .card-grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (min-width: 900px) { .card-grid-4 { grid-template-columns: repeat(4, 1fr); } }
+    .test-card { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 14px; }
+    .card-label { font-size: 0.78rem; font-weight: 600; color: var(--accent); margin-bottom: 3px; }
+    .card-desc { font-size: 0.75rem; color: var(--muted); line-height: 1.45; margin-bottom: 10px; }
+    .canvas-wrap { background: #fafbfe; border-radius: 6px; overflow: hidden; }
+    canvas { display: block; width: 100%; }
+    .test-footer { border-top: 1px solid var(--rule); padding: 1.6rem 0 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-top: 2.8rem; }
     .test-footer-left { font-size: 0.82rem; color: var(--muted); }
     .test-footer-left a { color: var(--muted); text-decoration: none; }
     .test-footer-left a:hover { color: var(--accent); }
-    .footer-logo { height: 22px; opacity: 0.5; }
-
-    /* draggable label cursor */
-    .draggable-label { cursor: grab; }
-    .draggable-label:active { cursor: grabbing; }
   </style>
 </head>
 <body>
 
-<!-- Left nav overlay + panel -->
 <div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
 <nav class="left-nav" id="leftNav" aria-label="Course weeks">
   <div class="left-nav-header">EC224</div>
@@ -157,741 +45,702 @@
     <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
     <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
     <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 12</a></li>
   </ul>
 </nav>
 
-<!-- Top bar -->
 <div class="top-bar" id="topBar">
   <div class="top-bar-left">
-    <a href="index.html" aria-label="Course home">
-      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-    </a>
+    <a href="index.html" aria-label="Course home"><img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" /></a>
     <div class="top-bar-divider"></div>
-    <div class="breadcrumb">
-      <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">&#x203A;</span>
-      <span>Testing</span>
-    </div>
+    <div class="breadcrumb"><a href="index.html">EC224</a><span class="breadcrumb-sep">&#x203A;</span><span>Visual Tests</span></div>
   </div>
   <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
 </div>
 
-<main class="main" style="max-width: 800px;">
+<main class="main" style="max-width:1300px;">
 
-  <!-- Hero -->
   <div class="test-hero">
     <div class="test-ghost">DEV</div>
     <div class="dev-badge">&#9888; Developer Testing Area</div>
-    <h1 class="test-title">Testing: Label Collision Experiments</h1>
-    <p class="test-subtitle">
-      This page is a developer sandbox for exploring label collision avoidance in economic diagrams.
-      Economic visualizations frequently have multiple labels (prices, quantities, equilibrium points) that
-      overlap when plotted naively. Three distinct approaches are compared here with live, interactive demos.
-      This page is not linked from the main course navigation.
-    </p>
-    <div style="display:flex; gap:0.45rem; flex-wrap:wrap;">
+    <h1 class="test-title">Visual Tests: Sizes, Labels &amp; Force Placement</h1>
+    <p class="test-subtitle">All canvases use a cost-curves figure: MC (red), ATC (blue), AVC (green), MR=P (purple), with 5 force-placed labels. Tell me which variant in each section looks best and I will apply it everywhere.</p>
+    <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
       <a href="index.html" class="dl-btn"><span class="dl-icon">&#8592;</span> Course Home</a>
+      <a href="week6.html" class="dl-btn"><span class="dl-icon">&#128202;</span> Week 6</a>
       <a href="week7.html" class="dl-btn"><span class="dl-icon">&#128202;</span> Week 7</a>
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════
-       SECTION 1: Labella.js
-       ════════════════════════════════════════════════ -->
-  <div class="approach-section" id="sec-labella">
-    <div class="approach-hdr">
-      <span class="approach-num">Approach 1</span>
-      <span class="approach-title">Labella.js - Force-directed label placement for 1D spaces</span>
-    </div>
-
-    <p class="approach-desc">
-      Labella.js solves the 1D label placement problem: given a set of labels that must stay on one axis
-      (e.g. a price axis), it shifts labels along that axis to remove overlaps while minimizing the total
-      displacement. It uses a force-directed algorithm optimised specifically for timelines and axis annotations,
-      drawing connector lines back to the true data positions. The demo below shows 8 equilibrium price/quantity
-      labels on a supply-demand diagram. Toggle between the raw (colliding) layout and the labella-resolved layout.
-    </p>
-
-    <div class="tradeoff-row">
-      <span class="tradeoff-pill pill-pro">+ Best for 1D axis labels</span>
-      <span class="tradeoff-pill pill-pro">+ Minimal displacement objective</span>
-      <span class="tradeoff-pill pill-pro">+ Tiny file size (~12 kB)</span>
-      <span class="tradeoff-pill pill-con">- Only works along one axis</span>
-      <span class="tradeoff-pill pill-con">- No 2D scatter label support</span>
-      <span class="tradeoff-pill pill-note">Use case: timeline events, axis tick labels</span>
-    </div>
-
-    <div id="labella-fallback" class="lib-fallback" style="display:none;">
-      <span class="lib-fallback-icon">&#9888;</span>
-      <span>Labella.js could not be loaded from CDN. The manual simulation below uses a simplified
-      iterative overlap-resolution algorithm that approximates the same result.</span>
-    </div>
-
-    <div class="demo-wrap">
-      <div class="demo-toolbar">
-        <span class="demo-toolbar-label">Supply &amp; Demand: Multiple Equilibria Labels</span>
-        <button class="viz-btn active" id="btn-labella-before" onclick="labellaToggle('before')">Before (collide)</button>
-        <button class="viz-btn" id="btn-labella-after"  onclick="labellaToggle('after')">After (resolved)</button>
+  <!-- ── SECTION 1: Figure Sizes ─────────────────────── -->
+  <div class="test-section">
+    <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 1</span><span class="test-section-hdr">Figure Sizes</span></p>
+    <p class="test-desc">Currently figures fill the full container (up to 1300 px wide &rarr; huge squares). Test 4 different max-width caps. Which size fits comfortably on your screen?</p>
+    <div class="card-grid-2">
+      <div class="test-card">
+        <div class="card-label">A &mdash; 320 px max</div>
+        <div class="card-desc">Very compact. Two figures easily fit side-by-side on any screen.</div>
+        <div class="canvas-wrap" style="max-width:320px"><canvas id="sz-a"></canvas></div>
       </div>
-      <div class="demo-svg-wrap">
-        <svg id="labella-svg" viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg"
-             style="font-family:'DM Sans',system-ui,sans-serif;">
-        </svg>
+      <div class="test-card">
+        <div class="card-label">B &mdash; 400 px max</div>
+        <div class="card-desc">Standard web figure. Comfortable on a 13&Prime; laptop.</div>
+        <div class="canvas-wrap" style="max-width:400px"><canvas id="sz-b"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">C &mdash; 480 px max</div>
+        <div class="card-desc">Larger &mdash; more detail visible. Still fits a 1280 px screen.</div>
+        <div class="canvas-wrap" style="max-width:480px"><canvas id="sz-c"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">D &mdash; 560 px max</div>
+        <div class="card-desc">Generous. Best on wide monitors; may still be too tall on laptops.</div>
+        <div class="canvas-wrap" style="max-width:560px"><canvas id="sz-d"></canvas></div>
       </div>
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════
-       SECTION 2: D3 Force Simulation
-       ════════════════════════════════════════════════ -->
-  <div class="approach-section" id="sec-d3">
-    <div class="approach-hdr">
-      <span class="approach-num">Approach 2</span>
-      <span class="approach-title">D3 Force Simulation - Physics-based collision avoidance</span>
-    </div>
-
-    <p class="approach-desc">
-      D3's force simulation applies physics-like forces to SVG elements. By combining
-      <code style="font-family:var(--mono);font-size:0.82em;color:var(--accent);">d3.forceCollide</code>
-      (labels repel each other) with
-      <code style="font-family:var(--mono);font-size:0.82em;color:var(--accent);">d3.forceX</code> /
-      <code style="font-family:var(--mono);font-size:0.82em;color:var(--accent);">d3.forceY</code>
-      (labels are attracted back toward their data points), you get 2D label placement that works in any
-      direction. Labels in the demo below are also draggable. Connector lines update in real time.
-    </p>
-
-    <div class="tradeoff-row">
-      <span class="tradeoff-pill pill-pro">+ Works in 2D - any direction</span>
-      <span class="tradeoff-pill pill-pro">+ Fully interactive (drag, animate)</span>
-      <span class="tradeoff-pill pill-pro">+ Highly customisable forces</span>
-      <span class="tradeoff-pill pill-con">- Larger dependency (D3 ~280 kB)</span>
-      <span class="tradeoff-pill pill-con">- Convergence not guaranteed</span>
-      <span class="tradeoff-pill pill-note">Use case: scatter plots, 2D diagrams</span>
-    </div>
-
-    <div id="d3-fallback" class="lib-fallback" style="display:none;">
-      <span class="lib-fallback-icon">&#9888;</span>
-      <span>D3 could not be loaded from CDN. The D3 force simulation demo requires a network connection
-      to <code>d3js.org</code>. Please check connectivity and reload the page.</span>
-    </div>
-
-    <div class="demo-wrap" id="d3-demo-wrap">
-      <div class="demo-toolbar">
-        <span class="demo-toolbar-label">Drag labels - connector lines follow</span>
-        <button class="viz-btn" onclick="resetD3()">Reset positions</button>
-        <button class="viz-btn" id="btn-d3-sim" onclick="toggleD3Sim()">Pause simulation</button>
+  <!-- ── SECTION 2: Label Font Sizes ───────────────────── -->
+  <div class="test-section">
+    <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 2</span><span class="test-section-hdr">Label Font Sizes</span></p>
+    <p class="test-desc">Same 420 px canvas, different label font sizes. Current labels are 9 px &mdash; small on high-DPR screens. Which size is most readable?</p>
+    <div class="card-grid-4">
+      <div class="test-card">
+        <div class="card-label">A &mdash; 9 px (current)</div>
+        <div class="card-desc">Hard to read on many screens, especially non-retina.</div>
+        <div class="canvas-wrap" style="max-width:420px"><canvas id="fs-a"></canvas></div>
       </div>
-      <div class="demo-svg-wrap" id="d3-svg-wrap"></div>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════════
-       SECTION 3: AG Charts
-       ════════════════════════════════════════════════ -->
-  <div class="approach-section" id="sec-ag">
-    <div class="approach-hdr">
-      <span class="approach-num">Approach 3</span>
-      <span class="approach-title">AG Charts - Built-in collision avoidance for chart libraries</span>
-    </div>
-
-    <p class="approach-desc">
-      AG Charts (Community edition) is a full charting library with built-in label collision avoidance.
-      When multiple series data points crowd together, AG Charts automatically hides, repositions, or offsets
-      labels to prevent overlap, with no custom code required. The demo below recreates a revenue-rectangle-style
-      diagram (inspired by Fig 4.3 from Week 4) showing total revenue, consumer surplus, and producer surplus
-      regions annotated with automatic labels.
-    </p>
-
-    <div class="tradeoff-row">
-      <span class="tradeoff-pill pill-pro">+ Zero collision code needed</span>
-      <span class="tradeoff-pill pill-pro">+ Production-quality chart output</span>
-      <span class="tradeoff-pill pill-pro">+ Tooltips, themes, legends built in</span>
-      <span class="tradeoff-pill pill-con">- Large bundle (~450 kB)</span>
-      <span class="tradeoff-pill pill-con">- Less control over label positions</span>
-      <span class="tradeoff-pill pill-note">Use case: standard chart types with dense labels</span>
-    </div>
-
-    <div id="ag-fallback" class="lib-fallback" style="display:none;">
-      <span class="lib-fallback-icon">&#9888;</span>
-      <span>AG Charts could not be loaded from CDN. The AG Charts demo requires a network connection
-      to <code>cdn.jsdelivr.net</code>. Please check connectivity and reload the page.</span>
-    </div>
-
-    <div class="demo-wrap" id="ag-demo-outer" style="display:none;">
-      <div class="demo-toolbar">
-        <span class="demo-toolbar-label">Revenue Decomposition - Demand &amp; Supply Curves</span>
+      <div class="test-card">
+        <div class="card-label">B &mdash; 11 px</div>
+        <div class="card-desc">Slightly larger &mdash; more comfortable.</div>
+        <div class="canvas-wrap" style="max-width:420px"><canvas id="fs-b"></canvas></div>
       </div>
-      <div id="ag-demo-container"></div>
+      <div class="test-card">
+        <div class="card-label">C &mdash; 13 px</div>
+        <div class="card-desc">Clear, readable at a glance. Labels take more space.</div>
+        <div class="canvas-wrap" style="max-width:420px"><canvas id="fs-c"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">D &mdash; 15 px</div>
+        <div class="card-desc">Bold and unmissable. Labels compete for space on small canvases.</div>
+        <div class="canvas-wrap" style="max-width:420px"><canvas id="fs-d"></canvas></div>
+      </div>
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════
-       COMPARISON TABLE
-       ════════════════════════════════════════════════ -->
-  <div class="compare-section" id="sec-compare">
-    <h2 class="compare-title">Comparison: Three Approaches</h2>
-    <table class="compare-table">
-      <thead>
-        <tr>
-          <th style="width:18%;">Dimension</th>
-          <th style="width:27%;">Labella.js</th>
-          <th style="width:27%;">D3 Force Sim</th>
-          <th style="width:28%;">AG Charts</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Ease of use</td>
-          <td>
-            <div class="rating">
-              <span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-empty">&#9679;</span><span class="dot-empty">&#9679;</span>
-            </div><br>
-            Moderate setup; must compute node positions and render manually
-          </td>
-          <td>
-            <div class="rating">
-              <span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-empty">&#9679;</span><span class="dot-empty">&#9679;</span><span class="dot-empty">&#9679;</span>
-            </div><br>
-            Requires D3 knowledge; tuning forces takes iteration
-          </td>
-          <td>
-            <div class="rating">
-              <span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span>
-            </div><br>
-            Drop-in chart config; collision avoidance is automatic
-          </td>
-        </tr>
-        <tr>
-          <td>Flexibility</td>
-          <td>Low: 1D axis only, fixed label arrangement model</td>
-          <td>Very high: arbitrary forces, shapes, interactivity, animation</td>
-          <td>Medium: limited to chart types AG supports; styling via themes</td>
-        </tr>
-        <tr>
-          <td>Performance</td>
-          <td>
-            <div class="rating">
-              <span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span>
-            </div><br>
-            Tiny bundle; algorithm runs once at layout time
-          </td>
-          <td>
-            <div class="rating">
-              <span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-empty">&#9679;</span><span class="dot-empty">&#9679;</span>
-            </div><br>
-            Continuous simulation uses CPU; fine for &lt;200 nodes
-          </td>
-          <td>
-            <div class="rating">
-              <span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-filled">&#9679;</span><span class="dot-empty">&#9679;</span>
-            </div><br>
-            Canvas rendering; fast for typical chart sizes
-          </td>
-        </tr>
-        <tr>
-          <td>Best fit for this site</td>
-          <td>Axis annotations on price/quantity axes with many tick labels</td>
-          <td>Complex 2D diagrams (isoquants, indifference curves) with labeled points</td>
-          <td>Standard supply/demand, cost curve, or market charts with data labels</td>
-        </tr>
-        <tr>
-          <td>Bundle size</td>
-          <td>~12 kB (standalone)</td>
-          <td>~280 kB (D3 v7 full)</td>
-          <td>~450 kB (AG Community UMD)</td>
-        </tr>
-        <tr>
-          <td>License</td>
-          <td>BSD-3</td>
-          <td>ISC</td>
-          <td>MIT (Community)</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- ── SECTION 3: Force Label Approaches ─────────────── -->
+  <div class="test-section">
+    <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 3</span><span class="test-section-hdr">Force Label Approaches</span></p>
+    <p class="test-desc">4 different collision-avoidance algorithms. All use 12 px font on a 460 px canvas. Which avoids lines and other labels best?</p>
+    <div class="card-grid-2">
+      <div class="test-card">
+        <div class="card-label">A &mdash; Current: spring-back + mild push</div>
+        <div class="card-desc">150 iter, push 0.5&times;, spring pulls label 5&percnt; back to anchor each iter, line-repel 0.4&times;. Labels stay close to anchor but may still overlap lines.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-a"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">B &mdash; Strong push, no spring, pre-offset</div>
+        <div class="card-desc">Labels pre-positioned 30 px away from nearest line before iteration. 250 iter, push 0.8&times;, no spring, line-repel 0.7&times;. Labels float freely; connector shows anchor.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-b"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">C &mdash; Smart pre-placement (away from curves)</div>
+        <div class="card-desc">Each label pre-placed 38 px in the direction away from the average of its 20 nearest line points. Then 90 iter light resolve. Labels start on the right side from the beginning.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-c"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">D &mdash; Best-of-8 compass positions</div>
+        <div class="card-desc">For each label, tests 8 compass directions (R = 42 px). Picks the position with fewest overlapping labels + line points. Then 70 iter fine-tune. Structured, predictable placement.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="fl-d"></canvas></div>
+      </div>
+    </div>
   </div>
 
-  <footer class="test-footer">
+  <!-- ── SECTION 4: Label Visual Styles ────────────────── -->
+  <div class="test-section">
+    <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 4</span><span class="test-section-hdr">Label Visual Styles</span></p>
+    <p class="test-desc">4 ways to draw the label and connector. All use Approach B forces + 12 px font on 460 px canvas. Which looks cleanest?</p>
+    <div class="card-grid-2">
+      <div class="test-card">
+        <div class="card-label">A &mdash; Current: gray leader + white rect</div>
+        <div class="card-desc">Thin gray (30&percnt; opaque) leader line. White rect background. No border. Text in curve color.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="ls-a"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">B &mdash; Colored leader + colored border box</div>
+        <div class="card-desc">2 px leader in label color. White rect with 1 px colored border. More visually tied to the curve.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="ls-b"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">C &mdash; Pill label, no leader</div>
+        <div class="card-desc">White pill shape with subtle shadow. No connector line &mdash; label floats over the canvas. Cleanest look.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="ls-c"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">D &mdash; Dot at anchor + colored leader</div>
+        <div class="card-desc">Small filled circle at the curve anchor, 2 px colored leader, white rect label. Makes the exact anchor point explicit.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="ls-d"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 5: Shading Bug Fix ────────────────────── -->
+  <div class="test-section">
+    <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 5</span><span class="test-section-hdr">Fig 6.10 Shading Fix</span></p>
+    <p class="test-desc">AC = q + 9/q. Efficient scale at q* = 3. At q = 1 the AC hits the y-axis top; for q &lt; 1 it exits the chart. The green &ldquo;economies of scale&rdquo; region should shade from the left edge of the plot to q*, but currently it starts where AC first becomes visible.</p>
+    <div class="card-grid-2">
+      <div class="test-card">
+        <div class="card-label">A &mdash; Current (buggy): green starts late</div>
+        <div class="card-desc">Green shading only covers q values where AC &le; acmax. The left strip (where AC is above the chart) is unshaded even though it is in the economies region.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="sh-a"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">B &mdash; Fixed: full left edge shading</div>
+        <div class="card-desc">AC values above acmax are clamped to the chart top. The path starts at the x-axis under q = 0.3, goes up to the top edge, follows the clamped curve in, then closes at q*. The clip region handles the boundary.</div>
+        <div class="canvas-wrap" style="max-width:460px"><canvas id="sh-b"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-footer">
     <div class="test-footer-left">
-      <a href="index.html">EC224 Intermediate Microeconomics</a>
-      &nbsp;&middot;&nbsp;
-      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
-      &nbsp;&middot;&nbsp; Developer testing page
+      Developer sandbox &mdash; not linked from course nav &middot;
+      <a href="index.html">Course Home</a>
     </div>
-    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
-  </footer>
+  </div>
 
 </main>
 
-<!-- ================================================================
-     JAVASCRIPT
-     ================================================================ -->
 <script>
-/* ── nav helpers ── */
 function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
-window.addEventListener('scroll', () => {
-  document.getElementById('topBar').classList.toggle('scrolled', window.scrollY > 4);
-});
+// ================================================================
+// SHARED DRAWING UTILITIES
+// ================================================================
+const ML=44, MR=22, MT=26, MB=42;
 
-/* ══════════════════════════════════════════════════════════════════
-   SECTION 1: LABELLA.JS DEMO
-   ══════════════════════════════════════════════════════════════════ */
-(function initLabella() {
-  // Data: 8 supply-demand equilibrium scenarios, each with a price on the Y axis
-  // These are deliberately clustered so naive placement causes overlaps
-  const POINTS = [
-    { id: 'E1', price: 22, qty: 18, label: 'E1 P=22', color: '#1a56db' },
-    { id: 'E2', price: 25, qty: 22, label: 'E2 P=25', color: '#1a56db' },
-    { id: 'E3', price: 26, qty: 30, label: 'E3 P=26', color: '#e67e22' },
-    { id: 'E4', price: 28, qty: 35, label: 'E4 P=28', color: '#e67e22' },
-    { id: 'E5', price: 29, qty: 42, label: 'E5 P=29', color: '#16a34a' },
-    { id: 'E6', price: 30, qty: 48, label: 'E6 P=30', color: '#16a34a' },
-    { id: 'E7', price: 44, qty: 58, label: 'E7 P=44', color: '#9333ea' },
-    { id: 'E8', price: 47, qty: 65, label: 'E8 P=47', color: '#9333ea' },
-  ];
+function toC(x,y,W,H,xR,yR){
+  const pw=W-ML-MR,ph=H-MT-MB;
+  return [ML+(x-xR[0])/(xR[1]-xR[0])*pw, H-MB-(y-yR[0])/(yR[1]-yR[0])*ph];
+}
 
-  const W = 680, H = 300;
-  const PAD = { top: 24, right: 140, bottom: 40, left: 54 };
-  const innerW = W - PAD.left - PAD.right;
-  const innerH = H - PAD.top - PAD.bottom;
-
-  const priceMin = 10, priceMax = 60;
-  const qtyMin = 0,   qtyMax = 80;
-
-  function px(price) { return PAD.top + innerH * (1 - (price - priceMin) / (priceMax - priceMin)); }
-  function qx(qty)   { return PAD.left + innerW * (qty - qtyMin) / (qtyMax - qtyMin); }
-
-  // Build supply / demand curve points
-  const demandPts = [];
-  const supplyPts = [];
-  for (let q = 0; q <= 80; q += 5) {
-    demandPts.push([qx(q), px(55 - 0.55 * q)]);
-    supplyPts.push([qx(q), px(8  + 0.55 * q)]);
+function drawAxes(ctx,W,H,xR,yR,xl,yl){
+  const [ox,oy]=toC(xR[0],yR[0],W,H,xR,yR);
+  const [ex]  =toC(xR[1],yR[0],W,H,xR,yR);
+  const [,ty] =toC(0,yR[1],W,H,xR,yR);
+  const fs=Math.max(8,Math.round(W/42));
+  ctx.save();
+  ctx.strokeStyle='#555'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ex+6,oy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ox,ty-6); ctx.stroke();
+  ctx.fillStyle='#555';
+  ctx.beginPath(); ctx.moveTo(ex+6,oy); ctx.lineTo(ex+1,oy-4); ctx.lineTo(ex+1,oy+4); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(ox,ty-6); ctx.lineTo(ox-4,ty-1); ctx.lineTo(ox+4,ty-1); ctx.fill();
+  ctx.font=`${fs}px DM Sans,sans-serif`; ctx.fillStyle='#555';
+  ctx.textAlign='center';
+  for(let x=xR[0]+2;x<=xR[1];x+=2){
+    const [cx]=toC(x,0,W,H,xR,yR); ctx.fillText(x,cx,oy+13);
   }
-  function polyline(pts) { return pts.map(p => p.join(',')).join(' '); }
+  ctx.textAlign='right';
+  for(let y=yR[0];y<=yR[1];y+=4){
+    const [,cy]=toC(0,y,W,H,xR,yR); ctx.fillText(y,ox-5,cy+3);
+  }
+  ctx.font=`bold ${fs+1}px DM Sans,sans-serif`; ctx.textAlign='center'; ctx.fillStyle='#333';
+  ctx.fillText(xl, ML+(W-ML-MR)/2, H-5);
+  ctx.save(); ctx.translate(12,MT+(H-MT-MB)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText(yl,0,0); ctx.restore();
+  ctx.restore();
+}
 
-  const LABEL_H = 16; // estimated label height for overlap check
+// ================================================================
+// COST CURVE DEFINITIONS
+// ================================================================
+const MC_fn  = q => 0.8*(q-3)**2 + 1.5;
+const ATC_fn = q => 0.14*(q-5.5)**2 + 3.2 + 11/q;
+const AVC_fn = q => 0.14*(q-4.5)**2 + 2.1;
+const MR_P   = 9;
 
-  // Simple iterative overlap resolver (used when labella is available as fallback solver too,
-  // since labella API may differ across builds)
-  function resolveOverlaps(yPositions, minGap) {
-    const sorted = yPositions.map((y, i) => ({ y, i })).sort((a, b) => a.y - b.y);
-    let changed = true;
-    let iters = 0;
-    while (changed && iters < 200) {
-      changed = false;
-      for (let k = 1; k < sorted.length; k++) {
-        const overlap = sorted[k - 1].y + minGap - sorted[k].y;
-        if (overlap > 0) {
-          sorted[k - 1].y -= overlap / 2;
-          sorted[k].y     += overlap / 2;
-          changed = true;
+// Bisect to find q* where MC_fn = MR_P
+function bisect(fn,target,lo,hi){
+  for(let i=0;i<60;i++){const m=(lo+hi)/2;(fn(m)<target?lo:hi)=m;if(hi-lo<0.001)break;}return (lo+hi)/2;
+}
+const qstar = bisect(MC_fn, MR_P, 3, 10);
+
+// ================================================================
+// LABEL HELPERS
+// ================================================================
+function makeLbl(ctx, ax, ay, text, color, fz, bold=false){
+  ctx.font = `${bold?'bold ':' '}${fz}px DM Sans,sans-serif`;
+  const tw = ctx.measureText(text).width, p=5;
+  return {ax,ay,x:ax,y:ay,w:tw+p*2,h:fz+p*2,text,color,fontSize:fz,bold};
+}
+
+// ================================================================
+// FORCE LABEL RESOLVERS
+// ================================================================
+
+// A — current: spring-back + mild push
+function resolveA(items, linePts, iter=150, pad=6){
+  for(let it=0;it<iter;it++){
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const a=items[i],b=items[j];
+        const gx=(a.w+b.w)/2+pad,gy=(a.h+b.h)/2+pad;
+        const dx=a.x-b.x,dy=a.y-b.y;
+        if(Math.abs(dx)<gx&&Math.abs(dy)<gy){
+          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.5;
+          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.5;
+          a.x+=sx;a.y+=sy;b.x-=sx;b.y-=sy;
         }
       }
-      iters++;
+      const lm=items[i];
+      lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
     }
-    // Clamp to SVG bounds
-    for (const s of sorted) s.y = Math.max(PAD.top + 8, Math.min(H - PAD.bottom - 8, s.y));
-    const result = new Array(yPositions.length);
-    for (const s of sorted) result[s.i] = s.y;
-    return result;
-  }
-
-  // Use labella if loaded, otherwise fall back to manual solver
-  function computeLabellaPositions() {
-    if (!window.labellaFailed && typeof labella !== 'undefined') {
-      try {
-        const nodes = POINTS.map(p => new labella.Node(px(p.price), LABEL_H + 4));
-        const force = new labella.Force({ nodeSpacing: 2, algorithm: 'overlap' });
-        force.nodes(nodes).compute();
-        return nodes.map(n => n.currentPos);
-      } catch (e) {
-        // fall through to manual
+    for(const lm of items){
+      const hw=lm.w/2+8,hh=lm.h/2+8;
+      for(const [lx,ly] of linePts){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
+        }
       }
     }
-    document.getElementById('labella-fallback').style.display = 'flex';
-    return resolveOverlaps(POINTS.map(p => px(p.price)), LABEL_H + 3);
   }
+}
 
-  function renderLabellaSVG(mode) {
-    const svg = document.getElementById('labella-svg');
-    svg.innerHTML = '';
-
-    const ns = 'http://www.w3.org/2000/svg';
-    function el(tag, attrs, parent) {
-      const e = document.createElementNS(ns, tag);
-      for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
-      if (parent) parent.appendChild(e);
-      return e;
+// B — strong push, no spring, pre-offset
+function resolveB(items, linePts, iter=250, pad=8){
+  for(const lm of items){
+    let nx=lm.ax,ny=lm.ay,nd=Infinity;
+    for(const [lx,ly] of linePts){
+      const d=Math.hypot(lx-lm.ax,ly-lm.ay);
+      if(d<nd){nd=d;nx=lx;ny=ly;}
     }
-    function text(content, attrs, parent) {
-      const e = el('text', attrs, parent);
-      e.textContent = content;
-      return e;
+    if(nd<80){
+      const dx=lm.ax-nx,dy=lm.ay-ny,len=Math.hypot(dx,dy)||1;
+      lm.x=lm.ax+dx/len*30; lm.y=lm.ay+dy/len*30;
     }
-
-    // Axes
-    el('line', { x1: PAD.left, y1: PAD.top, x2: PAD.left, y2: H - PAD.bottom, stroke: '#e4e4e4', 'stroke-width': 1.5 }, svg);
-    el('line', { x1: PAD.left, y1: H - PAD.bottom, x2: W - PAD.right + 20, y2: H - PAD.bottom, stroke: '#e4e4e4', 'stroke-width': 1.5 }, svg);
-
-    // Axis labels
-    text('Price ($)', { x: 12, y: PAD.top + innerH / 2, fill: '#6b6b6b', 'font-size': 10, transform: `rotate(-90,12,${PAD.top + innerH / 2})`, 'text-anchor': 'middle' }, svg);
-    text('Quantity', { x: PAD.left + innerW / 2, y: H - 6, fill: '#6b6b6b', 'font-size': 10, 'text-anchor': 'middle' }, svg);
-
-    // Price ticks
-    for (let p = 10; p <= 60; p += 10) {
-      const y = px(p);
-      el('line', { x1: PAD.left - 4, y1: y, x2: PAD.left, y2: y, stroke: '#e4e4e4', 'stroke-width': 1 }, svg);
-      text(p, { x: PAD.left - 7, y: y + 4, fill: '#6b6b6b', 'font-size': 9, 'text-anchor': 'end' }, svg);
-    }
-
-    // Demand curve (blue, downward sloping)
-    el('polyline', { points: polyline(demandPts), fill: 'none', stroke: '#1a56db', 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
-    text('Demand', { x: demandPts[0][0] + 4, y: demandPts[0][1] - 6, fill: '#1a56db', 'font-size': 10, 'font-weight': 600 }, svg);
-
-    // Supply curve (green, upward sloping)
-    el('polyline', { points: polyline(supplyPts), fill: 'none', stroke: '#16a34a', 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
-    text('Supply', { x: supplyPts[supplyPts.length - 1][0] - 38, y: supplyPts[supplyPts.length - 1][1] - 6, fill: '#16a34a', 'font-size': 10, 'font-weight': 600 }, svg);
-
-    // Equilibrium dots
-    POINTS.forEach(p => {
-      el('circle', { cx: qx(p.qty), cy: px(p.price), r: 4.5, fill: p.color, stroke: 'white', 'stroke-width': 1.5 }, svg);
-    });
-
-    // Labels
-    const labelX = W - PAD.right + 28;
-    let labelYs;
-    if (mode === 'before') {
-      labelYs = POINTS.map(p => px(p.price));
-    } else {
-      labelYs = computeLabellaPositions();
-    }
-
-    POINTS.forEach((p, i) => {
-      const dotY  = px(p.price);
-      const dotX  = qx(p.qty);
-      const labY  = labelYs[i];
-
-      if (mode === 'after') {
-        // connector line from dot to label
-        el('line', {
-          x1: dotX + 5, y1: dotY,
-          x2: labelX - 6, y2: labY,
-          stroke: p.color, 'stroke-width': 0.8, 'stroke-dasharray': '3,2', opacity: 0.6
-        }, svg);
+  }
+  for(let it=0;it<iter;it++){
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const a=items[i],b=items[j];
+        const gx=(a.w+b.w)/2+pad,gy=(a.h+b.h)/2+pad;
+        const dx=a.x-b.x,dy=a.y-b.y;
+        if(Math.abs(dx)<gx&&Math.abs(dy)<gy){
+          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.8;
+          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.8;
+          a.x+=sx;a.y+=sy;b.x-=sx;b.y-=sy;
+        }
       }
-
-      // label pill
-      const g = el('g', { transform: `translate(${labelX}, ${labY - 7})` }, svg);
-      el('rect', { x: 0, y: 0, width: 72, height: 14, rx: 3, fill: p.color, opacity: 0.12 }, g);
-      el('rect', { x: 0, y: 0, width: 3, height: 14, rx: 1, fill: p.color }, g);
-      text(p.label, { x: 7, y: 10.5, fill: p.color, 'font-size': 9.5, 'font-weight': 600 }, g);
-    });
+    }
+    for(const lm of items){
+      const hw=lm.w/2+10,hh=lm.h/2+10;
+      for(const [lx,ly] of linePts){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.7;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.7;
+        }
+      }
+    }
   }
+}
 
-  window.labellaToggle = function(mode) {
-    renderLabellaSVG(mode);
-    document.getElementById('btn-labella-before').classList.toggle('active', mode === 'before');
-    document.getElementById('btn-labella-after').classList.toggle('active', mode === 'after');
+// C — smart pre-placement: put label away from nearby line pts
+function resolveC(items, linePts, iter=90, pad=6){
+  for(const lm of items){
+    const nearby=linePts
+      .map(([lx,ly])=>({lx,ly,d:Math.hypot(lx-lm.ax,ly-lm.ay)}))
+      .filter(p=>p.d<90).sort((a,b)=>a.d-b.d).slice(0,20);
+    if(nearby.length>0){
+      let ax=0,ay=0;
+      for(const p of nearby){ax+=p.lx-lm.ax;ay+=p.ly-lm.ay;}
+      const len=Math.hypot(ax,ay)||1;
+      lm.x=lm.ax-ax/len*38; lm.y=lm.ay-ay/len*38;
+    }
+  }
+  for(let it=0;it<iter;it++){
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const a=items[i],b=items[j];
+        const gx=(a.w+b.w)/2+pad,gy=(a.h+b.h)/2+pad;
+        const dx=a.x-b.x,dy=a.y-b.y;
+        if(Math.abs(dx)<gx&&Math.abs(dy)<gy){
+          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.65;
+          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.65;
+          a.x+=sx;a.y+=sy;b.x-=sx;b.y-=sy;
+        }
+      }
+    }
+    for(const lm of items){
+      const hw=lm.w/2+9,hh=lm.h/2+9;
+      for(const [lx,ly] of linePts){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.55;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.55;
+        }
+      }
+    }
+  }
+}
+
+// D — best-of-8 compass positions then fine-tune
+function resolveD(items, linePts, iter=70, pad=6){
+  const R=42;
+  for(const lm of items){
+    let bx=lm.x,by=lm.y,bs=Infinity;
+    for(let a=0;a<8;a++){
+      const theta=a*Math.PI/4;
+      const cx=lm.ax+Math.cos(theta)*R, cy=lm.ay+Math.sin(theta)*R;
+      let score=0;
+      for(const other of items){
+        if(other===lm)continue;
+        const gx=(lm.w+other.w)/2+pad,gy=(lm.h+other.h)/2+pad;
+        if(Math.abs(cx-other.x)<gx&&Math.abs(cy-other.y)<gy)score+=12;
+      }
+      for(const [lx,ly] of linePts){
+        const hw=lm.w/2+7,hh=lm.h/2+7;
+        if(Math.abs(cx-lx)<hw&&Math.abs(cy-ly)<hh)score+=1;
+      }
+      if(score<bs){bs=score;bx=cx;by=cy;}
+    }
+    lm.x=bx; lm.y=by;
+  }
+  for(let it=0;it<iter;it++){
+    for(let i=0;i<items.length;i++){
+      for(let j=i+1;j<items.length;j++){
+        const a=items[i],b=items[j];
+        const gx=(a.w+b.w)/2+pad,gy=(a.h+b.h)/2+pad;
+        const dx=a.x-b.x,dy=a.y-b.y;
+        if(Math.abs(dx)<gx&&Math.abs(dy)<gy){
+          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.75;
+          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.75;
+          a.x+=sx;a.y+=sy;b.x-=sx;b.y-=sy;
+        }
+      }
+    }
+    for(const lm of items){
+      const hw=lm.w/2+8,hh=lm.h/2+8;
+      for(const [lx,ly] of linePts){
+        const dx=lm.x-lx,dy=lm.y-ly;
+        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.65;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.65;
+        }
+      }
+    }
+  }
+}
+
+// ================================================================
+// LABEL DRAW STYLES
+// ================================================================
+
+// A — current: thin gray leader + white rect
+function drawStyleA(ctx, lbl){
+  const {ax,ay,x,y,w,h,text,color,fontSize,bold}=lbl;
+  ctx.save();
+  if(Math.hypot(x-ax,y-ay)>3){
+    ctx.strokeStyle='rgba(80,80,80,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
+  }
+  ctx.fillStyle='rgba(255,255,255,0.93)';
+  ctx.fillRect(x-w/2,y-h/2,w,h);
+  ctx.font=`${bold?'bold ':' '}${fontSize}px DM Sans,sans-serif`;
+  ctx.fillStyle=color; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+// B — colored leader + colored border rect
+function drawStyleB(ctx, lbl){
+  const {ax,ay,x,y,w,h,text,color,fontSize,bold}=lbl;
+  ctx.save();
+  if(Math.hypot(x-ax,y-ay)>3){
+    ctx.strokeStyle=color; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
+  }
+  ctx.fillStyle='rgba(255,255,255,0.95)';
+  ctx.strokeStyle=color; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.rect(x-w/2,y-h/2,w,h); ctx.fill(); ctx.stroke();
+  ctx.font=`${bold?'bold ':' '}${fontSize}px DM Sans,sans-serif`;
+  ctx.fillStyle=color; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+// C — pill label, no leader
+function drawStyleC(ctx, lbl){
+  const {x,y,w,h,text,color,fontSize,bold}=lbl;
+  const r=h/2+1;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.13)'; ctx.shadowBlur=5; ctx.shadowOffsetY=1;
+  ctx.fillStyle='rgba(255,255,255,0.96)';
+  if(ctx.roundRect){
+    ctx.beginPath(); ctx.roundRect(x-w/2,y-h/2,w,h,r); ctx.fill();
+  } else {
+    ctx.fillRect(x-w/2,y-h/2,w,h);
+  }
+  ctx.shadowBlur=0; ctx.shadowColor='transparent';
+  ctx.font=`${bold?'bold ':' '}${fontSize}px DM Sans,sans-serif`;
+  ctx.fillStyle=color; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+// D — dot at anchor + colored leader + white rect
+function drawStyleD(ctx, lbl){
+  const {ax,ay,x,y,w,h,text,color,fontSize,bold}=lbl;
+  ctx.save();
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.arc(ax,ay,4,0,Math.PI*2); ctx.fill();
+  if(Math.hypot(x-ax,y-ay)>5){
+    ctx.strokeStyle=color; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
+  }
+  ctx.fillStyle='rgba(255,255,255,0.93)';
+  ctx.fillRect(x-w/2,y-h/2,w,h);
+  ctx.font=`${bold?'bold ':' '}${fontSize}px DM Sans,sans-serif`;
+  ctx.fillStyle=color; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+// ================================================================
+// MAIN COST-CURVES DRAWING FUNCTION
+// ================================================================
+function drawCostFig(cvsId, {fontSize=11, resolver=resolveB, labelDrawer=drawStyleA}={}){
+  const cvs=document.getElementById(cvsId); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.parentElement?.clientWidth||cvs.clientWidth||300;
+  if(!W) return;
+  const H=W;
+  cvs.width=Math.round(W*dpr); cvs.height=Math.round(H*dpr);
+  cvs.style.height=H+'px';
+  const ctx=cvs.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const xR=[0,10],yR=[0,16];
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  drawAxes(ctx,W,H,xR,yR,'Output q','$ per unit');
+
+  const linePts=[];
+  const draw=(fn,col,dash=[])=>{
+    ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.setLineDash(dash);
+    ctx.beginPath(); let first=true;
+    const pts=[];
+    for(let q=0.4;q<=9.9;q+=0.06){
+      const v=fn(q); if(!isFinite(v)||v<0||v>yR[1]) continue;
+      const [cx,cy]=toC(q,v,W,H,xR,yR);
+      first?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy); first=false;
+      linePts.push([cx,cy]); pts.push([cx,cy,q]);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+    return pts;
   };
 
-  renderLabellaSVG('before');
-})();
+  const mcPts  = draw(MC_fn, '#c0392b');
+  const atcPts = draw(ATC_fn,'#1a56db');
+  const avcPts = draw(AVC_fn,'#1e8449');
 
+  // Horizontal MR=P line
+  const [mrX0,mrY]=toC(0,MR_P,W,H,xR,yR);
+  const [mrX1]    =toC(10,MR_P,W,H,xR,yR);
+  ctx.strokeStyle='#7d3c98'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(mrX0,mrY); ctx.lineTo(mrX1,mrY); ctx.stroke(); ctx.setLineDash([]);
+  for(let q=0;q<=10;q+=0.25) linePts.push([...toC(q,MR_P,W,H,xR,yR)]);
 
-/* ══════════════════════════════════════════════════════════════════
-   SECTION 2: D3 FORCE SIMULATION DEMO
-   ══════════════════════════════════════════════════════════════════ */
-(function initD3() {
-  if (window.d3Failed || typeof d3 === 'undefined') {
-    document.getElementById('d3-fallback').style.display = 'flex';
-    document.getElementById('d3-demo-wrap').style.display = 'none';
-    return;
-  }
+  // q* dashed drop
+  const [qsX,]=toC(qstar,MR_P,W,H,xR,yR);
+  const [,axY]=toC(0,0,W,H,xR,yR);
+  ctx.strokeStyle='#bbb'; ctx.lineWidth=0.8; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(qsX,mrY); ctx.lineTo(qsX,axY); ctx.stroke(); ctx.setLineDash([]);
 
-  const W = 680, H = 310;
-  const PAD = { top: 28, right: 32, bottom: 42, left: 58 };
+  // Label anchors: pick a point near q=7.5 for each curve (right side, visible)
+  const pick=(pts,qTgt)=>pts.find(([,, q])=>q>=qTgt)||pts[pts.length-1];
+  const [mcAx,mcAy] =pick(mcPts, 7.5);
+  const [atcAx,atcAy]=pick(atcPts,8.0);
+  const [avcAx,avcAy]=pick(avcPts,8.0);
+  // min ATC around q=6.5
+  const atcMinQ=atcPts.reduce((b,p)=>p[1]<b[1]?p:b,atcPts[0]);
 
-  // Supply/demand data points for labels
-  const DATA_POINTS = [
-    { id: 'A', price: 48, qty: 12,  label: 'A: P=48, Q=12'  },
-    { id: 'B', price: 42, qty: 20,  label: 'B: P=42, Q=20'  },
-    { id: 'C', price: 36, qty: 28,  label: 'C: P=36, Q=28'  },
-    { id: 'D', price: 30, qty: 36,  label: 'D: P=30, Q=36'  },
-    { id: 'E', price: 24, qty: 44,  label: 'E: P=24, Q=44'  },
-    { id: 'F', price: 18, qty: 52,  label: 'F: P=18, Q=52'  },
+  // Build labels
+  const fz=fontSize;
+  const lbls=[
+    makeLbl(ctx,mcAx, mcAy, 'MC',          '#c0392b',fz,true),
+    makeLbl(ctx,atcAx,atcAy,'ATC',         '#1a56db',fz,true),
+    makeLbl(ctx,avcAx,avcAy,'AVC',         '#1e8449',fz,true),
+    makeLbl(ctx,(mrX0+mrX1)*0.3,mrY,`MR = P = $${MR_P}`,'#7d3c98',fz),
+    makeLbl(ctx,atcMinQ[0],atcMinQ[1],'min ATC','#1a56db',fz),
   ];
 
-  const priceMin = 8, priceMax = 58;
-  const qtyMin = 0, qtyMax = 72;
-  const scX = d3.scaleLinear().domain([qtyMin, qtyMax]).range([PAD.left, W - PAD.right]);
-  const scY = d3.scaleLinear().domain([priceMin, priceMax]).range([H - PAD.bottom, PAD.top]);
+  resolver(lbls, linePts);
+  lbls.forEach(lbl=>labelDrawer(ctx,lbl));
+}
 
-  // Demand curve: P = 60 - 0.6*Q
-  const demandQ = d3.range(0, 71, 5);
-  const demandLine = d3.line()
-    .x(q => scX(q))
-    .y(q => scY(Math.max(priceMin, 60 - 0.6 * q)));
+// ================================================================
+// SHADING BUG DEMO
+// ================================================================
+function drawShadingDemo(cvsId, fixed=false){
+  const cvs=document.getElementById(cvsId); if(!cvs) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.parentElement?.clientWidth||cvs.clientWidth||300;
+  if(!W) return;
+  const H=W;
+  cvs.width=Math.round(W*dpr); cvs.height=Math.round(H*dpr);
+  cvs.style.height=H+'px';
+  const ctx=cvs.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  // Supply curve: P = 6 + 0.6*Q
-  const supplyLine = d3.line()
-    .x(q => scX(q))
-    .y(q => scY(Math.min(priceMax, 6 + 0.6 * q)));
+  // AC = q + 9/q, MC = 2q, q* = 3
+  const acFn = q => q + 9/q;
+  const mcFn = q => 2*q;
+  const qstarS=3, qmaxS=8;
+  const xR=[0,8], yR=[0,12], acmax=10;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  drawAxes(ctx,W,H,xR,yR,'q (output)','$/unit');
 
-  const svg = d3.select('#d3-svg-wrap').append('svg')
-    .attr('viewBox', `0 0 ${W} ${H}`)
-    .style('width', '100%')
-    .style('display', 'block')
-    .style('font-family', "'DM Sans', system-ui, sans-serif");
+  const [,oy]=toC(0,0,W,H,xR,yR);
+  const [exX,]=toC(qstarS,0,W,H,xR,yR);
+  const [xRight,]=toC(qmaxS,0,W,H,xR,yR);
+  const MT_clip=MT;
 
-  // Grid lines
-  svg.append('g').selectAll('line').data(scY.ticks(6)).enter()
-    .append('line')
-    .attr('x1', PAD.left).attr('x2', W - PAD.right)
-    .attr('y1', d => scY(d)).attr('y2', d => scY(d))
-    .attr('stroke', '#f0f0f0').attr('stroke-width', 1);
+  // Clip region
+  ctx.save();
+  ctx.beginPath(); ctx.rect(ML,MT_clip,W-ML-MR,H-MT_clip-MB); ctx.clip();
 
-  // Curves
-  svg.append('path').datum(demandQ).attr('fill', 'none').attr('stroke', '#1a56db')
-    .attr('stroke-width', 2.2).attr('stroke-linejoin', 'round').attr('d', demandLine);
-  svg.append('path').datum(demandQ).attr('fill', 'none').attr('stroke', '#16a34a')
-    .attr('stroke-width', 2.2).attr('stroke-linejoin', 'round').attr('d', supplyLine);
+  if(fixed){
+    // FIXED: clamp AC to acmax, shade full left region
+    const gPts=[];
+    for(let q=0.3;q<=qstarS+0.05;q+=0.05){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
+      gPts.push(toC(q,Math.min(ac,acmax),W,H,xR,yR));
+    }
+    if(gPts.length>0){
+      ctx.beginPath();
+      ctx.moveTo(gPts[0][0],oy);
+      for(const [cx,cy] of gPts) ctx.lineTo(cx,cy);
+      ctx.lineTo(exX,oy); ctx.closePath();
+      ctx.fillStyle='rgba(39,174,96,0.18)'; ctx.fill();
+    }
+    // Red: clamp and extend to right edge
+    const rPts=[];
+    for(let q=qstarS;q<=qmaxS+0.05;q+=0.05){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0) continue;
+      rPts.push(toC(q,Math.min(ac,acmax),W,H,xR,yR));
+    }
+    if(rPts.length>0){
+      ctx.beginPath();
+      ctx.moveTo(rPts[0][0],oy);
+      for(const [cx,cy] of rPts) ctx.lineTo(cx,cy);
+      const lastY=rPts[rPts.length-1][1];
+      ctx.lineTo(xRight,lastY); ctx.lineTo(xRight,oy); ctx.closePath();
+      ctx.fillStyle='rgba(231,76,60,0.13)'; ctx.fill();
+    }
+  } else {
+    // BUGGY: skip points where AC > acmax (start late)
+    const gPts=[];
+    for(let q=0.3;q<=qstarS+0.05;q+=0.1){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax) continue;
+      gPts.push(toC(q,ac,W,H,xR,yR));
+    }
+    if(gPts.length>0){
+      ctx.beginPath();
+      ctx.moveTo(gPts[0][0],oy);
+      for(const [cx,cy] of gPts) ctx.lineTo(cx,cy);
+      ctx.lineTo(exX,oy); ctx.closePath();
+      ctx.fillStyle='rgba(39,174,96,0.18)'; ctx.fill();
+    }
+    const rPts=[];
+    for(let q=qstarS;q<=qmaxS;q+=0.1){
+      const ac=acFn(q); if(!isFinite(ac)||ac<=0||ac>acmax) break;
+      rPts.push(toC(q,ac,W,H,xR,yR));
+    }
+    if(rPts.length>0){
+      ctx.beginPath();
+      ctx.moveTo(rPts[0][0],oy);
+      for(const [cx,cy] of rPts) ctx.lineTo(cx,cy);
+      ctx.lineTo(rPts[rPts.length-1][0],oy); ctx.closePath();
+      ctx.fillStyle='rgba(231,76,60,0.13)'; ctx.fill();
+    }
+  }
 
-  // Curve labels
-  svg.append('text').attr('x', scX(5)).attr('y', scY(60 - 0.6 * 5) - 7)
-    .attr('fill', '#1a56db').attr('font-size', 11).attr('font-weight', 600).text('Demand');
-  svg.append('text').attr('x', scX(60)).attr('y', scY(6 + 0.6 * 60) - 7)
-    .attr('fill', '#16a34a').attr('font-size', 11).attr('font-weight', 600).text('Supply');
-
-  // Axes
-  svg.append('g').attr('transform', `translate(0,${H - PAD.bottom})`).call(
-    d3.axisBottom(scX).ticks(8).tickSize(4).tickFormat(d => d)
-  ).call(g => {
-    g.select('.domain').attr('stroke', '#e4e4e4');
-    g.selectAll('.tick line').attr('stroke', '#e4e4e4');
-    g.selectAll('.tick text').attr('fill', '#6b6b6b').attr('font-size', 9).attr('font-family', "'DM Sans', sans-serif");
-  });
-  svg.append('g').attr('transform', `translate(${PAD.left},0)`).call(
-    d3.axisLeft(scY).ticks(6).tickSize(4).tickFormat(d => '$' + d)
-  ).call(g => {
-    g.select('.domain').attr('stroke', '#e4e4e4');
-    g.selectAll('.tick line').attr('stroke', '#e4e4e4');
-    g.selectAll('.tick text').attr('fill', '#6b6b6b').attr('font-size', 9).attr('font-family', "'DM Sans', sans-serif");
-  });
-
-  // Axis titles
-  svg.append('text').attr('x', PAD.left + (W - PAD.left - PAD.right) / 2)
-    .attr('y', H - 8).attr('text-anchor', 'middle')
-    .attr('fill', '#6b6b6b').attr('font-size', 10).text('Quantity');
-  svg.append('text').attr('transform', `rotate(-90)`)
-    .attr('x', -(PAD.top + (H - PAD.top - PAD.bottom) / 2))
-    .attr('y', 14).attr('text-anchor', 'middle')
-    .attr('fill', '#6b6b6b').attr('font-size', 10).text('Price ($)');
-
-  // Data points and force-simulated labels
-  const LABEL_W = 100, LABEL_H = 14;
-  const nodes = DATA_POINTS.map(d => ({
-    ...d,
-    fx_anchor: scX(d.qty),
-    fy_anchor: scY(d.price),
-    x: scX(d.qty) + (Math.random() - 0.5) * 60,
-    y: scY(d.price) + (Math.random() - 0.5) * 60,
-  }));
-
-  // Connector lines (drawn first, updated in tick)
-  const connectors = svg.selectAll('.connector').data(nodes).enter()
-    .append('line').attr('class', 'connector')
-    .attr('stroke', '#1a56db').attr('stroke-width', 0.9)
-    .attr('stroke-dasharray', '4,3').attr('opacity', 0.5);
-
-  // Data point dots
-  svg.selectAll('.dot').data(nodes).enter()
-    .append('circle').attr('class', 'dot')
-    .attr('cx', d => d.fx_anchor).attr('cy', d => d.fy_anchor)
-    .attr('r', 5).attr('fill', '#1a56db').attr('stroke', 'white').attr('stroke-width', 1.8);
-
-  // Label groups
-  const labelGs = svg.selectAll('.label-g').data(nodes).enter()
-    .append('g').attr('class', 'label-g draggable-label')
-    .call(d3.drag()
-      .on('start', function(event, d) { sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag',  function(event, d) { d.fx = event.x; d.fy = event.y; })
-      .on('end',   function(event, d) { sim.alphaTarget(0); d.fx = null; d.fy = null; })
-    );
-
-  labelGs.append('rect')
-    .attr('width', LABEL_W).attr('height', LABEL_H)
-    .attr('rx', 3).attr('fill', 'white')
-    .attr('stroke', '#1a56db').attr('stroke-width', 0.8).attr('opacity', 0.95);
-
-  labelGs.append('text')
-    .attr('x', 5).attr('y', LABEL_H - 4)
-    .attr('fill', '#1a56db').attr('font-size', 9).attr('font-weight', 600)
-    .text(d => d.label);
-
-  // Force simulation
-  const sim = d3.forceSimulation(nodes)
-    .force('collide', d3.forceCollide(LABEL_W * 0.6).strength(0.85))
-    .force('x', d3.forceX(d => d.fx_anchor).strength(0.07))
-    .force('y', d3.forceY(d => d.fy_anchor).strength(0.07))
-    .on('tick', () => {
-      // Clamp labels within SVG
-      nodes.forEach(d => {
-        d.x = Math.max(PAD.left - 4, Math.min(W - LABEL_W - 4, d.x));
-        d.y = Math.max(PAD.top, Math.min(H - PAD.bottom - LABEL_H, d.y));
-      });
-      labelGs.attr('transform', d => `translate(${d.x},${d.y})`);
-      connectors
-        .attr('x1', d => d.fx_anchor).attr('y1', d => d.fy_anchor)
-        .attr('x2', d => d.x + LABEL_W / 2).attr('y2', d => d.y + LABEL_H / 2);
-    });
-
-  let simRunning = true;
-  window.toggleD3Sim = function() {
-    simRunning = !simRunning;
-    if (simRunning) { sim.alphaTarget(0.05).restart(); }
-    else            { sim.stop(); }
-    document.getElementById('btn-d3-sim').textContent = simRunning ? 'Pause simulation' : 'Resume simulation';
+  // Draw AC and MC curves
+  const drawC=(fn,col,qlo,qhi)=>{
+    ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.beginPath(); let f=true;
+    for(let q=qlo;q<=qhi;q+=0.05){
+      const v=fn(q); if(!isFinite(v)||v<0) continue;
+      const [cx,cy]=toC(q,Math.min(v,acmax),W,H,xR,yR);
+      f?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy); f=false;
+    }
+    ctx.stroke();
   };
+  drawC(acFn,'#1a56db',0.3,qmaxS);
+  drawC(mcFn,'#c0392b',0.5,qmaxS);
+  ctx.restore();
 
-  window.resetD3 = function() {
-    nodes.forEach(d => {
-      d.x  = d.fx_anchor + (Math.random() - 0.5) * 80;
-      d.y  = d.fy_anchor + (Math.random() - 0.5) * 80;
-      d.vx = 0; d.vy = 0;
-      d.fx = null; d.fy = null;
-    });
-    sim.alpha(0.6).restart();
-    if (!simRunning) { simRunning = true; document.getElementById('btn-d3-sim').textContent = 'Pause simulation'; }
-  };
-})();
+  // q* vertical line
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=0.8; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(exX,oy); ctx.lineTo(exX,MT_clip); ctx.stroke(); ctx.setLineDash([]);
 
+  // Labels
+  const fz=Math.max(9,Math.round(W/40));
+  ctx.font=`bold ${fz}px DM Sans,sans-serif`; ctx.textAlign='left';
+  ctx.fillStyle='#1a56db'; ctx.fillText('AC',W-MR-32,MT_clip+fz+4);
+  ctx.fillStyle='#c0392b'; ctx.fillText('MC',W-MR-32,MT_clip+fz*2.5+4);
+  ctx.textAlign='center'; ctx.font=`${fz}px DM Sans,sans-serif`;
+  ctx.fillStyle='#27ae60'; ctx.fillText('Economies',exX-30,oy-8);
+  ctx.fillStyle='#e74c3c'; ctx.fillText('Diseconomies',exX+40,oy-8);
+  ctx.fillStyle='#555';
+  ctx.fillText('q* = 3',exX+2,oy+14);
 
-/* ══════════════════════════════════════════════════════════════════
-   SECTION 3: AG CHARTS DEMO
-   ══════════════════════════════════════════════════════════════════ */
-(function initAG() {
-  if (window.agFailed || typeof agCharts === 'undefined') {
-    document.getElementById('ag-fallback').style.display = 'flex';
-    document.getElementById('ag-demo-outer').style.display = 'none';
-    return;
+  if(fixed){
+    // Annotate the fixed left region
+    const [annX,annY]=toC(0.5,5,W,H,xR,yR);
+    ctx.font=`${fz-1}px DM Sans,sans-serif`; ctx.fillStyle='#1e8449'; ctx.textAlign='left';
+    ctx.fillText('Full left', annX+2, annY);
+    ctx.fillText('region shaded',annX+2,annY+fz+2);
   }
+}
 
-  document.getElementById('ag-demo-outer').style.display = 'block';
+// ================================================================
+// DRAW ALL
+// ================================================================
+function drawAll(){
+  // Section 1: sizes (default 11px font, approach B, style A)
+  drawCostFig('sz-a',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('sz-b',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('sz-c',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('sz-d',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
 
-  // Revenue rectangle-style data: quantity on x, price on y
-  // Demand curve: P = 80 - Q
-  // Supply curve: P = 10 + 0.5*Q
-  // Equilibrium: 80 - Q = 10 + 0.5Q => Q* = 46.7, P* = 33.3
-  const demandData = [];
-  const supplyData = [];
-  for (let q = 0; q <= 70; q += 5) {
-    demandData.push({ q, price: Math.max(0, 80 - q) });
-    supplyData.push({ q, price: 10 + 0.5 * q });
-  }
+  // Section 2: font sizes (all 420px canvas, approach B, style A)
+  drawCostFig('fs-a',{fontSize:9, resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('fs-b',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('fs-c',{fontSize:13,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('fs-d',{fontSize:15,resolver:resolveB,labelDrawer:drawStyleA});
 
-  const keyPoints = [
-    { q: 0,    price: 80, label: 'Demand intercept (80)' },
-    { q: 46.7, price: 33.3, label: 'Equilibrium (Q=46.7, P=33.3)' },
-    { q: 70,   price: 10,  label: 'Supply base (P=10)' },
-  ];
+  // Section 3: force label approaches (all 12px, style A)
+  drawCostFig('fl-a',{fontSize:12,resolver:resolveA,labelDrawer:drawStyleA});
+  drawCostFig('fl-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('fl-c',{fontSize:12,resolver:resolveC,labelDrawer:drawStyleA});
+  drawCostFig('fl-d',{fontSize:12,resolver:resolveD,labelDrawer:drawStyleA});
 
-  try {
-    agCharts.AgCharts.create({
-      container: document.getElementById('ag-demo-container'),
-      title: { text: 'Supply & Demand: Revenue Decomposition', fontSize: 13, fontFamily: "'DM Sans', sans-serif", color: '#1a1a1a' },
-      subtitle: { text: 'AG Charts automatic label placement - equilibrium point annotated', fontSize: 11, fontFamily: "'DM Sans', sans-serif", color: '#6b6b6b' },
-      background: { fill: '#ffffff' },
-      series: [
-        {
-          type: 'line',
-          data: demandData,
-          xKey: 'q', yKey: 'price',
-          title: 'Demand',
-          stroke: '#1a56db', strokeWidth: 2.5,
-          marker: { enabled: false },
-          label: {
-            enabled: true,
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 10,
-            color: '#1a56db',
-            formatter: params => params.index === 0 ? 'D' : (params.index === demandData.length - 1 ? 'D' : ''),
-          },
-        },
-        {
-          type: 'line',
-          data: supplyData,
-          xKey: 'q', yKey: 'price',
-          title: 'Supply',
-          stroke: '#16a34a', strokeWidth: 2.5,
-          marker: { enabled: false },
-          label: {
-            enabled: true,
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 10,
-            color: '#16a34a',
-            formatter: params => params.index === 0 ? 'S' : (params.index === supplyData.length - 1 ? 'S' : ''),
-          },
-        },
-        {
-          type: 'scatter',
-          data: keyPoints,
-          xKey: 'q', yKey: 'price', labelKey: 'label',
-          title: 'Key Points',
-          marker: {
-            size: 9,
-            fill: '#e67e22', stroke: 'white', strokeWidth: 2,
-          },
-          label: {
-            enabled: true,
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 9.5,
-            fontWeight: '600',
-            color: '#92400e',
-            placement: 'top',
-          },
-          tooltip: {
-            renderer: params => ({
-              content: params.datum.label,
-            }),
-          },
-        },
-      ],
-      axes: [
-        {
-          type: 'number', position: 'bottom',
-          title: { text: 'Quantity (Q)', fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#6b6b6b' },
-          label: { fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#6b6b6b' },
-          gridLine: { style: [{ stroke: '#f0f0f0', lineDash: [3, 3] }] },
-          tick: { count: 8 },
-        },
-        {
-          type: 'number', position: 'left',
-          title: { text: 'Price ($)', fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#6b6b6b' },
-          label: { fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#6b6b6b', formatter: p => '$' + Math.round(p) },
-          gridLine: { style: [{ stroke: '#f0f0f0', lineDash: [3, 3] }] },
-        },
-      ],
-      legend: {
-        enabled: true,
-        position: 'bottom',
-        item: { label: { fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#1a1a1a' } },
-      },
-      padding: { top: 16, right: 24, bottom: 16, left: 24 },
-    });
-  } catch (e) {
-    document.getElementById('ag-fallback').style.display = 'flex';
-    document.getElementById('ag-fallback').querySelector('span').textContent =
-      'AG Charts failed to initialise: ' + e.message + '. This may be a version compatibility issue.';
-    document.getElementById('ag-demo-outer').style.display = 'none';
-  }
-})();
+  // Section 4: label styles (all 12px, approach B)
+  drawCostFig('ls-a',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('ls-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleB});
+  drawCostFig('ls-c',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleC});
+  drawCostFig('ls-d',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleD});
+
+  // Section 5: shading bug
+  drawShadingDemo('sh-a', false);
+  drawShadingDemo('sh-b', true);
+}
+
+window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(drawAll));
+window.addEventListener('resize', drawAll);
 </script>
 </body>
 </html>

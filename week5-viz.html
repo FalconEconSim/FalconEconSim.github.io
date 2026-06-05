@@ -486,7 +486,7 @@ function setupCvs(id) {
   const cvs = document.getElementById(id);
   if (!cvs) return {ctx:null, W:300, H:300};
   const dpr = window.devicePixelRatio || 1;
-  const W = cvs.clientWidth || 400;
+  const W = Math.min(cvs.clientWidth || 400, 480);
   const H = W;
   cvs.width = W * dpr;
   cvs.height = H * dpr;
@@ -1661,7 +1661,7 @@ function redrawAll5() {
   v55Draw(); v56Draw(); v57Draw(); v58Draw(); v59Draw();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   v51Update();
   v52DrawAll(); v52InitDrag();
   v53Init();
@@ -1682,7 +1682,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if(el&&el.parentElement) obs.observe(el.parentElement);
     });
   }
-});
+}));
 
 window.addEventListener('resize', redrawAll5);
 </script>
