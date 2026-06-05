@@ -129,17 +129,17 @@
     <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Wage w:</span>
-        <input type="range" class="viz-slider" id="v61-w" min="1" max="10" step="0.5" value="4" oninput="v61Update()">
+        <input type="range" class="viz-slider" id="v61-w" min="1" max="10" step="any" value="4" oninput="v61Update()">
         <span class="viz-slider-val" id="v61-w-val">4</span>
       </div>
       <div class="viz-slider-group">
         <span class="viz-slider-label">Rental rate v:</span>
-        <input type="range" class="viz-slider" id="v61-v" min="1" max="10" step="0.5" value="4" oninput="v61Update()">
+        <input type="range" class="viz-slider" id="v61-v" min="1" max="10" step="any" value="4" oninput="v61Update()">
         <span class="viz-slider-val" id="v61-v-val">4</span>
       </div>
       <div class="viz-slider-group">
         <span class="viz-slider-label">Output q:</span>
-        <input type="range" class="viz-slider" id="v61-q" min="1" max="6" step="0.5" value="3" oninput="v61Update()">
+        <input type="range" class="viz-slider" id="v61-q" min="1" max="6" step="any" value="3" oninput="v61Update()">
         <span class="viz-slider-val" id="v61-q-val">3</span>
       </div>
       <button class="viz-btn" id="v61-show-btn" onclick="v61ShowOptimal()">Show Optimal Bundle</button>
@@ -203,7 +203,7 @@
     <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
       <div class="viz-slider-group">
         <span class="viz-slider-label">TFC:</span>
-        <input type="range" class="viz-slider" id="v65-tfc" min="10" max="200" step="10" value="100" oninput="v65Update()">
+        <input type="range" class="viz-slider" id="v65-tfc" min="10" max="200" step="any" value="100" oninput="v65Update()">
         <span class="viz-slider-val" id="v65-tfc-val">100</span>
       </div>
       <button class="viz-btn" id="v65-lr-btn" onclick="v65ToggleLR()">Show LRAC</button>
@@ -261,12 +261,12 @@
     <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Min wage w:</span>
-        <input type="range" class="viz-slider" id="v68-w" min="1" max="12" step="0.5" value="3" oninput="v68Update()">
+        <input type="range" class="viz-slider" id="v68-w" min="1" max="12" step="any" value="3" oninput="v68Update()">
         <span class="viz-slider-val" id="v68-w-val">3</span>
       </div>
       <div class="viz-slider-group">
         <span class="viz-slider-label">Capital cost v:</span>
-        <input type="range" class="viz-slider" id="v68-v" min="1" max="8" step="0.5" value="3" oninput="v68Update()">
+        <input type="range" class="viz-slider" id="v68-v" min="1" max="8" step="any" value="3" oninput="v68Update()">
         <span class="viz-slider-val" id="v68-v-val">3</span>
       </div>
       <button class="viz-btn" onclick="window.resetFig68&&window.resetFig68()">Reset labels</button>
@@ -366,10 +366,6 @@ function drawForceLabel(ctx, lbl) {
     ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x+bw/2,y+bh/2); ctx.stroke();
     ctx.setLineDash([]); ctx.globalAlpha=1;
   }
-  // Anchor dot r=4
-  ctx.beginPath(); ctx.arc(ax,ay,4,0,2*Math.PI);
-  ctx.fillStyle=color; ctx.fill();
-  ctx.strokeStyle='white'; ctx.lineWidth=1.5; ctx.stroke();
   // Label box: white fill, colored stroke 0.8px, rx=3 (approximate with rect)
   ctx.fillStyle='white';
   ctx.strokeStyle=color; ctx.lineWidth=0.8;
@@ -862,7 +858,7 @@ window._initFig65=function initFig65(){
     return pts;
   }
 
-  let f65Nodes, f65Sim, f65LblGs, f65Conn, f65Dots;
+  let f65Nodes, f65Sim, f65LblGs, f65Conn;
 
   function buildNodes(tfc){
     const qminATC=Math.sqrt(tfc);
@@ -875,18 +871,13 @@ window._initFig65=function initFig65(){
       {id:'minATC',color:'#1a56db',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
     ];
     if(v65ShowLR) nodes.push({id:'LRAC',color:'#c0392b',label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
-    return nodes.filter(n=>isFinite(n.ay)).map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*50,y:n.ay+(Math.random()-0.5)*50}));
+    return nodes.filter(n=>isFinite(n.ay)).map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*80,y:n.ay+(Math.random()-0.5)*80}));
   }
 
   function initSim(tfc){
     if(f65Sim) f65Sim.stop();
-    svg.selectAll('.f65dot,.f65conn,.f65lbl').remove();
+    svg.selectAll('.f65conn,.f65lbl').remove();
     f65Nodes=buildNodes(tfc);
-
-    f65Dots=svg.selectAll('.f65dot').data(f65Nodes).enter()
-      .append('circle').attr('class','f65dot')
-      .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
-      .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
 
     f65Conn=svg.selectAll('.f65conn').data(f65Nodes).enter()
       .append('line').attr('class','f65conn')
@@ -1030,7 +1021,7 @@ window._initFig66=function initFig66(){
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('AC ($)');
 
-  let f66Sim, f66Nodes, f66LblGs, f66Conn, f66Dots;
+  let f66Sim, f66Nodes, f66LblGs, f66Conn;
 
   function makeSracPts(K){
     const pts=[];
@@ -1057,7 +1048,7 @@ window._initFig66=function initFig66(){
     sracLayer.selectAll('*').remove();
     lracLayer.selectAll('*').remove();
     dotLayer.selectAll('*').remove();
-    labelLayer.selectAll('.f66dot,.f66conn,.f66lbl').remove();
+    labelLayer.selectAll('.f66conn,.f66lbl').remove();
 
     const nodeList=[];
 
@@ -1075,7 +1066,7 @@ window._initFig66=function initFig66(){
         const txt='SRAC'+SUBS[ki];
         nodeList.push({id:'SRAC'+K,color:col,label:txt,lw:txt.length*6+10,
           ax:scX(qLbl),ay:scY(acLbl),fx_anchor:scX(qLbl),fy_anchor:scY(acLbl),
-          x:scX(qLbl)+(Math.random()-0.5)*40,y:scY(acLbl)+(Math.random()-0.5)*40});
+          x:scX(qLbl)+(Math.random()-0.5)*80,y:scY(acLbl)+(Math.random()-0.5)*80});
       }
     }
 
@@ -1094,15 +1085,10 @@ window._initFig66=function initFig66(){
       const lw=160;
       nodeList.push({id:'LRAC',color:'#1a56db',label:'LRAC (envelope)',lw,
         ax:scX(lracQ),ay:scY(lracAC),fx_anchor:scX(lracQ),fy_anchor:scY(lracAC),
-        x:scX(lracQ)+(Math.random()-0.5)*40,y:scY(lracAC)+(Math.random()-0.5)*40});
+        x:scX(lracQ)+(Math.random()-0.5)*80,y:scY(lracAC)+(Math.random()-0.5)*80});
     }
 
     f66Nodes=nodeList;
-
-    f66Dots=labelLayer.selectAll('.f66dot').data(f66Nodes).enter()
-      .append('circle').attr('class','f66dot')
-      .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
-      .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
 
     f66Conn=labelLayer.selectAll('.f66conn').data(f66Nodes).enter()
       .append('line').attr('class','f66conn')
@@ -1217,7 +1203,7 @@ window._initFig68=function initFig68(){
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('K (capital)');
 
-  let f68Nodes, f68Sim, f68LblGs, f68Conn, f68Dots;
+  let f68Nodes, f68Sim, f68LblGs, f68Conn;
 
   function buildLabels(w, v, optBase, optNew){
     const wBase=3,vBase=3;
@@ -1237,7 +1223,7 @@ window._initFig68=function initFig68(){
         ax:scX(optNew.Ls),ay:scY(optNew.Ks)},
     ];
     return nodes.filter(n=>isFinite(n.ax)&&isFinite(n.ay))
-      .map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*50,y:n.ay+(Math.random()-0.5)*50}));
+      .map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*80,y:n.ay+(Math.random()-0.5)*80}));
   }
 
   function v68DrawD3(){
@@ -1260,13 +1246,8 @@ window._initFig68=function initFig68(){
 
     // Rebuild labels
     if(f68Sim) f68Sim.stop();
-    svg.selectAll('.f68dot,.f68conn,.f68lbl').remove();
+    svg.selectAll('.f68conn,.f68lbl').remove();
     f68Nodes=buildLabels(w,v,optBase,optNew);
-
-    f68Dots=svg.selectAll('.f68dot').data(f68Nodes).enter()
-      .append('circle').attr('class','f68dot')
-      .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
-      .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
 
     f68Conn=svg.selectAll('.f68conn').data(f68Nodes).enter()
       .append('line').attr('class','f68conn')
@@ -1460,7 +1441,7 @@ window._initFig610=function initFig610(){
   // Force label group
   const labelG=svg.append('g');
 
-  let f610Sim, f610Nodes, f610LblGs, f610Conn, f610Dots;
+  let f610Sim, f610Nodes, f610LblGs, f610Conn;
 
   function draw610(){
     const preset=v610GetPreset();
@@ -1558,7 +1539,7 @@ window._initFig610=function initFig610(){
 
     // Force labels
     if(f610Sim) f610Sim.stop();
-    labelG.selectAll('.f610dot,.f610conn,.f610lbl').remove();
+    labelG.selectAll('.f610conn,.f610lbl').remove();
     const nodeList=[];
     if(qstar&&acstar<=acmax){
       nodeList.push({id:'qstar',color:'#1a56db',label:'q* = '+qstar.toFixed(1),lw:80,
@@ -1574,14 +1555,9 @@ window._initFig610=function initFig610(){
           nodeList.push({id:'MC',color:'#e74c3c',label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
       }
     }
-    f610Nodes=nodeList.map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*40,y:n.ay+(Math.random()-0.5)*40}));
+    f610Nodes=nodeList.map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.random()-0.5)*80,y:n.ay+(Math.random()-0.5)*80}));
 
     if(f610Nodes.length>0){
-      f610Dots=labelG.selectAll('.f610dot').data(f610Nodes).enter()
-        .append('circle').attr('class','f610dot')
-        .attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
-        .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
-
       f610Conn=labelG.selectAll('.f610conn').data(f610Nodes).enter()
         .append('line').attr('class','f610conn')
         .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);

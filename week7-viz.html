@@ -143,7 +143,7 @@
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Market Price P*:</span>
-        <input type="range" class="viz-slider" id="v71-p" min="3.5" max="15" step="0.5" value="10" oninput="v71Update()">
+        <input type="range" class="viz-slider" id="v71-p" min="3.5" max="15" step="any" value="10" oninput="v71Update()">
         <span class="viz-slider-val" id="v71-p-val">$10.00</span>
       </div>
       <button class="viz-btn" onclick="v71Reset()">Reset</button>
@@ -168,7 +168,7 @@
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Market Price P*:</span>
-        <input type="range" class="viz-slider" id="v72-p" min="2" max="12" step="0.25" value="7" oninput="v72Update()">
+        <input type="range" class="viz-slider" id="v72-p" min="2" max="12" step="any" value="7" oninput="v72Update()">
         <span class="viz-slider-val" id="v72-p-val">$7.00</span>
       </div>
       <button class="viz-btn" id="v72-mistakes-btn" onclick="v72ToggleMistakes()">Show Common Mistakes</button>
@@ -207,7 +207,7 @@
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Market Price P*:</span>
-        <input type="range" class="viz-slider" id="v73-p" min="0" max="10" step="0.25" value="6" oninput="v73Update()">
+        <input type="range" class="viz-slider" id="v73-p" min="0" max="10" step="any" value="6" oninput="v73Update()">
         <span class="viz-slider-val" id="v73-p-val">$6.00</span>
       </div>
       <button class="viz-btn" onclick="resetV73Labels()">Reset labels</button>
@@ -284,7 +284,7 @@
     <div class="viz-ctrl-row">
       <div class="viz-slider-group" id="v76-p-group">
         <span class="viz-slider-label">Price P*:</span>
-        <input type="range" class="viz-slider" id="v76-p" min="2" max="12" step="0.5" value="8" oninput="v76Update()">
+        <input type="range" class="viz-slider" id="v76-p" min="2" max="12" step="any" value="8" oninput="v76Update()">
         <span class="viz-slider-val" id="v76-p-val">$8.00</span>
       </div>
       <div id="v76-q-group" style="display:none;align-items:center;gap:0.5rem;">
@@ -403,7 +403,7 @@
       </select>
       <div class="viz-slider-group">
         <span class="viz-slider-label">Shock magnitude:</span>
-        <input type="range" class="viz-slider" id="v710-shock-mag" min="0" max="3" step="0.25" value="0" oninput="v710Update()">
+        <input type="range" class="viz-slider" id="v710-shock-mag" min="0" max="3" step="any" value="0" oninput="v710Update()">
         <span class="viz-slider-val" id="v710-shock-val">0</span>
       </div>
       <button class="viz-btn" onclick="resetV710Labels()">Reset labels</button>
@@ -467,10 +467,7 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
 function drawForceLabel(ctx, lbl) {
   const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
   ctx.save();
-  // Anchor dot
-  ctx.fillStyle=color;
-  ctx.beginPath();ctx.arc(ax,ay,4,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+
   // Connector line
   if (Math.hypot(x-ax,y-ay)>5) {
     ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]);ctx.globalAlpha=0.55;
@@ -499,8 +496,8 @@ function drawForceLabel(ctx, lbl) {
 function setupCvs7(id){
   const cv=document.getElementById(id); if(!cv)return null;
   const dpr=window.devicePixelRatio||1;
-  const W=Math.min(cv.clientWidth||500, 480);
-  const H=W;
+  const W=Math.min(cv.clientWidth||500, 680);
+  const H=Math.round(W*0.47);
   cv.width=W*dpr; cv.height=H*dpr;
   cv.style.height=H+'px';
   const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -583,7 +580,7 @@ function v71Draw(){
   const cvA=document.getElementById('cvs71a'), cvB=document.getElementById('cvs71b');
   if(!cvA||!cvB)return;
   const dpr=window.devicePixelRatio||1;
-  const W=Math.min(cvA.clientWidth||500, 480);
+  const W=Math.min(cvA.clientWidth||500, 680);
   [cvA,cvB].forEach((cv,i)=>{
     cv.width=W*dpr; cv.style.width=W+'px';
     const h=i===0?240:130;
@@ -739,12 +736,19 @@ function v72ToggleMistakes(){
   v72Update();
 }
 // ── D3 SVG helpers ────────────────────────────────────────────────────────
-const D3W=680,D3H=320,D3PAD={top:28,right:36,bottom:44,left:54};
+const D3W=680,D3H=320,D3H2=460,D3PAD={top:28,right:36,bottom:44,left:54};
 const LABEL_H=15;
 function d3MakeSvg(wrapId){
   d3.select('#'+wrapId).selectAll('svg').remove();
   return d3.select('#'+wrapId).append('svg')
     .attr('viewBox',`0 0 ${D3W} ${D3H}`)
+    .style('width','100%').style('display','block')
+    .style('font-family',"'DM Sans',system-ui,sans-serif");
+}
+function d3MakeSvg2(wrapId){
+  d3.select('#'+wrapId).selectAll('svg').remove();
+  return d3.select('#'+wrapId).append('svg')
+    .attr('viewBox',`0 0 ${D3W} ${D3H2}`)
     .style('width','100%').style('display','block')
     .style('font-family',"'DM Sans',system-ui,sans-serif");
 }
@@ -761,6 +765,27 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel){
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xLabel);
   if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yLabel);
 }
+function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
+    .append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right)
+    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
+  svg.append('g').attr('transform',`translate(0,${D3H2-D3PAD.bottom})`).call(
+    d3.axisBottom(scX).ticks(8).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
+    d3.axisLeft(scY).ticks(6).tickSize(4)
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xLabel);
+  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yLabel);
+}
+function d3TickClamp2(nodes,gs,conns){
+  nodes.forEach(d=>{
+    d.x=Math.max(D3PAD.left-4,Math.min(D3W-d.lw-4,d.x));
+    d.y=Math.max(D3PAD.top,Math.min(D3H2-D3PAD.bottom-LABEL_H,d.y));
+  });
+  gs.attr('transform',d=>`translate(${d.x},${d.y})`);
+  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+}
 function d3AddCurve(svg,fn,scX,scY,color,yMax,dash=''){
   const pts=[];
   for(let q=0.4;q<=9.0;q+=0.04){const v=fn(q);if(!isFinite(v)||v<0||v>yMax)continue;pts.push([scX(q),scY(v)]);}
@@ -768,9 +793,6 @@ function d3AddCurve(svg,fn,scX,scY,color,yMax,dash=''){
     .attr('stroke-dasharray',dash).attr('d',d3.line()(pts));
 }
 function d3AddLabels(svg,nodes,sim){
-  const dots=svg.selectAll(null).data(nodes).enter()
-    .append('circle').attr('cx',d=>d.fx_anchor).attr('cy',d=>d.fy_anchor)
-    .attr('r',4).attr('fill',d=>d.color).attr('stroke','white').attr('stroke-width',1.5);
   const conns=svg.selectAll(null).data(nodes).enter()
     .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
   const gs=svg.selectAll(null).data(nodes).enter()
@@ -785,7 +807,7 @@ function d3AddLabels(svg,nodes,sim){
   gs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
     .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
     .text(d=>d.label);
-  return {dots,conns,gs};
+  return {conns,gs};
 }
 function d3MakeSim(nodes){
   return d3.forceSimulation(nodes)
@@ -802,7 +824,7 @@ function d3TickClamp(nodes,gs,conns){
   conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
 }
 function d3Node(id,color,label,lw,ax,ay,extra={}){
-  return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax+(Math.random()-0.5)*50,y:ay+(Math.random()-0.5)*50,...extra};
+  return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax+(Math.random()-0.5)*80,y:ay+(Math.random()-0.5)*80,...extra};
 }
 
 // ── FIG 7.2 D3 SVG ───────────────────────────────────────────────────────
@@ -830,7 +852,7 @@ function v72InitSvg(){
   v72nodes=[
     d3Node('SAVC','#f39c12','SAVC',46,scX(4.5),scY(SAVC7(4.5))),
     d3Node('SAC','#2c3e50','SAC',36,scX(5.5),scY(SAC7(5.5))),
-    d3Node('SMC','#1a56db','SMC',36,scX(6.5),scY(SMC7(6.5))),
+    d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
     d3Node('P','#8e44ad','P*',30,scX(8),scY(P)),
   ];
   v72sim=d3MakeSim(v72nodes);
@@ -890,7 +912,7 @@ function v72DrawUpdate(P){
 function v72Draw(P){v72DrawUpdate(P);}
 window.resetV72Labels=function(){
   if(!v72nodes||!v72sim)return;
-  v72nodes.forEach(d=>{d.x=d.fx_anchor+(Math.random()-0.5)*60;d.y=d.fy_anchor+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
+  v72nodes.forEach(d=>{d.x=d.fx_anchor+(Math.random()-0.5)*80;d.y=d.fy_anchor+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
   v72sim.alpha(0.5).restart();
 };
 
@@ -909,13 +931,13 @@ let v73svg=null,v73sim=null,v73nodes=null,v73gs=null,v73conns=null,v73pLine=null
 function v73InitSvg(){
   const yMax=14;
   const scX=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scY=d3.scaleLinear().domain([0,yMax]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v73svg=d3MakeSvg('cvs73-wrap');
+  const scY=d3.scaleLinear().domain([0,yMax]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  v73svg=d3MakeSvg2('cvs73-wrap');
   const zones=[{from:0,to:4,color:'rgba(231,76,60,0.1)'},{from:4,to:5.5,color:'rgba(230,126,34,0.1)'},{from:5.5,to:14,color:'rgba(39,174,96,0.08)'}];
   zones.forEach(z=>{
     v73svg.append('rect').attr('x',D3PAD.left).attr('y',scY(Math.min(z.to,yMax-0.01))).attr('width',D3W-D3PAD.left-D3PAD.right).attr('height',scY(z.from)-scY(Math.min(z.to,yMax-0.01))).attr('fill',z.color);
   });
-  d3AddAxes(v73svg,scX,scY,'Quantity q','$/unit');
+  d3AddAxes2(v73svg,scX,scY,'Quantity q','$/unit');
   d3AddCurve(v73svg,SAVC7,scX,scY,'#f39c12',yMax);
   d3AddCurve(v73svg,SAC7,scX,scY,'#2c3e50',yMax);
   d3AddCurve(v73svg,SMC7,scX,scY,'#1a56db',yMax);
@@ -924,13 +946,13 @@ function v73InitSvg(){
   v73nodes=[
     d3Node('SAVC','#f39c12','SAVC',46,scX(5),scY(SAVC7(5))),
     d3Node('SAC','#2c3e50','SAC',36,scX(6),scY(SAC7(6))),
-    d3Node('SMC','#1a56db','SMC',36,scX(7),scY(SMC7(7))),
+    d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
     d3Node('P','#8e44ad','P*',30,scX(7.5),scY(P)),
   ];
   v73sim=d3MakeSim(v73nodes);
   const els=d3AddLabels(v73svg,v73nodes,v73sim);
   v73gs=els.gs;v73conns=els.conns;
-  v73sim.on('tick',()=>d3TickClamp(v73nodes,v73gs,v73conns));
+  v73sim.on('tick',()=>d3TickClamp2(v73nodes,v73gs,v73conns));
   v73svg._scX=scX;v73svg._scY=scY;
   v73DrawUpdate(P);
 }
@@ -959,7 +981,7 @@ function v73DrawUpdate(P){
 function v73Draw(P){v73DrawUpdate(P);}
 window.resetV73Labels=function(){
   if(!v73nodes||!v73sim)return;
-  v73nodes.forEach(d=>{d.x=d.fx_anchor+(Math.random()-0.5)*60;d.y=d.fy_anchor+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
+  v73nodes.forEach(d=>{d.x=d.fx_anchor+(Math.random()-0.5)*80;d.y=d.fy_anchor+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
   v73sim.alpha(0.5).restart();
 };
 
@@ -1075,13 +1097,13 @@ const PSD75=4;
 function v75InitSvg(){
   const yMax=14;
   v75scXa=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  v75scYa=d3.scaleLinear().domain([0,yMax]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v75scYa=d3.scaleLinear().domain([0,yMax]).range([D3H2-D3PAD.bottom,D3PAD.top]);
   v75scXb=d3.scaleLinear().domain([0,7]).range([D3PAD.left,D3W-D3PAD.right]);
-  v75scYb=d3.scaleLinear().domain([0,yMax]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v75scYb=d3.scaleLinear().domain([0,yMax]).range([D3H2-D3PAD.bottom,D3PAD.top]);
 
   // LEFT panel
-  v75svgA=d3MakeSvg('cvs75a-wrap');
-  d3AddAxes(v75svgA,v75scXa,v75scYa,'q','$/unit');
+  v75svgA=d3MakeSvg2('cvs75a-wrap');
+  d3AddAxes2(v75svgA,v75scXa,v75scYa,'q','$/unit');
   d3AddCurve(v75svgA,SAVC7,v75scXa,v75scYa,'#f39c12',yMax);
   // SMC below PSD (gray)
   {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<0||v>yMax||v>PSD75)continue;pts.push([v75scXa(q),v75scYa(v)]);}
@@ -1093,16 +1115,16 @@ function v75InitSvg(){
   // Labels for left panel
   v75nodes75=[
     d3Node('SAVC','#f39c12','SAVC',46,v75scXa(5),v75scYa(SAVC7(5))),
-    d3Node('SMC','#1a56db','SMC',36,v75scXa(7),v75scYa(SMC7(7))),
+    d3Node('SMC','#1a56db','SMC',36,v75scXa(5),v75scYa(SMC7(5))),
   ];
   v75sim75=d3MakeSim(v75nodes75);
   const els=d3AddLabels(v75svgA,v75nodes75,v75sim75);
   v75gs75=els.gs;v75conns75=els.conns;
-  v75sim75.on('tick',()=>d3TickClamp(v75nodes75,v75gs75,v75conns75));
+  v75sim75.on('tick',()=>d3TickClamp2(v75nodes75,v75gs75,v75conns75));
 
   // RIGHT panel
-  v75svgB=d3MakeSvg('cvs75b-wrap');
-  d3AddAxes(v75svgB,v75scXb,v75scYb,'q (supply)','P');
+  v75svgB=d3MakeSvg2('cvs75b-wrap');
+  d3AddAxes2(v75svgB,v75scXb,v75scYb,'q (supply)','P');
   v75supplyDots=v75svgB.append('g');
 }
 
@@ -1148,18 +1170,18 @@ function v75Reset(){
 }
 window.resetV75Labels=function(){
   if(!v75nodes75||!v75sim75)return;
-  v75nodes75.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*60;d.y=d.ay+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
+  v75nodes75.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
   v75sim75.alpha(0.5).restart();
 };
 window.resetV78Labels=function(){
-  [v78nodes78a,v78sim78a,v78nodes78b,v78sim78b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*60;d.y=d.ay+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
+  [v78nodes78a,v78sim78a,v78nodes78b,v78sim78b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
 };
 window.resetV79Labels=function(){
-  [v79nodesA,v79simA].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*60;d.y=d.ay+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
-  [v79nodesB,v79simB].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*60;d.y=d.ay+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
+  [v79nodesA,v79simA].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
+  [v79nodesB,v79simB].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
 };
 window.resetV710Labels=function(){
-  [v710nodes710a,v710sim710a,v710nodes710b,v710sim710b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*60;d.y=d.ay+(Math.random()-0.5)*60;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
+  [v710nodes710a,v710sim710a,v710nodes710b,v710sim710b].forEach((x,i)=>{if(i%2===0&&x){x.forEach(d=>{d.x=d.ax+(Math.random()-0.5)*80;d.y=d.ay+(Math.random()-0.5)*80;d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i%2===1&&x){x.alpha(0.5).restart();}});
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1321,6 +1343,9 @@ function v77Draw(){
     // Demand (down-slope, blue) and Supply (up-slope, red)
     g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1a56db').attr('stroke-width',2);
     g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke','#e74c3c').attr('stroke-width',2);
+    // Labels for D and S
+    g.append('text').attr('x',ox+pw-8).attr('y',bot-14).attr('text-anchor','end').attr('font-size',10).attr('font-weight',600).attr('fill','#1a56db').attr('font-family',"'DM Sans',sans-serif").text('D');
+    g.append('text').attr('x',ox+pw-8).attr('y',oy+30).attr('text-anchor','end').attr('font-size',10).attr('font-weight',600).attr('fill','#e74c3c').attr('font-family',"'DM Sans',sans-serif").text('S');
     // Shifted curves
     if(v77step>0&&((sc==='sub'||sc==='income')&&i===2||(sc==='input'&&i===0))){
       const sh=20;
@@ -1358,34 +1383,36 @@ let v78nodes78b=null,v78sim78b=null,v78gs78b=null,v78conns78b=null;
 
 function v78InitSvgA(){
   const scX=d3.scaleLinear().domain([0,8]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scY=d3.scaleLinear().domain([0,14]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v78svgA=d3MakeSvg('cvs78a-wrap');
-  d3AddAxes(v78svgA,scX,scY,'q (firm)','P');
+  const scY=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  v78svgA=d3MakeSvg2('cvs78a-wrap');
+  d3AddAxes2(v78svgA,scX,scY,'q (firm)','P');
+  // Firm supply: starts at q=0 (P=4 when q=0)
   const pts=[];for(let P=4;P<=14;P+=0.2){const q=(P-4)/2;if(q>8)break;pts.push([scX(q),scY(P)]);}
   v78svgA.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(pts));
   v78nodes78a=[d3Node('FS','#1a56db','Firm supply',80,scX(1),scY(6))];
   v78sim78a=d3MakeSim(v78nodes78a);
   const els=d3AddLabels(v78svgA,v78nodes78a,v78sim78a);
   v78gs78a=els.gs;v78conns78a=els.conns;
-  v78sim78a.on('tick',()=>d3TickClamp(v78nodes78a,v78gs78a,v78conns78a));
+  v78sim78a.on('tick',()=>d3TickClamp2(v78nodes78a,v78gs78a,v78conns78a));
   v78svgA._scX=scX;v78svgA._scY=scY;
 }
 
 function v78InitSvgB(n){
   const qMax=n*5+5;
   const scX=d3.scaleLinear().domain([0,qMax]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scY=d3.scaleLinear().domain([0,14]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v78svgB=d3MakeSvg('cvs78b-wrap');
-  d3AddAxes(v78svgB,scX,scY,'Q (market)','P');
-  // Market supply
+  const scY=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  v78svgB=d3MakeSvg2('cvs78b-wrap');
+  d3AddAxes2(v78svgB,scX,scY,'Q (market)','P');
+  // Market supply: starts at Q=0 when P=4
   const pts=[];for(let P=4;P<=14;P+=0.2){const Q=n*(P-4)/2;if(Q>qMax)break;pts.push([scX(Q),scY(P)]);}
   v78svgB.append('path').attr('fill','none').attr('stroke','#27ae60').attr('stroke-width',2).attr('d',d3.line()(pts));
-  // Demand
+  // Demand: linear line crossing visible area (extends beyond chart boundaries)
   const Qd=P=>Math.max(0,200-10*P);
   const Peq=(200+4*n/2)/(50+n/2);
   const Qeq=Qd(Peq);
+  v78svgB.append('line').attr('x1',scX(0)).attr('y1',scY(20)).attr('x2',scX(Math.min(qMax,200))).attr('y2',scY(0))
+    .attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4');
   if(Qeq<qMax){
-    v78svgB.append('line').attr('x1',scX(0)).attr('y1',scY(20)).attr('x2',scX(Math.min(qMax,200))).attr('y2',scY(0)).attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4');
     v78svgB.append('circle').attr('cx',scX(Qeq)).attr('cy',scY(Peq)).attr('r',5).attr('fill','#8e44ad').attr('stroke','white').attr('stroke-width',1.5);
   }
   const lbl='Market supply ('+n+' firms)';
@@ -1394,7 +1421,7 @@ function v78InitSvgB(n){
   v78sim78b=d3MakeSim(v78nodes78b);
   const els=d3AddLabels(v78svgB,v78nodes78b,v78sim78b);
   v78gs78b=els.gs;v78conns78b=els.conns;
-  v78sim78b.on('tick',()=>d3TickClamp(v78nodes78b,v78gs78b,v78conns78b));
+  v78sim78b.on('tick',()=>d3TickClamp2(v78nodes78b,v78gs78b,v78conns78b));
 }
 
 function v78Draw(n){
@@ -1422,10 +1449,10 @@ let v79nodesB=null,v79simB=null,v79gsB=null,v79connsB=null;
 function v79InitSvg(){
   // --- Left panel: Market ---
   const scXM=d3.scaleLinear().domain([0,300]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYM=d3.scaleLinear().domain([0,14]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v79svgA=d3MakeSvg('cvs79a-wrap');
-  d3AddAxes(v79svgA,scXM,scYM,'Q','P');
-  // Static demand line (Q=1000-50P visible range)
+  const scYM=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  v79svgA=d3MakeSvg2('cvs79a-wrap');
+  d3AddAxes2(v79svgA,scXM,scYM,'Q','P');
+  // Static demand line: Q = 1000-50P; at P=14, Q=300; extends upward off chart
   v79svgA.append('line').attr('class','v79-demand')
     .attr('x1',scXM(0)).attr('y1',scYM(20))
     .attr('x2',scXM(300)).attr('y2',scYM(14))
@@ -1440,14 +1467,14 @@ function v79InitSvg(){
   v79simA=d3MakeSim(v79nodesA);
   const elsA=d3AddLabels(v79svgA,v79nodesA,v79simA);
   v79gsA=elsA.gs;v79connsA=elsA.conns;
-  v79simA.on('tick',()=>d3TickClamp(v79nodesA,v79gsA,v79connsA));
+  v79simA.on('tick',()=>d3TickClamp2(v79nodesA,v79gsA,v79connsA));
   v79svgA._scXM=scXM;v79svgA._scYM=scYM;
 
   // --- Right panel: Firm ---
   const scXF=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYF=d3.scaleLinear().domain([0,14]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v79svgB=d3MakeSvg('cvs79b-wrap');
-  d3AddAxes(v79svgB,scXF,scYF,'q','$/unit');
+  const scYF=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  v79svgB=d3MakeSvg2('cvs79b-wrap');
+  d3AddAxes2(v79svgB,scXF,scYF,'q','$/unit');
   // Static SAC and SMC
   d3AddCurve(v79svgB,q=>SAC7(q),scXF,scYF,'#2c3e50',14);
   d3AddCurve(v79svgB,q=>SMC7(q),scXF,scYF,'#1a56db',14);
@@ -1456,12 +1483,12 @@ function v79InitSvg(){
   // Labels
   v79nodesB=[
     d3Node('SAC','#2c3e50','SAC',30,scXF(7.5),scYF(SAC7(7.5))),
-    d3Node('SMC','#1a56db','SMC',30,scXF(7),scYF(SMC7(7))),
+    d3Node('SMC','#1a56db','SMC',30,scXF(5),scYF(SMC7(5))),
   ];
   v79simB=d3MakeSim(v79nodesB);
   const elsB=d3AddLabels(v79svgB,v79nodesB,v79simB);
   v79gsB=elsB.gs;v79connsB=elsB.conns;
-  v79simB.on('tick',()=>d3TickClamp(v79nodesB,v79gsB,v79connsB));
+  v79simB.on('tick',()=>d3TickClamp2(v79nodesB,v79gsB,v79connsB));
   v79svgB._scXF=scXF;v79svgB._scYF=scYF;
 }
 
@@ -1558,29 +1585,29 @@ let v710nodes710b=null,v710sim710b=null,v710gs710b=null,v710conns710b=null;
 function v710InitSvg(){
   // --- Left (Firm) panel ---
   const scXF=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYF=d3.scaleLinear().domain([0,14]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v710svgA=d3MakeSvg('cvs710a-wrap');
-  d3AddAxes(v710svgA,scXF,scYF,'q','$/unit');
+  const scYF=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  v710svgA=d3MakeSvg2('cvs710a-wrap');
+  d3AddAxes2(v710svgA,scXF,scYF,'q','$/unit');
   // Static original SMC
   d3AddCurve(v710svgA,q=>SMC7(q),scXF,scYF,'#1a56db',14);
   v710svgA.append('g').attr('class','v710-dyn-firm');
   // Firm labels
-  v710nodes710a=[d3Node('SMC','#1a56db','SMC',30,scXF(7),scYF(SMC7(7)))];
+  v710nodes710a=[d3Node('SMC','#1a56db','SMC',30,scXF(5),scYF(SMC7(5)))];
   v710sim710a=d3MakeSim(v710nodes710a);
   const elsA=d3AddLabels(v710svgA,v710nodes710a,v710sim710a);
   v710gs710a=elsA.gs;v710conns710a=elsA.conns;
-  v710sim710a.on('tick',()=>d3TickClamp(v710nodes710a,v710gs710a,v710conns710a));
+  v710sim710a.on('tick',()=>d3TickClamp2(v710nodes710a,v710gs710a,v710conns710a));
   v710svgA._scXF=scXF;v710svgA._scYF=scYF;
 
   // --- Right (Market) panel ---
   const scXM=d3.scaleLinear().domain([0,200]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYM=d3.scaleLinear().domain([0,14]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v710svgB=d3MakeSvg('cvs710b-wrap');
-  d3AddAxes(v710svgB,scXM,scYM,'Q','P');
-  // Static demand
+  const scYM=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  v710svgB=d3MakeSvg2('cvs710b-wrap');
+  d3AddAxes2(v710svgB,scXM,scYM,'Q','P');
+  // Static demand: from (Q=0, P=14) to (Q=200, P=10)
   v710svgB.append('line').attr('x1',scXM(0)).attr('y1',scYM(14)).attr('x2',scXM(200)).attr('y2',scYM(10))
     .attr('stroke','#1a56db').attr('stroke-width',2);
-  // Static original market supply (Q=50*(P-4))
+  // Static original market supply (Q=50*(P-4)), starts at Q=0 when P=4
   {const pts=[];for(let P2=4;P2<=14;P2+=0.2){const Q2=50*(P2-4);if(Q2>200)break;pts.push([scXM(Q2),scYM(P2)]);}
   v710svgB.append('path').attr('fill','none').attr('stroke','#27ae60').attr('stroke-width',2).attr('d',d3.line()(pts));}
   v710svgB.append('g').attr('class','v710-dyn-mkt');
@@ -1592,7 +1619,7 @@ function v710InitSvg(){
   v710sim710b=d3MakeSim(v710nodes710b);
   const elsB=d3AddLabels(v710svgB,v710nodes710b,v710sim710b);
   v710gs710b=elsB.gs;v710conns710b=elsB.conns;
-  v710sim710b.on('tick',()=>d3TickClamp(v710nodes710b,v710gs710b,v710conns710b));
+  v710sim710b.on('tick',()=>d3TickClamp2(v710nodes710b,v710gs710b,v710conns710b));
   v710svgB._scXM=scXM;v710svgB._scYM=scYM;
 }
 
@@ -1609,12 +1636,12 @@ function v710Draw(shock,dw){
     const pts=[];for(let q=0.4;q<=9;q+=0.05){const v=SMC7(q)+shiftD;if(v<0||v>14)continue;pts.push([scXF(q),scYF(v)]);}
     if(pts.length>1)gF.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(pts));
     // Add SMC' label node (re-init sim with extra node)
-    const smcPrimeNode=d3Node('SMCp','#e74c3c',"SMC'",35,scXF(7),scYF(Math.min(SMC7(7)+shiftD,13.5)));
+    const smcPrimeNode=d3Node('SMCp','#e74c3c',"SMC'",35,scXF(5),scYF(Math.min(SMC7(5)+shiftD,13.5)));
     // Add it as plain label group without simulation (static offset)
     const g=gF.append('g').attr('class','draggable-label');
     g.append('rect').attr('x',-35/2-2).attr('y',-LABEL_H/2).attr('width',35+4).attr('height',LABEL_H).attr('rx',3).attr('fill','white').attr('stroke','#e74c3c').attr('stroke-width',0.8);
     g.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle').attr('fill','#e74c3c').attr('font-size',9).attr('font-weight','bold').attr('font-family',"'DM Sans',sans-serif").text("SMC'");
-    g.attr('transform',`translate(${scXF(7)+20},${scYF(Math.min(SMC7(7)+shiftD,13.5))-12})`);
+    g.attr('transform',`translate(${scXF(5)+20},${scYF(Math.min(SMC7(5)+shiftD,13.5))-12})`);
   }
 
   // Update market panel: shifted supply + new equilibrium if dw>0
