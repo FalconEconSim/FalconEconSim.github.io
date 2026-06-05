@@ -678,8 +678,9 @@ let v52DragL = 4, v52DragK = 4, v52Dragging = false;
 function v52DrawPanel(canvasId, type, qLevels, mode) {
   const cvs=document.getElementById(canvasId); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||280, H=280;
-  if(cvs.width!==W*dpr||cvs.height!==H*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||280;
+  const H=Math.round(W-(ML+MR-MT-MB)); // equal pixel-per-unit on both axes (xR=yR=[0,10])
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
@@ -803,8 +804,8 @@ function v53Draw() {
   const cvs=document.getElementById('cvs53'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
   const W=cvs.clientWidth||400;
-  // Square canvas: equal axis ranges [0,18] × [0,18]
-  const H=W;
+  // Equal pixel-per-unit on both axes: H adjusted for margin asymmetry
+  const H=Math.round(W-(ML+MR-MT-MB));
   if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){
     cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';
   }
