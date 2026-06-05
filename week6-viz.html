@@ -318,7 +318,7 @@ const ML=50, MR=20, MT=20, MB=40;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
 // items: [{x,y,ax,ay,w,h,text,color,fontSize,bold}] -- x/y are mutable label centers
-function resolveLabels(items, iter=100, pad=4) {
+function resolveLabels(items, linePts=[], iter=150, pad=6) {
   for (let it=0; it<iter; it++) {
     for (let i=0; i<items.length; i++) {
       for (let j=i+1; j<items.length; j++) {
@@ -332,6 +332,16 @@ function resolveLabels(items, iter=100, pad=4) {
         }
       }
       const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
+    }
+    for (const lm of items) {
+      const hw=lm.w/2+8, hh=lm.h/2+8;
+      for (const [lx,ly] of linePts) {
+        const dx=lm.x-lx, dy=lm.y-ly;
+        if (Math.abs(dx)<hw && Math.abs(dy)<hh) {
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
+        }
+      }
     }
   }
 }
@@ -355,10 +365,10 @@ function drawForceLabel(ctx, lbl) {
 }
 
 function setupCvs(id) {
-  const cvs=document.getElementById(id); if(!cvs) return {ctx:null,W:300,H:200};
+  const cvs=document.getElementById(id); if(!cvs) return {ctx:null,W:300,H:300};
   const dpr=window.devicePixelRatio||1;
   const W=cvs.clientWidth||400;
-  const H=parseInt(cvs.getAttribute('height'))||260;
+  const H=W;
   cvs.width=W*dpr; cvs.height=H*dpr; cvs.style.height=H+'px';
   const ctx=cvs.getContext('2d'); ctx.scale(dpr,dpr);
   return {ctx,W,H};
@@ -439,15 +449,15 @@ function v61Draw(Lcur,Kcur){
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
 
   // Isoquant for Q=q
+  const linePts61=[];
   ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
   for(let l=0.1;l<=AXIS_MAX;l+=0.05){
     const k=q*q/l; if(k>AXIS_MAX||k<0.05){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
+    if(l%2<0.05) linePts61.push([cx,cy]);
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
-  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('Isoquant Q = '+q, W-MR-80, MT+14);
 
   // Isocost family
   const TCopt=opt.TC;
@@ -456,25 +466,39 @@ function v61Draw(Lcur,Kcur){
     const Lint=TC/w, Kint=TC/v;
     const [lx0,ly0]=toC(0,Math.min(Kint,AXIS_MAX),W,H,xR,yR);
     const [lx1,ly1]=toC(Math.min(Lint,AXIS_MAX),0,W,H,xR,yR);
+    if(i===2) for(let t=0;t<=1;t+=0.25) linePts61.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);
     ctx.beginPath(); ctx.strokeStyle=i===2?'#e74c3c':'#ddd'; ctx.lineWidth=i===2?1.5:1;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
   });
   const [icLx,icLy]=toC(0,Math.min(TCopt/v,AXIS_MAX),W,H,xR,yR);
-  ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('Isocost TC* = '+opt.TC.toFixed(1), icLx+4, icLy-4);
+  ctx.font='9px DM Sans,sans-serif';
+  // Anchor label to a point on the isoquant near L=AXIS_MAX*0.7
+  const iqL=AXIS_MAX*0.7, iqK=q*q/iqL;
+  const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
+  const lbls61=[
+    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width+8,h:12,text:'Isoquant Q = '+q,color:'#1a56db',fontSize:9,bold:false},
+    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:'#e74c3c',fontSize:9,bold:false},
+  ];
+
+  // Resolve and draw static curve labels (isoquant + isocost)
+  resolveLabels(lbls61,linePts61,60,5);
+  lbls61.forEach(l=>drawForceLabel(ctx,l));
 
   // If optimal is shown, draw the green dot at the optimal location
   if(v61OptimalShown){
     const [ox,oy]=toC(opt.Ls,opt.Ks,W,H,xR,yR);
     dot6(ctx,ox,oy,9,'#2e8b57','#fff');
-    ctx.fillStyle='#2e8b57'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-    const lblX=ox>W-MR-130?ox-140:ox+12;
-    ctx.fillText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')', lblX, oy-6);
-    ctx.fillText('Cost minimised!', lblX, oy+10);
     ctx.setLineDash([3,3]); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.setLineDash([]);
+    ctx.font='9px DM Sans,sans-serif';
+    const optLbls=[
+      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2e8b57',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2e8b57',fontSize:9,bold:false},
+    ];
+    resolveLabels(optLbls,linePts61,60,5);
+    optLbls.forEach(l=>drawForceLabel(ctx,l));
     document.getElementById('v61-readout').innerHTML=
       '<div class="readout-row">' +
       '<div class="readout-col"><div class="readout-label">L*</div><div class="readout-val">'+opt.Ls.toFixed(2)+'</div></div>' +
@@ -494,12 +518,16 @@ function v61Draw(Lcur,Kcur){
   const atOpt=onIsoquant&&atTangency;
   const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
   dot6(ctx,bx,by,8,atOpt?'#2e8b57':'#e74c3c','#fff');
-  const lblX=bx>W-MR-130?bx-140:bx+10;
-  ctx.fillStyle=atOpt?'#2e8b57':'#e74c3c'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')', lblX, by-6);
-  if(atOpt) ctx.fillText('Cost minimised!', lblX, by+10);
-  else if(!onIsoquant){ ctx.fillStyle='#888'; ctx.fillText('Not on isoquant yet - drag near the blue curve', lblX, by+22); }
-  else { ctx.fillStyle='#888'; ctx.fillText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)+', keep adjusting', lblX, by+22); }
+  ctx.font='9px DM Sans,sans-serif';
+  const dotCol=atOpt?'#2e8b57':'#e74c3c';
+  const dragLbls=[
+    {ax:bx,ay:by,x:bx+12,y:by-10,w:ctx.measureText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')').width+8,h:12,text:'(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')',color:dotCol,fontSize:9,bold:false},
+  ];
+  if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2e8b57',fontSize:9,bold:false});
+  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'#888',fontSize:9,bold:false});
+  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#888',fontSize:9,bold:false});
+  resolveLabels(dragLbls,linePts61,60,5);
+  dragLbls.forEach(l=>drawForceLabel(ctx,l));
 
   const TC=w*Lcur+v*Kcur;
   document.getElementById('v61-readout').innerHTML=
@@ -634,8 +662,8 @@ function v62Draw(){
   const drawPanel=(id)=>{
     const cvs=document.getElementById(id); if(!cvs) return null;
     const dpr=window.devicePixelRatio||1;
-    const W=cvs.clientWidth||300, H=260;
-    if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+    const W=cvs.clientWidth||300, H=W;
+    if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
     const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,W,H);
     return {ctx,W,H};
@@ -746,50 +774,62 @@ function v65Draw(){
   const tfc=parseFloat(document.getElementById('v65-tfc').value);
   const cvs=document.getElementById('cvs65'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=280;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==W*dpr||cvs.height!==H*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const xR=[0,16], yR=[0,80];
   drawAxesSt(ctx,W,H,xR,yR,'q','Cost per unit ($)');
 
-  const drawCurve=(fn,col,lw,dash)=>{
+  const linePts65=[];
+  const drawCurve65=(fn,col,lw,dash)=>{
     ctx.beginPath(); let first=true;
     ctx.strokeStyle=col; ctx.lineWidth=lw;
     if(dash) ctx.setLineDash(dash); else ctx.setLineDash([]);
     for(let q=0.5;q<=15;q+=0.1){
       const v=fn(q); if(v>yR[1]||v<0){first=true;continue;}
       const [cx,cy]=toC(q,v,W,H,xR,yR);
+      if(q%1<0.1) linePts65.push([cx,cy]);
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
     ctx.stroke(); ctx.setLineDash([]);
   };
 
-  drawCurve(q=>v65MC(q),'#e74c3c',2.5);
-  drawCurve(q=>v65ATC(q,tfc),'#1a56db',2.5);
-  drawCurve(q=>v65AVC(q),'#2e8b57',2);
-  drawCurve(q=>v65AFC(q,tfc),'#888',1.5,[4,3]);
+  drawCurve65(q=>v65MC(q),'#e74c3c',2.5);
+  drawCurve65(q=>v65ATC(q,tfc),'#1a56db',2.5);
+  drawCurve65(q=>v65AVC(q),'#2e8b57',2);
+  drawCurve65(q=>v65AFC(q,tfc),'#888',1.5,[4,3]);
+
+  // Collect force labels for curve legends + LRAC + min ATC
+  const lbls65=[];
+  ctx.font='9px DM Sans,sans-serif';
+  const legData=[['SMC','#e74c3c'],['ATC','#1a56db'],['AVC','#2e8b57'],['AFC','#888']];
 
   if(v65ShowLR){
-    drawCurve(q=>2,'#c0392b',2.5,[5,3]);
-    ctx.fillStyle='#c0392b'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('LRAC = $2 (CRS)',ML+4,MT+12);
+    drawCurve65(q=>2,'#c0392b',2.5,[5,3]);
+    // LRAC = $2 horizontal line - add to linePts for repulsion
+    const [,lry]=toC(0,2,W,H,xR,yR);
+    for(let x=ML;x<=W-MR;x+=10) linePts65.push([x,lry]);
+    legData.push(['LRAC','#c0392b']);
   }
 
-  const leg=[['SMC','#e74c3c'],['ATC','#1a56db'],['AVC','#2e8b57'],['AFC','#888']];
-  leg.forEach(([lbl,col],i)=>{
-    ctx.fillStyle=col; ctx.fillRect(W-MR-80,MT+4+i*16,16,3);
+  // Legend swatches (fixed position in corner, no collision needed)
+  legData.forEach(([lbl,col],i)=>{
+    ctx.fillStyle=col; ctx.fillRect(W-MR-70,MT+4+i*16,12,3);
     ctx.fillStyle=col; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText(lbl,W-MR-60,MT+10+i*16);
+    ctx.fillText(lbl,W-MR-54,MT+9+i*16);
   });
 
+  // min ATC dot + force label
   const qminATC=Math.sqrt(tfc); const minATC=v65ATC(qminATC,tfc);
   if(qminATC<=15&&minATC<=yR[1]){
     const [mx,my]=toC(qminATC,minATC,W,H,xR,yR);
     dot6(ctx,mx,my,5,'#1a56db','#fff');
-    ctx.fillStyle='#1a56db'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('min ATC: q*='+qminATC.toFixed(1),mx,my-8);
+    const mAtcTxt='min ATC: q*='+qminATC.toFixed(1);
+    ctx.font='9px DM Sans,sans-serif';
+    lbls65.push({ax:mx,ay:my,x:mx,y:my-12,w:ctx.measureText(mAtcTxt).width+8,h:12,text:mAtcTxt,color:'#1a56db',fontSize:9,bold:false});
   }
+  if(lbls65.length){ resolveLabels(lbls65,linePts65,100); lbls65.forEach(l=>drawForceLabel(ctx,l)); }
 
   document.getElementById('v65-readout').innerHTML=
     '<div class="readout-row">' +
@@ -834,8 +874,8 @@ function v66Draw(){
   const nk=nkEl?parseInt(nkEl.value)||4:4;
   const cvs=document.getElementById('cvs66'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=300;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==W*dpr||cvs.height!==H*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
 
@@ -847,6 +887,7 @@ function v66Draw(){
 
   // Draw SRAC curves for K = 1, 2, ..., nk
   const sracLabels = [];
+  const linePts66=[];
   for(let ki=0;ki<nk;ki++){
     const K=ki+1;
     const col=cols[ki%cols.length];
@@ -854,6 +895,7 @@ function v66Draw(){
     for(let q=0.2;q<=13;q+=0.08){
       const ac=v66SRAC(q,K); if(ac>yR[1]||ac<0){first=true;continue;}
       const [cx,cy]=toC(q,ac,W,H,xR,yR);
+      if(q%1<0.08) linePts66.push([cx,cy]);
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
     ctx.stroke();
@@ -877,40 +919,50 @@ function v66Draw(){
       sracLabels.push({x:lx,y:ly-6,ax:lx,ay:ly,text:txt,color:col,fontSize:9,bold:true,w:tw+6,h:13});
     }
   }
-  // Resolve SRAC label collisions then draw with connector lines
-  resolveLabels(sracLabels, 120, 5);
+  // Resolve SRAC label collisions with line repulsion
+  resolveLabels(sracLabels, linePts66, 120, 5);
   sracLabels.forEach(lbl=>drawForceLabel(ctx,lbl));
 
-  // LRAC: lower envelope
+  // LRAC: lower envelope -- collect for repulsion
+  const lracPts=[];
   ctx.beginPath(); let firstLR=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
   for(let q=0.2;q<=13;q+=0.06){
     let minAC=Infinity;
     for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(q,ki+1); if(ac<minAC) minAC=ac; }
     if(minAC>yR[1]||minAC<0){firstLR=true;continue;}
     const [cx,cy]=toC(q,minAC,W,H,xR,yR);
+    if(q%1<0.06) lracPts.push([cx,cy]);
     firstLR?(ctx.moveTo(cx,cy),firstLR=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
 
-  // LRAC label
-  const lracQ=7;
-  let lracAC=Infinity;
-  for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(lracQ,ki+1); if(ac<lracAC) lracAC=ac; }
-  if(lracAC<=yR[1]){
-    const [llx,lly]=toC(lracQ,lracAC,W,H,xR,yR);
-    ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('LRAC (lower envelope)', llx, lly+16);
-  }
-
-  // LRAC minimum: for SRAC(q,K) = w*q/K + v*K/q, the LRAC = 2*sqrt(w*v) (constant)
+  // LRAC min dashed line
   const lracMin=2*Math.sqrt(V66_W*V66_V);
   if(lracMin<=yR[1]){
     const [,ly0]=toC(0,lracMin,W,H,xR,yR);
     ctx.setLineDash([5,4]); ctx.strokeStyle='#1a56dba0'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML,ly0); ctx.lineTo(W-MR,ly0); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle='#1a56db'; ctx.font='9px DM Mono,monospace'; ctx.textAlign='right';
-    ctx.fillText('LRAC min = $'+lracMin.toFixed(2), W-MR-2, ly0-3);
+    for(let x=ML;x<=W-MR;x+=10) lracPts.push([x,ly0]);
   }
+
+  // Force labels: LRAC label + LRAC min label
+  const lbls66=[];
+  const lracQ=7; let lracAC=Infinity;
+  for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(lracQ,ki+1); if(ac<lracAC) lracAC=ac; }
+  ctx.font='bold 10px DM Sans,sans-serif';
+  if(lracAC<=yR[1]){
+    const [llx,lly]=toC(lracQ,lracAC,W,H,xR,yR);
+    const lt='LRAC (lower envelope)';
+    lbls66.push({ax:llx,ay:lly,x:llx,y:lly+18,w:ctx.measureText(lt).width+8,h:13,text:lt,color:'#1a56db',fontSize:10,bold:true});
+  }
+  if(lracMin<=yR[1]){
+    const [,ly0]=toC(0,lracMin,W,H,xR,yR);
+    ctx.font='9px DM Mono,monospace';
+    const mt='LRAC min = $'+lracMin.toFixed(2);
+    lbls66.push({ax:W-MR-2,ay:ly0,x:W-MR-2-ctx.measureText(mt).width/2-4,y:ly0-8,w:ctx.measureText(mt).width+8,h:12,text:mt,color:'#1a56db',fontSize:9,bold:false});
+  }
+  resolveLabels(lbls66,lracPts,80);
+  lbls66.forEach(l=>drawForceLabel(ctx,l));
 
   document.getElementById('v66-readout').innerHTML=
     '<div style="font-size:0.84rem;color:var(--muted);line-height:1.7;">' +
@@ -940,25 +992,25 @@ function v68Draw(){
 
   const cvs=document.getElementById('cvs68'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=280;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
 
   const AXIS_MAX6=18;
   const xR=[0,AXIS_MAX6],yR=[0,AXIS_MAX6];
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
+  const linePts68=[];
 
   // Isoquant Q=4
   ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
   for(let l=0.1;l<=AXIS_MAX6;l+=0.05){
     const k=V68_Q*V68_Q/l; if(k>AXIS_MAX6||k<0.05){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
+    if(l%2<0.05) linePts68.push([cx,cy]);
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
-  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('Q='+V68_Q, W-MR-35, MT+14);
 
   // Old isocost (w=wBase)
   const TCold=optBase.TC;
@@ -966,6 +1018,7 @@ function v68Draw(){
   {
     const [ix0,iy0]=toC(0,Math.min(Kold,AXIS_MAX6),W,H,xR,yR);
     const [ix1,iy1]=toC(Math.min(Lold,AXIS_MAX6),0,W,H,xR,yR);
+    for(let t=0;t<=1;t+=0.25) linePts68.push([ix0+(ix1-ix0)*t,iy0+(iy1-iy0)*t]);
     ctx.beginPath(); ctx.strokeStyle='#aaa'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
     ctx.moveTo(ix0,iy0); ctx.lineTo(ix1,iy1); ctx.stroke(); ctx.setLineDash([]);
   }
@@ -975,31 +1028,34 @@ function v68Draw(){
   const Lnew=TCnew/w, Knew=TCnew/v;
   const [nx0,ny0]=toC(0,Math.min(Knew,AXIS_MAX6),W,H,xR,yR);
   const [nx1,ny1]=toC(Math.min(Lnew,AXIS_MAX6),0,W,H,xR,yR);
+  for(let t=0;t<=1;t+=0.25) linePts68.push([nx0+(nx1-nx0)*t,ny0+(ny1-ny0)*t]);
   ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
   ctx.moveTo(nx0,ny0); ctx.lineTo(nx1,ny1); ctx.stroke();
-  ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('New isocost (w=$'+w+')', nx0+4, ny0-5);
 
   // Old optimal (red X)
   const [ox,oy]=toC(optBase.Ls,optBase.Ks,W,H,xR,yR);
   ctx.fillStyle='#e74c3c'; ctx.font='bold 16px DM Sans,sans-serif'; ctx.textAlign='center';
   ctx.fillText('X',ox,oy+6);
-  ctx.font='10px DM Sans,sans-serif';
-  const olx=ox>W/2?ox-6:ox+6;
-  ctx.textAlign=ox>W/2?'right':'left';
-  ctx.fillText('old optimum (no longer min cost)',olx,oy-14);
 
   // New optimal (green dot)
   const [bx,by]=toC(optNew.Ls,optNew.Ks,W,H,xR,yR);
   dot6(ctx,bx,by,8,'#2e8b57','#fff');
-  ctx.fillStyle='#2e8b57'; ctx.font='10px DM Sans,sans-serif';
-  const nlx=bx>W/2?bx-6:bx+12;
-  ctx.textAlign=bx>W/2?'right':'left';
-  ctx.fillText('new optimum',nlx,by-10);
 
   // Arrow
   ctx.beginPath(); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1.5;
   ctx.moveTo(ox,oy); ctx.lineTo(bx,by); ctx.stroke();
+
+  // Force labels: Q=N isoquant, new isocost, old optimum, new optimum
+  ctx.font='9px DM Sans,sans-serif';
+  const[qlx,qly]=toC(AXIS_MAX6*0.8,V68_Q*V68_Q/(AXIS_MAX6*0.8),W,H,xR,yR);
+  const v68Lbls=[
+    {ax:qlx,ay:qly,x:qlx+16,y:qly-8,w:ctx.measureText('Q='+V68_Q).width+8,h:12,text:'Q='+V68_Q,color:'#1a56db',fontSize:9,bold:false},
+    {ax:(nx0+nx1)/2,ay:(ny0+ny1)/2,x:(nx0+nx1)/2+8,y:(ny0+ny1)/2-10,w:ctx.measureText('New isocost (w=$'+w+')').width+8,h:12,text:'New isocost (w=$'+w+')',color:'#e74c3c',fontSize:9,bold:false},
+    {ax:ox,ay:oy,x:ox+8,y:oy-18,w:ctx.measureText('old optimum').width+8,h:12,text:'old optimum',color:'#e74c3c',fontSize:9,bold:false},
+    {ax:bx,ay:by,x:bx+8,y:by-18,w:ctx.measureText('new optimum').width+8,h:12,text:'new optimum',color:'#2e8b57',fontSize:9,bold:false},
+  ];
+  resolveLabels(v68Lbls,linePts68,80,5);
+  v68Lbls.forEach(l=>drawForceLabel(ctx,l));
 
   const kl_old=optBase.Ks/optBase.Ls, kl_new=optNew.Ks/optNew.Ls;
   document.getElementById('v68-readout').innerHTML=
@@ -1120,8 +1176,8 @@ function v610Draw(){
 
   const cvs=document.getElementById('cvs610'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=280;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
 
@@ -1211,20 +1267,30 @@ function v610Draw(){
     ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(qsx,qsy); ctx.lineTo(qsx,qsy0); ctx.stroke(); ctx.setLineDash([]);
     dot6(ctx,qsx,qsy,7,'#1a56db','#fff');
-    ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('q* = '+qstar.toFixed(1), qsx, qsy-10);
-    ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif';
-    ctx.fillText('AC* = $'+acstar.toFixed(2), qsx, qsy0+14);
 
+    // Collect AC and MC line points for repulsion
+    const linePts610=[];
+    for(let q=0.3;q<=qmax;q+=1){
+      const ac=acFn(q); if(isFinite(ac)&&ac>0&&ac<=acmax) linePts610.push([...toC(q,Math.min(ac,acmax),W,H,xR,yR)]);
+      if(v610ShowMC){const mc=mcFn(q); if(isFinite(mc)&&mc>=0&&mc<=acmax) linePts610.push([...toC(q,Math.min(mc,acmax),W,H,xR,yR)]);}
+    }
+    linePts610.push([qsx,qsy0]); // dashed vertical line
+
+    ctx.font='bold 10px DM Sans,sans-serif';
+    const lbl610=[
+      {ax:qsx,ay:qsy,x:qsx,y:qsy-14,w:ctx.measureText('q* = '+qstar.toFixed(1)).width+8,h:13,text:'q* = '+qstar.toFixed(1),color:'#1a56db',fontSize:10,bold:true},
+      {ax:qsx,ay:qsy0,x:qsx,y:qsy0+18,w:ctx.measureText('AC* = $'+acstar.toFixed(2)).width+8,h:12,text:'AC* = $'+acstar.toFixed(2),color:'#888',fontSize:9,bold:false},
+    ];
     if(v610ShowMC){
-      // Mark MC=AC crossing (at min AC)
       const mcAtStar=mcFn(qstar);
       if(isFinite(mcAtStar)&&Math.abs(mcAtStar-acstar)/acstar<0.15){
         dot6(ctx,qsx,qsy,5,'#e74c3c','#fff');
-        ctx.fillStyle='#e74c3c'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-        ctx.fillText('MC = AC here', qsx+8, qsy+4);
+        ctx.font='9px DM Sans,sans-serif';
+        lbl610.push({ax:qsx,ay:qsy,x:qsx+14,y:qsy+8,w:ctx.measureText('MC = AC here').width+8,h:12,text:'MC = AC here',color:'#e74c3c',fontSize:9,bold:false});
       }
     }
+    resolveLabels(lbl610,linePts610,80,5);
+    lbl610.forEach(l=>drawForceLabel(ctx,l));
 
     ctx.font='10px DM Sans,sans-serif';
     ctx.fillStyle='rgba(46,139,87,0.85)'; ctx.textAlign='left';

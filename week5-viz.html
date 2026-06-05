@@ -436,7 +436,7 @@
 const ML=44, MR=16, MT=16, MB=32;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
-function resolveLabels(items, iter=100, pad=4) {
+function resolveLabels(items, linePts=[], iter=150, pad=6) {
   for (let it=0; it<iter; it++) {
     for (let i=0; i<items.length; i++) {
       for (let j=i+1; j<items.length; j++) {
@@ -450,6 +450,16 @@ function resolveLabels(items, iter=100, pad=4) {
         }
       }
       const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
+    }
+    for (const lm of items) {
+      const hw=lm.w/2+8, hh=lm.h/2+8;
+      for (const [lx,ly] of linePts) {
+        const dx=lm.x-lx, dy=lm.y-ly;
+        if (Math.abs(dx)<hw && Math.abs(dy)<hh) {
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
+        }
+      }
     }
   }
 }
@@ -474,10 +484,10 @@ function drawForceLabel(ctx, lbl) {
 
 function setupCvs(id) {
   const cvs = document.getElementById(id);
-  if (!cvs) return {ctx:null, W:300, H:200};
+  if (!cvs) return {ctx:null, W:300, H:300};
   const dpr = window.devicePixelRatio || 1;
   const W = cvs.clientWidth || 400;
-  const H = parseInt(cvs.getAttribute('height')) || 220;
+  const H = W;
   cvs.width = W * dpr;
   cvs.height = H * dpr;
   cvs.style.height = H + 'px';
@@ -610,38 +620,46 @@ function v51Draw() {
   ctxA.clearRect(0,0,W,HA);
   drawAxesSt(ctxA,W,HA,xR,yRA,'L (workers)','TP (output)');
 
-  // TP curve
+  // TP curve -- collect points for label repulsion
+  const linePts51=[];
   ctxA.beginPath(); let first=true;
   for(let l=0.1;l<=10;l+=0.05){
-    const [cx,cy]=toC(l,tp(l),W,HA,xR,yRA);
-    if(cy<MT-5||cy>HA-MB+5){first=true;continue;}
-    first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
+    const [cx2,cy2]=toC(l,tp(l),W,HA,xR,yRA);
+    if(cy2<MT-5||cy2>HA-MB+5){first=true;continue;}
+    if(l%0.5<0.05) linePts51.push([cx2,cy2]);
+    first?(ctxA.moveTo(cx2,cy2),first=false):ctxA.lineTo(cx2,cy2);
   }
   ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2.5; ctxA.stroke();
 
   // Current point on TP
   const tpL=tp(L), mplL=mpl(L);
   const [cx,cy]=toC(L,tpL,W,HA,xR,yRA);
-  // Tangent line: y = tpL + mplL*(x - L), always through the current point
   const dx=Math.min(L-0.1, 10-L, 2.0);
   const x0=L-dx, x1=L+dx;
   const y0=tpL+mplL*(x0-L), y1=tpL+mplL*(x1-L);
   const [tx0,ty0]=toC(Math.max(0.05,x0),y0,W,HA,xR,yRA);
   const [tx1,ty1]=toC(Math.min(10,x1),y1,W,HA,xR,yRA);
+  // Add tangent to line pts
+  for(let t=0;t<=1;t+=0.1) linePts51.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
   ctxA.beginPath(); ctxA.setLineDash([5,4]); ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=1.5;
   ctxA.moveTo(tx0,ty0); ctxA.lineTo(tx1,ty1); ctxA.stroke(); ctxA.setLineDash([]);
   dot5(ctxA,cx,cy,7,'#1a56db','#fff');
-  // Label: always place BELOW and to the RIGHT of the dot
-  const lblX2 = Math.min(cx + 12, W - MR - 120);
-  const lblY2 = Math.min(cy + 22, HA - MB - 4);
-  ctxA.fillStyle='#1a56db'; ctxA.font='bold 10px DM Sans,sans-serif'; ctxA.textAlign='left';
-  ctxA.fillText(`TP = ${tpL.toFixed(2)}`, lblX2, lblY2);
-  ctxA.fillStyle='#e74c3c';
-  ctxA.fillText(`slope = MPL = ${mplL.toFixed(3)}`, lblX2, lblY2 + 13);
 
-  // Phase label (bottom-right)
+  // Force labels for TP value + slope annotation
+  const tpTxt=`TP = ${tpL.toFixed(2)}`;
+  const slopeTxt=`slope = MPL = ${mplL.toFixed(3)}`;
+  ctxA.font='bold 10px DM Sans,sans-serif';
+  const tw51a=ctxA.measureText(tpTxt).width, tw51b=ctxA.measureText(slopeTxt).width;
+  const lbls51=[
+    {ax:cx,ay:cy,x:cx+20,y:cy+16,w:tw51a+8,h:13,text:tpTxt,color:'#1a56db',fontSize:10,bold:true},
+    {ax:cx,ay:cy,x:cx+20,y:cy+32,w:tw51b+8,h:13,text:slopeTxt,color:'#e74c3c',fontSize:10,bold:true},
+  ];
+  resolveLabels(lbls51,linePts51,100);
+  lbls51.forEach(l=>drawForceLabel(ctxA,l));
+
+  // Phase label (corner -- fixed, no collision)
   const phaseLabel=form.phase(mplL,L);
-  ctxA.fillStyle='#6b52a8'; ctxA.textAlign='right';
+  ctxA.fillStyle='#6b52a8'; ctxA.font='bold 10px DM Sans,sans-serif'; ctxA.textAlign='right'; ctxA.textBaseline='alphabetic';
   ctxA.fillText(phaseLabel,W-MR-4,HA-MB-6);
 
   // Drop line
@@ -654,21 +672,26 @@ function v51Draw() {
   ctxB.clearRect(0,0,W,HB);
   drawAxesSt(ctxB,W,HB,xR,yRB,'L (workers)','MPL');
 
-  // MPL curve
+  // MPL curve -- collect points
+  const linePts51b=[];
   ctxB.beginPath(); first=true;
   for(let l=0.1;l<=10;l+=0.05){
     const m=mpl(l);
     const [cx2,cy2]=toC(l,m,W,HB,xR,yRB);
     if(cy2<MT-5||cy2>HB-MB+5){first=true;continue;}
+    if(l%0.5<0.05) linePts51b.push([cx2,cy2]);
     first?(ctxB.moveTo(cx2,cy2),first=false):ctxB.lineTo(cx2,cy2);
   }
   ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=2.5; ctxB.stroke();
 
-  // Current MPL point
+  // Current MPL point + force label
   const [mx,my]=toC(L,mplL,W,HB,xR,yRB);
   dot5(ctxB,mx,my,7,'#e74c3c','#fff');
-  ctxB.fillStyle='#e74c3c'; ctxB.font='10px DM Sans,sans-serif'; ctxB.textAlign='left';
-  ctxB.fillText(`MPL=${mplL.toFixed(3)}`,mx+8,my-4);
+  ctxB.font='10px DM Sans,sans-serif';
+  const mplTxt=`MPL=${mplL.toFixed(3)}`;
+  const lbls51b=[{ax:mx,ay:my,x:mx+20,y:my-8,w:ctxB.measureText(mplTxt).width+8,h:13,text:mplTxt,color:'#e74c3c',fontSize:10,bold:false}];
+  resolveLabels(lbls51b,linePts51b,80);
+  lbls51b.forEach(l=>drawForceLabel(ctxB,l));
 
   // Zero line
   const [,zy]=toC(0,0,W,HB,xR,yRB);
@@ -730,12 +753,14 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
   const tangLabel=mode==='iq'?'MRTS':'MRS';
   const colors=['#1a56db','#2e8b57','#c0392b'];
   const curveLbls=[];
+  const linePts52=[];
   qLevels.forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=colors[qi]||'#888'; ctx.lineWidth=2;
     if(type==='cd'){
       for(let l=0.3;l<=10;l+=0.05){
         const k=q*q/l; if(k>10||k<0.1){first=true;continue;}
         const [cx,cy]=toC(l,k,W,H,xR,yR);
+        if(l%0.4<0.05) linePts52.push([cx,cy]);
         first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
       }
     } else if(type==='linear'){
@@ -743,6 +768,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
       if(kmax<=yR[1]&&lmax<=xR[1]){
         const [x0,y0]=toC(0,kmax,W,H,xR,yR);
         const [x1,y1]=toC(lmax,0,W,H,xR,yR);
+        for(let t=0;t<=1;t+=0.2) linePts52.push([x0+(x1-x0)*t,y0+(y1-y0)*t]);
         ctx.moveTo(x0,y0); ctx.lineTo(x1,y1);
       }
     } else if(type==='leontief'){
@@ -751,6 +777,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
         const [x0,y0]=toC(lk,yR[1]*0.95,W,H,xR,yR);
         const [xc,yc]=toC(lk,kk,W,H,xR,yR);
         const [x1,y1]=toC(xR[1]*0.95,kk,W,H,xR,yR);
+        linePts52.push([x0,y0],[xc,yc],[x1,y1]);
         ctx.moveTo(x0,y0); ctx.lineTo(xc,yc); ctx.lineTo(x1,y1);
       }
     }
@@ -764,11 +791,15 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
       const tw=ctx.measureText(txt).width;
       curveLbls.push({x:ax+tw/2+4,y:ay-6,ax,ay,text:txt,color:colors[qi]||'#888',fontSize:10,bold:false,w:tw+6,h:13});
     } else if(type==='linear'){
-      ctx.fillStyle=colors[qi]||'#888'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-      ctx.fillText(`${label}=${q}`,W-MR-36,MT+12+(qi*14));
+      const kmax=q;
+      const [ax,ay]=toC(0,kmax,W,H,xR,yR);
+      ctx.font='10px DM Sans,sans-serif';
+      const txt=`${label}=${q}`;
+      const tw=ctx.measureText(txt).width;
+      curveLbls.push({x:ax+tw/2+4,y:ay-6,ax,ay,text:txt,color:colors[qi]||'#888',fontSize:10,bold:false,w:tw+6,h:13});
     } else if(type==='leontief'){
       const kk=2*q;
-      if(q<=xR[1]&&kk<=yR[1]){ // only label if curve was drawn
+      if(q<=xR[1]&&kk<=yR[1]){
         const [ax,ay]=toC(Math.min(q+0.4,9),kk,W,H,xR,yR);
         ctx.font='10px DM Sans,sans-serif';
         const txt=`${label}=${q}`;
@@ -778,8 +809,8 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     }
   });
 
-  // Resolve curve label collisions (D3-style force simulation) then draw with connector lines
-  if(curveLbls.length) { resolveLabels(curveLbls,100,5); curveLbls.forEach(l=>drawForceLabel(ctx,l)); }
+  // Resolve curve label collisions with line repulsion, then draw
+  if(curveLbls.length) { resolveLabels(curveLbls,linePts52,100,5); curveLbls.forEach(l=>drawForceLabel(ctx,l)); }
 
   // Draggable point P only on the Cobb-Douglas panel (cvs52a)
   if(canvasId==='cvs52a' && type==='cd'){
@@ -794,13 +825,17 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     const [tx1,ty1]=toC(Math.min(9.8,L+dxT),K-mrts*dxT,W,H,xR,yR);
     ctx.setLineDash([4,3]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
-    // Dot P
+    // Dot P + force labels
     dot5(ctx,px,py,8,'#e74c3c','#fff');
-    ctx.fillStyle='#e74c3c'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
-    const lx=px>W-MR-120?px-130:px+10;
-    ctx.fillText(`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`,lx,py-8);
-    ctx.fillText(`${tangLabel} = ${mrts.toFixed(2)}`,lx,py+8);
-    ctx.textAlign='left';
+    // Add tangent to existing linePts52 for repulsion
+    for(let t=0;t<=1;t+=0.1) linePts52.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
+    const pTxt=`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`;
+    const mrtsTxt=`${tangLabel} = ${mrts.toFixed(2)}`;
+    ctx.font='bold 10px DM Sans,sans-serif';
+    const lpDot=[{ax:px,ay:py,x:px+20,y:py-10,w:ctx.measureText(pTxt).width+8,h:13,text:pTxt,color:'#e74c3c',fontSize:10,bold:true},
+                 {ax:px,ay:py,x:px+20,y:py+10,w:ctx.measureText(mrtsTxt).width+8,h:13,text:mrtsTxt,color:'#e74c3c',fontSize:10,bold:true}];
+    resolveLabels(lpDot,linePts52,80);
+    lpDot.forEach(l=>drawForceLabel(ctx,l));
   }
 }
 
@@ -874,17 +909,16 @@ function v53Draw() {
   const xR=[0,18],yR=[0,18];
   drawAxesSt(ctx,W,H,xR,yR,'L (workers)','K (machines)');
 
-  // Isoquant
+  // Isoquant -- collect line points
+  const linePts53=[];
   ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
   for(let l=0.5;l<=17;l+=0.1){
     const k=v53K(l); if(k>17||k<0.1){first=true;continue;}
-    const [cx,cy]=toC(l,k,W,H,xR,yR);
-    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+    const [cx2,cy2]=toC(l,k,W,H,xR,yR);
+    if(l%1<0.1) linePts53.push([cx2,cy2]);
+    first?(ctx.moveTo(cx2,cy2),first=false):ctx.lineTo(cx2,cy2);
   }
   ctx.stroke();
-  const [dlx,dly]=toC(14,Q0*Q0/14,W,H,xR,yR);
-  ctx.fillStyle='#1a56db'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`Q = ${Q0}`,dlx+4,dly-5);
 
   // Current point - always on the isoquant K=Q²/L
   const L=v53L, K=v53K(L), mrts=v53MRTS(L);
@@ -912,17 +946,27 @@ function v53Draw() {
   ctx.setLineDash([6,4]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
+  // Add tangent line to repulsion points
+  for(let t=0;t<=1;t+=0.1) linePts53.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
   dot5(ctx,cx,cy,9,'#2e8b57','#fff');
 
-  // Smart label placement: prefer below-right, avoid edges
-  const lx = cx > W-MR-160 ? cx - 170 : cx + 14;
-  const ly = cy > H-MB-60  ? cy - 40  : cy + 16;
-  ctx.fillStyle='#2e8b57'; ctx.font='bold 12px DM Sans,sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText(`L = ${L.toFixed(1)},  K = ${K.toFixed(1)}`, lx, ly);
-  ctx.fillStyle='#e74c3c'; ctx.font='12px DM Sans,sans-serif';
-  ctx.fillText(`MRTS = K/L = ${mrts.toFixed(2)}`, lx, ly + 17);
-  ctx.fillText(`1 worker replaces ${mrts.toFixed(2)} machines`, lx, ly + 34);
+  // Force labels for Q label, point coords, MRTS, and interpretation
+  const [dlx,dly]=toC(14,Q0*Q0/14,W,H,xR,yR);
+  const lkTxt=`L = ${L.toFixed(1)},  K = ${K.toFixed(1)}`;
+  const mTxt=`MRTS = K/L = ${mrts.toFixed(2)}`;
+  const replTxt=`1 worker replaces ${mrts.toFixed(2)} machines`;
+  const qTxt=`Q = ${Q0}`;
+  ctx.font='11px DM Sans,sans-serif';
+  const lbls53=[
+    {ax:dlx,ay:dly,x:dlx+ctx.measureText(qTxt).width/2+8,y:dly-10,w:ctx.measureText(qTxt).width+8,h:14,text:qTxt,color:'#1a56db',fontSize:11,bold:false},
+  ];
+  ctx.font='bold 12px DM Sans,sans-serif';
+  lbls53.push({ax:cx,ay:cy,x:cx+20,y:cy+16,w:ctx.measureText(lkTxt).width+8,h:15,text:lkTxt,color:'#2e8b57',fontSize:12,bold:true});
+  ctx.font='12px DM Sans,sans-serif';
+  lbls53.push({ax:cx,ay:cy,x:cx+20,y:cy+34,w:ctx.measureText(mTxt).width+8,h:15,text:mTxt,color:'#e74c3c',fontSize:12,bold:false});
+  lbls53.push({ax:cx,ay:cy,x:cx+20,y:cy+52,w:ctx.measureText(replTxt).width+8,h:15,text:replTxt,color:'#e74c3c',fontSize:12,bold:false});
+  resolveLabels(lbls53,linePts53,100);
+  lbls53.forEach(l=>drawForceLabel(ctx,l));
 
   document.getElementById('v53-readout').innerHTML=
     `<div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val" style="color:#2e8b57">${L.toFixed(2)}</div></div>
@@ -985,59 +1029,66 @@ function v54Draw() {
   const cvA=document.getElementById('cvs54a'); if(!cvA) return;
   const dpr=window.devicePixelRatio||1;
   const W=cvA.clientWidth||300;
-  if(cvA.width!==W*dpr){cvA.width=W*dpr;cvA.height=240*dpr;cvA.style.height='240px';}
+  const H54=W;
+  if(cvA.width!==Math.round(W*dpr)||cvA.height!==Math.round(H54*dpr)){cvA.width=Math.round(W*dpr);cvA.height=Math.round(H54*dpr);cvA.style.height=H54+'px';}
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
-  ctxA.clearRect(0,0,W,240);
-  // Compute max MPL to set y axis dynamically
+  ctxA.clearRect(0,0,W,H54);
   const mplAt1=b*v54CD(Kfix,1,a,b)/1;
   const yMaxMPL=Math.ceil(mplAt1*1.2*2)/2;
   const xRa=[0,12],yRa=[0,yMaxMPL];
-  drawAxesSt(ctxA,W,240,xRa,yRa,'L (workers)','MPL');
+  drawAxesSt(ctxA,W,H54,xRa,yRa,'L (workers)','MPL');
+  const linePts54a=[];
   ctxA.beginPath(); let first=true; ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=2.5;
   for(let l=0.2;l<=12;l+=0.1){
     const mpl=b*v54CD(Kfix,l,a,b)/l;
-    const [cx,cy]=toC(l,mpl,W,240,xRa,yRa);
-    if(cy<MT-5||cy>240-MB+5){first=true;continue;}
+    const [cx,cy]=toC(l,mpl,W,H54,xRa,yRa);
+    if(cy<MT-5||cy>H54-MB+5){first=true;continue;}
+    if(l%2<0.1) linePts54a.push([cx,cy]);
     first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
   }
   ctxA.stroke();
-  // Label: placed at right edge, above the curve endpoint
-  const mplAt12=b*v54CD(Kfix,12,a,b)/12;
-  const [lx12,ly12]=toC(12,mplAt12,W,240,xRa,yRa);
-  ctxA.fillStyle='#e74c3c'; ctxA.font='10px DM Sans,sans-serif'; ctxA.textAlign='right';
-  ctxA.fillText('MPL falls as L rises (K='+Kfix+' fixed)',W-MR-4,MT+12);
+  ctxA.font='9px DM Sans,sans-serif';
+  const mplLblTxt='MPL falls as L rises (K='+Kfix+' fixed)';
+  const mplMidL=6;
+  const[mplax,mpaly]=toC(mplMidL,b*v54CD(Kfix,mplMidL,a,b)/mplMidL,W,H54,xRa,yRa);
+  const mplLbls=[{ax:mplax,ay:mpaly,x:mplax,y:mpaly-14,w:ctxA.measureText(mplLblTxt).width+8,h:12,text:mplLblTxt,color:'#e74c3c',fontSize:9,bold:false}];
+  resolveLabels(mplLbls,linePts54a,60,5);
+  mplLbls.forEach(l=>drawForceLabel(ctxA,l));
 
   // Right panel: scale both inputs
   const cvB=document.getElementById('cvs54b'); if(!cvB) return;
-  if(cvB.width!==W*dpr){cvB.width=W*dpr;cvB.height=220*dpr;cvB.style.height='220px';}
+  if(cvB.width!==Math.round(W*dpr)||cvB.height!==Math.round(H54*dpr)){cvB.width=Math.round(W*dpr);cvB.height=Math.round(H54*dpr);cvB.style.height=H54+'px';}
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
-  ctxB.clearRect(0,0,W,220);
+  ctxB.clearRect(0,0,W,H54);
   const Lbase=4, Kbase=4;
-  // Dynamic y-axis: ensure lambda=2 and lambda=3 dots are always visible
   const q_lam4=v54CD(4*Kbase,4*Lbase,a,b);
   const yMaxB=Math.ceil(Math.max(q_lam4*1.2, 8));
   const xRb=[0.5,4], yRb=[0,yMaxB];
-  drawAxesSt(ctxB,W,220,xRb,yRb,'Scale λ (lambda)','Output Q');
-  ctxB.save(); ctxB.beginPath(); ctxB.rect(ML,MT,W-ML-MR,220-MT-MB); ctxB.clip();
+  drawAxesSt(ctxB,W,H54,xRb,yRb,'Scale λ (lambda)','Output Q');
+  const linePts54b=[];
+  ctxB.save(); ctxB.beginPath(); ctxB.rect(ML,MT,W-ML-MR,H54-MT-MB); ctxB.clip();
   ctxB.beginPath(); first=true; ctxB.strokeStyle='#1a56db'; ctxB.lineWidth=2.5;
   for(let lam=0.5;lam<=4;lam+=0.05){
     const q=v54CD(lam*Kbase,lam*Lbase,a,b);
-    const [cx,cy]=toC(lam,q,W,220,xRb,yRb);
+    const [cx,cy]=toC(lam,q,W,H54,xRb,yRb);
+    if(lam%1<0.05) linePts54b.push([cx,cy]);
     first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
   }
   ctxB.stroke(); ctxB.restore();
   // Dots at lambda=1 and lambda=2
   const q1_d=v54CD(Kbase,Lbase,a,b);
   const q2_d=v54CD(2*Kbase,2*Lbase,a,b);
-  const [dx1,dy1]=toC(1,q1_d,W,220,xRb,yRb);
-  const [dx2,dy2]=toC(2,q2_d,W,220,xRb,yRb);
+  const [dx1,dy1]=toC(1,q1_d,W,H54,xRb,yRb);
+  const [dx2,dy2]=toC(2,q2_d,W,H54,xRb,yRb);
   dot5(ctxB,dx1,dy1,7,'#2e8b57','#fff');
   dot5(ctxB,dx2,dy2,7,'#2e8b57','#fff');
-  ctxB.fillStyle='#2e8b57'; ctxB.font='10px DM Sans,sans-serif';
-  // Labels to the LEFT of each dot so they don't touch the curve
-  ctxB.textAlign='right';
-  ctxB.fillText(`Q(λ=1) = ${q1_d.toFixed(2)}`, dx1-10, dy1-6);
-  ctxB.fillText(`Q(λ=2) = ${q2_d.toFixed(2)}`, dx2-10, dy2-6);
+  ctxB.font='9px DM Sans,sans-serif';
+  const dotLbls54=[
+    {ax:dx1,ay:dy1,x:dx1-12,y:dy1-10,w:ctxB.measureText(`Q(λ=1) = ${q1_d.toFixed(2)}`).width+8,h:12,text:`Q(λ=1) = ${q1_d.toFixed(2)}`,color:'#2e8b57',fontSize:9,bold:false},
+    {ax:dx2,ay:dy2,x:dx2-12,y:dy2-10,w:ctxB.measureText(`Q(λ=2) = ${q2_d.toFixed(2)}`).width+8,h:12,text:`Q(λ=2) = ${q2_d.toFixed(2)}`,color:'#2e8b57',fontSize:9,bold:false},
+  ];
+  resolveLabels(dotLbls54,linePts54b,60,5);
+  dotLbls54.forEach(l=>drawForceLabel(ctxB,l));
 
   const rts=a+b;
   const rtsLabel=rts>1.01?'IRS':rts<0.99?'DRS':'CRS';
@@ -1068,8 +1119,8 @@ function v55Draw() {
   const b=parseFloat(document.getElementById('v55-b').value)||0.5;
   const cvs=document.getElementById('cvs55'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=260;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
@@ -1079,6 +1130,8 @@ function v55Draw() {
   const qLevels=[1,2,4];
   const cols=['#2e8b57','#1a56db','#c0392b'];
   const rayPts=[];
+  const linePts55=[];
+  const flbls55=[];
 
   // Clip all isoquant drawing to the plot area so lines stop at the axis limits
   ctx.save();
@@ -1088,21 +1141,20 @@ function v55Draw() {
     ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2.5;
     for(let l=0.05;l<=10.05;l+=0.04){
       const K=Math.pow(q/Math.pow(Math.max(l,0.01),b),1/a);
+      if(K>10||K<0.01){first=true;continue;}
       const [cx,cy]=toC(l,K,W,H,xR,yR);
+      if(l%2<0.04) linePts55.push([cx,cy]);
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
     ctx.stroke();
-    // Intersection with ray L=K (45-degree ray)
-    // On ray L=K: Q = L^(a+b) => L = Q^(1/(a+b))
+    // Intersection with ray L=K
     const lRay=Math.pow(q,1/(a+b));
     if(lRay<=9){
       rayPts.push({q,l:lRay,col:cols[qi]});
       const [rx,ry]=toC(lRay,lRay,W,H,xR,yR);
       dot5(ctx,rx,ry,6,cols[qi],'#fff');
-      ctx.fillStyle=cols[qi]; ctx.font='10px DM Sans,sans-serif';
-      // Place labels PERPENDICULAR to the 45° ray: shift upper-left to avoid it
-      ctx.textAlign='right';
-      ctx.fillText(`Q=${q}`,rx-10,ry-8);
+      ctx.font='9px DM Sans,sans-serif';
+      flbls55.push({ax:rx,ay:ry,x:rx-12,y:ry-12,w:ctx.measureText('Q='+q).width+8,h:12,text:'Q='+q,color:cols[qi],fontSize:9,bold:false});
     }
   });
 
@@ -1112,7 +1164,10 @@ function v55Draw() {
   ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
   const [r0x,r0y]=toC(0,0,W,H,xR,yR);
   const [r1x,r1y]=toC(9,9,W,H,xR,yR);
+  for(let t=0;t<=1;t+=0.2) linePts55.push([r0x+(r1x-r0x)*t,r0y+(r1y-r0y)*t]);
   ctx.beginPath(); ctx.moveTo(r0x,r0y); ctx.lineTo(r1x,r1y); ctx.stroke(); ctx.setLineDash([]);
+  resolveLabels(flbls55,linePts55,80,5);
+  flbls55.forEach(l=>drawForceLabel(ctx,l));
 
   const rts=a+b;
   const verdict=rts>1.01?'IRS: isoquants bunch up (get closer along ray)':rts<0.99?'DRS: isoquants spread out':' CRS: isoquants equally spaced';
@@ -1140,12 +1195,13 @@ let v56L=4, v56K=4;
 function v56Draw() {
   const cvs=document.getElementById('cvs56'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=280;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
+  const linePts56=[];
 
   // Show faded original isoquant (A=1, Q=4) for reference
   ctx.globalAlpha=0.25; ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=1.5;
@@ -1156,31 +1212,38 @@ function v56Draw() {
   }
   ctx.stroke(); ctx.globalAlpha=1;
 
-  // Active isoquant: A * K^0.5 * L^0.5 = Q_TARGET => K^0.5*L^0.5 = Q_TARGET/A => K = (Q_TARGET/(A*L^0.5))^2
+  // Active isoquant
   const A=v56TechLevel;
   ctx.beginPath(); first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.8;
   for(let l=0.2;l<=10;l+=0.08){
     const k=Math.pow(V56_Q_TARGET/(A*Math.pow(l,0.5)),2);
     if(k>10||k<0.1){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
+    if(l%2<0.08) linePts56.push([cx,cy]);
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
 
-  // Label isoquant
-  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`Q = ${V56_Q_TARGET} (A=${A.toFixed(2)})`, ML+4, MT+14);
-
   // Current bundle dot
   const [bx,by]=toC(v56L,v56K,W,H,xR,yR);
   dot5(ctx,bx,by,9,'#2e8b57','#fff');
-  const lx=bx>W-MR-140?bx-150:bx+12;
-  const ly=by<MT+40?by+22:by-10;
-  ctx.fillStyle='#2e8b57'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}`,lx,ly);
+
+  // Force labels: isoquant + bundle + tech label
+  ctx.font='9px DM Sans,sans-serif';
+  const iqAnchorL=Math.max(0.3,V56_Q_TARGET/A*0.6);
+  const iqAnchorK=Math.pow(V56_Q_TARGET/(A*Math.pow(iqAnchorL,0.5)),2);
+  const [iqax,iqay]=toC(Math.min(iqAnchorL,10),Math.min(iqAnchorK,10),W,H,xR,yR);
+  const lbTxt56=`Q = ${V56_Q_TARGET} (A=${A.toFixed(2)})`;
+  const flbls56=[
+    {ax:iqax,ay:iqay,x:iqax+12,y:iqay-8,w:ctx.measureText(lbTxt56).width+8,h:12,text:lbTxt56,color:'#1a56db',fontSize:9,bold:false},
+    {ax:bx,ay:by,x:bx+12,y:by-8,w:ctx.measureText(`L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}`).width+8,h:12,text:`L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}`,color:'#2e8b57',fontSize:9,bold:false},
+  ];
   if(A>1.0){
-    ctx.fillStyle='#c0392b'; ctx.fillText(`Technology improved (A=${A.toFixed(2)})`,ML+4,MT+28);
+    const techTxt=`Technology improved (A=${A.toFixed(2)})`;
+    flbls56.push({ax:ML+4,ay:MT+28,x:ML+4,y:MT+28,w:ctx.measureText(techTxt).width+8,h:12,text:techTxt,color:'#c0392b',fontSize:9,bold:false});
   }
+  resolveLabels(flbls56,linePts56,80,5);
+  flbls56.forEach(l=>drawForceLabel(ctx,l));
 }
 
 function v56SubstituteInputs() {
@@ -1222,14 +1285,15 @@ function v57Draw() {
   function drawAnalogy(canvasId, type, level) {
     const cvs=document.getElementById(canvasId); if(!cvs) return;
     const dpr=window.devicePixelRatio||1;
-    const W=cvs.clientWidth||300, H=240;
-    if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+    const W=cvs.clientWidth||300, H=W;
+    if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
     const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,W,H);
     const xR=[0,10],yR=[0,10];
     const xLbl=type==='ic'?'X (good 1)':'L (labor)';
     const yLbl=type==='ic'?'Y (good 2)':'K (capital)';
     drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl);
+    const linePts57=[];
 
     // Multiple curves
     [level-1,level,level+1.5].forEach((q,qi)=>{
@@ -1240,31 +1304,37 @@ function v57Draw() {
       for(let x=0.3;x<=10;x+=0.1){
         const y=q*q/x; if(y>10||y<0.1){first=true;continue;}
         const [cx,cy]=toC(x,y,W,H,xR,yR);
+        if(qi===1&&x%2<0.1) linePts57.push([cx,cy]);
         first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
       }
       ctx.stroke();
     });
     ctx.globalAlpha=1;
 
-    // Budget / isocost line (tangent at (level, level))
-    const slope=1; // unit prices
+    // Budget / isocost line
     const intercept=2*level;
     const [lx0,ly0]=toC(0,intercept,W,H,xR,yR);
     const [lx1,ly1]=toC(intercept,0,W,H,xR,yR);
+    for(let t=0;t<=1;t+=0.25) linePts57.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);
     ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
     // Optimal point
     const [ox,oy]=toC(level,level,W,H,xR,yR);
-    dot5(ctx,ox,oy,7,qi=>'#2e8b57','#fff');
     dot5(ctx,ox,oy,7,'#2e8b57','#fff');
     const curveLabel=type==='ic'?'IC':'Isoquant';
     const lineLabel=type==='ic'?'Budget':'Isocost';
-    const tangLabel=type==='ic'?'MRS = Px/Py':'MRTS = w/v';
-    ctx.fillStyle='#2e8b57'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('Optimum',ox+8,oy-4);
-    ctx.fillStyle='#e74c3c'; ctx.fillText(lineLabel,lx0+4,ly0-6);
-    ctx.fillStyle='#1a56db'; ctx.fillText(curveLabel,W-MR-55,MT+12);
+    // Anchor isoquant label at a point near x=level*0.6
+    const iqAx=level*0.6, iqAy=level*level/iqAx;
+    const [icAx,icAy]=toC(Math.min(iqAx,9),Math.min(iqAy,9),W,H,xR,yR);
+    ctx.font='9px DM Sans,sans-serif';
+    const anlbls=[
+      {ax:ox,ay:oy,x:ox+12,y:oy-8,w:ctx.measureText('Optimum').width+8,h:12,text:'Optimum',color:'#2e8b57',fontSize:9,bold:false},
+      {ax:(lx0+lx1)/2,ay:(ly0+ly1)/2,x:(lx0+lx1)/2+8,y:(ly0+ly1)/2-12,w:ctx.measureText(lineLabel).width+8,h:12,text:lineLabel,color:'#e74c3c',fontSize:9,bold:false},
+      {ax:icAx,ay:icAy,x:icAx+8,y:icAy-8,w:ctx.measureText(curveLabel).width+8,h:12,text:curveLabel,color:'#1a56db',fontSize:9,bold:false},
+    ];
+    resolveLabels(anlbls,linePts57,80,5);
+    anlbls.forEach(l=>drawForceLabel(ctx,l));
   }
 
   drawAnalogy('cvs57a','ic',u);
@@ -1295,16 +1365,15 @@ function v58Draw() {
 
   const cvs=document.getElementById('cvs58'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=280;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
+  const linePts58=[];
 
-  // No canvas equation label - shown above sliders in HTML
-
-  // Isoquant map at Q=A*(Kpt*lam)^a*(Lpt*lam)^b base values
+  // Isoquant map
   const qBase=v58Q(Kpt,Lpt,A,a,b);
   [qBase*0.5,qBase,qBase*2].forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=['#aac','#1a56db','#aac'][qi]; ctx.lineWidth=qi===1?2.5:1.5;
@@ -1312,6 +1381,7 @@ function v58Draw() {
       const K=Math.pow(q/(A*Math.pow(l,b)),1/a);
       if(K>10||K<0.1){first=true;continue;}
       const [cx,cy]=toC(l,K,W,H,xR,yR);
+      if(qi===1&&l%2<0.05) linePts58.push([cx,cy]);
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
     ctx.stroke();
@@ -1325,10 +1395,11 @@ function v58Draw() {
     dot5(ctx,spx,spy,7,'#e74c3c','#fff');
     ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(spx,spy); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle='#e74c3c'; ctx.font='bold 11px DM Sans,sans-serif';
-    const lamLblX = spx > W-MR-100 ? spx-110 : spx+10;
-    ctx.textAlign='left';
-    ctx.fillText(`λ = ${lam.toFixed(1)} (scaled inputs)`, lamLblX, spy-18);
+    ctx.font='9px DM Sans,sans-serif';
+    const lamTxt=`λ = ${lam.toFixed(1)} (scaled inputs)`;
+    const lamLbls=[{ax:spx,ay:spy,x:spx+12,y:spy-12,w:ctx.measureText(lamTxt).width+8,h:12,text:lamTxt,color:'#e74c3c',fontSize:9,bold:false}];
+    resolveLabels(lamLbls,linePts58,60,5);
+    lamLbls.forEach(l=>drawForceLabel(ctx,l));
   }
 
   const q0=v58Q(Kpt,Lpt,A,a,b);
@@ -1381,24 +1452,31 @@ function v59MPL(L,K){return L>0.05?0.5*Math.pow(K,0.5)*Math.pow(L,-0.5):Infinity
 function v59Draw() {
   const cvs=document.getElementById('cvs59'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=240;
-  if(cvs.width!==W*dpr){cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';}
+  const W=cvs.clientWidth||400, H=W;
+  if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const Lmax=12, TPmax=8;
   const xR=[0,Lmax],yR=[0,TPmax];
   drawAxesSt(ctx,W,H,xR,yR,'Workers L','Output (units)');
 
-  // TP curve
+  // TP curve + collect for repulsion
+  const linePts59=[];
   ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
   for(let l=0;l<=Lmax;l+=0.1){
     const tp=v59TP(l,v59K);
     const [cx,cy]=toC(l,tp,W,H,xR,yR);
+    if(l%2<0.1) linePts59.push([cx,cy]);
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
-  ctx.fillStyle='#1a56db'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`K = ${v59K} machines`,ML+4,MT+12);
+  ctx.font='9px DM Sans,sans-serif';
+  const tpMidL=Lmax*0.6;
+  const [tpax,tpay]=toC(tpMidL,v59TP(tpMidL,v59K),W,H,xR,yR);
+  const kTxt=`K = ${v59K} machines`;
+  const kLbls=[{ax:tpax,ay:tpay,x:tpax+12,y:tpay-8,w:ctx.measureText(kTxt).width+8,h:12,text:kTxt,color:'#1a56db',fontSize:9,bold:false}];
+  resolveLabels(kLbls,linePts59,60,5);
+  kLbls.forEach(l=>drawForceLabel(ctx,l));
 
   // Current workers
   if(v59L>0){
@@ -1507,36 +1585,46 @@ function quiz510DrawResult(type) {
   if(wrap) wrap.style.display='block';
   const cvs=document.getElementById('cvs510'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cvs.clientWidth||400, H=200;
-  cvs.width=W*dpr; cvs.height=H*dpr; cvs.style.height=H+'px';
+  const W=cvs.clientWidth||300, H=W;
+  cvs.width=Math.round(W*dpr); cvs.height=Math.round(H*dpr); cvs.style.height=H+'px';
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
+  const linePts510=[], flbls510=[];
+  const cols=['#2e8b57','#1a56db','#c0392b'];
   [2,4,6].forEach((q,qi)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=['#2e8b57','#1a56db','#c0392b'][qi]; ctx.lineWidth=2;
+    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2;
+    let ax=0,ay=0;
     if(type==='cd'){
       for(let l=0.3;l<=10;l+=0.1){
         const k=q*q/l; if(k>10){first=true;continue;}
         const [cx,cy]=toC(l,k,W,H,xR,yR);
+        if(l%2<0.1) linePts510.push([cx,cy]);
         first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
       }
+      [ax,ay]=toC(q,q,W,H,xR,yR);
     }else if(type==='linear'){
       const [x0,y0]=toC(0,Math.min(q,yR[1]),W,H,xR,yR);
       const [x1,y1]=toC(Math.min(q/0.5,xR[1]),0,W,H,xR,yR);
+      linePts510.push([x0,y0],[x1,y1]);
       ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);
+      ax=(x0+x1)/2; ay=(y0+y1)/2;
     }else if(type==='leontief'){
       const lk=q,kk=q;
       const [x0,y0]=toC(lk,Math.min(yR[1]*0.95,10),W,H,xR,yR);
       const [xc,yc]=toC(lk,kk,W,H,xR,yR);
       const [x1,y1]=toC(Math.min(xR[1]*0.95,10),kk,W,H,xR,yR);
+      linePts510.push([x0,y0],[xc,yc],[x1,y1]);
       ctx.moveTo(x0,y0);ctx.lineTo(xc,yc);ctx.lineTo(x1,y1);
+      ax=xc; ay=yc;
     }
     ctx.stroke();
-    ctx.fillStyle=ctx.strokeStyle; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-    const [tx,ty]=toC(type==='cd'?q:type==='linear'?0:q,type==='cd'?q:type==='linear'?Math.min(q,9):q,W,H,xR,yR);
-    ctx.fillText(`Q=${q}`,tx+4,ty-3);
+    ctx.font='9px DM Sans,sans-serif';
+    flbls510.push({ax,ay,x:ax+10,y:ay-8,w:ctx.measureText(`Q=${q}`).width+8,h:12,text:`Q=${q}`,color:cols[qi],fontSize:9,bold:false});
   });
+  resolveLabels(flbls510,linePts510,60,5);
+  flbls510.forEach(l=>drawForceLabel(ctx,l));
 }
 
 function quiz510Answer(ans) {

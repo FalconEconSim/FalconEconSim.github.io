@@ -422,7 +422,7 @@
 const ML=55, MR=25, MT=24, MB=42;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
-function resolveLabels(items, iter=100, pad=4) {
+function resolveLabels(items, linePts=[], iter=150, pad=6) {
   for (let it=0; it<iter; it++) {
     for (let i=0; i<items.length; i++) {
       for (let j=i+1; j<items.length; j++) {
@@ -436,6 +436,16 @@ function resolveLabels(items, iter=100, pad=4) {
         }
       }
       const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
+    }
+    for (const lm of items) {
+      const hw=lm.w/2+8, hh=lm.h/2+8;
+      for (const [lx,ly] of linePts) {
+        const dx=lm.x-lx, dy=lm.y-ly;
+        if (Math.abs(dx)<hw && Math.abs(dy)<hh) {
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
+        }
+      }
     }
   }
 }
@@ -460,10 +470,10 @@ function drawForceLabel(ctx, lbl) {
 
 function setupCvs(id) {
   const cvs = document.getElementById(id);
-  if (!cvs) return {ctx:null,W:300,H:260};
+  if (!cvs) return {ctx:null,W:300,H:300};
   const dpr = window.devicePixelRatio || 1;
   const W = cvs.clientWidth || cvs.parentElement?.clientWidth || 300;
-  const H = parseInt(cvs.getAttribute('height')) || 260;
+  const H = W;
   const tw = Math.round(W * dpr), th = Math.round(H * dpr);
   if (cvs.width !== tw || cvs.height !== th) {
     cvs.width = tw; cvs.height = th;
@@ -603,13 +613,15 @@ function v1Draw() {
   ctx.clearRect(0, 0, W, H);
   drawAxes(ctx, W, H, xR1, yR1);
 
-  // demand curve
+  // demand curve -- collect line points for label repulsion
+  const linePts1 = [];
   ctx.beginPath();
   ctx.strokeStyle = '#1a56db';
   ctx.lineWidth = 2.5;
   const P0 = v1.a / v1.b, Q0 = 0;
   const [ax0, ay0] = toC(Q0, P0, W, H, xR1, yR1);
   const [ax1, ay1] = toC(v1.a, 0, W, H, xR1, yR1);
+  for (let t=0; t<=1; t+=0.08) linePts1.push([ax0+(ax1-ax0)*t, ay0+(ay1-ay0)*t]);
   ctx.moveTo(ax0, ay0); ctx.lineTo(ax1, ay1); ctx.stroke();
 
   const Q1 = v1Q(v1.P1), Q2 = v1Q(v1.P2);
@@ -617,19 +629,18 @@ function v1Draw() {
   const [cx2, cy2] = toC(Q2, v1.P2, W, H, xR1, yR1);
 
   let e1, e2, eArc, label, color;
+  const lbls1 = [];
 
   if (v1.mode === 'arc') {
     const Qmid = (Q1+Q2)/2, Pmid = (v1.P1+v1.P2)/2;
     eArc = Pmid === 0 || Qmid === 0 ? 0 : ((Q2-Q1)/Qmid) / ((v1.P2-v1.P1)/Pmid);
     const ae = Math.abs(eArc);
     color = eColor(eArc);
-    // shade segment
     ctx.save();
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = color;
     ctx.fillRect(Math.min(cx1,cx2)-2, Math.min(cy1,cy2)-2, Math.abs(cx2-cx1)+4, Math.abs(cy2-cy1)+4);
     ctx.restore();
-    label = `Arc (midpoint) e = ${eArc.toFixed(3)}`;
     document.getElementById('v1-readout').innerHTML =
       `<div class="readout-row">
         <div class="readout-col"><div class="readout-label">Point 1</div><div class="readout-val">P=${v1.P1.toFixed(1)}, Q=${Q1.toFixed(1)}</div></div>
@@ -641,6 +652,15 @@ function v1Draw() {
         ${ae<1?'Inelastic: consumers respond weakly to price changes':''}
         ${ae===1?'Unit elastic':''}
       </div>`;
+    dot(ctx, cx1, cy1, 9, color, '#fff');
+    dot(ctx, cx2, cy2, 9, color, '#fff');
+    // dashed segment also repels labels
+    for (let t=0; t<=1; t+=0.1) linePts1.push([cx1+(cx2-cx1)*t, cy1+(cy2-cy1)*t]);
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font='bold 11px DM Sans,sans-serif';
+    lbls1.push({ax:cx1,ay:cy1,x:cx1+16,y:cy1-10,w:ctx.measureText('A').width+8,h:14,text:'A',color:'#333',fontSize:11,bold:true});
+    lbls1.push({ax:cx2,ay:cy2,x:cx2+16,y:cy2-10,w:ctx.measureText('B').width+8,h:14,text:'B',color:'#333',fontSize:11,bold:true});
   } else {
     e1 = v1.b === 0 || Q1 === 0 ? 0 : -v1.b * v1.P1 / Q1;
     e2 = v1.b === 0 || Q2 === 0 ? 0 : -v1.b * v1.P2 / Q2;
@@ -654,37 +674,15 @@ function v1Draw() {
         Point 1 is <strong>${ae1>1?'elastic':'inelastic'}</strong> (|e|=${ae1.toFixed(2)});
         Point 2 is <strong>${ae2>1?'elastic':'inelastic'}</strong> (|e|=${ae2.toFixed(2)}).
       </p>`;
-    // color each dot
     dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
     dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
-    // Labels: always place ABOVE or to the side, never inside the dot
     ctx.font='bold 11px DM Sans,sans-serif';
-    // Point A label: shift to upper-right with enough clearance
-    ctx.fillStyle = eColor(e1);
-    ctx.textAlign = 'left';
-    ctx.fillText('A', cx1 + 12, cy1 - 8);
-    // Point B label: shift to upper-right with clearance
-    ctx.fillStyle = eColor(e2);
-    ctx.textAlign = 'left';
-    ctx.fillText('B', cx2 + 12, cy2 - 8);
-    return;
+    lbls1.push({ax:cx1,ay:cy1,x:cx1+16,y:cy1-10,w:ctx.measureText('A').width+8,h:14,text:'A',color:eColor(e1),fontSize:11,bold:true});
+    lbls1.push({ax:cx2,ay:cy2,x:cx2+16,y:cy2-10,w:ctx.measureText('B').width+8,h:14,text:'B',color:eColor(e2),fontSize:11,bold:true});
   }
 
-  dot(ctx, cx1, cy1, 9, color, '#fff');
-  dot(ctx, cx2, cy2, 9, color, '#fff');
-  ctx.fillStyle = '#333'; ctx.font='bold 11px DM Sans,sans-serif';
-  // Always push labels to upper-right, clear of the dot
-  ctx.textAlign = 'left';
-  ctx.fillText('A', cx1 + 12, cy1 - 8);
-  ctx.fillText('B', cx2 + 12, cy2 - 8);
-
-  // line between
-  ctx.beginPath();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([4,3]);
-  ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2);
-  ctx.stroke(); ctx.setLineDash([]);
+  resolveLabels(lbls1, linePts1);
+  lbls1.forEach(l => drawForceLabel(ctx, l));
 }
 
 function v1Init() {
@@ -784,6 +782,7 @@ function v2ParseEq() {
 
 function v2Draw() {
   const ctx=v2ctx, W=v2W, H=v2H;
+  if (!ctx) return;
   const a = v2.a, b = v2.b > 0 ? v2.b : v2Bfloat();
   ctx.clearRect(0,0,W,H);
 
@@ -817,6 +816,11 @@ function v2Draw() {
   ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
   ctx.stroke();
 
+  // collect demand line points for repulsion
+  const linePts2 = [];
+  { const [sx2,sy2]=toC(0,Pmax,W,H,xR2,yR2); const [ex2,ey2]=toC(a,0,W,H,xR2,yR2);
+    for (let t=0; t<=1; t+=0.06) linePts2.push([sx2+(ex2-sx2)*t, sy2+(ey2-sy2)*t]); }
+
   drawAxes(ctx, W, H, xR2, yR2);
 
   // draggable dot
@@ -826,16 +830,15 @@ function v2Draw() {
   const [dpx,dpy]=toC(Qc,Pc,W,H,xR2,yR2);
   dot(ctx, dpx, dpy, 8, '#f39c12', '#fff');
 
-  // unit-elastic label: place near right edge, above the midpoint dot
+  // unit-elastic midpoint marker + force label
   const Pu = Pmax/2;
   const Qu = a/2;
   const [ux,uy]=toC(Qu,Pu,W,H,xR2,yR2);
-  // Draw small marker at midpoint
   ctx.beginPath(); ctx.arc(ux,uy,4,0,2*Math.PI); ctx.fillStyle='#e6a817aa'; ctx.fill();
-  // Label offset well to the right so it doesn't intersect the curve
-  ctx.fillStyle='#888'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  const lblX = Math.min(ux + 24, W - MR - 55);
-  ctx.fillText('unit elastic midpoint', lblX, uy - 6);
+  ctx.font='10px DM Sans,sans-serif';
+  const lbls2 = [{ax:ux,ay:uy,x:ux+28,y:uy-10,w:ctx.measureText('unit elastic midpoint').width+8,h:13,text:'unit elastic midpoint',color:'#888',fontSize:10,bold:false}];
+  resolveLabels(lbls2, linePts2);
+  lbls2.forEach(l => drawForceLabel(ctx, l));
 
   const ae=Math.abs(ed);
   document.getElementById('v2-readout').innerHTML=
@@ -909,6 +912,8 @@ function v3Draw() {
 
   const [lx0,ly0]=toC(0,v3.a/b,W,H,xR3l,yR3l);
   const [lx1,ly1]=toC(v3.a,0,W,H,xR3l,yR3l);
+  const linePts3 = [];
+  for (let t=0; t<=1; t+=0.08) linePts3.push([lx0+(lx1-lx0)*t, ly0+(ly1-ly0)*t]);
   ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
@@ -950,12 +955,14 @@ function v3Draw() {
   }
   ctx.setLineDash([]);
 
-  // Labels
-  ctx.fillStyle='#555'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('D', lx0-14, ly0+4);
-
   dot(ctx, bx, by, 7, '#555', '#fff');
   dot(ctx, nx, ny, 8, '#1a56db', '#fff');
+
+  // Force label for demand curve
+  ctx.font='bold 9px DM Sans,sans-serif';
+  const lbls3=[{ax:lx0,ay:ly0,x:lx0-18,y:ly0+8,w:ctx.measureText('D').width+8,h:12,text:'D',color:'#1a56db',fontSize:9,bold:true}];
+  resolveLabels(lbls3, linePts3);
+  lbls3.forEach(l=>drawForceLabel(ctx,l));
 
   const TRbase = Pb*Qb, TRnew = P*Q, deltaT = TRnew - TRbase;
   const ed = b===0||Qb===0 ? 0 : -b*Pb/Qb;
@@ -1044,28 +1051,37 @@ function v4Draw() {
   ctx.fillRect(cx-barW*1.6, pChange>=0 ? midY-pH : midY, barW, pH);
   ctx.fillStyle='#333'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
   ctx.fillText('%ΔP', cx-barW*1.1, chartBot+14);
-  ctx.fillStyle=pChange>=0?'#e74c3c':'#27ae60';
-  const pLblY=pChange>=0 ? midY-pH-6 : midY+pH+14;
-  ctx.fillText((pChange>=0?'+':'')+pChange.toFixed(0)+'%', cx-barW*1.1, Math.max(chartTop+12,Math.min(chartBot+14,pLblY)));
 
   // TR bar (right)
   ctx.fillStyle = trChange>=0 ? 'rgba(39,174,96,0.8)' : 'rgba(231,76,60,0.8)';
   ctx.fillRect(cx+barW*0.6, trChange>=0 ? midY-tH : midY, barW, tH);
   ctx.fillStyle='#333'; ctx.textAlign='center';
   ctx.fillText('%ΔTR', cx+barW*1.1, chartBot+14);
-  ctx.fillStyle=trChange>=0?'#27ae60':'#e74c3c';
-  const tLblY=trChange>=0 ? midY-tH-6 : midY+tH+14;
-  ctx.fillText((trChange>=0?'+':'')+trChange.toFixed(1)+'%', cx+barW*1.1, Math.max(chartTop+12,Math.min(chartBot+14,tLblY)));
 
   // zero line
   ctx.strokeStyle='#999'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(ML,midY); ctx.lineTo(W-MR,midY); ctx.stroke();
 
-  // elasticity badge
+  // elasticity badge (fixed position, no collision)
   ctx.fillStyle=eColor(ind.e); ctx.font='bold 13px DM Mono,monospace'; ctx.textAlign='left';
   ctx.fillText(`e = ${ind.e}`, ML, MT+14);
   ctx.fillStyle='#555'; ctx.font='11px DM Sans,sans-serif';
   ctx.fillText(ind.name, ML, MT+28);
+
+  // bar value labels as force labels (repelled from zero line)
+  const zeroLinePts = [];
+  for (let x=ML; x<=W-MR; x+=6) zeroLinePts.push([x, midY]);
+  ctx.font='bold 11px DM Sans,sans-serif';
+  const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
+  const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
+  const pValLblY = pChange>=0 ? midY-pH-8 : midY+pH+14;
+  const tValLblY = trChange>=0 ? midY-tH-8 : midY+tH+14;
+  const lbls4=[
+    {ax:cx-barW*1.1,ay:pValLblY,x:cx-barW*1.1,y:pValLblY,w:ctx.measureText(pTxt).width+8,h:14,text:pTxt,color:pChange>=0?'#e74c3c':'#27ae60',fontSize:11,bold:true},
+    {ax:cx+barW*1.1,ay:tValLblY,x:cx+barW*1.1,y:tValLblY,w:ctx.measureText(tTxt).width+8,h:14,text:tTxt,color:trChange>=0?'#27ae60':'#e74c3c',fontSize:11,bold:true},
+  ];
+  resolveLabels(lbls4, zeroLinePts);
+  lbls4.forEach(l=>drawForceLabel(ctx,l));
 
   document.getElementById('v4-readout').innerHTML=
     `<div class="readout-row">
@@ -1239,6 +1255,7 @@ function v7Q(P) { return Math.max(0, v7.a - v7.b*P); }
 
 function v7Draw() {
   const ctx=v7ctx, W=v7W, H=v7H;
+  if (!ctx) return;
   const P=parseFloat(document.getElementById('v7-p').value);
   const Pnorm=v7.Pnorm;
   const Pchoke=v7.a/v7.b;
@@ -1250,10 +1267,12 @@ function v7Draw() {
   ctx.clearRect(0,0,W,H);
   drawAxes(ctx,W,H,xR7,yR7,'Rides','P ($/ride)');
 
-  // demand line
+  // demand line -- collect for label repulsion
+  const linePts7=[];
   ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2.5;
   const [lx0,ly0]=toC(0,Pchoke,W,H,xR7,yR7);
   const [lx1,ly1]=toC(v7.a,0,W,H,xR7,yR7);
+  for(let t=0;t<=1;t+=0.08) linePts7.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
   const [ox,oy]=toC(0,0,W,H,xR7,yR7);
@@ -1281,10 +1300,17 @@ function v7Draw() {
   ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
   ctx.beginPath(); ctx.moveTo(ML,pyn); ctx.lineTo(W-MR,pyn); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle='#aaa'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('normal $'+Pnorm,ML+4,pyn-4);
+  // also treat the dashed normal line as a repulsor
+  for(let x=ML;x<=W-MR;x+=8) linePts7.push([x,pyn]);
 
   dot(ctx,qx,py,8,'#f39c12','#fff');
+
+  // force label for "normal $X"
+  ctx.font='10px DM Sans,sans-serif';
+  const normTxt='normal $'+Pnorm;
+  const lbls7=[{ax:ML+4,ay:pyn-6,x:ML+4+ctx.measureText(normTxt).width/2+6,y:pyn-10,w:ctx.measureText(normTxt).width+8,h:13,text:normTxt,color:'#aaa',fontSize:10,bold:false}];
+  resolveLabels(lbls7,linePts7);
+  lbls7.forEach(l=>drawForceLabel(ctx,l));
 
   const mult=P/Pnorm;
   document.getElementById('v7-readout').innerHTML=
@@ -1365,13 +1391,22 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
     ctx.fillText(`Choke $${choke.toFixed(0)}`,ML2-5,cy+3);
   }
 
-  // Demand formula label near mid-curve, offset right of line
+  // Demand formula label -- force label repelled from curve
   const midP=clampedChoke*0.5;
   const midQ=a-b*midP;
   const [mlx,mly]=toXY(midQ,midP);
   const formula=b===1?`Q = ${a} − P`:`Q = ${a} − ${b}P`;
-  ctx.fillStyle=color; ctx.font='bold 8px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(formula,mlx+7,mly-2);
+  // Collect line points from this panel's demand line
+  const linePtsP=[];
+  for(let t=0;t<=1;t+=0.1){
+    const px2=x0+t*(x1-x0), py2=y0+t*(y1-y0);
+    linePtsP.push([px2,py2]);
+  }
+  ctx.font='bold 8px DM Sans,sans-serif';
+  const fW=ctx.measureText(formula).width;
+  const flbls=[{ax:mlx,ay:mly,x:mlx+fW/2+10,y:mly-8,w:fW+8,h:11,text:formula,color:color,fontSize:8,bold:true}];
+  resolveLabels(flbls,linePtsP,80);
+  flbls.forEach(l=>drawForceLabel(ctx,l));
 
   // Current price dashed lines
   const Q=Math.max(0,a-b*P);
@@ -1454,21 +1489,26 @@ function v8aMarketDraw(P) {
   ctx.beginPath(); ctx.moveTo(ML2-4,cy12); ctx.lineTo(ML2,cy12); ctx.stroke();
   ctx.fillText('Kink $12',ML2-2,cy12+3);  // slightly right
 
-  // Kink dot and label
+  // Kink dot
   dot(ctx,kx,ky,5,'#888','#fff');
-  ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-  ctx.fillText('kink P=$12',kx+20,ky-16);  // further right, further up
 
-  // Formula labels near demand curve segments
-  // Upper segment Q=30-P: near P=23, shifted left of curve
+  // Collect market demand line points for repulsion
+  const linePts8m=[];
+  for(let p=yMmax;p>=0;p-=2){
+    const q=v8aQmarket(p); linePts8m.push([...toXY(q,p)]);
+  }
+
+  // Force labels: formula segments + kink label
+  ctx.font='bold 8px DM Sans,sans-serif';
   const [ulx,uly]=toXY(v8aQmarket(23),23);
-  ctx.fillStyle='#1a56db'; ctx.font='bold 8px DM Sans,sans-serif'; ctx.textAlign='right';
-  ctx.fillText('Qm = 30 − P',ulx-4,uly-2);
-
-  // Lower segment Q=54-3P: near P=6, well left of curve
   const [llx,lly]=toXY(v8aQmarket(6),6);
-  ctx.textAlign='right';
-  ctx.fillText('Qm = 54 − 3P',llx-8,lly-2);
+  const mktFmtLbls=[
+    {ax:kx,ay:ky,x:kx+12,y:ky-12,w:ctx.measureText('kink P=$12').width+6,h:11,text:'kink P=$12',color:'#888',fontSize:8,bold:false},
+    {ax:ulx,ay:uly,x:ulx-12,y:uly-8,w:ctx.measureText('Qm = 30 − P').width+6,h:11,text:'Qm = 30 − P',color:'#1a56db',fontSize:8,bold:true},
+    {ax:llx,ay:lly,x:llx-12,y:lly-8,w:ctx.measureText('Qm = 54 − 3P').width+6,h:11,text:'Qm = 54 − 3P',color:'#1a56db',fontSize:8,bold:true},
+  ];
+  resolveLabels(mktFmtLbls,linePts8m,60,4);
+  mktFmtLbls.forEach(l=>drawForceLabel(ctx,l));
 
   // Current price dashed lines
   const Qm=v8aQmarket(P);
@@ -1565,16 +1605,20 @@ function v8Draw() {
   const xRl=[0,Qmax*1.1], yRl=[0,Pmax*1.1];
   drawAxes(ctx,W,H,xRl,yRl,'Q','P($)');
 
+  const linePts8=[];
+
   // Consumer 1 line
   ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.8; ctx.globalAlpha=0.7;
   const [c1x0,c1y0]=toC(0,Math.min(c1.a/c1.b,yRl[1]),W,H,xRl,yRl);
   const [c1x1,c1y1]=toC(Math.min(c1.a,xRl[1]),0,W,H,xRl,yRl);
+  for(let t=0;t<=1;t+=0.1) linePts8.push([c1x0+(c1x1-c1x0)*t,c1y0+(c1y1-c1y0)*t]);
   ctx.moveTo(c1x0,c1y0); ctx.lineTo(c1x1,c1y1); ctx.stroke();
 
   // Consumer 2 line
   ctx.beginPath(); ctx.strokeStyle='#2980b9'; ctx.lineWidth=1.8;
   const [c2x0,c2y0]=toC(0,Math.min(c2.a/c2.b,yRl[1]),W,H,xRl,yRl);
   const [c2x1,c2y1]=toC(Math.min(c2.a,xRl[1]),0,W,H,xRl,yRl);
+  for(let t=0;t<=1;t+=0.1) linePts8.push([c2x0+(c2x1-c2x0)*t,c2y0+(c2y1-c2y0)*t]);
   ctx.moveTo(c2x0,c2y0); ctx.lineTo(c2x1,c2y1); ctx.stroke(); ctx.globalAlpha=1;
 
   // Market demand
@@ -1582,7 +1626,7 @@ function v8Draw() {
   for(let step=0;step<=200;step++){
     const P=Pmax*(1-step/200);
     const Q=v8QmNew(P);
-    if(Q>=0) pts.push([Q,P]);
+    if(Q>=0) { const [cx,cy]=toC(Q,P,W,H,xRl,yRl); pts.push([Q,P]); if(step%5===0) linePts8.push([cx,cy]); }
   }
   ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
   pts.forEach(([Q,P],idx)=>{
@@ -1591,7 +1635,9 @@ function v8Draw() {
   });
   ctx.stroke();
 
-  // Kink dots
+  // Kink dots + kink labels as force labels
+  const kinkLbls=[];
+  ctx.font='9px DM Sans,sans-serif';
   [c1,c2].forEach((c,i)=>{
     const Pk=c.a/c.b;
     if(Pk<=yRl[1]){
@@ -1599,15 +1645,24 @@ function v8Draw() {
       const [kx,ky]=toC(Qk,Pk,W,H,xRl,yRl);
       const col=i===0?'#e74c3c':'#2980b9';
       dot(ctx,kx,ky,5,col,'#fff');
-      ctx.fillStyle=col; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
-      ctx.fillText(`P=$${Pk.toFixed(0)}`,kx+6,ky-3);
+      const kt=`P=$${Pk.toFixed(0)}`;
+      kinkLbls.push({ax:kx,ay:ky,x:kx+ctx.measureText(kt).width/2+8,y:ky-10,w:ctx.measureText(kt).width+8,h:12,text:kt,color:col,fontSize:9,bold:false});
     }
   });
 
-  ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
+  // Force curve labels for D₁, D₂, Market D (also include kink labels)
+  const curveLbls8 = [...kinkLbls];
+  const c1midP = c1.a/(2*c1.b);
+  const [c1ax,c1ay] = toC(c1.a/2, c1midP, W, H, xRl, yRl);
+  curveLbls8.push({ax:c1ax,ay:c1ay,x:c1ax+22,y:c1ay-10,w:18,h:13,text:'D₁',color:'#e74c3c',fontSize:10,bold:true});
+  const c2midP = c2.a/(2*c2.b);
+  const [c2ax,c2ay] = toC(c2.a/2, c2midP, W, H, xRl, yRl);
+  curveLbls8.push({ax:c2ax,ay:c2ay,x:c2ax+22,y:c2ay-10,w:18,h:13,text:'D₂',color:'#2980b9',fontSize:10,bold:true});
   const midP=Pmax*0.3;
   const [mx,my]=toC(v8QmNew(midP),midP,W,H,xRl,yRl);
-  if(mx<W-MR-20) ctx.fillText('Market D',mx+6,my-5);
+  curveLbls8.push({ax:mx,ay:my,x:mx+28,y:my-10,w:54,h:13,text:'Market D',color:'#1a56db',fontSize:10,bold:true});
+  resolveLabels(curveLbls8,linePts8);
+  curveLbls8.forEach(lbl=>drawForceLabel(ctx,lbl));
 }
 
 function v8Update() {

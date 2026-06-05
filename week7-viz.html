@@ -427,7 +427,7 @@
 const ML=42,MR=18,MT=18,MB=32;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
-function resolveLabels(items, iter=100, pad=4) {
+function resolveLabels(items, linePts=[], iter=150, pad=6) {
   for (let it=0; it<iter; it++) {
     for (let i=0; i<items.length; i++) {
       for (let j=i+1; j<items.length; j++) {
@@ -441,6 +441,16 @@ function resolveLabels(items, iter=100, pad=4) {
         }
       }
       const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
+    }
+    for (const lm of items) {
+      const hw=lm.w/2+8, hh=lm.h/2+8;
+      for (const [lx,ly] of linePts) {
+        const dx=lm.x-lx, dy=lm.y-ly;
+        if (Math.abs(dx)<hw && Math.abs(dy)<hh) {
+          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
+          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
+        }
+      }
     }
   }
 }
@@ -467,10 +477,11 @@ function setupCvs7(id){
   const cv=document.getElementById(id); if(!cv)return null;
   const dpr=window.devicePixelRatio||1;
   const W=cv.clientWidth||500;
-  cv.width=W*dpr; cv.height=parseInt(cv.getAttribute('height')||'260')*dpr;
-  cv.style.height=cv.getAttribute('height')+'px';
+  const H=W;
+  cv.width=W*dpr; cv.height=H*dpr;
+  cv.style.height=H+'px';
   const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  return {ctx,W,H:parseInt(cv.getAttribute('height')||'260')};
+  return {ctx,W,H};
 }
 
 function toC7(x,y,W,H,xR,yR){
@@ -553,29 +564,37 @@ function v71Draw(){
   ctxA.clearRect(0,0,W,HA);
   drawAxes7(ctxA,W,HA,xR,yRA,'Quantity q','$');
 
-  // TC curve
+  // TC curve -- collect for repulsion
+  const linePts71=[];
   ctxA.beginPath();let first=true;
   for(let q=0;q<=9;q+=0.05){
     const tc=TC7(q);if(tc>30)break;
     const[cx,cy]=toC7(q,tc,W,HA,xR,yRA);
+    if(q%1<0.05) linePts71.push([cx,cy]);
     first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
   }
   ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2.5;ctxA.stroke();
-  ctxA.fillStyle='#e74c3c';ctxA.font='bold 10px DM Sans';ctxA.textAlign='left';
-  const[tcLx,tcLy]=toC7(8,TC7(8),W,HA,xR,yRA);
-  ctxA.fillText('TC',Math.min(tcLx+4,W-30),Math.max(tcLy-4,12));
 
-  // TR line -- clip at top of canvas (yRA[1]=30) so line never goes off-screen
+  // TR line
   const trQmax = P>0 ? Math.min(9, yRA[1]/P) : 9;
   ctxA.beginPath();
   const[tx0,ty0]=toC7(0,0,W,HA,xR,yRA);
   const[tx1,ty1]=toC7(trQmax,P*trQmax,W,HA,xR,yRA);
+  for(let t=0;t<=1;t+=0.15) linePts71.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
   ctxA.moveTo(tx0,ty0);ctxA.lineTo(tx1,ty1);
   ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2.5;ctxA.stroke();
-  // TR label: place at clip point (or q=8 if line reaches there)
+
+  // Force labels TC and TR
+  ctxA.font='bold 10px DM Sans,sans-serif';
+  const[tcLx,tcLy]=toC7(8,TC7(8),W,HA,xR,yRA);
   const trLblQ = Math.min(8, trQmax*0.85);
   const[trlx,trly]=toC7(trLblQ,P*trLblQ,W,HA,xR,yRA);
-  ctxA.fillStyle='#1a56db';ctxA.fillText('TR',trlx+4,Math.max(12,trly-4));
+  const lbls71=[
+    {ax:tcLx,ay:tcLy,x:tcLx+12,y:tcLy-6,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:'#e74c3c',fontSize:10,bold:true},
+    {ax:trlx,ay:trly,x:trlx+12,y:trly-6,w:ctxA.measureText('TR').width+8,h:13,text:'TR',color:'#1a56db',fontSize:10,bold:true},
+  ];
+  resolveLabels(lbls71,linePts71,80);
+  lbls71.forEach(l=>drawForceLabel(ctxA,l));
 
   // Profit shading
   for(let q=0;q<=9;q+=0.1){
@@ -692,27 +711,27 @@ function v72Draw(P){
   const xR=[0,9],yR=[0,14];
   drawAxes7(ctx,W,H,xR,yR,'Quantity q','$/unit');
 
-  // Draw SAVC, SAC, SMC curves and collect labels for force resolution
+  // Draw SAVC, SAC, SMC curves and collect labels + line points for force resolution
   const curveLbls72=[];
-  function drawCurve(fn,col,lbl){
+  const linePts72=[];
+  function drawCurve72(fn,col,lbl){
     ctx.beginPath();let fst=true;
     for(let q=0.3;q<=9;q+=0.05){
       const v=fn(q);if(v<0||v>14)continue;
       const[cx,cy]=toC7(q,v,W,H,xR,yR);
+      if(q%0.5<0.05) linePts72.push([cx,cy]);
       fst?(ctx.moveTo(cx,cy),fst=false):ctx.lineTo(cx,cy);
     }
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
     const ql=fn===SMC7?6.5:fn===SAC7?5.5:4.5;
     const[ax,ay]=toC7(ql,fn(ql),W,H,xR,yR);
-    ctx.font='bold 9px DM Sans';
+    ctx.font='bold 9px DM Sans,sans-serif';
     const tw=ctx.measureText(lbl).width;
     curveLbls72.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize:9,bold:true,w:tw+6,h:12});
   }
-  drawCurve(q=>SAVC7(q),'#f39c12','SAVC');
-  drawCurve(q=>SAC7(q),'#2c3e50','SAC');
-  drawCurve(q=>SMC7(q),'#1a56db','SMC');
-  resolveLabels(curveLbls72,100,5);
-  curveLbls72.forEach(l=>drawForceLabel(ctx,l));
+  drawCurve72(q=>SAVC7(q),'#f39c12','SAVC');
+  drawCurve72(q=>SAC7(q),'#2c3e50','SAC');
+  drawCurve72(q=>SMC7(q),'#1a56db','SMC');
 
   // Price line
   const qStar=Math.max(0.1,qStar7(P));
@@ -721,8 +740,14 @@ function v72Draw(P){
   ctx.strokeStyle='#8e44ad';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
   ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle='#8e44ad';ctx.font='bold 9px DM Sans';ctx.textAlign='left';
-  ctx.fillText('P*='+P.toFixed(2),W-MR-60,py-4);
+  for(let x=ML;x<=W-MR;x+=10) linePts72.push([x,py]);
+
+  // Add P* label to force labels
+  ctx.font='bold 9px DM Sans,sans-serif';
+  const pStarTxt='P*='+P.toFixed(2);
+  curveLbls72.push({ax:W-MR-30,ay:py,x:W-MR-30,y:py-10,w:ctx.measureText(pStarTxt).width+8,h:12,text:pStarTxt,color:'#8e44ad',fontSize:9,bold:true});
+  resolveLabels(curveLbls72,linePts72,100,5);
+  curveLbls72.forEach(l=>drawForceLabel(ctx,l));
 
   const[qx]=toC7(qStar,0,W,H,xR,yR);
   const[,sacy]=toC7(0,Math.min(sacQ,13.9),W,H,xR,yR);
@@ -802,33 +827,37 @@ function v73Draw(P){
   drawAxes7(ctx,W,H,xR,yR,'Quantity q','$/unit');
 
   const curveLbls73=[];
-  function drawCurve(fn,col,lbl,q0=0.5){
+  const linePts73=[];
+  function drawCurve73(fn,col,lbl,q0=0.5){
     ctx.beginPath();let fst=true;
     for(let q=q0;q<=9;q+=0.05){
       const v=fn(q);if(v<0||v>14)continue;
       const[cx,cy]=toC7(q,v,W,H,xR,yR);
+      if(q%0.5<0.05) linePts73.push([cx,cy]);
       fst?(ctx.moveTo(cx,cy),fst=false):ctx.lineTo(cx,cy);
     }
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
     const ql=fn===SMC7?7:fn===SAC7?6:5;
     const[ax,ay]=toC7(ql,fn(ql),W,H,xR,yR);
-    ctx.font='bold 9px DM Sans';
+    ctx.font='bold 9px DM Sans,sans-serif';
     const tw=ctx.measureText(lbl).width;
     curveLbls73.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize:9,bold:true,w:tw+6,h:12});
   }
-  drawCurve(SAVC7,'#f39c12','SAVC');
-  drawCurve(SAC7,'#2c3e50','SAC');
-  drawCurve(SMC7,'#1a56db','SMC');
-  resolveLabels(curveLbls73,100,5);
-  curveLbls73.forEach(l=>drawForceLabel(ctx,l));
+  drawCurve73(SAVC7,'#f39c12','SAVC');
+  drawCurve73(SAC7,'#2c3e50','SAC');
+  drawCurve73(SMC7,'#1a56db','SMC');
 
-  // Horizontal price line
+  // Horizontal price line + P* label as force label
   const[,py]=toC7(0,P,W,H,xR,yR);
   ctx.strokeStyle='#8e44ad';ctx.lineWidth=2;ctx.setLineDash([6,4]);
   ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle='#8e44ad';ctx.font='bold 10px DM Sans';ctx.textAlign='right';
-  ctx.fillText('P*=$'+P.toFixed(2),W-MR-4,py-5);
+  for(let x=ML;x<=W-MR;x+=10) linePts73.push([x,py]);
+  ctx.font='bold 10px DM Sans,sans-serif';
+  const pStarTxt73='P*=$'+P.toFixed(2);
+  curveLbls73.push({ax:W-MR-4,ay:py,x:W-MR-4-ctx.measureText(pStarTxt73).width/2-4,y:py-10,w:ctx.measureText(pStarTxt73).width+8,h:13,text:pStarTxt73,color:'#8e44ad',fontSize:10,bold:true});
+  resolveLabels(curveLbls73,linePts73,100,5);
+  curveLbls73.forEach(l=>drawForceLabel(ctx,l));
 
   // Zone label update
   let zLabel='',zColor='#27ae60',zBg='#f0fdf4';
@@ -910,31 +939,32 @@ function v75DrawPanels(){
   if(!cvA||!cvB)return;
   const dpr=window.devicePixelRatio||1;
   const W=cvA.clientWidth||300;
-  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=280*dpr;cv.style.height='280px';});
+  const H75=W;
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=H75*dpr;cv.style.height=H75+'px';});
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
   const xR=[0,9],yR=[0,14];
 
   // LEFT: Firm curves
-  ctxA.clearRect(0,0,W,280);
-  drawAxes7(ctxA,W,280,xR,yR,'q','$/unit');
+  ctxA.clearRect(0,0,W,H75);
+  drawAxes7(ctxA,W,H75,xR,yR,'q','$/unit');
+  const linePts75=[];
   // Draw SAVC
   ctxA.beginPath();let fst=true;
   for(let q=0.3;q<=9;q+=0.05){
     const v=SAVC7(q);if(v>14)continue;
-    const[cx,cy]=toC7(q,v,W,280,xR,yR);
+    const[cx,cy]=toC7(q,v,W,H75,xR,yR);
+    if(q%0.5<0.05) linePts75.push([cx,cy]);
     fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
   }
   ctxA.strokeStyle='#f39c12';ctxA.lineWidth=1.5;ctxA.stroke();
-  ctxA.fillStyle='#f39c12';ctxA.font='9px DM Sans';ctxA.textAlign='left';
-  ctxA.fillText('SAVC',toC7(5,SAVC7(5),W,280,xR,yR)[0]+3,toC7(5,SAVC7(5),W,280,xR,yR)[1]-3);
   // Draw SMC (supply portion highlighted if P above PSD)
   const PSD=4;
   for(let q=0.3;q<=9;q+=0.05){
     const smc=SMC7(q);if(smc>14)break;
-    const savc=SAVC7(q);
     const aboveSD=smc>=PSD && v75P>=PSD;
-    const[cx,cy]=toC7(q,smc,W,280,xR,yR);
+    const[cx,cy]=toC7(q,smc,W,H75,xR,yR);
+    if(q%0.5<0.05) linePts75.push([cx,cy]);
     if(Math.abs(q-0.3)<0.01){ctxA.beginPath();ctxA.moveTo(cx,cy);continue;}
     ctxA.lineTo(cx,cy);
     if((q+0.05)>9||(SMC7(q+0.05)||14)>14){
@@ -944,21 +974,29 @@ function v75DrawPanels(){
     }
   }
   ctxA.strokeStyle='#1a56db';ctxA.lineWidth=1.5;ctxA.stroke();
-  ctxA.fillStyle='#1a56db';ctxA.font='9px DM Sans';
-  ctxA.fillText('SMC',toC7(7,SMC7(7),W,280,xR,yR)[0]+3,toC7(7,SMC7(7),W,280,xR,yR)[1]-3);
   // Current price line
   if(v75P>0){
-    const[,py]=toC7(0,Math.min(v75P,13.9),W,280,xR,yR);
+    const[,py]=toC7(0,Math.min(v75P,13.9),W,H75,xR,yR);
     ctxA.strokeStyle='#8e44ad';ctxA.lineWidth=2;ctxA.setLineDash([5,4]);
     ctxA.beginPath();ctxA.moveTo(ML,py);ctxA.lineTo(W-MR,py);ctxA.stroke();
     ctxA.setLineDash([]);
   }
+  // Force labels for SAVC and SMC
+  ctxA.font='9px DM Sans,sans-serif';
+  const[sax,say]=toC7(5,SAVC7(5),W,H75,xR,yR);
+  const[smx,smy]=toC7(7,SMC7(7),W,H75,xR,yR);
+  const savlbls=[
+    {ax:sax,ay:say,x:sax+16,y:say-6,w:ctxA.measureText('SAVC').width+8,h:12,text:'SAVC',color:'#f39c12',fontSize:9,bold:false},
+    {ax:smx,ay:smy,x:smx+16,y:smy-10,w:ctxA.measureText('SMC').width+8,h:12,text:'SMC',color:'#1a56db',fontSize:9,bold:false},
+  ];
+  resolveLabels(savlbls,linePts75,80,5);
+  savlbls.forEach(l=>drawForceLabel(ctxA,l));
 
   // RIGHT: Supply curve
-  ctxB.clearRect(0,0,W,280);
-  drawAxes7(ctxB,W,280,[0,7],[0,14],'q (supply)','P');
+  ctxB.clearRect(0,0,W,H75);
+  drawAxes7(ctxB,W,H75,[0,7],[0,14],'q (supply)','P');
   v75supplyPts.forEach(({q,P})=>{
-    const[cx,cy]=toC7(q,P,W,280,[0,7],[0,14]);
+    const[cx,cy]=toC7(q,P,W,H75,[0,7],[0,14]);
     dot7(ctxB,cx,cy,3,'#1a56db');
   });
   const ro=document.getElementById('v75-readout');
@@ -1031,8 +1069,11 @@ function v76Draw(P,q){
     const[,py]=toC7(0,P,W,H,xR,yR);
     ctx.strokeStyle='#1a56db';ctx.lineWidth=2.5;
     ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
-    ctx.fillStyle='#1a56db';ctx.font='bold 10px DM Sans';ctx.textAlign='left';
-    ctx.fillText('Demand = MR = P = $'+P.toFixed(2),ML+8,py-6);
+    ctx.font='bold 10px DM Sans,sans-serif';
+    const ptLbls=[{ax:ML+W*0.5,ay:py,x:ML+W*0.5,y:py-10,w:ctx.measureText('Demand = MR = P = $'+P.toFixed(2)).width+10,h:14,text:'Demand = MR = P = $'+P.toFixed(2),color:'#1a56db',fontSize:10,bold:true}];
+    const ptLine=[];for(let t=0;t<=1;t+=0.1)ptLine.push([ML+(W-ML-MR)*t,py]);
+    resolveLabels(ptLbls,ptLine,60,5);
+    ptLbls.forEach(l=>drawForceLabel(ctx,l));
     const qPT=parseFloat(document.getElementById('v76-p').value)*1.5;
     for(let i=0;i<Math.min(12,qPT);i++){
       const[x0]=toC7(i,0,W,H,xR,yR);
@@ -1047,21 +1088,27 @@ function v76Draw(P,q){
     const xR=[0,11],yR=[-4,11];
     drawAxes7(ctx,W,H,xR,yR,'Quantity q','$/unit');
     // Demand curve
+    const linePts76=[];
     ctx.beginPath();
     const[dx0,dy0]=toC7(0,10,W,H,xR,yR);
     const[dx1,dy1]=toC7(10,0,W,H,xR,yR);
+    for(let t=0;t<=1;t+=0.2)linePts76.push([dx0+(dx1-dx0)*t,dy0+(dy1-dy0)*t]);
     ctx.moveTo(dx0,dy0);ctx.lineTo(dx1,dy1);
     ctx.strokeStyle='#1a56db';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#1a56db';ctx.font='9px DM Sans';ctx.textAlign='left';
-    ctx.fillText('D: P=10-q',ML+4,dy0+14);
     // MR curve P = 10 - 2q
     ctx.beginPath();
     const[mx0,my0]=toC7(0,10,W,H,xR,yR);
     const[mx1,my1]=toC7(5,0,W,H,xR,yR);
+    for(let t=0;t<=1;t+=0.2)linePts76.push([mx0+(mx1-mx0)*t,my0+(my1-my0)*t]);
     ctx.moveTo(mx0,my0);ctx.lineTo(mx1,my1);
     ctx.strokeStyle='#e74c3c';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#e74c3c';ctx.textAlign='left';
-    ctx.fillText('MR=10-2q',ML+4,my0+26);
+    ctx.font='9px DM Sans,sans-serif';
+    const[dmx,dmy]=toC7(6,4,W,H,xR,yR);
+    const[mrmx,mrmy]=toC7(4,2,W,H,xR,yR);
+    const mktPwrLbls=[
+      {ax:dmx,ay:dmy,x:dmx+16,y:dmy-6,w:ctx.measureText('D: P=10-q').width+8,h:12,text:'D: P=10-q',color:'#1a56db',fontSize:9,bold:false},
+      {ax:mrmx,ay:mrmy,x:mrmx+16,y:mrmy+12,w:ctx.measureText('MR=10-2q').width+8,h:12,text:'MR=10-2q',color:'#e74c3c',fontSize:9,bold:false},
+    ];
 
     // Rectangles
     if(v76showGainLoss && v76prevQ<9){
@@ -1098,6 +1145,8 @@ function v76Draw(P,q){
       document.getElementById('v76-readout').innerHTML=
         `At q=${q}: P = $${Pq.toFixed(2)}, MR = 10 - 2&times;${q} = $${MRq.toFixed(2)}. MR &lt; P because selling more requires cutting price on ALL existing units.`;
     }
+    resolveLabels(mktPwrLbls,linePts76,80,5);
+    mktPwrLbls.forEach(l=>drawForceLabel(ctx,l));
   }
 }
 
@@ -1186,37 +1235,42 @@ function v78Draw(n){
   if(!cvA||!cvB)return;
   const dpr=window.devicePixelRatio||1;
   const W=cvA.clientWidth||300;
-  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=260*dpr;cv.style.height='260px';});
+  const H78=W;
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=H78*dpr;cv.style.height=H78+'px';});
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
   const xR1=[0,8],yR=[0,14], xR2=[0,n*5+5],yR2=[0,14];
 
   // Firm supply (SMC above PSD=4): q = (P-4)/2 for P>=4
-  ctxA.clearRect(0,0,W,260);
-  drawAxes7(ctxA,W,260,xR1,yR,'q (firm)','P');
+  ctxA.clearRect(0,0,W,H78);
+  drawAxes7(ctxA,W,H78,xR1,yR,'q (firm)','P');
+  const linePts78a=[];
   ctxA.beginPath();let fst=true;
   for(let P=4;P<=14;P+=0.2){
     const q=(P-4)/2;if(q>8)break;
-    const[cx,cy]=toC7(q,P,W,260,xR1,yR);
+    const[cx,cy]=toC7(q,P,W,H78,xR1,yR);
+    if(P%2<0.2) linePts78a.push([cx,cy]);
     fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
   }
   ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2.5;ctxA.stroke();
-  ctxA.fillStyle='#1a56db';ctxA.font='9px DM Sans';ctxA.textAlign='left';
-  ctxA.fillText('Firm supply',toC7(1,6,W,260,xR1,yR)[0]+3,toC7(1,6,W,260,xR1,yR)[1]-3);
+  ctxA.font='9px DM Sans,sans-serif';
+  const[fslx,fsly]=toC7(1,6,W,H78,xR1,yR);
+  const fsLbls=[{ax:fslx,ay:fsly,x:fslx+16,y:fsly-6,w:ctxA.measureText('Firm supply').width+8,h:12,text:'Firm supply',color:'#1a56db',fontSize:9,bold:false}];
+  resolveLabels(fsLbls,linePts78a,60,5);
+  fsLbls.forEach(l=>drawForceLabel(ctxA,l));
 
   // Market supply: Q = n*(P-4)/2 for P>=4
-  ctxB.clearRect(0,0,W,260);
-  drawAxes7(ctxB,W,260,xR2,yR2,'Q (market)','P');
+  ctxB.clearRect(0,0,W,H78);
+  drawAxes7(ctxB,W,H78,xR2,yR2,'Q (market)','P');
+  const linePts78b=[];
   ctxB.beginPath();fst=true;
   for(let P=4;P<=14;P+=0.2){
     const Q=n*(P-4)/2;if(Q>xR2[1])break;
-    const[cx,cy]=toC7(Q,P,W,260,xR2,yR2);
+    const[cx,cy]=toC7(Q,P,W,H78,xR2,yR2);
+    if(P%2<0.2) linePts78b.push([cx,cy]);
     fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
   }
   ctxB.strokeStyle='#27ae60';ctxB.lineWidth=2.5;ctxB.stroke();
-  ctxB.fillStyle='#27ae60';ctxB.font='9px DM Sans';ctxB.textAlign='left';
-  const Qex=n*(8-4)/2;
-  ctxB.fillText('Market supply ('+n+' firms)',toC7(Qex*0.3,8,W,260,xR2,yR2)[0]+3,toC7(Qex*0.3,8,W,260,xR2,yR2)[1]-3);
 
   // Add demand in market panel for equilibrium: Q_D = 1000 - 50P (simplified)
   const Qd=P=>Math.max(0,200-10*P);
@@ -1225,12 +1279,20 @@ function v78Draw(n){
   if(Qeq>0&&Qeq<xR2[1]){
     ctxB.setLineDash([5,4]);ctxB.strokeStyle='#e74c3c';ctxB.lineWidth=1.5;
     ctxB.beginPath();
-    const[deq_x0,deq_y0]=toC7(0,20,W,260,xR2,yR2);
-    const[deq_x1,deq_y1]=toC7(Math.min(xR2[1],200),0,W,260,xR2,yR2);
+    const[deq_x0,deq_y0]=toC7(0,20,W,H78,xR2,yR2);
+    const[deq_x1,deq_y1]=toC7(Math.min(xR2[1],200),0,W,H78,xR2,yR2);
+    for(let t=0;t<=1;t+=0.25) linePts78b.push([deq_x0+(deq_x1-deq_x0)*t,deq_y0+(deq_y1-deq_y0)*t]);
     ctxB.moveTo(deq_x0,deq_y0);ctxB.lineTo(deq_x1,deq_y1);ctxB.stroke();
     ctxB.setLineDash([]);
-    dot7(ctxB,...toC7(Qeq,Peq,W,260,xR2,yR2),5,'#8e44ad','#fff');
+    dot7(ctxB,...toC7(Qeq,Peq,W,H78,xR2,yR2),5,'#8e44ad','#fff');
   }
+  // Force labels for market panel
+  ctxB.font='9px DM Sans,sans-serif';
+  const Qex=n*(8-4)/2;
+  const[mslx,msly]=toC7(Qex*0.3,8,W,H78,xR2,yR2);
+  const mktLbls78=[{ax:mslx,ay:msly,x:mslx+16,y:msly-6,w:ctxB.measureText('Market supply ('+n+' firms)').width+8,h:12,text:'Market supply ('+n+' firms)',color:'#27ae60',fontSize:9,bold:false}];
+  resolveLabels(mktLbls78,linePts78b,60,5);
+  mktLbls78.forEach(l=>drawForceLabel(ctxB,l));
 
   document.getElementById('v78-readout').innerHTML=
     `<div class="readout-row">
@@ -1250,7 +1312,8 @@ function v79Draw(){
   if(!cvA||!cvB)return;
   const dpr=window.devicePixelRatio||1;
   const W=cvA.clientWidth||300;
-  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=260*dpr;cv.style.height='260px';});
+  const H79=W;
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=H79*dpr;cv.style.height=H79+'px';});
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
   const n=v79n, P=v79PofN(n);
@@ -1258,69 +1321,92 @@ function v79Draw(){
   const xRF=[0,9],yRF=[0,14];
 
   // MARKET
-  ctxA.clearRect(0,0,W,260);
-  drawAxes7(ctxA,W,260,xRM,yRM,'Q','P');
+  ctxA.clearRect(0,0,W,H79);
+  drawAxes7(ctxA,W,H79,xRM,yRM,'Q','P');
+  const linePts79a=[];
   // Demand: Q = 1000-50P => P = 20-Q/50
   ctxA.beginPath();
-  ctxA.moveTo(...toC7(0,20,W,260,xRM,yRM));
-  ctxA.lineTo(...toC7(300,14,W,260,xRM,yRM));
+  const[d79x0,d79y0]=toC7(0,20,W,H79,xRM,yRM);
+  const[d79x1,d79y1]=toC7(300,14,W,H79,xRM,yRM);
+  for(let t=0;t<=1;t+=0.2) linePts79a.push([d79x0+(d79x1-d79x0)*t,d79y0+(d79y1-d79y0)*t]);
+  ctxA.moveTo(d79x0,d79y0);ctxA.lineTo(d79x1,d79y1);
   ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2;ctxA.stroke();
-  ctxA.fillStyle='#1a56db';ctxA.font='9px DM Sans';ctxA.textAlign='left';
-  ctxA.fillText('D',toC7(280,14.4,W,260,xRM,yRM)[0],toC7(280,14.4,W,260,xRM,yRM)[1]-3);
   // Supply: Q = n*(P-4)/2 => P = 4+2Q/n
   const Qs=P=>n*(P-4)/2;
   ctxA.beginPath();let fst=true;
   for(let P2=4;P2<=14;P2+=0.2){
     const Q2=Qs(P2);if(Q2<0||Q2>300)continue;
-    const[cx,cy]=toC7(Q2,P2,W,260,xRM,yRM);
+    const[cx,cy]=toC7(Q2,P2,W,H79,xRM,yRM);
+    if(P2%2<0.2) linePts79a.push([cx,cy]);
     fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
   }
   ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2;ctxA.stroke();
   // Equilibrium point
   const Qeq=Qs(P);
-  dot7(ctxA,...toC7(Math.min(299,Qeq),Math.min(13.5,P),W,260,xRM,yRM),5,'#8e44ad','#fff');
-  ctxA.fillStyle='#8e44ad';ctxA.font='bold 9px DM Sans';ctxA.textAlign='left';
+  dot7(ctxA,...toC7(Math.min(299,Qeq),Math.min(13.5,P),W,H79,xRM,yRM),5,'#8e44ad','#fff');
+  ctxA.fillStyle='#8e44ad';ctxA.font='bold 9px DM Sans,sans-serif';ctxA.textAlign='left';
   ctxA.fillText('n='+n+', P*=$'+P.toFixed(2),ML+4,MT+14);
+  // Force labels for D and S in market panel
+  ctxA.font='9px DM Sans,sans-serif';
+  const[dlx79,dly79]=toC7(260,13.8,W,H79,xRM,yRM);
+  const[slx79,sly79]=toC7(Qs(10)*0.7,10,W,H79,xRM,yRM);
+  const mktLbls79=[
+    {ax:dlx79,ay:dly79,x:dlx79+8,y:dly79-8,w:ctxA.measureText('D').width+8,h:12,text:'D',color:'#1a56db',fontSize:9,bold:false},
+    {ax:slx79,ay:sly79,x:slx79+8,y:sly79-8,w:ctxA.measureText('S').width+8,h:12,text:'S',color:'#e74c3c',fontSize:9,bold:false},
+  ];
+  resolveLabels(mktLbls79,linePts79a,80,5);
+  mktLbls79.forEach(l=>drawForceLabel(ctxA,l));
 
   // FIRM
-  ctxB.clearRect(0,0,W,260);
-  drawAxes7(ctxB,W,260,xRF,yRF,'q','$/unit');
+  ctxB.clearRect(0,0,W,H79);
+  drawAxes7(ctxB,W,H79,xRF,yRF,'q','$/unit');
+  const linePts79b=[];
   // SAC curve
   ctxB.beginPath();fst=true;
   for(let q=0.5;q<=9;q+=0.05){
     const v=SAC7(q);if(v>14)continue;
-    const[cx,cy]=toC7(q,v,W,260,xRF,yRF);
+    const[cx,cy]=toC7(q,v,W,H79,xRF,yRF);
+    if(q%0.5<0.05) linePts79b.push([cx,cy]);
     fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
   }
   ctxB.strokeStyle='#2c3e50';ctxB.lineWidth=2;ctxB.stroke();
-  ctxB.fillStyle='#2c3e50';ctxB.font='9px DM Sans';ctxB.textAlign='left';
-  ctxB.fillText('SAC',toC7(7.5,SAC7(7.5),W,260,xRF,yRF)[0]+3,toC7(7.5,SAC7(7.5),W,260,xRF,yRF)[1]-3);
   // SMC curve
   ctxB.beginPath();fst=true;
   for(let q=0.5;q<=9;q+=0.05){
     const v=SMC7(q);if(v>14)continue;
-    const[cx,cy]=toC7(q,v,W,260,xRF,yRF);
+    const[cx,cy]=toC7(q,v,W,H79,xRF,yRF);
+    if(q%0.5<0.05) linePts79b.push([cx,cy]);
     fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
   }
   ctxB.strokeStyle='#1a56db';ctxB.lineWidth=1.5;ctxB.stroke();
+  // Force labels for SAC and SMC
+  ctxB.font='9px DM Sans,sans-serif';
+  const[saclx,sacly]=toC7(7.5,SAC7(7.5),W,H79,xRF,yRF);
+  const[smclx,smcly]=toC7(7,SMC7(7),W,H79,xRF,yRF);
+  const firmLbls79=[
+    {ax:saclx,ay:sacly,x:saclx+16,y:sacly-6,w:ctxB.measureText('SAC').width+8,h:12,text:'SAC',color:'#2c3e50',fontSize:9,bold:false},
+    {ax:smclx,ay:smcly,x:smclx+16,y:smcly-6,w:ctxB.measureText('SMC').width+8,h:12,text:'SMC',color:'#1a56db',fontSize:9,bold:false},
+  ];
+  resolveLabels(firmLbls79,linePts79b,80,5);
+  firmLbls79.forEach(l=>drawForceLabel(ctxB,l));
   // Price line and profit rectangle
   const Pc=Math.min(13.9,P);
-  const[,py]=toC7(0,Pc,W,260,xRF,yRF);
+  const[,py]=toC7(0,Pc,W,H79,xRF,yRF);
   ctxB.strokeStyle='#8e44ad';ctxB.lineWidth=1.5;ctxB.setLineDash([5,4]);
   ctxB.beginPath();ctxB.moveTo(ML,py);ctxB.lineTo(W-MR,py);ctxB.stroke();
   ctxB.setLineDash([]);
   if(P>0.5){
     const qf=qStar7(P);const sacF=SAC7(qf);
     const profit=qf*(P-sacF);
-    const[qfx]=toC7(qf,0,W,260,xRF,yRF);
-    const[,sacy]=toC7(0,Math.min(sacF,13.9),W,260,xRF,yRF);
+    const[qfx]=toC7(qf,0,W,H79,xRF,yRF);
+    const[,sacy]=toC7(0,Math.min(sacF,13.9),W,H79,xRF,yRF);
     if(Math.abs(py-sacy)>2){
       ctxB.fillStyle=profit>0?'rgba(39,174,96,0.25)':'rgba(231,76,60,0.2)';
       ctxB.fillRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
       ctxB.strokeStyle=profit>0?'#27ae60':'#e74c3c';ctxB.lineWidth=1.5;
       ctxB.strokeRect(ML,Math.min(py,sacy),qfx-ML,Math.abs(py-sacy));
     }
-    ctxB.fillStyle='#8e44ad';ctxB.font='bold 9px DM Sans';ctxB.textAlign='left';
+    ctxB.fillStyle='#8e44ad';ctxB.font='bold 9px DM Sans,sans-serif';ctxB.textAlign='left';
     ctxB.fillText('P*=$'+P.toFixed(2)+', π='+(profit>0?'+':'')+profit.toFixed(2),ML+4,MT+14);
   }
 
@@ -1366,20 +1452,23 @@ function v710Draw(shock,dw){
   if(!cvA||!cvB)return;
   const dpr=window.devicePixelRatio||1;
   const W=cvA.clientWidth||300;
-  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=260*dpr;cv.style.height='260px';});
+  [cvA,cvB].forEach(cv=>{cv.width=W*dpr;cv.height=W*dpr;cv.style.height=W+'px';});
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
+  const H710=W;
   const xR=[0,9],yR=[0,14];
   const shiftD=shock==='tech'?-dw:dw;
 
   // FIRM
-  ctxA.clearRect(0,0,W,260);
-  drawAxes7(ctxA,W,260,xR,yR,'q','$/unit');
-  // Original SMC
+  ctxA.clearRect(0,0,W,H710);
+  drawAxes7(ctxA,W,H710,xR,yR,'q','$/unit');
+  // Original SMC -- collect for repulsion
+  const linePts710=[];
   ctxA.beginPath();let fst=true;
   for(let q=0.5;q<=9;q+=0.05){
     const v=SMC7(q);if(v>14)continue;
-    const[cx,cy]=toC7(q,v,W,260,xR,yR);
+    const[cx,cy]=toC7(q,v,W,H710,xR,yR);
+    if(q%0.5<0.05) linePts710.push([cx,cy]);
     fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
   }
   ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2;ctxA.stroke();
@@ -1388,69 +1477,83 @@ function v710Draw(shock,dw){
     ctxA.beginPath();fst=true;
     for(let q=0.5;q<=9;q+=0.05){
       const v=SMC7(q)+shiftD;if(v<0||v>14)continue;
-      const[cx,cy]=toC7(q,v,W,260,xR,yR);
+      const[cx,cy]=toC7(q,v,W,H710,xR,yR);
+      if(q%0.5<0.05) linePts710.push([cx,cy]);
       fst?(ctxA.moveTo(cx,cy),fst=false):ctxA.lineTo(cx,cy);
     }
     ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2;ctxA.setLineDash([5,4]);ctxA.stroke();ctxA.setLineDash([]);
   }
-  // Force-resolve SMC / SMC' labels so they don't overlap
+  // Force-resolve SMC / SMC' labels with line repulsion
   {
     const lbls710=[];
-    const[ax0,ay0]=toC7(7,SMC7(7),W,260,xR,yR);
-    ctxA.font='9px DM Sans';
+    const[ax0,ay0]=toC7(7,SMC7(7),W,H710,xR,yR);
+    ctxA.font='9px DM Sans,sans-serif';
     const tw0=ctxA.measureText('SMC').width;
     lbls710.push({x:ax0+tw0/2+4,y:ay0-5,ax:ax0,ay:ay0,text:'SMC',color:'#1a56db',fontSize:9,bold:false,w:tw0+6,h:12});
     if(dw>0){
-      const[ax1,ay1]=toC7(7,Math.min(SMC7(7)+shiftD,13.5),W,260,xR,yR);
+      const[ax1,ay1]=toC7(7,Math.min(SMC7(7)+shiftD,13.5),W,H710,xR,yR);
       const tw1=ctxA.measureText("SMC'").width;
       lbls710.push({x:ax1+tw1/2+4,y:ay1-5,ax:ax1,ay:ay1,text:"SMC'",color:'#e74c3c',fontSize:9,bold:false,w:tw1+6,h:12});
     }
-    resolveLabels(lbls710,80,5);
+    resolveLabels(lbls710,linePts710,80,5);
     lbls710.forEach(l=>drawForceLabel(ctxA,l));
   }
 
-  // MARKET (simplified: S = 50*(P-4), D = 300-50P => P* = 7)
-  ctxB.clearRect(0,0,W,260);
+  // MARKET panel
+  ctxB.clearRect(0,0,W,H710);
   const xRM=[0,200],yRM=[0,14];
-  drawAxes7(ctxB,W,260,xRM,yRM,'Q','P');
+  drawAxes7(ctxB,W,H710,xRM,yRM,'Q','P');
+  const linePts710B=[];
   // Demand
   ctxB.beginPath();
-  ctxB.moveTo(...toC7(0,14,W,260,xRM,yRM));
-  ctxB.lineTo(...toC7(200,10,W,260,xRM,yRM));
+  const[dx0,dy0]=toC7(0,14,W,H710,xRM,yRM);
+  const[dx1,dy1]=toC7(200,10,W,H710,xRM,yRM);
+  for(let t=0;t<=1;t+=0.2) linePts710B.push([dx0+(dx1-dx0)*t,dy0+(dy1-dy0)*t]);
+  ctxB.moveTo(dx0,dy0); ctxB.lineTo(dx1,dy1);
   ctxB.strokeStyle='#1a56db';ctxB.lineWidth=2;ctxB.stroke();
-  ctxB.fillStyle='#1a56db';ctxB.font='9px DM Sans';ctxB.textAlign='left';
-  ctxB.fillText('D',toC7(185,10.1,W,260,xRM,yRM)[0],toC7(185,10.1,W,260,xRM,yRM)[1]-3);
   // Original supply
   const PSD_new=4+shiftD;
   const SatP=P=>50*Math.max(0,P-4);
   ctxB.beginPath();fst=true;
   for(let P2=4;P2<=14;P2+=0.2){
     const Q2=SatP(P2);if(Q2>200)break;
-    const[cx,cy]=toC7(Q2,P2,W,260,xRM,yRM);
+    const[cx,cy]=toC7(Q2,P2,W,H710,xRM,yRM);
+    linePts710B.push([cx,cy]);
     fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
   }
   ctxB.strokeStyle='#27ae60';ctxB.lineWidth=2;ctxB.stroke();
-  ctxB.fillStyle='#27ae60';ctxB.font='9px DM Sans';ctxB.textAlign='left';
-  ctxB.fillText('S',toC7(50,5,W,260,xRM,yRM)[0]+3,toC7(50,5,W,260,xRM,yRM)[1]-3);
   // Shifted supply if shock
   if(dw>0){
     const SatP2=P=>50*Math.max(0,P-PSD_new);
     ctxB.beginPath();fst=true;
     for(let P2=PSD_new;P2<=14;P2+=0.2){
       const Q2=SatP2(P2);if(Q2>200)break;
-      const[cx,cy]=toC7(Q2,P2,W,260,xRM,yRM);
+      const[cx,cy]=toC7(Q2,P2,W,H710,xRM,yRM);
+      if(P2%1<0.2) linePts710B.push([cx,cy]);
       fst?(ctxB.moveTo(cx,cy),fst=false):ctxB.lineTo(cx,cy);
     }
     ctxB.strokeStyle='#e74c3c';ctxB.lineWidth=2;ctxB.setLineDash([5,4]);ctxB.stroke();ctxB.setLineDash([]);
-    ctxB.fillStyle='#e74c3c';
-    ctxB.fillText("S'",toC7(20,PSD_new+0.5,W,260,xRM,yRM)[0]+3,toC7(20,PSD_new+0.5,W,260,xRM,yRM)[1]-3);
   }
-  // Equilibrium dots (before and after)
-  const PeqBefore=7, QeqBefore=150; // simplified
+  // Equilibrium dots
+  const PeqBefore=7, QeqBefore=150;
   const sign=shock==='tech'?-1:1;
   const PeqAfter=7+sign*0.5*dw, QeqAfter=150-sign*25*dw;
-  dot7(ctxB,...toC7(Math.max(0,QeqBefore),Math.min(13.9,PeqBefore),W,260,xRM,yRM),5,'#27ae60','#fff');
-  if(dw>0)dot7(ctxB,...toC7(Math.max(0,QeqAfter),Math.min(13.9,PeqAfter),W,260,xRM,yRM),5,'#e74c3c','#fff');
+  dot7(ctxB,...toC7(Math.max(0,QeqBefore),Math.min(13.9,PeqBefore),W,H710,xRM,yRM),5,'#27ae60','#fff');
+  if(dw>0)dot7(ctxB,...toC7(Math.max(0,QeqAfter),Math.min(13.9,PeqAfter),W,H710,xRM,yRM),5,'#e74c3c','#fff');
+  // Force labels for D, S, S' on market panel
+  const[dlblx,dlbly]=toC7(185,10.1,W,H710,xRM,yRM);
+  const[slblx,slbly]=toC7(50,5,W,H710,xRM,yRM);
+  ctxB.font='9px DM Sans,sans-serif';
+  const mktLbls=[
+    {ax:dlblx,ay:dlbly,x:dlblx+8,y:dlbly-6,w:ctxB.measureText('D').width+8,h:12,text:'D',color:'#1a56db',fontSize:9,bold:false},
+    {ax:slblx,ay:slbly,x:slblx+8,y:slbly-6,w:ctxB.measureText('S').width+8,h:12,text:'S',color:'#27ae60',fontSize:9,bold:false},
+  ];
+  if(dw>0){
+    const[sp2x,sp2y]=toC7(20,PSD_new+0.5,W,H710,xRM,yRM);
+    mktLbls.push({ax:sp2x,ay:sp2y,x:sp2x+8,y:sp2y-6,w:ctxB.measureText("S'").width+8,h:12,text:"S'",color:'#e74c3c',fontSize:9,bold:false});
+  }
+  resolveLabels(mktLbls,linePts710B,80,5);
+  mktLbls.forEach(l=>drawForceLabel(ctxB,l));
 
   document.getElementById('v710-readout').innerHTML=
     `<table style="width:100%;font-size:0.84rem;border-collapse:collapse;">
