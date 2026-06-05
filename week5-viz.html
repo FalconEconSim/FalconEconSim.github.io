@@ -774,20 +774,29 @@ function v52DrawAll() {
 
 function v52InitDrag() {
   const cvs=document.getElementById('cvs52a'); if(!cvs) return;
-  function getL(e) {
+  function getCanvasXY(e) {
     const r=cvs.getBoundingClientRect();
     const dpr=window.devicePixelRatio||1;
-    const W=cvs.width/dpr, H=cvs.height/dpr;
-    const px=(e.clientX-r.left)*(cvs.width/r.width)/dpr;
-    const [L]=fromC(px,0,W,H,[0,10],[0,10]);
-    return Math.max(0.5, Math.min(9.5, L));
+    return [(e.clientX-r.left)*(cvs.width/r.width)/dpr,(e.clientY-r.top)*(cvs.height/r.height)/dpr];
   }
-  cvs.addEventListener('mousedown',e=>{v52Dragging=true; v52DragL=getL(e); v52DrawAll();});
-  cvs.addEventListener('mousemove',e=>{if(!v52Dragging)return; v52DragL=getL(e); v52DrawAll();});
+  function closestLOnIsoquant(px,py) {
+    const dpr=window.devicePixelRatio||1;
+    const W=cvs.width/dpr, H=cvs.height/dpr;
+    let bestL=v52DragL, bestDist=Infinity;
+    for(let l=0.3;l<=9.5;l+=0.06){
+      const k=16/l; if(k>10) continue;
+      const [sx,sy]=toC(l,k,W,H,[0,10],[0,10]);
+      const d=Math.hypot(sx-px,sy-py);
+      if(d<bestDist){bestDist=d;bestL=l;}
+    }
+    return Math.max(0.5,Math.min(9.5,bestL));
+  }
+  cvs.addEventListener('mousedown',e=>{const [px,py]=getCanvasXY(e);v52Dragging=true;v52DragL=closestLOnIsoquant(px,py);v52DrawAll();});
+  cvs.addEventListener('mousemove',e=>{if(!v52Dragging)return;const [px,py]=getCanvasXY(e);v52DragL=closestLOnIsoquant(px,py);v52DrawAll();});
   cvs.addEventListener('mouseup',()=>v52Dragging=false);
   cvs.addEventListener('mouseleave',()=>v52Dragging=false);
-  cvs.addEventListener('touchstart',e=>{e.preventDefault();v52Dragging=true;v52DragL=getL(e.touches[0]);v52DrawAll();},{passive:false});
-  cvs.addEventListener('touchmove',e=>{e.preventDefault();if(!v52Dragging)return;v52DragL=getL(e.touches[0]);v52DrawAll();},{passive:false});
+  cvs.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v52Dragging=true;v52DragL=closestLOnIsoquant(px,py);v52DrawAll();},{passive:false});
+  cvs.addEventListener('touchmove',e=>{e.preventDefault();if(!v52Dragging)return;const t=e.touches[0];const [px,py]=getCanvasXY(t);v52DragL=closestLOnIsoquant(px,py);v52DrawAll();},{passive:false});
   cvs.addEventListener('touchend',()=>v52Dragging=false);
 }
 

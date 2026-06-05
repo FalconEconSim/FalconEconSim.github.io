@@ -257,6 +257,34 @@
           <div class="callout key-idea">
             <strong>Key insight:</strong> At each price, the budget line pivots and a new indifference curve is tangent at the new optimal bundle. Each (P<sub>X</sub>, X*) pair marks one point on the right panel. The dashed lines show exactly where the price (from the Y axis) and the quantity (from the X axis) come from before they converge into the demand point. Connecting all six points at the end traces the demand curve D.
           </div>
+
+          <!-- Narration box -->
+          <div id="v1-narration" style="font-size:1.05rem;font-weight:500;color:var(--ink);background:var(--accent-lt);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;padding:0.85rem 1.1rem;margin-bottom:1rem;line-height:1.65;min-height:3.5rem;"></div>
+
+          <!-- Two-panel canvas area -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
+            <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;">
+              <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule);">Utility Maximization</div>
+              <canvas id="cv1-left" style="width:100%;display:block;"></canvas>
+            </div>
+            <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;">
+              <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule);">Demand Curve</div>
+              <canvas id="cv1-right" style="width:100%;display:block;"></canvas>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+            <button id="v1-play-btn" onclick="v1PlayPause()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 1rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;">Play</button>
+            <button onclick="v1StepBack()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 0.8rem;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">&larr; Back</button>
+            <button onclick="v1StepFwd()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 0.8rem;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">Next &rarr;</button>
+            <button onclick="v1Reset()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 0.8rem;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">Reset</button>
+            <span style="font-family:var(--mono);font-size:0.72rem;color:var(--ink-light);">Speed:</span>
+            <button onclick="v1SetSpeed(0.5)" id="v1-sp-05" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
+            <button onclick="v1SetSpeed(1)" id="v1-sp-1" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
+            <button onclick="v1SetSpeed(2)" id="v1-sp-2" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
+            <span id="v1-step-counter" style="font-family:var(--mono);font-size:0.72rem;color:var(--faint);margin-left:auto;">Step 0 / 6</span>
+          </div>
         </div>
       </div>
     </section>
@@ -513,7 +541,9 @@ function v1SetRate(r) {
   });
 }
 
-/* (canvas animation variables kept as stubs so nothing breaks) */
+/* ============================================================
+   VIZ 1: Interactive Canvas Animation
+   ============================================================ */
 const V1_I = 60, V1_Py = 3, V1_alpha = 0.5;
 const V1_PX_STEPS = [6, 5, 4, 3, 2, 1];
 const V1_COLS = ['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80'];
@@ -524,174 +554,372 @@ let v1PlayTimer = null;
 let v1Speed = 1;
 let v1AnimRAF = null;
 let v1AnimStart = null;
+let v1IsPlaying = false;
 
 const V1_NARRATION = [
   'Click <strong>Play</strong> or use the step buttons to watch the demand curve build itself one price at a time.',
-  'Now change P<sub>X</sub> to <strong>$6</strong>. The budget line is steep, reflecting the high price of X. The indifference curve is tangent at <strong>X* = 5 units</strong>. On the right panel, $6 is marked on the price axis and 5 on the quantity axis. The dashed lines converge to reveal the first demand point.',
-  'Now change P<sub>X</sub> to <strong>$5</strong>. The budget line pivots outward as X becomes cheaper. A new indifference curve is tangent at <strong>X* = 6 units</strong>. The budget line pivot and new optimal bundle lead to a second demand point.',
-  'Now change P<sub>X</sub> to <strong>$4</strong>. Another pivot outward. The new optimal bundle gives <strong>X* = 7.5 units</strong>. Each price reduction reveals a new demand point on the right.',
-  'Now change P<sub>X</sub> to <strong>$3</strong>. The optimal bundle gives <strong>X* = 10 units</strong>. Notice that Y* = 10 has not changed across any step. With Cobb-Douglas preferences (α = 0.5), the consumer always spends half of income on each good, so Y* is independent of P<sub>X</sub>.',
-  'Now change P<sub>X</sub> to <strong>$2</strong>. The budget line is now three times as flat as at the start. <strong>X* = 15 units</strong>. As X becomes cheaper, the consumer substitutes strongly toward it.',
-  'Now change P<sub>X</sub> to <strong>$1</strong>. <strong>X* = 30 units</strong>. All six demand points are plotted. Each point tells the optimal consumption of X at a given price. How this relationship changes with price <em>is</em> the demand curve. Joining these points gives us the demand curve D.'
+  'P<sub>X</sub> = <strong>$6</strong>. The budget line is steep, reflecting the high price of X. The indifference curve is tangent at <strong>X* = 5 units</strong>. On the right panel, $6 is marked on the price axis and 5 on the quantity axis. The dashed lines converge to reveal the first demand point.',
+  'P<sub>X</sub> = <strong>$5</strong>. The budget line pivots outward as X becomes cheaper. A new indifference curve is tangent at <strong>X* = 6 units</strong>. The budget line pivot and new optimal bundle lead to a second demand point.',
+  'P<sub>X</sub> = <strong>$4</strong>. Another pivot outward. The new optimal bundle gives <strong>X* = 7.5 units</strong>. Each price reduction reveals a new demand point on the right.',
+  'P<sub>X</sub> = <strong>$3</strong>. The optimal bundle gives <strong>X* = 10 units</strong>. Notice Y* = 10 has not changed across any step. With Cobb-Douglas preferences (&alpha; = 0.5), the consumer always spends half of income on each good, so Y* is independent of P<sub>X</sub>.',
+  'P<sub>X</sub> = <strong>$2</strong>. The budget line is now three times as flat as at the start. <strong>X* = 15 units</strong>. As X becomes cheaper, the consumer substitutes strongly toward it.',
+  'P<sub>X</sub> = <strong>$1</strong>. <strong>X* = 30 units</strong>. All six demand points are plotted. Each point tells the optimal consumption of X at a given price. How this changes with price <em>is</em> the demand curve. Joining these points traces the demand curve D.'
 ];
 
 function v1Xstar(px) { return V1_alpha * V1_I / px; }
 
+/* ---- canvas sizing and init ---- */
 function initViz1() {
   const cvL = document.getElementById('cv1-left');
   const cvR = document.getElementById('cv1-right');
   if (!cvL || !cvR) return;
+
   function setSize() {
-    const w = cvL.parentElement ? Math.max(200, cvL.parentElement.clientWidth) : 300;
-    const h = Math.round(w * 0.82);
+    const W = Math.max(180, cvL.parentElement ? cvL.parentElement.clientWidth : 300);
     const dpr = window.devicePixelRatio || 1;
     [cvL, cvR].forEach(c => {
-      c.width = w * dpr; c.height = h * dpr; c.style.height = h + 'px';
+      c.width  = Math.round(W * dpr);
+      c.height = Math.round(W * dpr);
+      c.style.height = W + 'px';
     });
     v1DrawCanvas(1);
   }
+
   setSize();
-  window.addEventListener('resize', () => { setSize(); });
-  v1UpdateStatus();
+  window.addEventListener('resize', setSize);
+  v1UpdateNarration();
 }
 
-function v1DrawCanvas(animProg) {
-  if (animProg === undefined) animProg = 1;
+/* ---- coordinate mappers ---- */
+// Left panel: X in [0,35], Y in [0,25]
+// Right panel: X (quantity) in [0,35], Y (price) in [0,8]
+function v1GetCtx() {
   const cvL = document.getElementById('cv1-left');
   const cvR = document.getElementById('cv1-right');
-  if (!cvL || !cvR) return;
+  if (!cvL || !cvR) return null;
   const dpr = window.devicePixelRatio || 1;
   const W = cvL.width, H = cvL.height;
-  const pL = 44*dpr, pB = 30*dpr, pT = 14*dpr, pR = 12*dpr;
-  const pw = W - pL - pR, ph = H - pT - pB;
+  const ML = 42*dpr, MR = 14*dpr, MT = 14*dpr, MB = 30*dpr;
+  const pw = W - ML - MR, ph = H - MT - MB;
 
-  const toL = (x, y) => [pL + (x/65)*pw, pT + (1 - y/22)*ph];
-  const toR = (x, p) => [pL + (x/35)*pw, pT + (1 - p/7)*ph];
+  // Left panel axes: X [0,35], Y [0,25]
+  const toLx = x => ML + (x / 35) * pw;
+  const toLy = y => MT + (1 - y / 25) * ph;
+  const toL  = (x, y) => [toLx(x), toLy(y)];
+
+  // Right panel axes: quantity X [0,35], price P [0,8]
+  const toRx = x => ML + (x / 35) * pw;
+  const toRy = p => MT + (1 - p / 8) * ph;
+  const toR  = (x, p) => [toRx(x), toRy(p)];
+
+  return { cvL, cvR, dpr, W, H, ML, MR, MT, MB, pw, ph, toL, toLx, toLy, toR, toRx, toRy };
+}
+
+/* ---- axis drawing ---- */
+function v1DrawAxes(ctx, c) {
+  const { dpr, ML, MR, MT, MB, W, H } = c;
+  const ox = ML, oy = H - MB;
+  const ex = W - MR, ey = MT;
+
+  ctx.strokeStyle = '#c8ccce';
+  ctx.lineWidth = 1.5 * dpr;
+  // X axis
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex + 6*dpr, oy); ctx.stroke();
+  // Y axis
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox, ey - 6*dpr); ctx.stroke();
+  // arrowheads
+  ctx.fillStyle = '#c8ccce';
+  ctx.beginPath();
+  ctx.moveTo(ex + 6*dpr, oy);
+  ctx.lineTo(ex, oy - 4*dpr);
+  ctx.lineTo(ex, oy + 4*dpr);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(ox, ey - 6*dpr);
+  ctx.lineTo(ox - 4*dpr, ey);
+  ctx.lineTo(ox + 4*dpr, ey);
+  ctx.closePath(); ctx.fill();
+}
+
+function v1DrawLeftAxisLabels(ctx, c) {
+  const { dpr, W, H, ML, MB, MT, MR } = c;
+  const ox = ML, oy = H - MB;
+  ctx.fillStyle = '#9aa3b2';
+  ctx.font = (11*dpr) + 'px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('X', W - MR + 3*dpr, oy + 4*dpr);
+  ctx.textAlign = 'center';
+  ctx.fillText('Y', ox, MT - 4*dpr);
+  ctx.textAlign = 'left';
+}
+
+function v1DrawRightAxisLabels(ctx, c) {
+  const { dpr, W, H, ML, MB, MT, MR } = c;
+  const ox = ML, oy = H - MB;
+  ctx.fillStyle = '#9aa3b2';
+  ctx.font = (11*dpr) + 'px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Qty', W - MR + 3*dpr, oy + 4*dpr);
+  ctx.textAlign = 'center';
+  ctx.fillText('P($)', ox, MT - 4*dpr);
+  ctx.textAlign = 'left';
+}
+
+/* ---- main draw function ---- */
+function v1DrawCanvas(animProg) {
+  if (animProg === undefined) animProg = 1;
+  const c = v1GetCtx();
+  if (!c) return;
+  const { cvL, cvR, dpr, W, H, ML, MB, toL, toLx, toLy, toR, toRx, toRy } = c;
 
   const ctxL = cvL.getContext('2d');
   const ctxR = cvR.getContext('2d');
   ctxL.clearRect(0, 0, W, H);
   ctxR.clearRect(0, 0, W, H);
 
-  function drawAxisArrows(ctx, toFn, maxX, maxY, labelX, labelY) {
-    ctx.strokeStyle = '#c8ccce'; ctx.lineWidth = 1.5*dpr;
-    const o = toFn(0,0), xE = toFn(maxX,0), yE = toFn(0,maxY);
-    ctx.beginPath(); ctx.moveTo(o[0],o[1]); ctx.lineTo(xE[0],o[1]); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(o[0],o[1]); ctx.lineTo(o[0],yE[1]); ctx.stroke();
-    ctx.fillStyle='#c8ccce';
-    ctx.beginPath(); ctx.moveTo(xE[0],o[1]); ctx.lineTo(xE[0]-6*dpr,o[1]-4*dpr); ctx.lineTo(xE[0]-6*dpr,o[1]+4*dpr); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(o[0],yE[1]); ctx.lineTo(o[0]-4*dpr,yE[1]+6*dpr); ctx.lineTo(o[0]+4*dpr,yE[1]+6*dpr); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#9aa3b2'; ctx.font=`${11*dpr}px sans-serif`; ctx.textAlign='left';
-    ctx.fillText(labelX, xE[0]+4*dpr, o[1]+5*dpr);
-    ctx.textAlign='center'; ctx.fillText(labelY, o[0], yE[1]-6*dpr); ctx.textAlign='left';
-  }
+  // Draw axes
+  v1DrawAxes(ctxL, c);
+  v1DrawAxes(ctxR, c);
+  v1DrawLeftAxisLabels(ctxL, c);
+  v1DrawRightAxisLabels(ctxR, c);
 
-  drawAxisArrows(ctxL, toL, 65, 22, 'X', 'Y');
-  drawAxisArrows(ctxR, toR, 35,  7, 'X', 'P($)');
+  const origLx = ML, origLy = H - MB;
+  const origRx = ML, origRy = H - MB;
 
-  const origL = toL(0,0);
-  const origR = toR(0,0);
+  /* ===== LEFT PANEL ===== */
 
-  // ── LEFT PANEL ──
+  // Draw all completed steps (dim for older, full color for current)
   for (let i = 0; i < v1CurrStep; i++) {
-    const px = V1_PX_STEPS[i], xs = v1Xstar(px), col = V1_COLS[i];
-    const isLast = (i === v1CurrStep - 1);
-    const lw = isLast ? 2.2*dpr : 1.3*dpr;
-    const a8 = isLast ? '' : '66';
-    const xi = V1_I / px;
-    const [bx0,by0] = toL(0,20), [bx1,by1] = toL(xi,0);
-    ctxL.beginPath(); ctxL.moveTo(bx0,by0); ctxL.lineTo(bx1,by1);
-    ctxL.strokeStyle=col+a8; ctxL.lineWidth=lw; ctxL.stroke();
-    const k = xs * V1_Ystar;
-    ctxL.beginPath(); let fp=true;
-    for (let x=0.5; x<=63; x+=0.3) {
-      const y=k/x; if(y>21.5){fp=true;continue;}
-      const [cx,cy]=toL(x,y); fp?(ctxL.moveTo(cx,cy),fp=false):ctxL.lineTo(cx,cy);
+    const px = V1_PX_STEPS[i];
+    const xs = v1Xstar(px);
+    const col = V1_COLS[i];
+    const isCurrent = (i === v1CurrStep - 1);
+    const alpha8 = isCurrent ? '' : '55';
+    const lw = isCurrent ? 2.5*dpr : 1.2*dpr;
+
+    // Budget line: from (0, I/Py) to (I/Px, 0)
+    const yInt = V1_I / V1_Py; // = 20
+    const xInt = V1_I / px;
+    const [blx0, bly0] = toL(0, yInt);
+    const [blx1, bly1] = toL(xInt, 0);
+    ctxL.beginPath();
+    ctxL.moveTo(blx0, bly0);
+    ctxL.lineTo(blx1, bly1);
+    ctxL.strokeStyle = col + alpha8;
+    ctxL.lineWidth = lw;
+    ctxL.stroke();
+
+    // Indifference curve through (xs, V1_Ystar): U = xs * V1_Ystar, hyperbola y = U/x
+    const U = xs * V1_Ystar;
+    ctxL.beginPath();
+    let firstPt = true;
+    for (let xv = 0.3; xv <= 34.5; xv += 0.2) {
+      const yv = U / xv;
+      if (yv > 24.5 || yv < 0.05) { firstPt = true; continue; }
+      const [cx, cy] = toL(xv, yv);
+      if (firstPt) { ctxL.moveTo(cx, cy); firstPt = false; }
+      else { ctxL.lineTo(cx, cy); }
     }
-    ctxL.strokeStyle=col+a8; ctxL.lineWidth=lw; ctxL.stroke();
-    const [ox,oy]=toL(xs,V1_Ystar);
-    ctxL.beginPath(); ctxL.arc(ox,oy,(isLast?7:4)*dpr,0,2*Math.PI);
-    ctxL.fillStyle=col; ctxL.fill(); ctxL.strokeStyle='#fff'; ctxL.lineWidth=2*dpr; ctxL.stroke();
-    if (isLast) {
-      const [axXL] = toL(xs,0);
-      ctxL.setLineDash([5*dpr,4*dpr]); ctxL.strokeStyle=col+'88'; ctxL.lineWidth=1.5*dpr;
-      ctxL.beginPath(); ctxL.moveTo(ox,oy); ctxL.lineTo(axXL,origL[1]); ctxL.stroke();
-      ctxL.setLineDash([]);
-      ctxL.fillStyle=col; ctxL.font=`${10*dpr}px sans-serif`;
-      ctxL.textAlign='center'; ctxL.fillText(`X*=${xs.toFixed(0)}`,axXL,origL[1]+15*dpr);
-      ctxL.textAlign='right'; ctxL.fillText(`P=$${px}`,bx0-4*dpr,by0-4*dpr);
-      ctxL.textAlign='left';
+    ctxL.strokeStyle = col + alpha8;
+    ctxL.lineWidth = lw;
+    ctxL.stroke();
+
+    // Optimal bundle dot
+    const [ox, oy] = toL(xs, V1_Ystar);
+    const dotR = isCurrent ? 6*dpr : 3.5*dpr;
+    ctxL.beginPath();
+    ctxL.arc(ox, oy, dotR, 0, 2*Math.PI);
+    ctxL.fillStyle = col;
+    ctxL.fill();
+    ctxL.strokeStyle = '#fff';
+    ctxL.lineWidth = 1.8*dpr;
+    ctxL.stroke();
+
+    // Label current bundle
+    if (isCurrent) {
+      ctxL.fillStyle = col;
+      ctxL.font = `bold ${10*dpr}px sans-serif`;
+      ctxL.textAlign = 'center';
+      const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
+      ctxL.fillText('X*=' + xsDisp, ox, oy - 10*dpr);
+      ctxL.fillText('P=$' + px, blx0 - 20*dpr, bly0 + 12*dpr);
+      ctxL.textAlign = 'left';
     }
   }
 
-  // ── RIGHT PANEL: previous steps as small dots ──
+  /* ===== RIGHT PANEL ===== */
+
+  const prog = Math.min(1, animProg);
+
+  // Draw all fully-completed (not current) demand points
   for (let i = 0; i < v1CurrStep - 1; i++) {
-    const px=V1_PX_STEPS[i], xs=v1Xstar(px), col=V1_COLS[i];
-    const [rx,ry]=toR(xs,px);
-    ctxR.beginPath(); ctxR.arc(rx,ry,4*dpr,0,2*Math.PI);
-    ctxR.fillStyle=col+'99'; ctxR.fill(); ctxR.strokeStyle='#fff'; ctxR.lineWidth=1.5*dpr; ctxR.stroke();
-    ctxR.beginPath(); ctxR.moveTo(origR[0]-4*dpr,ry); ctxR.lineTo(origR[0]+3*dpr,ry);
-    ctxR.strokeStyle=col+'55'; ctxR.lineWidth=1.2*dpr; ctxR.stroke();
-    ctxR.beginPath(); ctxR.moveTo(rx,origR[1]+4*dpr); ctxR.lineTo(rx,origR[1]-3*dpr);
-    ctxR.strokeStyle=col+'55'; ctxR.lineWidth=1.2*dpr; ctxR.stroke();
+    const px = V1_PX_STEPS[i];
+    const xs = v1Xstar(px);
+    const col = V1_COLS[i];
+    const [rx, ry] = toR(xs, px);
+
+    // Small tick marks on axes
+    ctxR.strokeStyle = col + '88';
+    ctxR.lineWidth = 1.2*dpr;
+    ctxR.beginPath(); ctxR.moveTo(origRx - 4*dpr, ry); ctxR.lineTo(origRx + 3*dpr, ry); ctxR.stroke();
+    ctxR.beginPath(); ctxR.moveTo(rx, origRy + 4*dpr); ctxR.lineTo(rx, origRy - 3*dpr); ctxR.stroke();
+
+    // Price label
+    ctxR.fillStyle = col + '88';
+    ctxR.font = (9*dpr) + 'px sans-serif';
+    ctxR.textAlign = 'right';
+    ctxR.fillText('$' + px, origRx - 6*dpr, ry + 3*dpr);
+    ctxR.textAlign = 'left';
+
+    // Demand dot (fully opaque for completed steps)
+    ctxR.beginPath();
+    ctxR.arc(rx, ry, 5*dpr, 0, 2*Math.PI);
+    ctxR.fillStyle = col;
+    ctxR.fill();
+    ctxR.strokeStyle = '#fff';
+    ctxR.lineWidth = 1.5*dpr;
+    ctxR.stroke();
   }
 
-  // ── RIGHT PANEL: current step with converging-lines animation ──
+  // Animate current step on right panel
   if (v1CurrStep > 0) {
     const i = v1CurrStep - 1;
-    const px=V1_PX_STEPS[i], xs=v1Xstar(px), col=V1_COLS[i];
-    const [rx,ry]=toR(xs,px);
-    const prog = Math.min(1, animProg);
+    const px = V1_PX_STEPS[i];
+    const xs = v1Xstar(px);
+    const col = V1_COLS[i];
+    const [rx, ry] = toR(xs, px);
 
-    // Axis tick marks (instant)
-    ctxR.lineWidth=2*dpr; ctxR.strokeStyle=col;
-    ctxR.beginPath(); ctxR.moveTo(origR[0]-7*dpr,ry); ctxR.lineTo(origR[0]+5*dpr,ry); ctxR.stroke();
-    ctxR.beginPath(); ctxR.moveTo(rx,origR[1]+7*dpr); ctxR.lineTo(rx,origR[1]-5*dpr); ctxR.stroke();
-    ctxR.fillStyle=col; ctxR.font=`bold ${10*dpr}px sans-serif`;
-    ctxR.textAlign='right'; ctxR.fillText(`$${px}`,origR[0]-9*dpr,ry+4*dpr);
-    ctxR.textAlign='center'; ctxR.fillText(`${xs.toFixed(0)}`,rx,origR[1]+15*dpr);
-    ctxR.textAlign='left';
+    // Phase boundaries
+    const P1_END = 0.4;  // budget line pivots + horizontal dashed line extends
+    const P2_END = 0.7;  // IC appears + vertical dashed line rises
+    // Phase 3: 0.7-1.0  both lines merge; dot appears
 
-    // Converging dashed lines (animated by prog)
-    const hEnd = origR[0] + (rx - origR[0]) * prog;
-    const vEnd = origR[1] - (origR[1] - ry) * prog;
-    ctxR.setLineDash([4*dpr,3*dpr]); ctxR.lineWidth=1.6*dpr; ctxR.strokeStyle=col+'aa';
-    ctxR.beginPath(); ctxR.moveTo(origR[0],ry); ctxR.lineTo(hEnd,ry); ctxR.stroke();
-    ctxR.beginPath(); ctxR.moveTo(rx,origR[1]); ctxR.lineTo(rx,vEnd); ctxR.stroke();
-    ctxR.setLineDash([]);
+    // Always show price tick on Y-axis (instant)
+    ctxR.strokeStyle = col;
+    ctxR.lineWidth = 2*dpr;
+    ctxR.beginPath(); ctxR.moveTo(origRx - 7*dpr, ry); ctxR.lineTo(origRx + 5*dpr, ry); ctxR.stroke();
+    ctxR.fillStyle = col;
+    ctxR.font = `bold ${10*dpr}px sans-serif`;
+    ctxR.textAlign = 'right';
+    ctxR.fillText('$' + px, origRx - 9*dpr, ry + 4*dpr);
+    ctxR.textAlign = 'left';
 
-    // Dot fades in once lines reach the point
-    if (prog >= 0.85) {
-      const da = Math.min(1,(prog-0.85)/0.15);
-      ctxR.globalAlpha=da;
-      ctxR.beginPath(); ctxR.arc(rx,ry,7*dpr,0,2*Math.PI);
-      ctxR.fillStyle=col; ctxR.fill(); ctxR.strokeStyle='#fff'; ctxR.lineWidth=2*dpr; ctxR.stroke();
-      ctxR.globalAlpha=1;
+    // Phase 1 (0 - P1_END): horizontal dashed line extends from Y-axis rightward
+    if (prog <= P1_END) {
+      const frac = prog / P1_END;
+      const hEnd = origRx + (rx - origRx) * frac;
+      ctxR.setLineDash([4*dpr, 3*dpr]);
+      ctxR.strokeStyle = col + 'bb';
+      ctxR.lineWidth = 1.6*dpr;
+      ctxR.beginPath(); ctxR.moveTo(origRx, ry); ctxR.lineTo(hEnd, ry); ctxR.stroke();
+      ctxR.setLineDash([]);
+    }
+
+    // Phase 2 (P1_END - P2_END): full horizontal line + vertical rises from X-axis
+    if (prog > P1_END && prog <= P2_END) {
+      const frac = (prog - P1_END) / (P2_END - P1_END);
+
+      // Show qty tick on X-axis
+      ctxR.strokeStyle = col;
+      ctxR.lineWidth = 2*dpr;
+      ctxR.beginPath(); ctxR.moveTo(rx, origRy + 7*dpr); ctxR.lineTo(rx, origRy - 5*dpr); ctxR.stroke();
+      const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
+      ctxR.fillStyle = col;
+      ctxR.font = `bold ${10*dpr}px sans-serif`;
+      ctxR.textAlign = 'center';
+      ctxR.fillText(xsDisp, rx, origRy + 16*dpr);
+      ctxR.textAlign = 'left';
+
+      // Full horizontal dashed line
+      ctxR.setLineDash([4*dpr, 3*dpr]);
+      ctxR.strokeStyle = col + 'bb';
+      ctxR.lineWidth = 1.6*dpr;
+      ctxR.beginPath(); ctxR.moveTo(origRx, ry); ctxR.lineTo(rx, ry); ctxR.stroke();
+
+      // Vertical dashed line rises
+      const vEnd = origRy - (origRy - ry) * frac;
+      ctxR.beginPath(); ctxR.moveTo(rx, origRy); ctxR.lineTo(rx, vEnd); ctxR.stroke();
+      ctxR.setLineDash([]);
+    }
+
+    // Phase 3 (P2_END - 1.0): both lines fully drawn; dot appears
+    if (prog > P2_END) {
+      const frac = (prog - P2_END) / (1 - P2_END);
+
+      // Show qty tick on X-axis (keep it)
+      ctxR.strokeStyle = col;
+      ctxR.lineWidth = 2*dpr;
+      ctxR.beginPath(); ctxR.moveTo(rx, origRy + 7*dpr); ctxR.lineTo(rx, origRy - 5*dpr); ctxR.stroke();
+      const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
+      ctxR.fillStyle = col;
+      ctxR.font = `bold ${10*dpr}px sans-serif`;
+      ctxR.textAlign = 'center';
+      ctxR.fillText(xsDisp, rx, origRy + 16*dpr);
+      ctxR.textAlign = 'left';
+
+      // Both dashed lines fully drawn
+      ctxR.setLineDash([4*dpr, 3*dpr]);
+      ctxR.strokeStyle = col + 'bb';
+      ctxR.lineWidth = 1.6*dpr;
+      ctxR.beginPath(); ctxR.moveTo(origRx, ry); ctxR.lineTo(rx, ry); ctxR.stroke();
+      ctxR.beginPath(); ctxR.moveTo(rx, origRy); ctxR.lineTo(rx, ry); ctxR.stroke();
+      ctxR.setLineDash([]);
+
+      // Dot pops in with scale effect (0 -> 1.3 -> 1.0 radius)
+      const dotAlpha = Math.min(1, frac / 0.5);
+      const scale = frac < 0.5
+        ? (frac / 0.5) * 1.3
+        : 1.3 - 0.3 * ((frac - 0.5) / 0.5);
+      const dotR = 6 * dpr * Math.max(0, scale);
+      ctxR.globalAlpha = dotAlpha;
+      ctxR.beginPath();
+      ctxR.arc(rx, ry, dotR, 0, 2*Math.PI);
+      ctxR.fillStyle = col;
+      ctxR.fill();
+      ctxR.strokeStyle = '#fff';
+      ctxR.lineWidth = 2*dpr;
+      ctxR.stroke();
+      ctxR.globalAlpha = 1;
     }
   }
 
-  // ── RIGHT PANEL: draw demand curve only at final step ──
+  // At final step: draw the demand curve through all 6 points
   if (v1CurrStep === V1_PX_STEPS.length) {
-    ctxR.beginPath(); let fp=true;
-    for (let x=4.5; x<=33; x+=0.2) {
-      const p=(V1_alpha*V1_I)/x; if(p>6.8||p<0.5){fp=true;continue;}
-      const [cx,cy]=toR(x,p); fp?(ctxR.moveTo(cx,cy),fp=false):ctxR.lineTo(cx,cy);
+    ctxR.beginPath();
+    let firstPt = true;
+    for (let qv = 4; qv <= 34; qv += 0.15) {
+      const pv = (V1_alpha * V1_I) / qv;
+      if (pv > 7.8 || pv < 0.4) { firstPt = true; continue; }
+      const [cx, cy] = toR(qv, pv);
+      if (firstPt) { ctxR.moveTo(cx, cy); firstPt = false; }
+      else { ctxR.lineTo(cx, cy); }
     }
-    ctxR.strokeStyle='#3d5a80'; ctxR.lineWidth=2.5*dpr; ctxR.stroke();
-    const [dlx,dly]=toR(27,(V1_alpha*V1_I)/27);
-    ctxR.fillStyle='#3d5a80'; ctxR.font=`italic bold ${13*dpr}px sans-serif`;
-    ctxR.textAlign='left'; ctxR.fillText('D',dlx+5*dpr,dly-6*dpr);
+    ctxR.strokeStyle = '#3d5a80';
+    ctxR.lineWidth = 2.5*dpr;
+    ctxR.stroke();
+
+    // "D" label
+    const [dlx, dly] = toR(26, (V1_alpha * V1_I) / 26);
+    ctxR.fillStyle = '#3d5a80';
+    ctxR.font = `italic bold ${13*dpr}px sans-serif`;
+    ctxR.textAlign = 'left';
+    ctxR.fillText('D', dlx + 5*dpr, dly - 6*dpr);
   }
 }
 
+/* ---- animation loop ---- */
 function v1RunAnim() {
   const now = performance.now();
   if (!v1AnimStart) v1AnimStart = now;
-  const dur = Math.round(700 / v1Speed);
+  const dur = Math.round(1800 / v1Speed);
   const prog = Math.min(1, (now - v1AnimStart) / dur);
   v1DrawCanvas(prog);
-  if (prog < 1) { v1AnimRAF = requestAnimationFrame(v1RunAnim); }
-  else { v1AnimRAF = null; v1AnimStart = null; }
+  if (prog < 1) {
+    v1AnimRAF = requestAnimationFrame(v1RunAnim);
+  } else {
+    v1AnimRAF = null;
+    v1AnimStart = null;
+  }
 }
 
 function v1StartAnim() {
@@ -700,69 +928,100 @@ function v1StartAnim() {
   v1AnimRAF = requestAnimationFrame(v1RunAnim);
 }
 
-function v1UpdateStatus() {
-  const el = document.getElementById('v1-status');
+/* ---- narration + counter ---- */
+function v1UpdateNarration() {
   const nar = document.getElementById('v1-narration');
-  if (!el) return;
-  if (v1CurrStep === 0) {
-    el.textContent = 'Step 0 / 6';
-    if (nar) nar.innerHTML = V1_NARRATION[0];
-  } else {
-    const px = V1_PX_STEPS[v1CurrStep-1];
-    el.innerHTML = `Step ${v1CurrStep}/6 &middot; P<sub>X</sub>=$${px} &rarr; X*=${v1Xstar(px).toFixed(1)}`;
-    if (nar) nar.innerHTML = V1_NARRATION[v1CurrStep];
-  }
-  const prev = document.getElementById('v1-prev');
-  const next = document.getElementById('v1-next');
-  if (prev) prev.disabled = v1CurrStep === 0;
-  if (next) next.disabled = v1CurrStep === V1_PX_STEPS.length;
+  const ctr = document.getElementById('v1-step-counter');
+  if (nar) nar.innerHTML = V1_NARRATION[v1CurrStep] || '';
+  if (ctr) ctr.textContent = 'Step ' + v1CurrStep + ' / ' + V1_PX_STEPS.length;
 }
 
+/* ---- public control functions ---- */
 function v1SetSpeed(s) {
   v1Speed = s;
-  document.querySelectorAll('.v1-speed-btn').forEach(b => {
-    const on = parseFloat(b.dataset.speed) === s;
-    b.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
-    b.style.background  = on ? 'var(--accent-lt)' : '#fff';
-    b.style.color       = on ? 'var(--accent)' : '';
+  const ids = { 0.5: 'v1-sp-05', 1: 'v1-sp-1', 2: 'v1-sp-2' };
+  [0.5, 1, 2].forEach(r => {
+    const btn = document.getElementById(ids[r]);
+    if (!btn) return;
+    const on = r === s;
+    btn.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
+    btn.style.background  = on ? 'var(--accent-lt)' : '#fff';
+    btn.style.color       = on ? 'var(--accent)' : '';
   });
 }
 
-function v1CtrlStep(dir) {
+function v1StepFwd() {
+  v1IsPlaying = false;
   clearTimeout(v1PlayTimer); v1PlayTimer = null;
   const pb = document.getElementById('v1-play-btn');
-  if (pb) pb.textContent = '▶ Play';
-  const ns = Math.max(0, Math.min(V1_PX_STEPS.length, v1CurrStep + dir));
-  if (ns !== v1CurrStep) { v1CurrStep = ns; v1StartAnim(); v1UpdateStatus(); }
+  if (pb) pb.textContent = 'Play';
+  if (v1CurrStep < V1_PX_STEPS.length) {
+    v1CurrStep++;
+    v1StartAnim();
+    v1UpdateNarration();
+  }
 }
 
-function v1CtrlReset() {
+function v1StepBack() {
+  v1IsPlaying = false;
+  clearTimeout(v1PlayTimer); v1PlayTimer = null;
+  const pb = document.getElementById('v1-play-btn');
+  if (pb) pb.textContent = 'Play';
+  if (v1CurrStep > 0) {
+    v1CurrStep--;
+    v1DrawCanvas(1);
+    v1UpdateNarration();
+  }
+}
+
+function v1Reset() {
+  v1IsPlaying = false;
   clearTimeout(v1PlayTimer); v1PlayTimer = null;
   if (v1AnimRAF) { cancelAnimationFrame(v1AnimRAF); v1AnimRAF = null; }
   const pb = document.getElementById('v1-play-btn');
-  if (pb) pb.textContent = '▶ Play';
-  v1CurrStep = 0; v1DrawCanvas(1); v1UpdateStatus();
+  if (pb) pb.textContent = 'Play';
+  v1CurrStep = 0;
+  v1DrawCanvas(1);
+  v1UpdateNarration();
 }
 
-function v1CtrlPlay() {
+function v1PlayPause() {
   const pb = document.getElementById('v1-play-btn');
-  if (v1PlayTimer) {
+  if (v1IsPlaying) {
+    // Pause
+    v1IsPlaying = false;
     clearTimeout(v1PlayTimer); v1PlayTimer = null;
-    if (pb) pb.textContent = '▶ Play';
+    if (pb) pb.textContent = 'Play';
     return;
   }
-  v1CurrStep = 0; v1DrawCanvas(1); v1UpdateStatus();
-  if (pb) pb.textContent = '⏸ Pause';
+  // Start / resume play
+  v1IsPlaying = true;
+  if (pb) pb.textContent = 'Pause';
+
+  // If already at end, restart from beginning
+  if (v1CurrStep >= V1_PX_STEPS.length) {
+    v1CurrStep = 0;
+    v1DrawCanvas(1);
+    v1UpdateNarration();
+  }
+
   function tick() {
-    if (v1CurrStep >= V1_PX_STEPS.length) {
+    if (!v1IsPlaying || v1CurrStep >= V1_PX_STEPS.length) {
+      v1IsPlaying = false;
       v1PlayTimer = null;
-      if (pb) pb.textContent = '▶ Play';
+      if (pb) pb.textContent = 'Play';
       return;
     }
-    v1CurrStep++; v1StartAnim(); v1UpdateStatus();
-    v1PlayTimer = setTimeout(tick, Math.round(1600 / v1Speed));
+    v1CurrStep++;
+    v1StartAnim();
+    v1UpdateNarration();
+    // Wait for animation (1800ms) + a brief pause (300ms) before next step
+    const delay = Math.round(2100 / v1Speed);
+    v1PlayTimer = setTimeout(tick, delay);
   }
-  v1PlayTimer = setTimeout(tick, 400);
+
+  // Small initial delay then kick off
+  v1PlayTimer = setTimeout(tick, Math.round(400 / v1Speed));
 }
 
 /* ============================================================
@@ -1173,6 +1432,7 @@ function redrawV5() {
    Boot all visualizations
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
+  initViz1();
   initViz2();
   initViz3();
   drillNewRound();
