@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     .test-hero { padding: 2.4rem 0 1.6rem; border-bottom: 1px solid var(--rule); position: relative; }
     .test-ghost { position: absolute; right: 0; top: 0.8rem; font-size: 5rem; font-weight: 700; color: #f0f0f0; line-height: 1; user-select: none; pointer-events: none; font-family: var(--mono); }
@@ -265,6 +266,29 @@
         <div class="card-label">C &mdash; Snappy (spring 0.10, damp 0.77)</div>
         <div class="card-desc">Strong spring + lower damping. Labels closely track the anchor with a slight overshoot-and-settle.</div>
         <div class="canvas-wrap"><canvas id="lv-c"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 7: True D3.js Force Simulation ───────── -->
+  <div class="test-section">
+    <p style="margin-bottom:0.35rem"><span class="test-section-num">Section 7</span><span class="test-section-hdr">True D3.js Force Simulation</span></p>
+    <p class="test-desc">The actual D3.js v7 <code>forceSimulation</code> API &mdash; not our custom re-implementation. D3 runs the tick loop, manages alpha decay, and applies <code>forceX</code>&thinsp;/&thinsp;<code>forceY</code> springs toward label anchors. Our custom rectangular-collision and line-repulsion forces are registered alongside. Canvas redraws on every D3 tick event. On slider change, the MR anchor updates and the simulation is reheated with <code>sim.alpha(0.3).restart()</code>.</p>
+    <div class="slider-row">
+      <label>MR&thinsp;=&thinsp;P&thinsp;=&thinsp;</label><span class="sv" id="s7-val">$9</span>
+      <input type="range" id="s7-slider" min="2" max="14" step="0.1" value="9">
+      <span class="hint">drag and compare smoothness to sections 3 and 6</span>
+    </div>
+    <div class="card-grid-2">
+      <div class="test-card">
+        <div class="card-label">A &mdash; D3 standard (alphaDecay 0.025, velocityDecay 0.15)</div>
+        <div class="card-desc">Close to D3 defaults. ~240 frames to settle. Slow initial animation but very smooth convergence.</div>
+        <div class="canvas-wrap"><canvas id="d3-a"></canvas></div>
+      </div>
+      <div class="test-card">
+        <div class="card-label">B &mdash; D3 faster (alphaDecay 0.04, velocityDecay 0.1)</div>
+        <div class="card-desc">Faster decay (~140 frames) with less velocity damping. Labels settle faster with a bit more bounce.</div>
+        <div class="canvas-wrap"><canvas id="d3-b"></canvas></div>
       </div>
     </div>
   </div>
@@ -934,8 +958,9 @@ function drawShadingDemo(cvsId, fixed=false){
 
 // ================================================================
 // LIVE CONTINUOUS PHYSICS (section 6)
-// D3-style alpha decay: forces scale with alpha, simulation stops
-// when alpha < alphaMin, reheats to 0.3 on slider change.
+// Per-label alpha: only the MR label reheats on slider change.
+// Static labels (MC/ATC/AVC/minATC) stay frozen — no jitter.
+// Labels pre-offset from anchors so frame-1 forces aren't explosive.
 // ================================================================
 function _liveAnchors(ctx,W,H,xR,yR,P,fz=12){
   const Pc=Math.max(0.5,Math.min(P,yR[1]-0.5));
@@ -946,7 +971,8 @@ function _liveAnchors(ctx,W,H,xR,yR,P,fz=12){
     const tw=ctx.measureText(text).width,p=5;
     return {ax,ay,w:tw+p*2,h:fz+p*2,text,color,fontSize:fz,bold};
   };
-  const mcPt  =toC(7.5, MC_fn(7.5), W,H,xR,yR);
+  // MC_fn(7.5)≈17.7 which is off-chart (yR max 16) — use q=6.5 instead
+  const mcPt  =toC(6.5, MC_fn(6.5), W,H,xR,yR);
   const atcPt =toC(8.0, ATC_fn(8.0),W,H,xR,yR);
   const avcPt =toC(8.0, AVC_fn(8.0),W,H,xR,yR);
   const atcMin=toC(6.5, ATC_fn(6.5),W,H,xR,yR);
@@ -960,16 +986,16 @@ function _liveAnchors(ctx,W,H,xR,yR,P,fz=12){
   ];
 }
 
+// Pre-offsets per label index — start away from curve so first-frame forces are gentle
+const _LIVE_PRE=[{dx:22,dy:-18},{dx:24,dy:-14},{dx:24,dy:12},{dx:0,dy:-22},{dx:-4,dy:-22}];
+
 const _liveState={};
 
-function startLive(cvsId,{springK=0.08,damping=0.85,lineStr=0.4,pad=8,alphaDecay=0.03}={}){
-  const st={
-    P:9, labels:null,
-    alpha:1.0, alphaTarget:0, alphaDecay, alphaMin:0.001,
-    running:false,
-  };
+function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDecay=0.03}={}){
+  // Per-label alpha: each label has its own lm.alpha that decays independently
+  const st={P:9,labels:null,running:false,_aDecay:alphaDecay,_aMin:0.001};
   _liveState[cvsId]=st;
-  const xR=[0,10], yR=[0,16];
+  const xR=[0,10],yR=[0,16];
 
   function tick(){
     st.running=true;
@@ -985,41 +1011,45 @@ function startLive(cvsId,{springK=0.08,damping=0.85,lineStr=0.4,pad=8,alphaDecay
     }
     const ctx=cvs.getContext('2d');
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    const P=st.P, Pc=Math.max(0.5,Math.min(P,yR[1]-0.5));
-    const a=st.alpha; // current heat
+    const P=st.P,Pc=Math.max(0.5,Math.min(P,yR[1]-0.5));
 
-    // Draw background, axes, curves
-    ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+    // Draw
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
     drawAxes(ctx,W,H,xR,yR,'Output q','$ per unit');
     const linePts=[];
     const dC=(fn,col)=>{
       ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.beginPath();let f=true;
       for(let q=0.4;q<=9.9;q+=0.06){
         const v=fn(q);if(!isFinite(v)||v<0||v>yR[1])continue;
-        const [cx,cy]=toC(q,v,W,H,xR,yR);
+        const[cx,cy]=toC(q,v,W,H,xR,yR);
         f?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);f=false;linePts.push([cx,cy]);
       }
       ctx.stroke();
     };
     dC(MC_fn,'#c0392b');dC(ATC_fn,'#1a56db');dC(AVC_fn,'#1e8449');
 
-    const [mrX0,mrY]=toC(0,Pc,W,H,xR,yR);
-    const [mrX1]    =toC(10,Pc,W,H,xR,yR);
+    const[mrX0,mrY]=toC(0,Pc,W,H,xR,yR);const[mrX1]=toC(10,Pc,W,H,xR,yR);
     ctx.strokeStyle='#7d3c98';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
     ctx.beginPath();ctx.moveTo(mrX0,mrY);ctx.lineTo(mrX1,mrY);ctx.stroke();ctx.setLineDash([]);
-    for(let q=0;q<=10;q+=0.4) linePts.push([...toC(q,Pc,W,H,xR,yR)]);
+    for(let q=0;q<=10;q+=0.4)linePts.push([...toC(q,Pc,W,H,xR,yR)]);
 
     if(MC_fn(0.5)<Pc&&MC_fn(9.9)>Pc){
       const qs=bisect(MC_fn,Pc,3,10);
-      const [qsX]=toC(qs,Pc,W,H,xR,yR);const[,aY]=toC(0,0,W,H,xR,yR);
+      const[qsX]=toC(qs,Pc,W,H,xR,yR);const[,aY]=toC(0,0,W,H,xR,yR);
       ctx.strokeStyle='#ddd';ctx.lineWidth=0.8;ctx.setLineDash([4,3]);
       ctx.beginPath();ctx.moveTo(qsX,mrY);ctx.lineTo(qsX,aY);ctx.stroke();ctx.setLineDash([]);
     }
 
-    // Update anchors
+    // Init or update anchors
     const anch=_liveAnchors(ctx,W,H,xR,yR,P);
     if(!st.labels){
-      st.labels=anch.map(a=>({...a,x:a.ax,y:a.ay,vx:0,vy:0}));
+      // Start labels pre-offset from anchors so line repulsion isn't explosive on frame 1
+      st.labels=anch.map((a,i)=>({
+        ...a,
+        x:a.ax+_LIVE_PRE[i].dx, y:a.ay+_LIVE_PRE[i].dy,
+        vx:0,vy:0,
+        alpha:0.5, // half energy start — reduces initial jitter
+      }));
     } else {
       for(let i=0;i<anch.length;i++){
         const lm=st.labels[i];
@@ -1028,59 +1058,179 @@ function startLive(cvsId,{springK=0.08,damping=0.85,lineStr=0.4,pad=8,alphaDecay
     }
 
     const items=st.labels;
-    const thin=linePts.filter((_,i)=>i%4===0);
+    const anyHot=items.some(lm=>lm.alpha>st._aMin);
 
-    // Label-label collision — NOT alpha-scaled (like D3 forceCollide), always prevents overlap
-    for(let i=0;i<items.length;i++){
-      for(let j=i+1;j<items.length;j++){
-        const A=items[i],B=items[j];
-        const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
-        const dist=Math.hypot(dx,dy);
-        const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
-        if(dist<minD){const s=(minD-dist)/dist*0.5;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
-      }
-    }
+    if(anyHot){
+      const thin=linePts.filter((_,i)=>i%4===0);
 
-    // Spring to anchor — alpha-scaled (weakens as simulation cools)
-    for(const lm of items){
-      lm.vx+=(lm.ax-lm.x)*springK*a;
-      lm.vy+=(lm.ay-lm.y)*springK*a;
-    }
-
-    // Line repulsion — alpha-scaled (stops fighting spring as alpha→0)
-    for(const lm of items){
-      const hw=lm.w/2+12,hh=lm.h/2+12;
-      for(const [lx,ly] of thin){
-        const dx=lm.x-lx,dy=lm.y-ly;
-        if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
-          lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*lineStr*a;
-          lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*lineStr*a;
+      // Label-label collision — NOT alpha-scaled (always prevents overlap)
+      for(let i=0;i<items.length;i++){
+        for(let j=i+1;j<items.length;j++){
+          const A=items[i],B=items[j];
+          const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
+          const dist=Math.hypot(dx,dy);
+          const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
+          if(dist<minD){const s=(minD-dist)/dist*0.5;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
         }
       }
+
+      // Spring + line repulsion — only for warm labels (per-label alpha)
+      for(const lm of items){
+        if(lm.alpha<=st._aMin) continue;
+        const a=lm.alpha;
+        lm.vx+=(lm.ax-lm.x)*springK*a;
+        lm.vy+=(lm.ay-lm.y)*springK*a;
+        const hw=lm.w/2+12,hh=lm.h/2+12;
+        for(const[lx,ly] of thin){
+          const dx=lm.x-lx,dy=lm.y-ly;
+          if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+            lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*lineStr*a;
+            lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*lineStr*a;
+          }
+        }
+      }
+
+      // Integrate + per-label alpha decay
+      for(const lm of items){
+        lm.vx*=damping;lm.vy*=damping;lm.x+=lm.vx;lm.y+=lm.vy;
+        lm.alpha+=(0-lm.alpha)*st._aDecay;
+      }
     }
-
-    // Velocity decay (D3: velocity *= 1 - velocityDecay) + integrate
-    for(const lm of items){lm.vx*=damping;lm.vy*=damping;lm.x+=lm.vx;lm.y+=lm.vy;}
-
-    // D3-style alpha update: interpolate toward alphaTarget then stop
-    st.alpha+=(st.alphaTarget-st.alpha)*st.alphaDecay;
 
     items.forEach(lbl=>drawStyleA(ctx,lbl));
 
-    if(st.alpha>st.alphaMin){
+    if(anyHot){
       requestAnimationFrame(tick);
     } else {
-      st.running=false; // simulation cooled — stop until reheated
+      st.running=false;
     }
   }
 
-  // Reheat to newAlpha and resume (called by slider)
-  st._restart=function(newAlpha=0.3){
-    st.alpha=Math.max(st.alpha,newAlpha);
+  // Heat a specific label by index (or all if idx=-1) and resume the loop
+  st._restart=function(newAlpha=0.3,idx=-1){
+    if(st.labels){
+      if(idx>=0) st.labels[idx].alpha=Math.max(st.labels[idx].alpha,newAlpha);
+      else st.labels.forEach(lm=>{lm.alpha=Math.max(lm.alpha,newAlpha);});
+    }
     if(!st.running) requestAnimationFrame(tick);
   };
 
   requestAnimationFrame(tick);
+}
+
+// ================================================================
+// TRUE D3.js FORCE SIMULATION (section 7)
+// Uses the actual D3 forceSimulation — identical physics to the
+// original D3 test that worked well. Canvas renders each tick event.
+// ================================================================
+const _d3State={};
+
+function initD3Sim(cvsId,{alphaDecay=0.025,velocityDecay=0.15}={}){
+  const cvs=document.getElementById(cvsId);if(!cvs)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.parentElement?.clientWidth||300;if(!W)return;
+  const H=W;
+  cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';
+  const ctx=cvs.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const xR=[0,10],yR=[0,16];
+  const st={P:9,nodes:null,sim:null,ctx,W,H,dpr,xR,yR};
+  _d3State[cvsId]=st;
+
+  // Static curve line points (MR added dynamically inside force)
+  const curvePts=[];
+  for(const fn of[MC_fn,ATC_fn,AVC_fn]){
+    for(let q=0.4;q<=9.9;q+=0.09){
+      const v=fn(q);if(!isFinite(v)||v<0||v>yR[1])continue;
+      curvePts.push(toC(q,v,W,H,xR,yR));
+    }
+  }
+  const thinCurve=curvePts.filter((_,i)=>i%3===0);
+
+  // Init D3 nodes from anchors, pre-offset
+  const anch=_liveAnchors(ctx,W,H,xR,yR,st.P);
+  st.nodes=anch.map((a,i)=>({
+    ...a,
+    x:a.ax+_LIVE_PRE[i].dx, y:a.ay+_LIVE_PRE[i].dy,
+  }));
+
+  // Custom rectangular collision (not alpha-scaled — D3 forceCollide style)
+  function rectCollide(){
+    const pad=8;
+    return function(){
+      for(let i=0;i<st.nodes.length;i++){
+        for(let j=i+1;j<st.nodes.length;j++){
+          const A=st.nodes[i],B=st.nodes[j];
+          const dx=(A.x-B.x)||0.01,dy=(A.y-B.y)||0.01;
+          const dist=Math.hypot(dx,dy);
+          const minD=Math.hypot((A.w+B.w)/2+pad,(A.h+B.h)/2+pad);
+          if(dist<minD){const s=(minD-dist)/dist*0.5;A.vx+=dx*s;A.vy+=dy*s;B.vx-=dx*s;B.vy-=dy*s;}
+        }
+      }
+    };
+  }
+
+  // Line repulsion (alpha-scaled — weakens as simulation cools)
+  function lineRepel(){
+    return function(alpha){
+      const Pc=Math.max(0.5,Math.min(st.P,yR[1]-0.5));
+      const mrPts=[];
+      for(let q=0;q<=10;q+=0.5)mrPts.push(toC(q,Pc,W,H,xR,yR));
+      const thin=[...thinCurve,...mrPts].filter((_,i)=>i%2===0);
+      for(const lm of st.nodes){
+        const hw=lm.w/2+12,hh=lm.h/2+12;
+        for(const[lx,ly] of thin){
+          const dx=lm.x-lx,dy=lm.y-ly;
+          if(Math.abs(dx)<hw&&Math.abs(dy)<hh){
+            lm.vx+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.45*alpha;
+            lm.vy+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.45*alpha;
+          }
+        }
+      }
+    };
+  }
+
+  function redraw(){
+    const P=st.P,Pc=Math.max(0.5,Math.min(P,yR[1]-0.5));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    drawAxes(ctx,W,H,xR,yR,'Output q','$ per unit');
+    const dC=(fn,col)=>{
+      ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.beginPath();let f=true;
+      for(let q=0.4;q<=9.9;q+=0.06){
+        const v=fn(q);if(!isFinite(v)||v<0||v>yR[1])continue;
+        const[cx,cy]=toC(q,v,W,H,xR,yR);
+        f?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);f=false;
+      }
+      ctx.stroke();
+    };
+    dC(MC_fn,'#c0392b');dC(ATC_fn,'#1a56db');dC(AVC_fn,'#1e8449');
+    const[mrX0,mrY]=toC(0,Pc,W,H,xR,yR);const[mrX1]=toC(10,Pc,W,H,xR,yR);
+    ctx.strokeStyle='#7d3c98';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(mrX0,mrY);ctx.lineTo(mrX1,mrY);ctx.stroke();ctx.setLineDash([]);
+    if(MC_fn(0.5)<Pc&&MC_fn(9.9)>Pc){
+      const qs=bisect(MC_fn,Pc,3,10);
+      const[qsX]=toC(qs,Pc,W,H,xR,yR);const[,aY]=toC(0,0,W,H,xR,yR);
+      ctx.strokeStyle='#ddd';ctx.lineWidth=0.8;ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(qsX,mrY);ctx.lineTo(qsX,aY);ctx.stroke();ctx.setLineDash([]);
+    }
+    // Sync node anchors/text so forceX/Y uses latest positions next tick
+    const anch=_liveAnchors(ctx,W,H,xR,yR,P);
+    for(let i=0;i<st.nodes.length;i++){
+      st.nodes[i].ax=anch[i].ax;st.nodes[i].ay=anch[i].ay;
+      st.nodes[i].w=anch[i].w;st.nodes[i].h=anch[i].h;st.nodes[i].text=anch[i].text;
+    }
+    st.nodes.forEach(lm=>drawStyleA(ctx,lm));
+  }
+
+  st.sim=d3.forceSimulation(st.nodes)
+    .force('x',d3.forceX(d=>d.ax).strength(0.1))
+    .force('y',d3.forceY(d=>d.ay).strength(0.1))
+    .force('collide',rectCollide())
+    .force('lineRepel',lineRepel())
+    .alphaDecay(alphaDecay)
+    .velocityDecay(velocityDecay)
+    .on('tick',redraw);
 }
 
 // ================================================================
@@ -1147,17 +1297,30 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   document.getElementById('s3-slider').addEventListener('input', function(){ redrawS3(parseFloat(this.value)); });
   document.getElementById('s4-slider').addEventListener('input', function(){ redrawS4(parseFloat(this.value)); });
 
-  // Section 6: start live simulations with D3-style alpha decay
-  startLive('lv-a',{springK:0.08,damping:0.85,lineStr:0.4,alphaDecay:0.03});   // balanced
-  startLive('lv-b',{springK:0.05,damping:0.91,lineStr:0.4,alphaDecay:0.022});  // floaty
-  startLive('lv-c',{springK:0.14,damping:0.78,lineStr:0.45,alphaDecay:0.04});  // snappy
+  // Section 6: per-label alpha — only MR label (index 3) reheats on slider
+  startLive('lv-a',{springK:0.08,damping:0.86,lineStr:0.38,alphaDecay:0.03});
+  startLive('lv-b',{springK:0.05,damping:0.91,lineStr:0.38,alphaDecay:0.022});
+  startLive('lv-c',{springK:0.14,damping:0.79,lineStr:0.42,alphaDecay:0.04});
   document.getElementById('s6-slider').addEventListener('input',function(){
     const P=parseFloat(this.value);
     document.getElementById('s6-val').textContent=fmtP(P);
     for(const k of['lv-a','lv-b','lv-c']){
-      const st=_liveState[k]; if(!st) continue;
+      const st=_liveState[k];if(!st)continue;
       st.P=P;
-      st._restart(0.3); // reheat to 0.3 — labels smoothly glide to new positions
+      st._restart(0.4,3); // only heat MR label — MC/ATC/AVC stay frozen
+    }
+  });
+
+  // Section 7: real D3 force simulations
+  initD3Sim('d3-a',{alphaDecay:0.025,velocityDecay:0.15});
+  initD3Sim('d3-b',{alphaDecay:0.04, velocityDecay:0.10});
+  document.getElementById('s7-slider').addEventListener('input',function(){
+    const P=parseFloat(this.value);
+    document.getElementById('s7-val').textContent=fmtP(P);
+    for(const k of['d3-a','d3-b']){
+      const st=_d3State[k];if(!st||!st.sim)continue;
+      st.P=P;
+      st.sim.alpha(0.3).restart(); // D3 native reheat
     }
   });
 }));
