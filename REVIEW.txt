@@ -1,53 +1,83 @@
-CHANGES — f8abce0
-================
+CHANGES — through dd77ef4
+==========================
 
-WHAT WAS DONE
--------------
+ROUND 1 (commit f8abce0) — figure-specific fixes
+-------------------------------------------------
 1. Slider jank fixed sitewide — dragging no longer causes label thrashing.
    Affected: week6 figs 6.5, 6.6, 6.8 / week7 figs 7.2, 7.3, 7.6
-
 2. Label tracking — labels with anchored points now snap with the slider
    instead of drifting. Affected: week6 fig 6.5 (min ATC dot)
-
 3. Fig 7.1 — now side-by-side panels (was stacked), both canvases H=320
-
 4. Fig 7.7 — D and S labels are now draggable D3 force labels (were static text)
-
 5. Figs 7.8 / 7.9 — demand curves now start at the y-axis (P-intercept ≤ 14)
    Equilibrium formulas updated to match new demand functions
-
 6. Fig 6.1 — canvas height fixed to 320px (was nearly square / huge)
-
 7. D3 label initial position — now spawns 110-160px radially from anchor
    (was ±40px box, often landed on top of curves)
-
 8. testing.html S9 — new test section: market supply+demand both touching
    y-axis, D3 force labels, equilibrium dot
+
+ROUND 2 (commit dd77ef4) — sitewide alignment to S6/S8 "gold standard"
+-----------------------------------------------------------------------
+Audited every D3 figure against testing.html's S6/S8 (the figures you said
+were perfect) and brought mismatches in line:
+9.  Purple palette unified — off-standard #8e44ad replaced with S6/S8's
+    #7d3c98 everywhere (price/MR/equilibrium lines & labels: figs 7.2, 7.3,
+    7.5, 7.6, 7.8, 7.9); fig 7.9's firm price-line dash style normalized
+    to match the gold-standard spec (width 1.8, dash 6,4, opacity 0.85)
+10. Fig 7.10 — removed the "draggable" cursor styling from the static
+    SMC'/S' labels (they don't have drag handlers, so the cursor was lying)
+11. Fig 7.1 canvas — curve stroke-width normalized 2.5→2 to match every
+    other curve sitewide; fixed a missing font-family fallback
+12. week6 D3 figure heights — 6.5/6.6/6.10 were H=340, 6.8 was H=360;
+    all four now H=320 to match S6/S8 proportions exactly
+13. week6 curve colors aligned to the established palette — fig 6.10 MC
+    curve #e74c3c→#c0392b, fig 6.5 AVC curve #2e8b57→#1e8449
+14. Fig 6.8 — replaced "rebuild the entire sim on every slider input"
+    (the worst form of jank) with the same delta-translate pattern S6/S8
+    use; reset buttons for figs 6.5/6.8 now randomize-and-restart instead
+    of doing a full rebuild
 
 
 WHAT TO REVIEW IN THE BROWSER
 ------------------------------
 week7-viz.html
-  [ ] Fig 7.1 — two panels side by side, curves fit within bounds
-  [ ] Fig 7.2 — drag P slider, labels should follow smoothly (no jank)
-  [ ] Fig 7.3 — same slider test
+  [ ] Fig 7.1 — two panels side by side, curves fit within bounds, line weight
+                looks consistent with other figures (was thicker, now 2px)
+  [ ] Fig 7.2 — drag P slider: smooth, no jank; purple P* line/label/dot
+  [ ] Fig 7.3 — same slider + purple-line check
+  [ ] Fig 7.5 — purple price-sweep line color
   [ ] Fig 7.6 — same slider test
   [ ] Fig 7.7 — D and S labels draggable; persist across scenario steps
-  [ ] Fig 7.8 — demand curve starts at y-axis; equilibrium dot looks right
-  [ ] Fig 7.9 — same demand check; labels anchored to curve, not floating
-  [ ] Fig 7.10 — SMC' and S' labels present (static layer, not force labels yet)
+  [ ] Fig 7.8 — demand curve starts at y-axis; purple equilibrium dot
+  [ ] Fig 7.9 — demand check; purple equilibrium dot + firm price line/label
+  [ ] Fig 7.10 — SMC'/S' labels show a normal cursor (not a "move" cursor)
 
 week6-viz.html
   [ ] Fig 6.1 — normal size, not giant; labels visible
-  [ ] Fig 6.5 — drag TFC slider, min ATC label moves with the dot
-  [ ] Fig 6.6 / 6.8 — slider drag feels smooth
+  [ ] Fig 6.5 — drag TFC slider: smooth; min ATC label moves with the dot;
+                AVC curve is now a slightly different green (#1e8449)
+  [ ] Fig 6.6 — slider drag feels smooth
+  [ ] Fig 6.8 — drag w/v sliders: should feel noticeably smoother than before
+                (was rebuilding the whole chart on every pixel of movement);
+                reset button still works
+  [ ] Fig 6.10 — MC curve is now a slightly different red (#c0392b)
+  [ ] All D3 figures in week6 — should look the same proportions/size as S6/S8
 
 testing.html
   [ ] S9 — supply starts at P=$4 (touches y-axis), demand at P=$12
            equilibrium dot at P=$8, Q=200; labels draggable
+  [ ] S6/S8 — unchanged; these are the reference "perfect" figures everything
+              else was aligned to
 
 
-KNOWN GAPS (not yet done)
---------------------------
-- Fig 7.10 SMC' and S' labels are still static (not D3 force draggable)
-- Fig 7.9 P* profit label not yet added to chart
+KNOWN GAPS / JUDGMENT CALLS (left alone — flag if you disagree)
+-----------------------------------------------------------------
+- Fig 7.10 SMC'/S' labels are still static text (not draggable D3 force
+  labels) — only the misleading cursor was fixed, not the underlying type
+- Fig 7.9 P* profit label ("P*=$8.00, π=+9.79") not yet added as a D3 label
+- Fig 7.1's profit-curve purple (#6b52a8) left distinct from the
+  price/equilibrium purple (#7d3c98) since they represent different concepts
+- Weeks 2-5 use a different (intentionally consistent) earthy color palette
+  for consumer/production-theory diagrams — left as-is, not repainted to
+  match S6/S8's cost-curve palette since the content domain differs
