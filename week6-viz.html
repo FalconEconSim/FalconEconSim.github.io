@@ -809,7 +809,7 @@ function v65AFC(q,tfc){return tfc/q;}
 
 window._initFig65=function initFig65(){
   if(typeof d3==='undefined') return;
-  const W=680,H=340,PAD={top:28,right:36,bottom:44,left:54};
+  const W=680,H=320,PAD={top:28,right:36,bottom:44,left:54};
   const xMax=16, yMax=80;
   const scX=d3.scaleLinear().domain([0,xMax]).range([PAD.left,W-PAD.right]);
   const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
@@ -829,7 +829,7 @@ window._initFig65=function initFig65(){
   // Curve path elements (ordered: LRAC behind, then others)
   const lracPath=svg.append('path').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',1.8).attr('stroke-dasharray','5,3').attr('opacity',0);
   const afcPath=svg.append('path').attr('fill','none').attr('stroke','#888').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
-  const avcPath=svg.append('path').attr('fill','none').attr('stroke','#2e8b57').attr('stroke-width',2);
+  const avcPath=svg.append('path').attr('fill','none').attr('stroke','#1e8449').attr('stroke-width',2);
   const atcPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
   const smcPath=svg.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2);
 
@@ -866,7 +866,7 @@ window._initFig65=function initFig65(){
     const nodes=[
       {id:'SMC',  color:'#e74c3c',label:'SMC',  lw:44,ax:scX(12),  ay:scY(Math.min(v65MC(12),yMax))},
       {id:'ATC',  color:'#1a56db',label:'ATC',  lw:40, ax:scX(13),  ay:scY(Math.min(v65ATC(13,tfc),yMax))},
-      {id:'AVC',  color:'#2e8b57',label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
+      {id:'AVC',  color:'#1e8449',label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
       {id:'AFC',  color:'#888',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
       {id:'minATC',color:'#1a56db',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
     ];
@@ -993,9 +993,13 @@ window._initFig65=function initFig65(){
     if(f65Sim){ f65Sim.alpha(0.5).restart(); setTimeout(()=>f65Sim.alphaTarget(0),1200); }
   };
   window.resetFig65=function(){
-    const tfc=parseFloat(document.getElementById('v65-tfc').value);
-    initSim(tfc);
-    v65DrawD3(tfc);
+    if(f65Sim&&f65Nodes){
+      f65Nodes.forEach(d=>{
+        d.x=d.fx_anchor+(Math.random()-0.5)*60; d.y=d.fy_anchor+(Math.random()-0.5)*60;
+        d.vx=0; d.vy=0; d.fx=null; d.fy=null;
+      });
+      f65Sim.alpha(0.5).restart();
+    }
   };
 };
 
@@ -1007,7 +1011,7 @@ function v66SRAC(q,K){ return V66_W*q/K + V66_V*K/q; }
 
 window._initFig66=function initFig66(){
   if(typeof d3==='undefined') return;
-  const W=680,H=340,PAD={top:28,right:36,bottom:44,left:54};
+  const W=680,H=320,PAD={top:28,right:36,bottom:44,left:54};
   const xMax=14, yMax=36;
   const LABEL_H=15;
   const scX=d3.scaleLinear().domain([0,xMax]).range([PAD.left,W-PAD.right]);
@@ -1185,7 +1189,7 @@ function v68Opt(w,v){ const q=V68_Q; const Ls=q*Math.sqrt(v/w),Ks=q*Math.sqrt(w/
 
 window._initFig68=function initFig68(){
   if(typeof d3==='undefined') return;
-  const W=680,H=360,PAD={top:28,right:36,bottom:44,left:54};
+  const W=680,H=320,PAD={top:28,right:36,bottom:44,left:54};
   const AXIS_MAX=18;
   const LABEL_H=15;
   const scX=d3.scaleLinear().domain([0,AXIS_MAX]).range([PAD.left,W-PAD.right]);
@@ -1257,27 +1261,7 @@ window._initFig68=function initFig68(){
       .map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));
   }
 
-  function v68DrawD3(){
-    const w=parseFloat(document.getElementById('v68-w').value);
-    const v=parseFloat(document.getElementById('v68-v').value);
-    const wBase=3, vBase=3;
-    const optBase=v68Opt(wBase,vBase);
-    const optNew=v68Opt(w,v);
-    const TCold=optBase.TC, Lold=TCold/wBase, Kold=TCold/vBase;
-    const TCnew=optNew.TC, Lnew=TCnew/w, Knew=TCnew/v;
-
-    oldIsocost.attr('x1',scX(0)).attr('y1',scY(Math.min(Kold,AXIS_MAX)))
-      .attr('x2',scX(Math.min(Lold,AXIS_MAX))).attr('y2',scY(0));
-    newIsocost.attr('x1',scX(0)).attr('y1',scY(Math.min(Knew,AXIS_MAX)))
-      .attr('x2',scX(Math.min(Lnew,AXIS_MAX))).attr('y2',scY(0));
-    oldOptTxt.attr('x',scX(optBase.Ls)).attr('y',scY(optBase.Ks));
-    newOptDot.attr('cx',scX(optNew.Ls)).attr('cy',scY(optNew.Ks));
-    arrow.attr('x1',scX(optBase.Ls)).attr('y1',scY(optBase.Ks))
-         .attr('x2',scX(optNew.Ls)).attr('y2',scY(optNew.Ks));
-
-    // Rebuild labels
-    if(f68Sim) f68Sim.stop();
-    svg.selectAll('.f68conn,.f68lbl').remove();
+  function buildSim(w,v,optBase,optNew){
     f68Nodes=buildLabels(w,v,optBase,optNew);
 
     f68Conn=svg.selectAll('.f68conn').data(f68Nodes).enter()
@@ -1309,6 +1293,57 @@ window._initFig68=function initFig68(){
         f68LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
         f68Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
       });
+  }
+
+  // Move an existing node's anchor to (nx,ny), translating its current position by the delta
+  // (matches S6/S8 _setP/updateChart pattern — never restarts the sim per input)
+  function moveAnchor(node,nx,ny){
+    if(!node) return;
+    const dx=nx-node.fx_anchor, dy=ny-node.fy_anchor;
+    node.x+=dx; node.y+=dy;
+    node.vx=0; node.vy=0;
+    node.fx_anchor=nx; node.fy_anchor=ny;
+  }
+
+  function v68DrawD3(){
+    const w=parseFloat(document.getElementById('v68-w').value);
+    const v=parseFloat(document.getElementById('v68-v').value);
+    const wBase=3, vBase=3;
+    const optBase=v68Opt(wBase,vBase);
+    const optNew=v68Opt(w,v);
+    const TCold=optBase.TC, Lold=TCold/wBase, Kold=TCold/vBase;
+    const TCnew=optNew.TC, Lnew=TCnew/w, Knew=TCnew/v;
+
+    oldIsocost.attr('x1',scX(0)).attr('y1',scY(Math.min(Kold,AXIS_MAX)))
+      .attr('x2',scX(Math.min(Lold,AXIS_MAX))).attr('y2',scY(0));
+    newIsocost.attr('x1',scX(0)).attr('y1',scY(Math.min(Knew,AXIS_MAX)))
+      .attr('x2',scX(Math.min(Lnew,AXIS_MAX))).attr('y2',scY(0));
+    oldOptTxt.attr('x',scX(optBase.Ls)).attr('y',scY(optBase.Ks));
+    newOptDot.attr('cx',scX(optNew.Ls)).attr('cy',scY(optNew.Ks));
+    arrow.attr('x1',scX(optBase.Ls)).attr('y1',scY(optBase.Ks))
+         .attr('x2',scX(optNew.Ls)).attr('y2',scY(optNew.Ks));
+
+    const iqL=AXIS_MAX*0.78, iqK=V68_Q*V68_Q/iqL;
+    const newICax=(scX(0)+scX(Math.min(Lnew,AXIS_MAX)))/2, newICay=(scY(Math.min(Knew,AXIS_MAX))+scY(0))/2;
+    const newICtxt='new isocost (w=$'+w+')', newIClw=w.toString().length>1?160:146;
+
+    if(!f68Sim){
+      // First build: create nodes + simulation
+      buildSim(w,v,optBase,optNew);
+    } else {
+      // Subsequent draws (slider input): translate existing nodes by anchor delta only —
+      // never rebuild or restart the sim here (that's what causes step="any" slider jank)
+      const byId=id=>f68Nodes.find(n=>n.id===id);
+      moveAnchor(byId('IQ'), scX(Math.min(iqL,AXIS_MAX)), scY(Math.min(iqK,AXIS_MAX)));
+      moveAnchor(byId('newIC'), newICax, newICay);
+      const newICnode=byId('newIC');
+      if(newICnode){ newICnode.lw=newIClw; newICnode.label=newICtxt; }
+      moveAnchor(byId('newOpt'), scX(optNew.Ls), scY(optNew.Ks));
+      // oldIC / oldOpt are anchored to the fixed baseline (w=v=3) and never move
+
+      f68LblGs.select('rect').attr('width',d=>d.lw);
+      f68LblGs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+    }
 
     const kl_old=optBase.Ks/optBase.Ls, kl_new=optNew.Ks/optNew.Ls;
     document.getElementById('v68-readout').innerHTML=
@@ -1343,7 +1378,16 @@ window._initFig68=function initFig68(){
     document.getElementById('v68-v-val').textContent=parseFloat(document.getElementById('v68-v').value);
     v68DrawD3();
   };
-  window.resetFig68=function(){ v68DrawD3(); };
+  window.resetFig68=function(){
+    v68DrawD3();
+    if(f68Sim&&f68Nodes){
+      f68Nodes.forEach(d=>{
+        d.x=d.fx_anchor+(Math.random()-0.5)*60; d.y=d.fy_anchor+(Math.random()-0.5)*60;
+        d.vx=0; d.vy=0; d.fx=null; d.fy=null;
+      });
+      f68Sim.alpha(0.5).restart();
+    }
+  };
 };
 
 // ======================================================================
@@ -1440,7 +1484,7 @@ function v610ToggleMC(){
 
 window._initFig610=function initFig610(){
   if(typeof d3==='undefined') return;
-  const W=680,H=340,PAD={top:28,right:36,bottom:44,left:54};
+  const W=680,H=320,PAD={top:28,right:36,bottom:44,left:54};
   const LABEL_H=15;
 
   const svg=d3.select('#cvs610-wrap').append('svg')
@@ -1462,7 +1506,7 @@ window._initFig610=function initFig610(){
 
   // Curves
   const acCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
-  const mcCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2);
+  const mcCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',2);
 
   // q* dashed drop line
   const qstarLine=svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,3');
@@ -1593,7 +1637,7 @@ window._initFig610=function initFig610(){
           nodeList.push({id:'AC',color:'#1a56db',label:'AC',lw:36,ax:scX(acQ),ay:scY(Math.min(ac,acmax))});
         const mcQ=Math.min(13,qmax*0.65);
         const mc=mcFn(mcQ); if(isFinite(mc)&&mc>=0&&mc<=acmax)
-          nodeList.push({id:'MC',color:'#e74c3c',label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
+          nodeList.push({id:'MC',color:'#c0392b',label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
       }
     }
     f610Nodes=nodeList.map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));

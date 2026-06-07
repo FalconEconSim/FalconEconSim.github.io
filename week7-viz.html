@@ -608,7 +608,7 @@ function v71Draw(){
     if(q%1<0.05) linePts71.push([cx,cy]);
     first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
   }
-  ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2.5;ctxA.stroke();
+  ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2;ctxA.stroke();
 
   // TR line
   const trQmax = P>0 ? Math.min(9, yRA[1]/P) : 9;
@@ -617,7 +617,7 @@ function v71Draw(){
   const[tx1,ty1]=toC7(trQmax,P*trQmax,W,HA,xR,yRA);
   for(let t=0;t<=1;t+=0.15) linePts71.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
   ctxA.moveTo(tx0,ty0);ctxA.lineTo(tx1,ty1);
-  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2.5;ctxA.stroke();
+  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2;ctxA.stroke();
 
   // Force labels TC and TR
   ctxA.font='bold 10px DM Sans,sans-serif';
@@ -652,7 +652,7 @@ function v71Draw(){
   dot7(ctxA,curX,toC7(q,Math.min(tc_val,29.5),W,HA,xR,yRA)[1],5,'#e74c3c');
   dot7(ctxA,curX,toC7(q,Math.min(P*q,29.5),W,HA,xR,yRA)[1],5,'#1a56db');
   ctxA.fillStyle=mc>P?'#e74c3c':'#27ae60';
-  ctxA.font='bold 10px DM Sans';ctxA.textAlign='left';
+  ctxA.font='bold 10px DM Sans,sans-serif';ctxA.textAlign='left';
   const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
   ctxA.fillText(note,curX+6,MT+20);
 
@@ -671,7 +671,7 @@ function v71Draw(){
     const[cx,cy]=toC7(q2,pi2,W,HB,xR,yRB);
     first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
   }
-  ctxB.strokeStyle='#6b52a8';ctxB.lineWidth=2.5;ctxB.stroke();
+  ctxB.strokeStyle='#6b52a8';ctxB.lineWidth=2;ctxB.stroke();
   // Current point
   const pi2=Math.max(-8,Math.min(8,pi));
   const[piX,piY]=toC7(q,pi2,W,HB,xR,yRB);
@@ -848,7 +848,7 @@ function v72InitSvg(){
   d3AddCurve(v72svg,SAC7,scX,scY,'#2c3e50',yMax);
   d3AddCurve(v72svg,SMC7,scX,scY,'#1a56db',yMax);
   // Price line
-  v72pLine=v72svg.append('line').attr('stroke','#8e44ad').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+  v72pLine=v72svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   // Rect group (inserted before labels)
   v72rectG=v72svg.append('g');
   // Labels
@@ -858,7 +858,7 @@ function v72InitSvg(){
     d3Node('SAVC','#f39c12','SAVC',46,scX(4.5),scY(SAVC7(4.5))),
     d3Node('SAC','#2c3e50','SAC',36,scX(5.5),scY(SAC7(5.5))),
     d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
-    d3Node('P','#8e44ad','P*',30,scX(8),scY(P)),
+    d3Node('P','#7d3c98','P*',30,scX(8),scY(P)),
   ];
   v72sim=d3MakeSim(v72nodes);
   const els=d3AddLabels(v72svg,v72nodes,v72sim);
@@ -895,7 +895,7 @@ function v72DrawUpdate(P){
       .attr('fill','rgba(231,76,60,0.2)').attr('stroke','#e74c3c').attr('stroke-width',2);
     v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',(py+sy)/2+4).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#e74c3c').text('Loss');
   }
-  v72rectG.append('circle').attr('cx',x1).attr('cy',py).attr('r',6).attr('fill','#8e44ad').attr('stroke','white').attr('stroke-width',1.5);
+  v72rectG.append('circle').attr('cx',x1).attr('cy',py).attr('r',6).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5);
   v72rectG.append('circle').attr('cx',x1).attr('cy',sy).attr('r',6).attr('fill','#2c3e50').attr('stroke','white').attr('stroke-width',1.5);
   // Move P label anchor
   const pNode=v72nodes.find(n=>n.id==='P');
@@ -945,13 +945,13 @@ function v73InitSvg(){
   d3AddCurve(v73svg,SAVC7,scX,scY,'#f39c12',yMax);
   d3AddCurve(v73svg,SAC7,scX,scY,'#2c3e50',yMax);
   d3AddCurve(v73svg,SMC7,scX,scY,'#1a56db',yMax);
-  v73pLine=v73svg.append('line').attr('stroke','#8e44ad').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+  v73pLine=v73svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   const P=parseFloat(document.getElementById('v73-p').value);
   v73nodes=[
     d3Node('SAVC','#f39c12','SAVC',46,scX(5),scY(SAVC7(5))),
     d3Node('SAC','#2c3e50','SAC',36,scX(6),scY(SAC7(6))),
     d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
-    d3Node('P','#8e44ad','P*',30,scX(7.5),scY(P)),
+    d3Node('P','#7d3c98','P*',30,scX(7.5),scY(P)),
   ];
   v73sim=d3MakeSim(v73nodes);
   const els=d3AddLabels(v73svg,v73nodes,v73sim);
@@ -1021,7 +1021,7 @@ function v73Draw_OLD_UNUSED(P){
 
   // Horizontal price line + P* label as force label
   const[,py]=toC7(0,P,W,H,xR,yR);
-  ctx.strokeStyle='#8e44ad';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+  ctx.strokeStyle='#7d3c98';ctx.lineWidth=2;ctx.setLineDash([6,4]);
   ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
   ctx.setLineDash([]);
   } // end if(false)
@@ -1114,7 +1114,7 @@ function v75InitSvg(){
   // SMC above PSD (supply, blue, highlighted)
   {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax)continue;pts.push([v75scXa(q),v75scYa(v)]);}
   v75smcHi=v75svgA.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(pts));}
-  v75pLineEl=v75svgA.append('line').attr('stroke','#8e44ad').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
+  v75pLineEl=v75svgA.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
   // Labels for left panel
   v75nodes75=[
     d3Node('SAVC','#f39c12','SAVC',46,v75scXa(5),v75scYa(SAVC7(5))),
@@ -1427,7 +1427,7 @@ function v78InitSvgB(n){
   for(let P2=10;P2>=0;P2-=0.2){const Q2=100-10*P2;if(Q2<0||Q2>qMax)break;demPts78.push([scX(Q2),scY(P2)]);}
   if(demPts78.length>1)v78svgB.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(demPts78));
   if(Qeq>=0&&Qeq<qMax&&Peq>=0&&Peq<=14){
-    v78svgB.append('circle').attr('cx',scX(Qeq)).attr('cy',scY(Peq)).attr('r',5).attr('fill','#8e44ad').attr('stroke','white').attr('stroke-width',1.5);
+    v78svgB.append('circle').attr('cx',scX(Qeq)).attr('cy',scY(Peq)).attr('r',5).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5);
   }
   const lbl='Market supply ('+n+' firms)';
   const lw=lbl.length*5.5+8;
@@ -1521,9 +1521,9 @@ function v79Draw(){
   for(let P2=4;P2<=14;P2+=0.2){const Q2=Qs(P2);if(Q2<0||Q2>300)continue;supPts.push([scXM(Q2),scYM(P2)]);}
   if(supPts.length>1)gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('d',d3.line()(supPts));
   const Qeq=Math.min(299,Qs(P));
-  gM.append('circle').attr('cx',scXM(Qeq)).attr('cy',scYM(Math.min(13.5,P))).attr('r',5).attr('fill','#8e44ad').attr('stroke','white').attr('stroke-width',1.5);
+  gM.append('circle').attr('cx',scXM(Qeq)).attr('cy',scYM(Math.min(13.5,P))).attr('r',5).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5);
   gM.append('text').attr('x',D3PAD.left+6).attr('y',D3PAD.top+12)
-    .attr('fill','#8e44ad').attr('font-size',9).attr('font-weight','bold')
+    .attr('fill','#7d3c98').attr('font-size',9).attr('font-weight','bold')
     .attr('font-family',"'DM Sans',sans-serif")
     .text('n='+n+', P*=$'+P.toFixed(2));
   // Update anchor for S label to current supply mid-point
@@ -1545,7 +1545,7 @@ function v79Draw(){
   const Pc=Math.min(13.9,P);
   const py=scYF(Pc);
   gF.append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right).attr('y1',py).attr('y2',py)
-    .attr('stroke','#8e44ad').attr('stroke-width',1.5).attr('stroke-dasharray','5,4');
+    .attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   if(P>0.5){
     const qf=qStar7(P), sacF=SAC7(qf), profit=qf*(P-sacF);
     const qfx=scXF(qf), sacy=scYF(Math.min(sacF,13.9));
@@ -1556,7 +1556,7 @@ function v79Draw(){
         .attr('stroke',profit>0?'#27ae60':'#e74c3c').attr('stroke-width',1.5);
     }
     gF.append('text').attr('x',D3PAD.left+4).attr('y',D3PAD.top+12)
-      .attr('fill','#8e44ad').attr('font-size',9).attr('font-weight','bold')
+      .attr('fill','#7d3c98').attr('font-size',9).attr('font-weight','bold')
       .attr('font-family',"'DM Sans',sans-serif")
       .text('P*=$'+P.toFixed(2)+', π='+(profit>0?'+':'')+profit.toFixed(2));
   }
@@ -1663,7 +1663,7 @@ function v710Draw(shock,dw){
     if(pts.length>1)gF.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(pts));
     // SMC' label in persistent layer
     const lx=scXF(5)+20,ly=scYF(Math.min(SMC7(5)+shiftD,13.5))-12;
-    const g=gSL.append('g').attr('class','draggable-label').attr('transform',`translate(${lx},${ly})`);
+    const g=gSL.append('g').attr('transform',`translate(${lx},${ly})`);
     g.append('rect').attr('x',-35/2-2).attr('y',-LABEL_H/2).attr('width',39).attr('height',LABEL_H).attr('rx',3).attr('fill','white').attr('stroke','#e74c3c').attr('stroke-width',0.8);
     g.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle').attr('fill','#e74c3c').attr('font-size',9).attr('font-weight','bold').attr('font-family',"'DM Sans',sans-serif").text("SMC'");
   }
@@ -1689,7 +1689,7 @@ function v710Draw(shock,dw){
     const PSD_new2=4+shiftD;
     const s2Q=50*Math.max(0,6-PSD_new2);
     const lx=scXM(Math.min(s2Q,190))+8,ly=scYM(Math.min(PSD_new2+0.5,13))-8;
-    const g=gSLM.append('g').attr('class','draggable-label').attr('transform',`translate(${lx},${ly})`);
+    const g=gSLM.append('g').attr('transform',`translate(${lx},${ly})`);
     g.append('rect').attr('x',-14).attr('y',-LABEL_H/2).attr('width',22).attr('height',LABEL_H).attr('rx',3).attr('fill','white').attr('stroke','#e74c3c').attr('stroke-width',0.8);
     g.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle').attr('fill','#e74c3c').attr('font-size',9).attr('font-weight','bold').attr('font-family',"'DM Sans',sans-serif").text("S'");
   }
