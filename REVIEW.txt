@@ -1,5 +1,94 @@
-CHANGES — through dd77ef4
+CHANGES — through 4666c00
 ==========================
+
+ROUND 3 (commit 4666c00) — Prof. Sunder's week-7 feedback, week 8 build, sitewide D3 labels
+---------------------------------------------------------------------------------------------
+Week 7 — addressed all 10 numbered items from Naveen's feedback email:
+15. Fig 7.1 — y-axis now scales dynamically so profit is visible across the
+    full price range (was clipped at high prices)
+16. Fig 7.2 — added a calculation/explanation box: "Profit = (P-ATC) x q* = ..."
+    plus a short note on why that rectangle's area equals profit
+17. Fig 7.3 — the shutdown-rule proof is now always visible; only the price
+    slider / produce-or-shut-down decision stays interactive (per Naveen:
+    "the proof is always the same so it can show all the time")
+18. Fig 7.4 — reviewed; left as a decide-first-then-reveal exercise (different
+    pattern from 7.3's proof — gating is pedagogically intentional here)
+19. Fig 7.5 — redesigned around the core lesson Naveen flagged: added a
+    step-by-step narrative + an accumulating scatter of (q,P) points that
+    visibly traces the MC curve, making explicit "MC curve = supply curve"
+20. Fig 7.6 — kept (reviewed in full: solid, well-built); fixed one latent bug
+    (stale q reference could draw a negative-width gain/loss rectangle)
+21. Fig 7.7 — full fix: (a) wrong-starting-graph bug — step-1 label/handler now
+    derives from the actual scenario data instead of a hardcoded string;
+    (b) missing-panel-effect bug — replaced the shift condition with a
+    causal-order map so all three panels visibly shift by the final step
+22. Fig 7.8 — kept (reviewed in full: math verified consistent for n=1..50,
+    panels redraw correctly, equilibrium dot sits at the true intersection)
+23. Fig 7.9 — re-anchored entry/exit scenarios to the model's true long-run
+    equilibrium (n=297, P=$5.51); "Run Exit" now starts from a LOSS
+    (n=450, profit=-$1.47) per Naveen's catch — was starting from a profit
+24. Fig 7.10 — fixed supply/demand curves not intersecting at the equilibrium
+    dot (corrected demand line + exact algebraic post-shock intersection,
+    was using a hand-fit approximation); added a "what to look for" insight
+    box explaining how a firm-level cost shock propagates to the market
+
+Week 8 — built week8-viz.html from Prof. Sunder's plan + draft HTML, restyled
+to match the site's S6/S8 D3 SVG architecture end to end (shared force-label
+helpers, W=680/H=320 dimensions, color palette, no anchor dots, alphaTarget
+slider-smoothness). All 10 tools implemented: CS/PS Triangle Anatomy, Transfer
+vs Destruction, Trade Gains & Tariffs, Monopoly Two-Step Rule, Competition vs
+Monopoly Welfare Comparator, Lerner Index Meter, Perfect Price Discrimination,
+Block Pricing, Market Separation (3rd-degree PD), Natural Monopoly Regulation.
+Note: no week8.html hub page exists yet (week 8 is still "upcoming" sitewide),
+so week8-viz.html's nav/breadcrumb self-links rather than 404ing.
+
+Sitewide D3 labels — converted weeks 2-5 label/annotation systems to D3 SVG
+force-simulation draggable labels matching the S6/S8 standard:
+25. Week 2 (JSXGraph) — overlay SVG layer over each board; converted budget-
+    line slope label, B0/B1 shift labels, IC1/IC2 cross labels
+26. Week 3 (mixed Canvas+JSXGraph) — overlay layers for figs 3.1 (demand
+    derivation), 3.2 (Slutsky), 3.3 (income expansion path), 3.5 (added a "D"
+    label that didn't exist before); fig 3.4 is a label-free quiz, left as-is.
+    Bonus: fixed a pre-existing latent bug (`MR` missing from destructured
+    canvas-context vars) that silently aborted every fig-3.1 frame
+27. Week 4 (Canvas) — overlay layers for figs 4.1, 4.2, 4.3, 4.4 (dynamic
+    resizing labels), 4.7, 4.8 (three-panel + builder, with signature-diffed
+    rebuilds so labels persist drag position across input changes)
+28. Week 5 (Canvas) — overlay layers for figs 5.1-5.10, including the delicate
+    fig 5.2 perpendicular-drag isoquant (left its drag math untouched, only
+    labels migrated) and fig 5.10's per-round-rebuilt quiz overlay
+
+
+WHAT TO REVIEW IN THE BROWSER (Round 3)
+-----------------------------------------
+week7-viz.html
+  [ ] Fig 7.1 — profit curve visible (not clipped) at high prices
+  [ ] Fig 7.2 — calculation box updates live with the price slider
+  [ ] Fig 7.3 — proof text always visible; price slider still works
+  [ ] Fig 7.5 — narrative steps + scatter trace the MC curve as price sweeps
+  [ ] Fig 7.6 — gain/loss rectangle never goes negative-width after +1 unit
+  [ ] Fig 7.7 — correct starting graph per scenario; all 3 panels shift
+  [ ] Fig 7.9 — "Run Exit" clearly starts from a loss (red rectangle)
+  [ ] Fig 7.10 — supply & demand visibly cross at the equilibrium dot,
+                 before AND after a cost shock
+
+week8-viz.html (brand new — needs a full first-pass review)
+  [ ] All 10 figures render, sliders/buttons respond, labels draggable
+  [ ] Visual style matches week7 (fonts, colors, label boxes, no anchor dots)
+  [ ] Fig 8.3 — uses the draft's CS/PS convention (+66/-30); flag if you want
+                the plan's headline numbers (+48/-32) instead — it's a one-line change
+
+weeks 2-5 — spot-check that:
+  [ ] Curve-name labels (D, S, B0/B1, IC1/IC2, etc.) are now draggable D3 boxes
+      with dashed connectors (no dot), matching S6/S8 styling
+  [ ] All existing interactions still work — dragging points/gliders, sliders,
+      animations, the fig 5.2 isoquant perpendicular-drag, the fig 5.10 quiz
+  [ ] Fig 3.1's demand-derivation animation — labels appear correctly through
+      all 4 narration steps (a latent bug in its canvas context was also fixed)
+
+
+ORIGINAL CHANGES THROUGH dd77ef4
+==================================
 
 ROUND 1 (commit f8abce0) — figure-specific fixes
 -------------------------------------------------
