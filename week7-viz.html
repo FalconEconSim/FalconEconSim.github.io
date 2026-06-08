@@ -179,6 +179,7 @@
       <button class="viz-btn" onclick="resetV72Labels()">Reset labels</button>
     </div>
     <div class="viz-readout" id="v72-readout"></div>
+    <div class="viz-readout" id="v72-calc-box" style="margin-top:0.6rem;"></div>
   </section>
 
   <!-- FIG 7.3 -->
@@ -189,23 +190,20 @@
     </div>
     <p class="fig-intro">
       Use the price slider to set P*. The colored zone shows whether the firm should shut down, operate at a loss,
-      break even, or earn positive profit. Click "Next Step" to walk through the algebraic proof of the shutdown rule.
+      break even, or earn positive profit. The algebraic proof of the shutdown rule (right) always stays visible &mdash;
+      it never changes. What changes is the price you choose, and therefore which zone &mdash; and which decision &mdash; applies.
     </p>
     <div class="two-col-panels">
       <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs73-wrap"></div></div>
       <div style="padding:1rem;background:#f8fafb;border:1px solid var(--rule);border-radius:10px;display:flex;flex-direction:column;gap:0.5rem;">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Algebraic Proof: When to Produce</div>
+        <div style="font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Algebraic Proof: When to Produce <span style="font-weight:500;text-transform:none;letter-spacing:normal;color:#888;">(this logic never changes &mdash; only the price below does)</span></div>
         <div id="v73-proof-step0" style="font-size:0.88rem;line-height:1.7;color:var(--text);">Produce if operating loss &lt; shutdown loss:</div>
-        <div id="v73-proof-step1" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 1:</strong> Profits &gt; &minus;TFC &nbsp;&rarr;&nbsp; keep producing</div>
-        <div id="v73-proof-step2" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 2:</strong> TR &minus; TVC &minus; TFC &gt; &minus;TFC</div>
-        <div id="v73-proof-step3" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 3:</strong> TR &minus; TVC &gt; 0 &nbsp;&rarr;&nbsp; TR &gt; TVC</div>
-        <div id="v73-proof-step4" style="font-size:0.88rem;line-height:1.7;color:#888;display:none;"><strong>Step 4:</strong> P&middot;q &gt; AVC&middot;q</div>
-        <div id="v73-proof-step5" style="font-size:0.88rem;line-height:1.7;color:var(--accent);font-weight:700;display:none;"><strong>Conclusion: P &gt; AVC</strong> &nbsp;&#10003;</div>
-        <div style="margin-top:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
-          <button class="viz-btn" id="v73-next-btn" onclick="v73NextStep()">Next Step &rarr;</button>
-          <button class="viz-btn" onclick="v73ResetProof()">Reset Proof</button>
-        </div>
-        <div id="v73-zone-label" style="margin-top:0.5rem;padding:0.6rem 0.9rem;border-radius:7px;font-size:0.85rem;font-weight:600;background:#f0fdf4;color:#16a34a;"></div>
+        <div id="v73-proof-step1" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 1:</strong> Profits &gt; &minus;TFC &nbsp;&rarr;&nbsp; keep producing</div>
+        <div id="v73-proof-step2" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 2:</strong> TR &minus; TVC &minus; TFC &gt; &minus;TFC</div>
+        <div id="v73-proof-step3" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 3:</strong> TR &minus; TVC &gt; 0 &nbsp;&rarr;&nbsp; TR &gt; TVC</div>
+        <div id="v73-proof-step4" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 4:</strong> P&middot;q &gt; AVC&middot;q</div>
+        <div id="v73-proof-step5" style="font-size:0.88rem;line-height:1.7;color:var(--accent);font-weight:700;"><strong>Conclusion: P &gt; AVC</strong> &nbsp;&#10003;&nbsp; &mdash; produce whenever price covers average variable cost; shut down otherwise.</div>
+        <div id="v73-zone-label" style="margin-top:auto;padding:0.6rem 0.9rem;border-radius:7px;font-size:0.85rem;font-weight:600;background:#f0fdf4;color:#16a34a;"></div>
       </div>
     </div>
     <div class="viz-ctrl-row">
@@ -251,13 +249,25 @@
       Watch the price sweep upward. Below the shutdown price (min SAVC = $4), the firm supplies nothing. Above it, the
       SMC curve lights up and each supply point traces out in the right panel, building the supply curve in real time.
     </p>
+    <div class="insight-box" style="margin-top:0;margin-bottom:0.9rem;">
+      <strong>The core idea &mdash; how we get a supply curve out of a cost curve:</strong>
+      <ol style="margin:0.4rem 0 0.2rem 1.1rem;padding:0;line-height:1.7;">
+        <li>Pick a price <em>P</em>.</li>
+        <li>The firm maximizes profit by producing where <strong>MC = P</strong> (the profit-maximizing rule).</li>
+        <li>That intersection pins down a specific quantity <em>q</em>.</li>
+        <li>Plot the point <strong>(q, P)</strong> &mdash; that's one point on the firm's supply curve.</li>
+        <li>Repeat for every price &hellip; and the dots you trace out land <em>exactly on the SMC curve</em>.</li>
+      </ol>
+      <strong>That's why the marginal cost curve (above the shutdown point) <em>is</em> the firm's supply curve</strong> &mdash;
+      profit-maximization (MC = P) directly maps each price to the quantity the firm will supply at that price.
+    </div>
     <div class="two-col-panels">
       <div class="cvs-wrap">
-        <div class="panel-label">Firm: SMC and SAVC</div>
+        <div class="panel-label">Step 1&ndash;3: Price line meets MC &rarr; gives quantity q</div>
         <div class="demo-svg-wrap" id="cvs75a-wrap"></div>
       </div>
       <div class="cvs-wrap">
-        <div class="panel-label">Supply Curve (builds as P rises)</div>
+        <div class="panel-label">Step 4&ndash;5: Each (q, P) point plotted &mdash; the dots trace the MC curve</div>
         <div class="demo-svg-wrap" id="cvs75b-wrap"></div>
       </div>
     </div>
@@ -267,6 +277,11 @@
       <button class="viz-btn" onclick="resetV75Labels()">Reset labels</button>
     </div>
     <div class="viz-readout" id="v75-readout">Press "Animate" to watch the supply curve emerge.</div>
+    <div class="insight-box" id="v75-insight-box">
+      <strong>Key insight:</strong> The firm's supply curve <em>is</em> its MC curve (above the shutdown point). Every price
+      you pick maps &mdash; via MC = P &mdash; to exactly one quantity, and tracing those (q, P) pairs across all prices
+      reproduces the MC curve point for point. That's the whole reason economists call MC "the firm's supply curve."
+    </div>
   </section>
 
   <!-- FIG 7.6 -->
@@ -365,9 +380,11 @@
       <span class="fig-title">Long-Run Entry/Exit Machine</span>
     </div>
     <p class="fig-intro">
-      Start with 50 firms earning positive profit (P* = $8, green rectangle visible). Click "Run Entry" to watch firms
-      enter, supply shift right, price fall, and the profit rectangle shrink to zero at long-run equilibrium (n = 100, P* = $7).
-      Click "Run Exit" to go the other direction from a loss situation.
+      Start with 150 firms earning a healthy profit (P* &asymp; $6.40 &gt; SAC, green rectangle visible). Click "Run Entry" to
+      watch new firms enter, market supply shift right, price fall, and the profit rectangle shrink toward zero at long-run
+      equilibrium (n &asymp; 297, P* &asymp; $5.51 = minimum SAC). Click "Run Exit" to start instead from an industry with
+      <em>too many</em> firms (n = 450) &mdash; price is below SAC, the rectangle turns red (a loss), and firms exit until
+      the same zero-profit equilibrium is reached from above.
     </p>
     <div class="two-col-panels">
       <div class="cvs-wrap">
@@ -380,9 +397,9 @@
       </div>
     </div>
     <div class="viz-ctrl-row">
-      <button class="viz-btn green" onclick="v79RunEntry()">Run Entry (n=50 &rarr; 100)</button>
-      <button class="viz-btn red" onclick="v79RunExit()">Run Exit (n=150 &rarr; 100)</button>
-      <button class="viz-btn" onclick="v79Reset()">Reset to n=50</button>
+      <button class="viz-btn green" onclick="v79RunEntry()">Run Entry (n=150 &rarr; 297, profit &rarr; 0)</button>
+      <button class="viz-btn red" onclick="v79RunExit()">Run Exit (n=450 &rarr; 297, loss &rarr; 0)</button>
+      <button class="viz-btn" onclick="v79Reset()">Reset to n=150</button>
       <button class="viz-btn" onclick="resetV79Labels()">Reset labels</button>
     </div>
     <div class="viz-readout" id="v79-readout"></div>
@@ -397,8 +414,12 @@
     </div>
     <p class="fig-intro">
       Choose a shock type and drag the slider to apply it. Both panels update simultaneously: the firm panel shows how
-      SMC shifts and the market panel shows how equilibrium changes. The comparison table shows the direction of change
-      for all key variables.
+      <em>one</em> firm's SMC shifts and the market panel shows how the <em>same</em> shock, applied to every firm at once,
+      moves the market supply curve and shifts the equilibrium. <strong>What to look for:</strong> the firm-level shift
+      (left) and the market-level shift (right) are two views of one cause &mdash; watch how a small horizontal move in
+      the firm's SMC becomes a parallel shift of the entire market supply curve, and trace how that translates into the
+      new price/quantity where supply crosses demand. The comparison table summarizes the direction of change for all
+      key variables.
     </p>
     <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
       <select class="viz-slider" id="v710-shock" onchange="v710Update()" style="width:auto;font-size:0.82rem;padding:4px 8px;">
@@ -423,6 +444,15 @@
       </div>
     </div>
     <div class="viz-readout" id="v710-readout"></div>
+    <div class="insight-box">
+      <strong>The lesson:</strong> A cost increase (input price up) shifts the firm's SMC <em>left/up</em>, which on its own
+      would lower that one firm's profit-maximizing quantity at the old price. But the same cost shock hits <em>every</em>
+      firm in the industry simultaneously &mdash; so market supply shifts left too, the market price rises, and market
+      quantity falls. A cost <em>decrease</em> (better technology) runs the whole chain in reverse: SMC shifts right/down,
+      market supply shifts right, price falls and quantity rises. Either way, the firm-level shift you see in the left
+      panel is the <em>same underlying cause</em> you see propagate to the market-level shift in the right panel &mdash;
+      just viewed at two different scales.
+    </div>
   </section>
 
   <footer class="hub-footer">
@@ -593,7 +623,15 @@ function v71Draw(){
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
   const HA=H,HB=H;
-  const xR=[0,9],yRA=[0,30],yRB=[-8,8];
+  const xR=[0,9],yRA=[0,30];
+  // Profit panel y-axis: dynamic yMax so the profit curve is never clipped, even
+  // at high prices (the slider runs up to $15, where peak profit reaches ~$44).
+  // We size to the peak profit at the CURRENT price (with headroom), floored at 8
+  // so low-price scenarios keep their familiar compact scale.
+  let piPeak71=0;
+  for(let qq=0;qq<=9;qq+=0.1){ piPeak71=Math.max(piPeak71, P*qq-TC7(qq)); }
+  const yMaxB71=Math.max(8, piPeak71*1.15);
+  const yRB=[-8,yMaxB71];
 
   // TOP: TR and TC
   ctxA.clearRect(0,0,W,HA);
@@ -667,13 +705,13 @@ function v71Draw(){
   ctxB.beginPath();first=true;
   for(let q2=0;q2<=9;q2+=0.05){
     const pi2=P*q2-TC7(q2);
-    if(Math.abs(pi2)>8)continue;
+    if(pi2<yRB[0]||pi2>yRB[1])continue;
     const[cx,cy]=toC7(q2,pi2,W,HB,xR,yRB);
     first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
   }
   ctxB.strokeStyle='#6b52a8';ctxB.lineWidth=2;ctxB.stroke();
   // Current point
-  const pi2=Math.max(-8,Math.min(8,pi));
+  const pi2=Math.max(yRB[0],Math.min(yRB[1],pi));
   const[piX,piY]=toC7(q,pi2,W,HB,xR,yRB);
   dot7(ctxB,piX,piY,5,'#6b52a8','#fff');
   // Vertical cursor in bottom panel
@@ -912,6 +950,27 @@ function v72DrawUpdate(P){
       <div class="readout-col"><div class="readout-label">SAC(q*)</div><div class="readout-val">$${sacQ.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">Profit = q*(P*-SAC)</div><div class="readout-val" style="color:${profit>=0?'#27ae60':'#e74c3c'}">${profit>=0?'+':''}$${profit.toFixed(2)}</div></div>
     </div>`;
+
+  // Calculation + explanation box: shows WHY the rectangle's area equals total profit
+  const margin=P-sacQ;
+  const marginColor=margin>=0?'#27ae60':'#e74c3c';
+  const profitColor=profit>=0?'#27ae60':'#e74c3c';
+  const profitWord=profit>=0?'profit':'loss';
+  document.getElementById('v72-calc-box').innerHTML=
+    `<div style="font-family:'DM Sans',system-ui,sans-serif;">
+      <div style="font-weight:700;color:var(--accent);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">The Calculation</div>
+      <div style="font-size:1.0rem;font-weight:600;color:var(--text);margin-bottom:0.5rem;">
+        Profit = (P* &minus; SAC) &times; q*&nbsp; = &nbsp;($${P.toFixed(2)} &minus; $${sacQ.toFixed(2)}) &times; ${qStar.toFixed(2)}&nbsp; = &nbsp;<span style="color:${marginColor}">$${margin.toFixed(2)}</span> &times; ${qStar.toFixed(2)} &nbsp;=&nbsp; <span style="color:${profitColor}">${profit>=0?'+':'−'}$${Math.abs(profit).toFixed(2)}</span>
+      </div>
+      <div style="font-size:0.84rem;line-height:1.65;color:var(--text);">
+        <strong>Why does the rectangle's area equal ${profitWord}?</strong> Because a rectangle's area is height &times; width &mdash;
+        and that's exactly what total profit is built from. The <strong>height</strong> (P* &minus; SAC) is the
+        <em>per-unit profit margin</em>: how much the firm earns (or loses) on each individual unit sold. The
+        <strong>width</strong> (q*) is the <em>quantity produced</em>. Multiplying a per-unit amount by the number of
+        units gives the total &mdash; so height &times; width = per-unit profit &times; units = total ${profitWord}. That's why the
+        shaded rectangle's area is literally the firm's ${profitWord}, not just a visual analogy.
+      </div>
+    </div>`;
 }
 function v72Draw(P){v72DrawUpdate(P);}
 window.resetV72Labels=function(){
@@ -923,7 +982,6 @@ window.resetV72Labels=function(){
 // ─────────────────────────────────────────────────────────────────────────
 // FIG 7.3: SHUTDOWN ZONE MAP
 // ─────────────────────────────────────────────────────────────────────────
-let v73proofStep=0;
 function v73Update(){
   const P=parseFloat(document.getElementById('v73-p').value);
   document.getElementById('v73-p-val').textContent='$'+P.toFixed(2);
@@ -1027,24 +1085,10 @@ function v73Draw_OLD_UNUSED(P){
   } // end if(false)
 } // end v73Draw_OLD_UNUSED
 
-function v73NextStep(){
-  v73proofStep=Math.min(5,v73proofStep+1);
-  for(let i=1;i<=5;i++){
-    const el=document.getElementById('v73-proof-step'+i);
-    if(el)el.style.display=i<=v73proofStep?'block':'none';
-  }
-  const btn=document.getElementById('v73-next-btn');
-  if(btn)btn.style.display=v73proofStep>=5?'none':'inline-block';
-}
-function v73ResetProof(){
-  v73proofStep=0;
-  for(let i=1;i<=5;i++){
-    const el=document.getElementById('v73-proof-step'+i);
-    if(el)el.style.display='none';
-  }
-  const btn=document.getElementById('v73-next-btn');
-  if(btn)btn.style.display='inline-block';
-}
+// NOTE: per Prof. Sunder's feedback, the algebraic proof of the shutdown rule
+// (steps above) is now always visible — it never changes, so there's no need
+// to gate it behind a "Next Step" click. Only the price (and the resulting
+// produce/shut-down zone) is dynamic, via the slider below.
 
 // ─────────────────────────────────────────────────────────────────────────
 // FIG 7.4: SHUTDOWN MANAGER
@@ -1095,6 +1139,7 @@ function v74Decide(choice){
 let v75P=0, v75animRunning=false, v75animId=null, v75supplyPts=[];
 let v75svgA=null,v75svgB=null,v75scXa=null,v75scYa=null,v75scXb=null,v75scYb=null;
 let v75pLineEl=null,v75smcHi=null,v75smcLo=null,v75supplyDots=null,v75nodes75=null,v75sim75=null,v75gs75=null,v75conns75=null;
+let v75dropLine=null,v75isectDot=null,v75qLabel=null,v75mcOverlay=null;
 const PSD75=4;
 
 function v75InitSvg(){
@@ -1115,6 +1160,12 @@ function v75InitSvg(){
   {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax)continue;pts.push([v75scXa(q),v75scYa(v)]);}
   v75smcHi=v75svgA.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(pts));}
   v75pLineEl=v75svgA.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
+  // Vertical drop-line from the P=MC intersection down to the q-axis (shows "this price gives this quantity")
+  v75dropLine=v75svgA.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
+  // q label at the foot of the drop-line
+  v75qLabel=v75svgA.append('text').attr('text-anchor','middle').attr('font-size',9).attr('font-weight',700).attr('fill','#7d3c98').attr('opacity',0);
+  // Intersection dot where the price line crosses MC -- the (q, P) pairing made visible
+  v75isectDot=v75svgA.append('circle').attr('r',5).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5).attr('opacity',0);
   // Labels for left panel
   v75nodes75=[
     d3Node('SAVC','#f39c12','SAVC',46,v75scXa(5),v75scYa(SAVC7(5))),
@@ -1128,6 +1179,11 @@ function v75InitSvg(){
   // RIGHT panel
   v75svgB=d3MakeSvg2('cvs75b-wrap');
   d3AddAxes2(v75svgB,v75scXb,v75scYb,'q (supply)','P');
+  // Faint reference overlay of the MC curve (above shutdown point), revealed once the
+  // sweep completes -- so students can see the accumulated dots land exactly on it.
+  {const pts=[];for(let q=0.4;q<=7;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax)continue;pts.push([v75scXb(q),v75scYb(v)]);}
+  v75mcOverlay=v75svgB.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2.5)
+    .attr('stroke-dasharray','2,3').attr('opacity',0).attr('d',d3.line()(pts));}
   v75supplyDots=v75svgB.append('g');
 }
 
@@ -1140,15 +1196,33 @@ function v75DrawPanels(){
     v75pLineEl.attr('y1',py).attr('y2',py).attr('opacity',0.85);
     v75smcHi.attr('stroke',v75P>=PSD75?'#1a56db':'#aaa');
   }
+  // Mark the MC = P intersection: drop a vertical line to the q-axis and label q
+  if(v75P>=PSD75){
+    const q=qStar7(v75P);
+    const ix=v75scXa(q), iy=v75scYa(Math.min(v75P,yMax-0.01));
+    const baseY=v75scYa(0);
+    v75isectDot.attr('cx',ix).attr('cy',iy).attr('opacity',1);
+    v75dropLine.attr('x1',ix).attr('x2',ix).attr('y1',iy).attr('y2',baseY).attr('opacity',0.7);
+    v75qLabel.attr('x',ix).attr('y',baseY+13).text('q='+q.toFixed(1)).attr('opacity',1);
+  } else {
+    v75isectDot.attr('opacity',0);
+    v75dropLine.attr('opacity',0);
+    v75qLabel.attr('opacity',0);
+  }
   // Supply dots right panel
   v75supplyDots.selectAll('circle').data(v75supplyPts).join('circle')
     .attr('cx',d=>v75scXb(d.q)).attr('cy',d=>v75scYb(d.P)).attr('r',3).attr('fill','#1a56db');
+  // Reveal the faint MC overlay once the sweep finishes -- the punchline: the dots ARE the MC curve
+  if(v75mcOverlay) v75mcOverlay.attr('opacity', (!v75animRunning && v75P>=13.4) ? 0.55 : 0);
   const ro=document.getElementById('v75-readout');
   if(ro){
-    if(v75P<PSD75)ro.innerHTML=`P=$${v75P.toFixed(2)} &lt; P<sub>SD</sub>=$${PSD75}: firm shuts down, supplies 0.`;
-    else if(v75P<=13){
+    if(v75P<=0) ro.innerHTML=`Press "Animate" to watch the supply curve emerge.`;
+    else if(v75P<PSD75)ro.innerHTML=`Step 1&ndash;3: P=$${v75P.toFixed(2)} &lt; P<sub>SD</sub>=$${PSD75} (min SAVC) &rarr; producing would lose more than shutting down. The firm supplies <strong>q = 0</strong>.`;
+    else if(v75P<13.4){
       const q=qStar7(v75P);
-      ro.innerHTML=`P=$${v75P.toFixed(2)} &ge; P<sub>SD</sub>=$${PSD75}: firm supplies q=${q.toFixed(2)} where P = SMC.`;
+      ro.innerHTML=`Step 1&ndash;4: at P=$${v75P.toFixed(2)}, the profit-maximizing rule <strong>MC = P</strong> is satisfied at <strong>q = ${q.toFixed(2)}</strong> (purple dot, left). That pins down the point <strong>(q, P) = (${q.toFixed(2)}, $${v75P.toFixed(2)})</strong>, plotted on the right.`;
+    } else {
+      ro.innerHTML=`Step 5: sweep complete &mdash; the accumulated (q, P) points trace out a curve identical to SMC (dashed overlay, right). <strong>The MC curve above the shutdown point IS the firm's supply curve.</strong>`;
     }
   }
 }
@@ -1168,7 +1242,14 @@ function v75animate(){
 function v75Reset(){
   v75P=0;v75supplyPts=[];v75animRunning=false;
   document.getElementById('v75-anim-btn').textContent='Animate Price Sweep';
-  if(v75svgA){v75pLineEl.attr('opacity',0);v75supplyDots.selectAll('*').remove();}
+  if(v75svgA){
+    v75pLineEl.attr('opacity',0);
+    v75dropLine.attr('opacity',0);
+    v75isectDot.attr('opacity',0);
+    v75qLabel.attr('opacity',0);
+    v75mcOverlay.attr('opacity',0);
+    v75supplyDots.selectAll('*').remove();
+  }
   v75DrawPanels();
 }
 window.resetV75Labels=function(){
@@ -1265,7 +1346,7 @@ function v76Draw(P,q){
     if(mrNode){const nx=scX(7),ny=py;const dx=nx-mrNode.fx_anchor,dy=ny-mrNode.fy_anchor;mrNode.x+=dx;mrNode.y+=dy;mrNode.vx=0;mrNode.vy=0;mrNode.fx_anchor=nx;mrNode.fy_anchor=ny;}
     document.getElementById('v76-readout').innerHTML=`<strong>Price Taker:</strong> MR = P = $${P.toFixed(2)} at every unit. Each additional unit adds exactly P* to revenue. No red bar; no price effect.`;
   } else {
-    if(v76showGainLoss && v76prevQ<9){
+    if(v76showGainLoss && v76prevQ<9 && q>v76prevQ){
       const Pnew=10-q,Pold=10-v76prevQ,dP=Pold-Pnew,gain=Pnew,loss=dP*v76prevQ,MR=gain-loss;
       const x0=scX(v76prevQ),x1=scX(q),y0=scY(0),yPnew=scY(Pnew),yPold=scY(Pold);
       v76rectG.append('rect').attr('x',x0).attr('y',Math.min(y0,yPnew)).attr('width',x1-x0).attr('height',Math.abs(y0-yPnew)).attr('fill','rgba(39,174,96,0.3)').attr('stroke','#27ae60').attr('stroke-width',1.5);
@@ -1307,7 +1388,14 @@ const v77scenarios_data={
 };
 function v77Reset(){
   v77step=0;
-  document.getElementById('v77-step-btn').textContent='Step 1: Consumer Effect →';
+  const sc=document.getElementById('v77-scenario')?.value||'sub';
+  const data=v77scenarios_data[sc];
+  const btn=document.getElementById('v77-step-btn');
+  // Step button label must reflect THIS scenario's causal order (e.g. "input" starts
+  // with the Firm, not the Consumer) — previously this was hardcoded to "Consumer
+  // Effect", so switching scenarios could leave the button mismatched with the chart.
+  btn.textContent='Step 1: '+data.labels[1]+' Effect →';
+  btn.onclick=v77NextStep;
   document.getElementById('v77-readout').innerHTML='Choose a scenario and click through the steps to trace the causal chain.';
   v77Draw();
 }
@@ -1316,10 +1404,9 @@ function v77NextStep(){
   const sc=document.getElementById('v77-scenario').value;
   const data=v77scenarios_data[sc];
   document.getElementById('v77-readout').innerHTML=`<strong>${data.labels[v77step] || 'Result'}:</strong> ${data.steps[v77step]}`;
-  const stepLabels=['Step 1 →','Step 2 →','Step 3 →','Reset'];
   const btn=document.getElementById('v77-step-btn');
   if(v77step<3){btn.textContent='Step '+(v77step+1)+': '+data.labels[v77step+1]+' Effect →';}
-  else{btn.textContent='Reset';btn.onclick=()=>{v77step=0;btn.textContent='Step 1: Consumer Effect →';btn.onclick=v77NextStep;v77Reset();};}
+  else{btn.textContent='Reset';btn.onclick=()=>{ v77Reset(); };}
   v77Draw();
 }
 // ── FIG 7.7 D3 SVG ───────────────────────────────────────────────────────
@@ -1349,6 +1436,16 @@ function v77Draw(){
   const sc=document.getElementById('v77-scenario')?.value||'sub';
   const panels=['Firm','Market','Consumer'];
   const pw=(D3W-D3PAD.left-D3PAD.right-20)/3;
+  // Causal order of panels (by index into `panels`) for each scenario, and the step
+  // (1-indexed) at which each panel in that order first shows its shift. Every
+  // previously-affected panel remains shifted as the chain progresses (cumulative),
+  // so all three panels visibly change by the time the chain completes.
+  //   sub/income: shock starts with the Consumer (2) -> Market (1) -> Firm (0)
+  //   input:      shock starts with the Firm (0) -> Market (1) -> Consumer (2)
+  const causalOrder=(sc==='input')?[0,1,2]:[2,1,0];
+  // panelShiftStep[i] = the v77step value at which panel i first shows a shifted curve
+  const panelShiftStep={};
+  causalOrder.forEach((panelIdx,orderPos)=>{ panelShiftStep[panelIdx]=orderPos+1; });
   panels.forEach((label,i)=>{
     const ox=D3PAD.left+i*(pw+10);
     const oy=D3PAD.top, bot=D3H-D3PAD.bottom;
@@ -1359,26 +1456,27 @@ function v77Draw(){
     g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1a56db').attr('stroke-width',2);
     g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke','#e74c3c').attr('stroke-width',2);
     // D and S labels handled by persistent D3 force labels (v77nodes)
-    // Shifted curves
-    if(v77step>0&&((sc==='sub'||sc==='income')&&i===2||(sc==='input'&&i===0))){
+    // Shifted curve: shown once the causal chain has reached this panel, and stays
+    // shown (cumulative) for every subsequent step so the full chain stays visible.
+    if(v77step>=panelShiftStep[i]){
       const sh=20;
       g.append('line').attr('x1',ox+10+sh).attr('y1',oy+20).attr('x2',ox+pw-10+sh).attr('y2',bot-10).attr('stroke','#27ae60').attr('stroke-width',2).attr('stroke-dasharray','4,3');
-    }
-    if(v77step>1&&i===1){
-      const sh=18;
-      g.append('line').attr('x1',ox+10+sh).attr('y1',oy+20).attr('x2',ox+pw-10+sh).attr('y2',bot-10).attr('stroke','#27ae60').attr('stroke-width',2).attr('stroke-dasharray','4,3');
+      g.append('text').attr('x',ox+pw-22).attr('y',oy+20+sh-4).attr('text-anchor','middle').attr('font-size',8).attr('font-weight',600).attr('fill','#1e8449').text('shifted →');
     }
   });
+  // Causal-flow arrows between adjacent panels: 'input' flows Firm→Market→Consumer
+  // (left to right); 'sub'/'income' flow Consumer→Market→Firm (right to left).
   const midY=(D3PAD.top+D3H-D3PAD.bottom)/2;
+  const arrowGlyph=(sc==='input')?'→':'←';
   if(v77step>=1){
     const ax=D3PAD.left+pw+10;
-    g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5).attr('marker-end','');
-    g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text('→');
+    g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5);
+    g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
   }
   if(v77step>=2){
     const ax=D3PAD.left+pw*2+20;
     g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5);
-    g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text('→');
+    g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
   }
 }
 
@@ -1454,7 +1552,12 @@ function v78Draw(n){
 // ─────────────────────────────────────────────────────────────────────────
 // FIG 7.9: LONG-RUN ENTRY/EXIT
 // ─────────────────────────────────────────────────────────────────────────
-let v79n=50, v79animId=null;
+// Long-run (zero-economic-profit) equilibrium for this market is where P = min(SAC) ≈ $5.51,
+// which occurs at n ≈ 297-298. We use n=297 (P≈$5.51, profit≈ +$0.01 ≈ 0) as the LR target —
+// firms start with a clear profit (entry, n=150) or a clear loss (exit, n=450) and the
+// simulation runs them toward this same zero-profit point from opposite directions.
+const V79_LR_N=297;
+let v79n=150, v79animId=null;
 // Qd=500-50P, Qs=n*(P-4)/2 => P=(500+2n)/(50+n/2)=(1000+4n)/(100+n)
 function v79PofN(n){return(1000+4*n)/(100+n);}
 // ── FIG 7.9 D3 SVG ───────────────────────────────────────────────────────
@@ -1570,23 +1673,28 @@ function v79Draw(){
     </div>`;
 }
 function v79RunEntry(){
-  if(v79animId)clearInterval(v79animId);
-  v79animId=setInterval(()=>{
-    if(v79n>=100){clearInterval(v79animId);v79animId=null;return;}
-    v79n++;v79Draw();
-  },60);
-}
-function v79RunExit(){
+  // Entry: start where firms are PROFITABLE (P > SAC) — positive profit attracts new
+  // entrants. Supply grows, price falls, until profit is competed down to zero.
   v79n=150;v79Draw();
   if(v79animId)clearInterval(v79animId);
   v79animId=setInterval(()=>{
-    if(v79n<=100){clearInterval(v79animId);v79animId=null;return;}
+    if(v79n>=V79_LR_N){clearInterval(v79animId);v79animId=null;return;}
+    v79n++;v79Draw();
+  },40);
+}
+function v79RunExit(){
+  // Exit: start where firms are LOSING money (P < SAC) — losses push firms out of the
+  // industry. Supply shrinks, price rises, until losses are eliminated at zero profit.
+  v79n=450;v79Draw();
+  if(v79animId)clearInterval(v79animId);
+  v79animId=setInterval(()=>{
+    if(v79n<=V79_LR_N){clearInterval(v79animId);v79animId=null;return;}
     v79n--;v79Draw();
-  },60);
+  },40);
 }
 function v79Reset(){
   if(v79animId){clearInterval(v79animId);v79animId=null;}
-  v79n=50;v79Draw();
+  v79n=150;v79Draw();
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1626,17 +1734,25 @@ function v710InitSvg(){
   const scYM=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
   v710svgB=d3MakeSvg2('cvs710b-wrap');
   d3AddAxes2(v710svgB,scXM,scYM,'Q','P');
-  // Static demand: from (Q=0, P=14) to (Q=200, P=10)
-  v710svgB.append('line').attr('x1',scXM(0)).attr('y1',scYM(14)).attr('x2',scXM(200)).attr('y2',scYM(10))
+  // Static demand: P = 14 - (7/150)*Q, i.e. drawn from (Q=0, P=14) to (Q=200, P=14-200*7/150≈4.67).
+  // This line is chosen to pass exactly through the equilibrium point (Q=150, P=7) — see
+  // PeqBefore/QeqBefore below — so D and S visibly cross at the plotted equilibrium dot
+  // (previously the line ran from (0,14) to (200,10), which crosses supply at Q=250,P=9,
+  // nowhere near the (150,7) dot — the curves never visually intersected at the marker).
+  const demP_atQ200=14-200*(7/150);
+  v710svgB.append('line').attr('x1',scXM(0)).attr('y1',scYM(14)).attr('x2',scXM(200)).attr('y2',scYM(demP_atQ200))
     .attr('stroke','#1a56db').attr('stroke-width',2);
-  // Static original market supply (Q=50*(P-4)), starts at Q=0 when P=4
+  // Static original market supply (Q=50*(P-4)): at P=7, Q=50*3=150 — matches the
+  // equilibrium dot exactly (this curve was already correct).
   {const pts=[];for(let P2=4;P2<=14;P2+=0.2){const Q2=50*(P2-4);if(Q2>200)break;pts.push([scXM(Q2),scYM(P2)]);}
   v710svgB.append('path').attr('fill','none').attr('stroke','#27ae60').attr('stroke-width',2).attr('d',d3.line()(pts));}
   v710svgB.append('g').attr('class','v710-dyn-mkt');
   v710svgB.append('g').attr('class','v710-shifted-labels-mkt'); // persistent shifted market label layer
   // Market labels
   v710nodes710b=[
-    d3Node('D','#1a56db','D',20,scXM(185),scYM(10.1)),
+    // D anchor sits on the (corrected) demand line near its lower-right end: at Q=180,
+    // P = 14 - 180*(7/150) = 5.6 (previously anchored at P=10.1, far off the redrawn line).
+    d3Node('D','#1a56db','D',20,scXM(180),scYM(demP_atQ200+0.6)),
     d3Node('S','#27ae60','S',20,scXM(50),scYM(5)),
   ];
   v710sim710b=d3MakeSim(v710nodes710b);
@@ -1673,11 +1789,17 @@ function v710Draw(shock,dw){
   gM.selectAll('*').remove();
   const PeqBefore=7,QeqBefore=150;
   const sign=shock==='tech'?-1:1;
-  const PeqAfter=7+sign*0.5*dw, QeqAfter=150-sign*25*dw;
+  // Demand: P = 14 - Q*(7/150)  <=>  Q = (14-P)*150/7
+  // Shifted supply: Q = 50*(P - PSD_new), where PSD_new = 4 + shiftD is the new supply
+  // P-intercept. Solve the two simultaneously for the exact new equilibrium — this
+  // replaces a hand-fitted linear approximation that drifted away from where the
+  // actual (redrawn) curves cross, which left the red "after" dot floating off both lines.
+  const PSD_new=4+shiftD;
+  const PeqAfter=(2100+350*PSD_new)/500;
+  const QeqAfter=(14-PeqAfter)*150/7;
   // Original eq dot
   gM.append('circle').attr('cx',scXM(QeqBefore)).attr('cy',scYM(PeqBefore)).attr('r',5).attr('fill','#27ae60').attr('stroke','white').attr('stroke-width',1.5);
   if(dw>0){
-    const PSD_new=4+shiftD;
     const pts=[];for(let P2=PSD_new;P2<=14;P2+=0.2){const Q2=50*Math.max(0,P2-PSD_new);if(Q2>200)break;pts.push([scXM(Q2),scYM(P2)]);}
     if(pts.length>1)gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(pts));
     gM.append('circle').attr('cx',scXM(Math.max(0,QeqAfter))).attr('cy',scYM(Math.min(13.9,PeqAfter))).attr('r',5).attr('fill','#e74c3c').attr('stroke','white').attr('stroke-width',1.5);
@@ -1713,7 +1835,12 @@ window.addEventListener('DOMContentLoaded',()=>{
   v74SetScenario(0, document.querySelector('.scenario-tab'));
   v75InitSvg(); v75DrawPanels();
   v76Update(); // v76Draw lazily calls v76InitSvg(P,q)
-  v77InitSvg(); v77Draw();
+  v77InitSvg();
+  // Force a deterministic starting scenario (browsers can restore stale <select> values
+  // on reload/back-navigation, which previously left the step button/readout out of sync
+  // with the rendered scenario — i.e. "starts with the wrong graph").
+  document.getElementById('v77-scenario').value='sub';
+  v77Reset();
   v78InitSvgA(); v78Draw(parseInt(document.getElementById('v78-n').value));
   v79InitSvg(); v79Draw();
   v710InitSvg(); v710Draw(document.getElementById('v710-shock').value, parseFloat(document.getElementById('v710-shock-mag').value));

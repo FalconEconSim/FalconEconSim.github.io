@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script>
     window.MathJax = {
       tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
@@ -100,6 +101,9 @@
     .viz-panel-label { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); padding:0.5rem 0.8rem; background:#f8f9fb; border-bottom:1px solid var(--rule); }
 
     .jxgbox { background:#fff !important; border:none !important; border-radius:0 !important; }
+    .draggable-label { cursor:move; }
+    .d3-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; font-family:'DM Sans',system-ui,sans-serif; }
+    .d3-overlay .draggable-label { pointer-events:auto; }
 
     .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; padding:0.8rem; }
     .stat-box { background:#f8f9fb; border:1px solid var(--rule); border-radius:5px; padding:0.55rem 0.75rem; }
@@ -261,11 +265,17 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
             <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;">
               <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule);">Utility Maximization</div>
-              <canvas id="cv1-left" style="width:100%;display:block;"></canvas>
+              <div id="cv1-left-wrap" style="position:relative;">
+                <canvas id="cv1-left" style="width:100%;display:block;"></canvas>
+                <div id="cv1-left-ov" class="d3-overlay"></div>
+              </div>
             </div>
             <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;">
               <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule);">Demand Curve</div>
-              <canvas id="cv1-right" style="width:100%;display:block;"></canvas>
+              <div id="cv1-right-wrap" style="position:relative;">
+                <canvas id="cv1-right" style="width:100%;display:block;"></canvas>
+                <div id="cv1-right-ov" class="d3-overlay"></div>
+              </div>
             </div>
           </div>
 
@@ -312,7 +322,10 @@
           <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
             <div class="viz-panel">
               <div class="viz-panel-label">Three budget lines · Two ICs</div>
-              <div id="jxg-v2" style="width:100%;aspect-ratio:1/1;"></div>
+              <div id="jxg-v2-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-v2" style="width:100%;height:100%;"></div>
+                <div id="jxg-v2-ov" class="d3-overlay"></div>
+              </div>
             </div>
             <div>
               <div class="scoreboard">
@@ -380,11 +393,17 @@
           <div class="viz-two-col">
             <div class="viz-panel">
               <div class="viz-panel-label">IC / Budget Constraint + Expansion Path</div>
-              <div id="jxg-v3-left" style="width:100%;aspect-ratio:1/1;"></div>
+              <div id="jxg-v3-left-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-v3-left" style="width:100%;height:100%;"></div>
+                <div id="jxg-v3-left-ov" class="d3-overlay"></div>
+              </div>
             </div>
             <div class="viz-panel">
               <div class="viz-panel-label">Demand Curve Shift (at P<sub>X</sub> = $2)</div>
-              <div id="jxg-v3-right" style="width:100%;aspect-ratio:1/1;"></div>
+              <div id="jxg-v3-right-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-v3-right" style="width:100%;height:100%;"></div>
+                <div id="jxg-v3-right-ov" class="d3-overlay"></div>
+              </div>
             </div>
           </div>
           <div class="stat-grid" style="margin-top:0.8rem;">
@@ -470,7 +489,10 @@
             </div>
             <div class="viz-panel">
               <div class="viz-panel-label">Demand Curve for X (own price effect)</div>
-              <div id="jxg-v5" style="width:100%;aspect-ratio:1/1;"></div>
+              <div id="jxg-v5-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-v5" style="width:100%;height:100%;"></div>
+                <div id="jxg-v5-ov" class="d3-overlay"></div>
+              </div>
             </div>
           </div>
           <div class="callout key-idea" style="margin-top:1rem;">
@@ -522,6 +544,98 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function freeB(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } return null; }
+
+/* ============================================================
+   D3 SVG force-label overlay helpers
+   (matches the S6/S8 "gold standard" pattern from testing.html:
+    white rounded-rect boxes, font-size 9 weight 600 'DM Sans',
+    dashed thin connectors, NO anchor dot, forceCollide + forceX/Y
+    anchored springs, smooth alphaTarget drag.)
+
+   These helpers render a draggable D3 force-label layer ON TOP OF
+   a canvas or JSXGraph figure. The overlay <svg> is sized in CSS
+   pixels to match its wrapper container (position:relative), and
+   label anchors (fx_anchor/fy_anchor) are supplied in that same
+   CSS-pixel coordinate space by the caller (via toC()/scrCoords/etc).
+   ============================================================ */
+const D3_LABEL_H = 15;
+
+// Build (or rebuild) an SVG sized to the overlay div's current pixel box.
+// Returns {svg, w, h}. Caller should re-invoke on resize to keep in sync.
+function d3OverlaySvg(ovId) {
+  const wrap = document.getElementById(ovId);
+  if (!wrap) return null;
+  const w = wrap.clientWidth || wrap.parentElement.clientWidth || 300;
+  const h = wrap.clientHeight || w;
+  d3.select(wrap).selectAll('svg').remove();
+  const svg = d3.select(wrap).append('svg')
+    .attr('viewBox', `0 0 ${w} ${h}`)
+    .style('width', '100%').style('height', '100%').style('display', 'block')
+    .style('font-family', "'DM Sans',system-ui,sans-serif")
+    .style('overflow', 'visible');
+  return { svg, w, h };
+}
+
+// Build a force-label node. ax/ay = anchor in overlay-pixel space.
+function d3OvNode(id, color, label, lw, ax, ay, extra = {}) {
+  const ang = Math.random() * 2 * Math.PI, r = 36 + Math.random() * 30;
+  return { id, color, label, lw, ax, ay, fx_anchor: ax, fy_anchor: ay,
+           x: ax + r * Math.cos(ang), y: ay + r * Math.sin(ang), ...extra };
+}
+
+// Append connector lines + draggable label groups (rect+text) to svg.
+// Matches S6/S8 styling exactly: white rounded rect, 9px/600 DM Sans text,
+// dashed 0.9px connector at 0.55 opacity, no anchor dot.
+function d3OvAddLabels(svg, nodes, sim) {
+  const conns = svg.selectAll(null).data(nodes).enter()
+    .append('line')
+    .attr('stroke', d => d.color).attr('stroke-width', 0.9)
+    .attr('stroke-dasharray', '4,3').attr('opacity', 0.55);
+  const gs = svg.selectAll(null).data(nodes).enter()
+    .append('g').attr('class', 'draggable-label')
+    .call(d3.drag()
+      .on('start', (e, d) => { sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end',   (e, d) => { sim.alphaTarget(0); d.fx = null; d.fy = null; })
+    );
+  gs.append('rect').attr('width', d => d.lw).attr('height', D3_LABEL_H).attr('rx', 3)
+    .attr('fill', 'white').attr('stroke', d => d.color).attr('stroke-width', 0.8).attr('opacity', 0.95);
+  gs.append('text').attr('x', d => d.lw / 2).attr('y', D3_LABEL_H - 4)
+    .attr('text-anchor', 'middle').attr('fill', d => d.color)
+    .attr('font-size', 9).attr('font-weight', 600)
+    .text(d => d.label);
+  return { conns, gs };
+}
+
+// Standard collide + anchored-spring force simulation (same constants as S6/S8).
+function d3OvMakeSim(nodes) {
+  return d3.forceSimulation(nodes)
+    .force('collide', d3.forceCollide(d => d.lw * 0.55 + 4).strength(0.85))
+    .force('x', d3.forceX(d => d.fx_anchor).strength(0.04))
+    .force('y', d3.forceY(d => d.fy_anchor).strength(0.04));
+}
+
+// Per-tick clamp + redraw. w/h = overlay pixel box; pad = {top,right,bottom,left} keep-out margins.
+function d3OvTick(nodes, gs, conns, w, h, pad) {
+  pad = pad || { top: 4, right: 4, bottom: 4, left: 4 };
+  nodes.forEach(d => {
+    d.x = Math.max(pad.left, Math.min(w - d.lw - pad.right, d.x));
+    d.y = Math.max(pad.top,  Math.min(h - D3_LABEL_H - pad.bottom, d.y));
+  });
+  gs.attr('transform', d => `translate(${d.x},${d.y})`);
+  conns.attr('x1', d => d.fx_anchor).attr('y1', d => d.fy_anchor)
+       .attr('x2', d => d.x + d.lw / 2).attr('y2', d => d.y + D3_LABEL_H / 2);
+}
+
+// Re-anchor a node to a new (ax,ay) anchor, translating its current position
+// by the same delta so it keeps tracking smoothly (used when curves move/animate).
+function d3OvReanchor(node, ax, ay) {
+  const dx = ax - node.fx_anchor, dy = ay - node.fy_anchor;
+  node.x += dx; node.y += dy;
+  node.fx_anchor = ax; node.fy_anchor = ay;
+  if (node.fx != null) node.fx += dx;
+  if (node.fy != null) node.fy += dy;
+}
 
 /* ============================================================
    VIZ 1: Demand Derivation - video playback speed control
@@ -577,11 +691,121 @@ function initViz1() {
       c.style.height = W + 'px';
     });
     v1DrawCanvas(1);
+    v1RebuildOverlay();
   }
 
   setSize();
   window.addEventListener('resize', setSize);
   v1UpdateNarration();
+}
+
+/* ---- D3 SVG label overlay (draggable force-labels over the canvas panels) ----
+   Matches the S6/S8 gold-standard styling: white rounded-rect boxes,
+   font-size 9 / weight 600 'DM Sans', dashed thin connectors, no anchor dot. */
+let v1OvL = null, v1OvR = null; // {svg,w,h,nodes,gs,conns,sim}
+
+function v1RebuildOverlay() {
+  if (typeof d3 === 'undefined') return;
+  const c = v1GetCtx();
+  if (!c) return;
+  // Stop any previous simulations so they don't keep ticking detached DOM
+  if (v1OvL && v1OvL.sim) v1OvL.sim.stop();
+  if (v1OvR && v1OvR.sim) v1OvR.sim.stop();
+  const dpr = c.dpr;
+  // Convert canvas-pixel (DPR-scaled) coords -> CSS-pixel overlay coords
+  const toCss = (cx, cy) => [cx / dpr, cy / dpr];
+
+  // ---- Left panel: "X*=" and "P=$" labels for the current bundle ----
+  // (only present once at least one step has been taken — matches the
+  //  canvas's own `isCurrent` gating, which requires v1CurrStep > 0)
+  {
+    const ov = d3OverlaySvg('cv1-left-ov');
+    if (!ov) return;
+    const { svg, w, h } = ov;
+    if (v1CurrStep > 0) {
+      const i = v1CurrStep - 1;
+      const px = V1_PX_STEPS[i];
+      const xs = v1Xstar(px);
+      const col = V1_COLS[i];
+      const [ox, oy] = toCss(...c.toL(xs, V1_Ystar));
+      const yInt = V1_I / V1_Py;
+      const [blx0, bly0] = toCss(...c.toL(0, yInt));
+      const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
+
+      const nodes = [
+        d3OvNode('xstar', col, 'X*=' + xsDisp, 38, ox, oy),
+        d3OvNode('price', col, 'P=$' + px,     38, blx0, bly0),
+      ];
+      const sim = d3OvMakeSim(nodes);
+      const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
+      sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
+      v1OvL = { svg, w, h, nodes, gs, conns, sim, lastStep: v1CurrStep };
+    } else {
+      v1OvL = null;
+    }
+  }
+
+  // ---- Right panel: "D" demand-curve label (only once curve is complete) ----
+  {
+    const ov = d3OverlaySvg('cv1-right-ov');
+    if (!ov) return;
+    const { svg, w, h } = ov;
+    if (v1CurrStep === V1_PX_STEPS.length) {
+      const [dlx, dly] = toCss(...c.toR(26, (V1_alpha * V1_I) / 26));
+      const nodes = [ d3OvNode('D', '#3d5a80', 'D', 22, dlx, dly) ];
+      const sim = d3OvMakeSim(nodes);
+      const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
+      sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
+      v1OvR = { svg, w, h, nodes, gs, conns, sim, lastStep: v1CurrStep };
+    } else {
+      v1OvR = null; // cleared; will be rebuilt once the curve completes
+    }
+  }
+}
+
+// Re-anchor existing overlay nodes when the step changes (without a full
+// rebuild, so dragged positions / simulation momentum are preserved).
+function v1UpdateOverlayAnchors() {
+  if (typeof d3 === 'undefined') return;
+  const c = v1GetCtx();
+  if (!c) return;
+  const dpr = c.dpr;
+  const toCss = (cx, cy) => [cx / dpr, cy / dpr];
+
+  const hadL = !!v1OvL, wantL = (v1CurrStep > 0);
+  if (hadL !== wantL) {
+    // Transition into/out of "at least one step taken" — rebuild cleanly.
+    v1RebuildOverlay();
+    return;
+  }
+  if (v1OvL && v1OvL.lastStep !== v1CurrStep) {
+    const i = v1CurrStep - 1;
+    const px = V1_PX_STEPS[i];
+    const xs = v1Xstar(px);
+    const col = V1_COLS[i];
+    const [ox, oy] = toCss(...c.toL(xs, V1_Ystar));
+    const yInt = V1_I / V1_Py;
+    const [blx0, bly0] = toCss(...c.toL(0, yInt));
+    const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
+
+    const nXstar = v1OvL.nodes.find(n => n.id === 'xstar');
+    const nPrice = v1OvL.nodes.find(n => n.id === 'price');
+    if (nXstar) { nXstar.color = col; nXstar.label = 'X*=' + xsDisp; d3OvReanchor(nXstar, ox, oy); }
+    if (nPrice) { nPrice.color = col; nPrice.label = 'P=$' + px;     d3OvReanchor(nPrice, blx0, bly0); }
+    // refresh colors/text on existing DOM nodes
+    v1OvL.gs.select('rect').attr('stroke', d => d.color);
+    v1OvL.gs.select('text').attr('fill', d => d.color).text(d => d.label);
+    v1OvL.conns.attr('stroke', d => d.color);
+    v1OvL.lastStep = v1CurrStep;
+    v1OvL.sim.alpha(0.4).restart();
+  }
+
+  // The "D" label only exists once the demand curve is complete; rebuild
+  // the right-panel overlay if completion state changed.
+  const shouldHaveD = (v1CurrStep === V1_PX_STEPS.length);
+  if (shouldHaveD !== !!v1OvR) {
+    v1RebuildOverlay();
+  }
 }
 
 /* ---- coordinate mappers ---- */
@@ -664,7 +888,7 @@ function v1DrawCanvas(animProg) {
   if (animProg === undefined) animProg = 1;
   const c = v1GetCtx();
   if (!c) return;
-  const { cvL, cvR, dpr, W, H, ML, MB, toL, toLx, toLy, toR, toRx, toRy } = c;
+  const { cvL, cvR, dpr, W, H, ML, MR, MB, toL, toLx, toLy, toR, toRx, toRy } = c;
 
   const ctxL = cvL.getContext('2d');
   const ctxR = cvR.getContext('2d');
@@ -744,16 +968,9 @@ function v1DrawCanvas(animProg) {
     ctxL.lineWidth = 1.5*dpr;
     ctxL.stroke();
 
-    // Label current bundle
-    if (isCurrent) {
-      ctxL.fillStyle = col;
-      ctxL.font = `bold ${9*dpr}px 'DM Sans',system-ui,sans-serif`;
-      ctxL.textAlign = 'center';
-      const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
-      ctxL.fillText('X*=' + xsDisp, ox, oy - 10*dpr);
-      ctxL.fillText('P=$' + px, blx0 - 20*dpr, bly0 + 12*dpr);
-      ctxL.textAlign = 'left';
-    }
+    // "X*=" / "P=$" labels for the current bundle are now rendered by the
+    // D3 SVG overlay (v1UpdateOverlay) as draggable force-labels, matching
+    // the S6/S8 gold-standard styling. (Canvas no longer draws this text.)
   }
 
   /* ===== RIGHT PANEL ===== */
@@ -867,12 +1084,8 @@ function v1DrawCanvas(animProg) {
     ctxR.lineWidth = 2*dpr;
     ctxR.stroke();
 
-    // "D" label
-    const [dlx, dly] = toR(26, (V1_alpha * V1_I) / 26);
-    ctxR.fillStyle = '#3d5a80';
-    ctxR.font = `italic bold ${10*dpr}px 'DM Sans',system-ui,sans-serif`;
-    ctxR.textAlign = 'left';
-    ctxR.fillText('D', dlx + 5*dpr, dly - 6*dpr);
+    // "D" demand-curve label is now rendered by the D3 SVG overlay
+    // (v1UpdateOverlay) as a draggable force-label. (Canvas no longer draws this text.)
   }
 }
 
@@ -903,6 +1116,9 @@ function v1UpdateNarration() {
   const ctr = document.getElementById('v1-step-counter');
   if (nar) nar.innerHTML = V1_NARRATION[v1CurrStep] || '';
   if (ctr) ctr.textContent = 'Step ' + v1CurrStep + ' / ' + V1_PX_STEPS.length;
+  // Keep the D3 SVG label overlay (X*=, P=$, "D") tracking the current step
+  if (v1OvL || v1OvR) v1UpdateOverlayAnchors();
+  else v1RebuildOverlay();
 }
 
 /* ---- public control functions ---- */
@@ -1053,16 +1269,12 @@ function drawV2() {
   b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#888',fixed:true});
 
   // Budget lines
-  b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
-  // "Original" label: place in upper-left region, well away from the red/new line
-  b.create('text',[xiA*0.12, yi*0.92, 'Original'],{fontSize:9,color:'#3d5a80',fixed:true});
-
-  b.create('segment',[[0,yHicksInt],[xiHicks,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
-  // "Compensated" label: place at lower end of the compensated line, clear of the dashed line
-  b.create('text',[xiHicks*0.55, yHicksInt*0.15, 'Compensated'],{fontSize:9,color:'#6b52a8',fixed:true});
-
-  b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
-  b.create('text',[xiB*0.5,yi*0.6,'New'],{fontSize:9,color:'#c0392b',fixed:true});
+  const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
+  const segHicks = b.create('segment',[[0,yHicksInt],[xiHicks,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
+  const segNew   = b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+  // Curve-name labels ("Original"/"Compensated"/"New") are rendered by the
+  // D3 SVG overlay below as draggable force-labels (S6/S8 gold-standard style)
+  // instead of fixed JSXGraph text — see d3v2InitOverlay().
 
   // ICs
   const alpha = 0.5;
@@ -1080,10 +1292,10 @@ function drawV2() {
 
   // SE/IE brackets on X axis
   const yBr = -ymax*0.03;
-  b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2,fixed:true});
-  b.create('text',[(d.XA+d.XC)/2,yBr*2.5,'SE'],{fontSize:9,color:'#6b52a8',fixed:true});
-  b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
-  b.create('text',[(d.XC+d.XB)/2,yBr*2.5,'IE'],{fontSize:9,color:'#c0392b',fixed:true});
+  const segSE = b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2,fixed:true});
+  const segIE = b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+  // "SE"/"IE" bracket labels are rendered by the D3 SVG overlay below
+  // (see d3v2InitOverlay()) instead of fixed JSXGraph text.
 
   // Scoreboard
   document.getElementById('v2-a').textContent = `(${nn(d.XA)}, ${nn(d.YA)})`;
@@ -1094,6 +1306,66 @@ function drawV2() {
   document.getElementById('v2-te').textContent = `${d.TE >= 0 ? '+' : ''}${nn(d.TE)}`;
   const isNorm = (d.IE < 0) === (d.TE < 0);
   document.getElementById('v2-type').textContent = isNorm ? 'Normal Good' : 'Inferior Good';
+
+  // Curve-name + bracket labels as a draggable D3 SVG force-label overlay
+  // (white rounded-rect boxes, 9px/600 'DM Sans', dashed connectors — S6/S8 style)
+  d3v2InitOverlay(b, {
+    segOrig, segHicks, segNew, segSE, segIE,
+    xiA, yi, xiHicks, yHicksInt, xiB,
+    XA:d.XA, XC:d.XC, XB:d.XB, yBr
+  });
+}
+
+/* ---- Fig 3.2 D3 SVG label overlay (draggable force-labels over JSXGraph) ----
+   Uses board.create('point',...,{visible:false}) anchor points + .coords.scrCoords
+   to get pixel anchor positions, and board.on('update',...) to keep tracking. */
+let v2Ov = null; // {svg,w,h,nodes,gs,conns,sim,anchors,off}
+function d3v2InitOverlay(b, geo) {
+  if (typeof d3 === 'undefined') return;
+  if (v2Ov) { if (v2Ov.off) try { v2Ov.off(); } catch(e){} if (v2Ov.sim) v2Ov.sim.stop(); }
+  const ov = d3OverlaySvg('jxg-v2-ov');
+  if (!ov) return;
+  const { svg, w, h } = ov;
+
+  // Hidden anchor points (data-space) whose scrCoords give pixel positions that
+  // automatically track the board's bounding box / zoom / pan.
+  const mk = (x,y) => b.create('point',[x,y],{visible:false,fixed:true,withLabel:false});
+  const anchors = {
+    orig:  mk(geo.xiA*0.30,         geo.yi*0.30),
+    comp:  mk(geo.xiHicks*0.62,     geo.yHicksInt*0.16),
+    newL:  mk(geo.xiB*0.55,         geo.yi*0.55),
+    se:    mk((geo.XA+geo.XC)/2,    geo.yBr*2.6),
+    ie:    mk((geo.XC+geo.XB)/2,    geo.yBr*2.6),
+  };
+  const scr = pt => { const sc = pt.coords.scrCoords; return [sc[1], sc[2]]; };
+
+  const specs = [
+    { id:'orig', color:'#3d5a80', label:'Original',     lw:54, key:'orig' },
+    { id:'comp', color:'#6b52a8', label:'Compensated',  lw:78, key:'comp' },
+    { id:'new',  color:'#c0392b', label:'New',          lw:34, key:'newL' },
+    { id:'se',   color:'#6b52a8', label:'SE',           lw:26, key:'se'   },
+    { id:'ie',   color:'#c0392b', label:'IE',           lw:26, key:'ie'   },
+  ];
+  const nodes = specs.map(s => {
+    const [ax,ay] = scr(anchors[s.key]);
+    return d3OvNode(s.id, s.color, s.label, s.lw, ax, ay, {anchorKey:s.key});
+  });
+  const sim = d3OvMakeSim(nodes);
+  const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
+  sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
+
+  // Keep anchors tracking the board on pan/zoom/redraw
+  const updateHandler = () => {
+    nodes.forEach(n => {
+      const [ax,ay] = scr(anchors[n.anchorKey]);
+      d3OvReanchor(n, ax, ay);
+    });
+    sim.alpha(0.3).restart();
+  };
+  b.on('update', updateHandler);
+
+  v2Ov = { svg, w, h, nodes, gs, conns, sim, anchors,
+           off: () => { try { b.off('update', updateHandler); } catch(e){} } };
 }
 
 /* ============================================================
@@ -1116,6 +1388,39 @@ function v3SetType(t) {
   document.getElementById('v3-normal-btn').classList.toggle('active', t==='normal');
   document.getElementById('v3-inferior-btn').classList.toggle('active', t==='inferior');
   initViz3();
+}
+
+/* ---- Fig 3.3 D3 SVG label overlay (draggable force-label for the
+   "Income Expansion Path" / "IEP (inferior)" curve-name label, over the
+   left JSXGraph board). Uses a hidden anchor point + .coords.scrCoords
+   for pixel position, and board.on('update',...) to keep tracking. ---- */
+let v3Ov = null;
+function d3v3InitOverlay(b1, ax, ay, label) {
+  if (typeof d3 === 'undefined') return;
+  if (v3Ov) { if (v3Ov.off) try { v3Ov.off(); } catch(e){} if (v3Ov.sim) v3Ov.sim.stop(); }
+  const ov = d3OverlaySvg('jxg-v3-left-ov');
+  if (!ov) return;
+  const { svg, w, h } = ov;
+
+  const anchorPt = b1.create('point',[ax,ay],{visible:false,fixed:true,withLabel:false});
+  const scr = () => { const sc = anchorPt.coords.scrCoords; return [sc[1], sc[2]]; };
+  const [sx, sy] = scr();
+
+  const lw = Math.max(40, label.length * 5.6 + 10);
+  const nodes = [ d3OvNode('iep', '#6b52a8', label, lw, sx, sy) ];
+  const sim = d3OvMakeSim(nodes);
+  const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
+  sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
+
+  const updateHandler = () => {
+    const [nx, ny] = scr();
+    d3OvReanchor(nodes[0], nx, ny);
+    sim.alpha(0.3).restart();
+  };
+  b1.on('update', updateHandler);
+
+  v3Ov = { svg, w, h, nodes, gs, conns, sim,
+           off: () => { try { b1.off('update', updateHandler); } catch(e){} } };
 }
 
 function initViz3() {
@@ -1152,13 +1457,17 @@ function initViz3() {
   b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
   b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#888',fixed:true});
 
-  // Draw expansion path (static dashed line)
+  // Draw expansion path (static dashed line). Its label is rendered by the
+  // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
+  // fixed JSXGraph text — see d3v3InitOverlay().
+  let v3IepAnchorX, v3IepAnchorY, v3IepLabel;
   if (v3Type === 'normal') {
     // Ray from origin slope = (V3_Px/V3_Py) = 2/3
     b1.create('line',[[0,0],[1,V3_Px/V3_Py]],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true,
       point1:{visible:false},point2:{visible:false}});
-    // Label placed to the LEFT of the expansion path line to avoid overlap
-    b1.create('text',[xmax*0.25, xmax*0.25*(V3_Px/V3_Py)+1.2, 'Income\nExpansion Path'],{fontSize:9,color:'#6b52a8',fixed:true});
+    v3IepAnchorX = xmax*0.25;
+    v3IepAnchorY = xmax*0.25*(V3_Px/V3_Py)+1.2;
+    v3IepLabel = 'Income Expansion Path';
   } else {
     // Backward-bending: X decreases as I rises
     const pathPts = [];
@@ -1166,7 +1475,9 @@ function initViz3() {
     const pathX = pathPts.map(p=>p[0]);
     const pathY = pathPts.map(p=>p[1]);
     b1.create('curve',[pathX,pathY],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true});
-    b1.create('text',[v3Xstar(60)+0.5,v3Ystar(60)+1,'IEP (inferior)'],{fontSize:9,color:'#6b52a8',fixed:true});
+    v3IepAnchorX = v3Xstar(60)+0.5;
+    v3IepAnchorY = v3Ystar(60)+1;
+    v3IepLabel = 'IEP (inferior)';
   }
 
   let v3IC = null, v3BL = null, v3Pt = null;
@@ -1229,6 +1540,7 @@ function initViz3() {
   }
 
   redrawV3();
+  d3v3InitOverlay(b1, v3IepAnchorX, v3IepAnchorY, v3IepLabel);
 
   document.getElementById('v3-income').addEventListener('input', function() {
     v3Income = parseFloat(this.value);
@@ -1340,9 +1652,49 @@ function v5SetRel(r) {
   redrawV5();
 }
 
+/* ---- Fig 3.5 D3 SVG label overlay: draggable "D" demand-curve label ----
+   A hidden anchor point rides the curve at x=50 (data coords); its
+   .coords.scrCoords gives the pixel anchor, kept current via setPosition()
+   on each redraw and board.on('update',...) for pan/zoom tracking. */
+let v5Ov = null;
+function d3v5UpdateOverlay(b, safAdj) {
+  if (typeof d3 === 'undefined') return;
+  const ax = 50, ay = safAdj / ax;
+
+  if (!v5Ov || v5Ov.board !== b) {
+    if (v5Ov && v5Ov.off) { try { v5Ov.off(); } catch(e){} }
+    const ov = d3OverlaySvg('jxg-v5-ov');
+    if (!ov) return;
+    const { svg, w, h } = ov;
+    const anchorPt = b.create('point',[ax,ay],{visible:false,fixed:true,withLabel:false});
+    const scr = () => { const sc = anchorPt.coords.scrCoords; return [sc[1], sc[2]]; };
+    const [sx, sy] = scr();
+    const nodes = [ d3OvNode('D', '#1a56db', 'D', 22, sx, sy) ];
+    const sim = d3OvMakeSim(nodes);
+    const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
+    sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
+    const updateHandler = () => {
+      const [nx, ny] = scr();
+      d3OvReanchor(nodes[0], nx, ny);
+      sim.alpha(0.3).restart();
+    };
+    b.on('update', updateHandler);
+    v5Ov = { svg, w, h, nodes, gs, conns, sim, anchorPt, board:b,
+             off: () => { try { b.off('update', updateHandler); } catch(e){} } };
+  } else {
+    // Move the anchor point to track the curve's new position, then re-derive screen coords
+    v5Ov.anchorPt.setPosition(JXG.COORDS_BY_USER, [ax, ay]);
+    v5Ov.board.update();
+    const sc = v5Ov.anchorPt.coords.scrCoords;
+    d3OvReanchor(v5Ov.nodes[0], sc[1], sc[2]);
+    v5Ov.sim.alpha(0.3).restart();
+  }
+}
+
 function initViz5() {
   v5b = freeB(v5b);
   v5Curve = null; v5Pt = null;
+  v5Ov = null; // board is being recreated — overlay must rebuild against the new board
   v5b = JXG.JSXGraph.initBoard('jxg-v5',{
     boundingbox:[-2,7,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
@@ -1398,6 +1750,10 @@ function redrawV5() {
   const curX = safAdj / v5Px;
   v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
     name:`(${Xs.toFixed(1)},${v5Px})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[7,5]}});
+
+  // "D" demand-curve name label as a draggable D3 SVG force-label overlay
+  // (S6/S8 gold-standard style), anchored to a point on the curve.
+  d3v5UpdateOverlay(b, safAdj);
 
   // Update displays
   const fmla = `X* = αI/P<sub>X</sub> = (0.5 × ${v5I}) / ${v5Px} = <strong>${Xs.toFixed(2)}</strong><br>` +

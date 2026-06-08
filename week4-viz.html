@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     /* ── layout ── */
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
@@ -34,6 +35,13 @@
     /* ── canvas wrapper ── */
     .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
     canvas { display:block; width:100%; height:320px; cursor:default; }
+
+    /* ── canvas + D3 SVG label overlay ── */
+    .cvs-stack { position:relative; }
+    .cvs-stack > canvas { position:relative; z-index:1; }
+    .cvs-overlay { position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+    .cvs-overlay .draggable-label { pointer-events:auto; cursor:grab; }
+    .cvs-overlay .draggable-label:active { cursor:grabbing; }
 
     /* ── controls ── */
     .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
@@ -136,7 +144,7 @@
       between two points using the midpoint formula. Toggle between modes to compare how the two methods diverge as the
       gap between points widens.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs1" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs1" height="320"></canvas><div class="cvs-overlay" id="cvs1-ov"></div></div></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Mode:</span>
@@ -159,7 +167,7 @@
       at the bottom (inelastic, |e|&lt;1). Drag the yellow dot to any point and read off its exact elasticity.
       Type your own linear demand equation below to reshape the curve.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs2" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs2" height="320"></canvas><div class="cvs-overlay" id="cvs2-ov"></div></div></div>
     <div class="viz-ctrl-row" style="align-items:center;gap:0.6rem;">
       <div style="display:flex;flex-direction:column;gap:0.28rem;">
         <span class="viz-slider-label" style="font-size:0.73rem;">Enter demand equation (format: Q = a &minus; bP)</span>
@@ -192,7 +200,7 @@
       strip</strong> shows revenue lost from buyers who leave. The live verdict tells you which effect dominates.
       Set the old price, pick the new price, and adjust the demand slope to explore.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs3" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs3" height="320"></canvas><div class="cvs-overlay" id="cvs3-ov"></div></div></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Old price P<sub>old</sub>:</span>
@@ -223,7 +231,7 @@
       Select an industry with its real-world empirical elasticity estimate. Then adjust the price change and see the predicted
       change in total revenue. Uses the approximation %&Delta;TR &asymp; %&Delta;P &times; (1&nbsp;+&nbsp;e<sub>d</sub>).
     </p>
-    <div class="cvs-wrap"><canvas id="cvs4" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs4" height="320"></canvas><div class="cvs-overlay" id="cvs4-ov"></div></div></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Industry:</span>
@@ -258,7 +266,7 @@
       <strong style="color:#27ae60">rectangle</strong> (existing buyers now paying more) and the <strong style="color:#e6ac17">exit triangle</strong>
       (buyers priced out of the market). Click <strong>Show Calculation</strong> to see the step-by-step formula.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs6" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs6" height="320"></canvas><div class="cvs-overlay" id="cvs6-ov"></div></div></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Base price P*:</span>
@@ -288,7 +296,7 @@
       Uber's revenue grows - up to a point. Riders priced out exit the market entirely.
       This illustrates the welfare trade-off between producer revenue and consumer surplus.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs7" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs7" height="320"></canvas><div class="cvs-overlay" id="cvs7-ov"></div></div></div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
         <span class="viz-slider-label">Surge price:</span>
@@ -331,15 +339,15 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;">
         <div class="cvs-wrap">
           <div class="panel-label" style="color:#e74c3c;">Consumer 1 &nbsp; Q = 30 &minus; P</div>
-          <canvas id="cvs8a" style="width:100%;"></canvas>
+          <div class="cvs-stack"><canvas id="cvs8a" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8a-ov"></div></div>
         </div>
         <div class="cvs-wrap">
           <div class="panel-label" style="color:#2980b9;">Consumer 2 &nbsp; Q = 24 &minus; 2P</div>
-          <canvas id="cvs8b" style="width:100%;"></canvas>
+          <div class="cvs-stack"><canvas id="cvs8b" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8b-ov"></div></div>
         </div>
         <div class="cvs-wrap">
           <div class="panel-label" style="color:#1a56db;">Market Demand Q<sub>m</sub>(P)</div>
-          <canvas id="cvs8c" style="width:100%;"></canvas>
+          <div class="cvs-stack"><canvas id="cvs8c" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8c-ov"></div></div>
         </div>
       </div>
       <div class="viz-ctrl-row" style="margin-top:0.75rem;">
@@ -372,7 +380,7 @@
         The market demand curve builds itself as the horizontal sum. The functional form at different price ranges
         appears at the bottom.
       </p>
-      <div class="cvs-wrap"><canvas id="cvs8" height="320"></canvas></div>
+      <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs8" height="320"></canvas><div class="cvs-overlay" id="cvs8-ov"></div></div></div>
       <div class="viz-ctrl-row" style="flex-direction:column;align-items:flex-start;gap:0.6rem;margin-top:0.75rem;">
         <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
           <span style="font-family:var(--mono);font-size:0.78rem;color:#e74c3c;font-weight:600;min-width:80px;">Consumer 1</span>
@@ -421,61 +429,103 @@
 // ══════════════════════════════════════════════════════════════════════
 const ML=55, MR=25, MT=24, MB=42;
 
-// Force-simulation label collision avoidance (D3-style physics, Canvas version)
-function resolveLabels(items, linePts=[], iter=150, pad=6) {
-  for (let it=0; it<iter; it++) {
-    for (let i=0; i<items.length; i++) {
-      for (let j=i+1; j<items.length; j++) {
-        const a=items[i], b=items[j];
-        const gx=(a.w+b.w)/2+pad, gy=(a.h+b.h)/2+pad;
-        const dx=a.x-b.x, dy=a.y-b.y;
-        if (Math.abs(dx)<gx && Math.abs(dy)<gy) {
-          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.5;
-          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.5;
-          a.x+=sx; a.y+=sy; b.x-=sx; b.y-=sy;
-        }
-      }
-      const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
-    }
-    for (const lm of items) {
-      const hw=lm.w/2+8, hh=lm.h/2+8;
-      for (const [lx,ly] of linePts) {
-        const dx=lm.x-lx, dy=lm.y-ly;
-        if (Math.abs(dx)<hw && Math.abs(dy)<hh) {
-          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
-          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
-        }
-      }
-    }
-  }
+
+// ──────────────────────────────────────────────────────────────────────
+// D3 SVG FORCE-LABEL OVERLAY HELPERS (S6/S8 "gold standard" pattern,
+// adapted for canvases whose pixel size W×H is computed at draw-time)
+// ──────────────────────────────────────────────────────────────────────
+const D3_LABEL_H = 15;
+
+// (Re)build the <svg> inside an overlay <div>, sized to the canvas's CSS
+// pixel dimensions W×H via viewBox (NOT the DPR-scaled internal resolution).
+function d3Overlay(ovId, W, H) {
+  if (typeof d3 === 'undefined') return null;
+  const host = d3.select('#'+ovId);
+  if (host.empty()) return null;
+  host.selectAll('svg').remove();
+  return host.append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('width', '100%').attr('height', '100%')
+    .style('display', 'block').style('overflow', 'visible')
+    .style('font-family', "'DM Sans',system-ui,sans-serif");
 }
-function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
-  ctx.save();
-  if (Math.hypot(x-ax,y-ay)>5) {
-    ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]); ctx.globalAlpha=0.55;
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
-    ctx.setLineDash([]); ctx.globalAlpha=1;
-  }
-  ctx.font='bold 9px DM Sans,sans-serif';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  const tw=ctx.measureText(text).width;
-  const th=15;
-  const rx=3, rw=tw+8, rh=th, rx0=x-rw/2, ry0=y-rh/2;
-  ctx.fillStyle='white';
-  ctx.strokeStyle=color; ctx.lineWidth=0.8;
-  ctx.beginPath();
-  if(ctx.roundRect){ ctx.roundRect(rx0,ry0,rw,rh,rx); }
-  else {
-    ctx.moveTo(rx0+rx,ry0); ctx.lineTo(rx0+rw-rx,ry0); ctx.arcTo(rx0+rw,ry0,rx0+rw,ry0+rx,rx);
-    ctx.lineTo(rx0+rw,ry0+rh-rx); ctx.arcTo(rx0+rw,ry0+rh,rx0+rw-rx,ry0+rh,rx);
-    ctx.lineTo(rx0+rx,ry0+rh); ctx.arcTo(rx0,ry0+rh,rx0,ry0+rh-rx,rx);
-    ctx.lineTo(rx0,ry0+rx); ctx.arcTo(rx0,ry0,rx0+rx,ry0,rx); ctx.closePath();
-  }
-  ctx.fill(); ctx.stroke();
-  ctx.fillStyle=color;
-  ctx.fillText(text,x,y);
-  ctx.restore();
+
+// Build a label-node datum: {id,color,label,lw,ax,ay,fx_anchor,fy_anchor,x,y}
+// scattered randomly around its anchor so the sim animates into place.
+function d3LblNode(id, color, label, lw, ax, ay, extra={}) {
+  const ang = Math.random()*2*Math.PI, r = 40 + Math.random()*40;
+  return { id, color, label, lw, ax, ay,
+           fx_anchor: ax, fy_anchor: ay,
+           x: ax + r*Math.cos(ang), y: ay + r*Math.sin(ang), ...extra };
+}
+
+// forceSimulation with collide + weak pull toward each node's anchor —
+// exactly the S6/S8 spec.
+function d3LabelSim(nodes) {
+  return d3.forceSimulation(nodes)
+    .force('collide', d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+    .force('x', d3.forceX(d=>d.fx_anchor).strength(0.04))
+    .force('y', d3.forceY(d=>d.fy_anchor).strength(0.04));
+}
+
+// Append connector lines + draggable white rounded-rect label groups
+// (NO anchor dot — matches S6/S8). Returns {conns, gs} selections.
+// `simRef` is a function returning the current simulation (so drag handlers
+// stay valid even if the sim is rebuilt on resize).
+function d3LabelLayer(svg, nodes, simRef) {
+  const conns = svg.selectAll(null).data(nodes).enter()
+    .append('line')
+    .attr('stroke', d=>d.color).attr('stroke-width', 0.9)
+    .attr('stroke-dasharray', '4,3').attr('opacity', 0.55);
+  const gs = svg.selectAll(null).data(nodes).enter()
+    .append('g').attr('class', 'draggable-label')
+    .call(d3.drag()
+      .on('start', (e,d)=>{ const s=simRef(); if(s){s.alphaTarget(0.3).restart();} d.fx=d.x; d.fy=d.y; })
+      .on('drag',  (e,d)=>{ d.fx=e.x; d.fy=e.y; })
+      .on('end',   (e,d)=>{ const s=simRef(); if(s){s.alphaTarget(0);} d.fx=null; d.fy=null; })
+    );
+  gs.append('rect').attr('width', d=>d.lw).attr('height', D3_LABEL_H).attr('rx', 3)
+    .attr('fill', 'white').attr('stroke', d=>d.color).attr('stroke-width', 0.8).attr('opacity', 0.95);
+  gs.append('text').attr('x', d=>d.lw/2).attr('y', D3_LABEL_H-4)
+    .attr('text-anchor', 'middle').attr('fill', d=>d.color)
+    .attr('font-size', 9).attr('font-weight', 600)
+    .text(d=>d.label);
+  return { conns, gs };
+}
+
+// Tick handler: clamp label positions to the plot area, update transforms
+// and connector-line endpoints. PAD = {top,right,bottom,left}; pw/ph are
+// the canvas's plot-area pixel bounds (here: ML/MR/MT/MB margins).
+function d3LabelTick(nodes, gs, conns, W, H, left, right, top, bottom) {
+  nodes.forEach(d=>{
+    d.x = Math.max(left-4, Math.min(W-right-d.lw+4, d.x));
+    d.y = Math.max(top, Math.min(H-bottom-D3_LABEL_H, d.y));
+  });
+  gs.attr('transform', d=>`translate(${d.x},${d.y})`);
+  conns.attr('x1', d=>d.fx_anchor).attr('y1', d=>d.fy_anchor)
+       .attr('x2', d=>d.x+d.lw/2).attr('y2', d=>d.y+D3_LABEL_H/2);
+}
+
+// Move a node's anchor to a new (ax,ay), translating x/y by the delta so
+// the label glides smoothly with its curve instead of snapping/drifting —
+// the established S6 pattern for slider/drag-driven anchor updates.
+function d3MoveAnchor(node, ax, ay) {
+  const dx = ax - node.fx_anchor, dy = ay - node.fy_anchor;
+  node.x += dx; node.y += dy;
+  node.vx = 0; node.vy = 0;
+  node.fx_anchor = ax; node.fy_anchor = ay;
+}
+
+// Wire a slider/control element so dragging it keeps the label sim buttery
+// smooth (alphaTarget pattern) without restarting on every input tick.
+function d3WireSliderSmoothness(el, simRef) {
+  if (!el) return;
+  const start = ()=>{ const s=simRef(); if(s) s.alphaTarget(0.3).restart(); };
+  const end   = ()=>{ const s=simRef(); if(s) s.alphaTarget(0); };
+  el.addEventListener('mousedown', start);
+  el.addEventListener('touchstart', start, {passive:true});
+  window.addEventListener('mouseup', end);
+  window.addEventListener('touchend', end);
 }
 
 function setupCvs(id) {
@@ -619,6 +669,7 @@ function dot(ctx, x, y, r, fill, stroke) {
 const v1 = { a:100, b:2, P1:25, P2:40, drag:null, mode:'arc' };
 const xR1=[0,60], yR1=[0,52];
 let v1W, v1H, v1ctx;
+let v1Svg, v1Sim, v1Nodes, v1Lbl;
 
 function v1SetMode(m) {
   v1.mode = m;
@@ -634,15 +685,13 @@ function v1Draw() {
   ctx.clearRect(0, 0, W, H);
   drawAxes(ctx, W, H, xR1, yR1);
 
-  // demand curve -- collect line points for label repulsion
-  const linePts1 = [];
+  // demand curve
   ctx.beginPath();
   ctx.strokeStyle = '#1a56db';
   ctx.lineWidth = 2;
   const P0 = v1.a / v1.b, Q0 = 0;
   const [ax0, ay0] = toC(Q0, P0, W, H, xR1, yR1);
   const [ax1, ay1] = toC(v1.a, 0, W, H, xR1, yR1);
-  for (let t=0; t<=1; t+=0.08) linePts1.push([ax0+(ax1-ax0)*t, ay0+(ay1-ay0)*t]);
   ctx.moveTo(ax0, ay0); ctx.lineTo(ax1, ay1); ctx.stroke();
 
   const Q1 = v1Q(v1.P1), Q2 = v1Q(v1.P2);
@@ -650,7 +699,7 @@ function v1Draw() {
   const [cx2, cy2] = toC(Q2, v1.P2, W, H, xR1, yR1);
 
   let e1, e2, eArc, label, color;
-  const lbls1 = [];
+  let labelColorA = '#333', labelColorB = '#333';
 
   if (v1.mode === 'arc') {
     const Qmid = (Q1+Q2)/2, Pmid = (v1.P1+v1.P2)/2;
@@ -675,13 +724,11 @@ function v1Draw() {
       </div>`;
     dot(ctx, cx1, cy1, 9, color, '#fff');
     dot(ctx, cx2, cy2, 9, color, '#fff');
-    // dashed segment also repels labels
-    for (let t=0; t<=1; t+=0.1) linePts1.push([cx1+(cx2-cx1)*t, cy1+(cy2-cy1)*t]);
+    // dashed segment between A and B (no longer needed for label repulsion --
+    // the SVG overlay handles label collisions via forceSimulation)
     ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
     ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke(); ctx.setLineDash([]);
-    ctx.font='bold 11px DM Sans,sans-serif';
-    lbls1.push({ax:cx1,ay:cy1,x:cx1+16,y:cy1-10,w:ctx.measureText('A').width+8,h:14,text:'A',color:'#333',fontSize:11,bold:true});
-    lbls1.push({ax:cx2,ay:cy2,x:cx2+16,y:cy2-10,w:ctx.measureText('B').width+8,h:14,text:'B',color:'#333',fontSize:11,bold:true});
+    labelColorA = '#333'; labelColorB = '#333';
   } else {
     e1 = v1.b === 0 || Q1 === 0 ? 0 : -v1.b * v1.P1 / Q1;
     e2 = v1.b === 0 || Q2 === 0 ? 0 : -v1.b * v1.P2 / Q2;
@@ -697,19 +744,43 @@ function v1Draw() {
       </p>`;
     dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
     dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
-    ctx.font='bold 11px DM Sans,sans-serif';
-    lbls1.push({ax:cx1,ay:cy1,x:cx1+16,y:cy1-10,w:ctx.measureText('A').width+8,h:14,text:'A',color:eColor(e1),fontSize:11,bold:true});
-    lbls1.push({ax:cx2,ay:cy2,x:cx2+16,y:cy2-10,w:ctx.measureText('B').width+8,h:14,text:'B',color:eColor(e2),fontSize:11,bold:true});
+    labelColorA = eColor(e1); labelColorB = eColor(e2);
   }
 
-  resolveLabels(lbls1, linePts1);
-  lbls1.forEach(l => drawForceLabel(ctx, l));
+  // Update D3 SVG overlay label anchors (smooth glide, no restart on redraw)
+  if (v1Nodes) {
+    const nA = v1Nodes.find(n=>n.id==='A'), nB = v1Nodes.find(n=>n.id==='B');
+    d3MoveAnchor(nA, cx1, cy1);
+    d3MoveAnchor(nB, cx2, cy2);
+    nA.color = labelColorA; nB.color = labelColorB;
+    if (v1Lbl) {
+      v1Lbl.gs.select('rect').attr('stroke', d=>d.color);
+      v1Lbl.gs.select('text').attr('fill', d=>d.color);
+      v1Lbl.conns.attr('stroke', d=>d.color);
+    }
+  }
 }
 
 function v1Init() {
   const s = setupCvs('cvs1');
   v1ctx = s.ctx; v1W = s.W; v1H = s.H;
   const cvs = document.getElementById('cvs1');
+
+  // ── D3 SVG force-label overlay (draggable A/B labels, S6/S8 styling) ──
+  if (v1Sim) v1Sim.stop();
+  v1Svg = d3Overlay('cvs1-ov', v1W, v1H);
+  if (v1Svg) {
+    const Q1=v1Q(v1.P1), Q2=v1Q(v1.P2);
+    const [acx1,acy1]=toC(Q1,v1.P1,v1W,v1H,xR1,yR1);
+    const [acx2,acy2]=toC(Q2,v1.P2,v1W,v1H,xR1,yR1);
+    v1Nodes = [
+      d3LblNode('A', '#333', 'A', 22, acx1, acy1),
+      d3LblNode('B', '#333', 'B', 22, acx2, acy2),
+    ];
+    v1Sim = d3LabelSim(v1Nodes);
+    v1Lbl = d3LabelLayer(v1Svg, v1Nodes, ()=>v1Sim);
+    v1Sim.on('tick', ()=>d3LabelTick(v1Nodes, v1Lbl.gs, v1Lbl.conns, v1W, v1H, ML, MR, MT, MB));
+  }
 
   // Snap mouse (px, py) to nearest point on the demand line
   function snapToLine(px, py) {
@@ -782,6 +853,7 @@ function v1Init() {
 const v2 = { a:100, b:2, P:25 };
 let xR2=[0,110], yR2=[0,55]; // updated dynamically so demand line stays on screen
 let v2W, v2H, v2ctx, v2drag=false;
+let v2Svg, v2Sim, v2Nodes, v2Lbl;
 
 function v2Bfloat() {
   const v = parseFloat(document.getElementById('v2-b-in') ? document.getElementById('v2-b-in').value : 2);
@@ -837,11 +909,6 @@ function v2Draw() {
   ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
   ctx.stroke();
 
-  // collect demand line points for repulsion
-  const linePts2 = [];
-  { const [sx2,sy2]=toC(0,Pmax,W,H,xR2,yR2); const [ex2,ey2]=toC(a,0,W,H,xR2,yR2);
-    for (let t=0; t<=1; t+=0.06) linePts2.push([sx2+(ex2-sx2)*t, sy2+(ey2-sy2)*t]); }
-
   drawAxes(ctx, W, H, xR2, yR2);
 
   // draggable dot
@@ -851,15 +918,12 @@ function v2Draw() {
   const [dpx,dpy]=toC(Qc,Pc,W,H,xR2,yR2);
   dot(ctx, dpx, dpy, 8, '#f39c12', '#fff');
 
-  // unit-elastic midpoint marker + force label
+  // unit-elastic midpoint marker + D3 SVG force label
   const Pu = Pmax/2;
   const Qu = a/2;
   const [ux,uy]=toC(Qu,Pu,W,H,xR2,yR2);
   ctx.beginPath(); ctx.arc(ux,uy,4,0,2*Math.PI); ctx.fillStyle='#e6a817aa'; ctx.fill();
-  ctx.font='10px DM Sans,sans-serif';
-  const lbls2 = [{ax:ux,ay:uy,x:ux+28,y:uy-10,w:ctx.measureText('unit elastic midpoint').width+8,h:13,text:'unit elastic midpoint',color:'#888',fontSize:10,bold:false}];
-  resolveLabels(lbls2, linePts2);
-  lbls2.forEach(l => drawForceLabel(ctx, l));
+  if (v2Nodes) d3MoveAnchor(v2Nodes[0], ux, uy);
 
   const ae=Math.abs(ed);
   document.getElementById('v2-readout').innerHTML=
@@ -880,6 +944,22 @@ function v2Init() {
   const s = setupCvs('cvs2');
   v2ctx=s.ctx; v2W=s.W; v2H=s.H;
   const cvs=document.getElementById('cvs2');
+
+  // ── D3 SVG force-label overlay ──
+  if (v2Sim) v2Sim.stop();
+  v2Svg = d3Overlay('cvs2-ov', v2W, v2H);
+  if (v2Svg) {
+    const a=v2.a, b=v2.b>0?v2.b:v2Bfloat();
+    const Pmax=a/b;
+    const xHi = Math.max(110, Math.ceil(a*1.12/10)*10);
+    const yHi = Math.max(55, Math.ceil(Pmax*1.12/5)*5);
+    const [ux,uy]=toC(a/2, Pmax/2, v2W, v2H, [0,xHi], [0,yHi]);
+    v2Nodes = [ d3LblNode('unitElastic', '#888', 'unit elastic midpoint', 118, ux, uy) ];
+    v2Sim = d3LabelSim(v2Nodes);
+    v2Lbl = d3LabelLayer(v2Svg, v2Nodes, ()=>v2Sim);
+    v2Sim.on('tick', ()=>d3LabelTick(v2Nodes, v2Lbl.gs, v2Lbl.conns, v2W, v2H, ML, MR, MT, MB));
+    d3WireSliderSmoothness(cvs, ()=>v2Sim);
+  }
 
   function dragP(py) {
     const b=v2Bfloat();
@@ -912,6 +992,7 @@ function v2Init() {
 const v3 = { a:100 };
 const xR3=[0,110], yR3=[0,55];
 let v3W, v3H, v3ctx;
+let v3Svg, v3Sim, v3Nodes, v3Lbl;
 
 function v3GetB() {
   const el = document.getElementById('v3-slope');
@@ -933,8 +1014,6 @@ function v3Draw() {
 
   const [lx0,ly0]=toC(0,v3.a/b,W,H,xR3l,yR3l);
   const [lx1,ly1]=toC(v3.a,0,W,H,xR3l,yR3l);
-  const linePts3 = [];
-  for (let t=0; t<=1; t+=0.08) linePts3.push([lx0+(lx1-lx0)*t, ly0+(ly1-ly0)*t]);
   ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
@@ -979,11 +1058,8 @@ function v3Draw() {
   dot(ctx, bx, by, 7, '#555', '#fff');
   dot(ctx, nx, ny, 8, '#1a56db', '#fff');
 
-  // Force label for demand curve
-  ctx.font='bold 9px DM Sans,sans-serif';
-  const lbls3=[{ax:lx0,ay:ly0,x:lx0-18,y:ly0+8,w:ctx.measureText('D').width+8,h:12,text:'D',color:'#1a56db',fontSize:9,bold:true}];
-  resolveLabels(lbls3, linePts3);
-  lbls3.forEach(l=>drawForceLabel(ctx,l));
+  // D3 SVG force label for demand curve
+  if (v3Nodes) d3MoveAnchor(v3Nodes[0], lx0, ly0);
 
   const TRbase = Pb*Qb, TRnew = P*Q, deltaT = TRnew - TRbase;
   const ed = b===0||Qb===0 ? 0 : -b*Pb/Qb;
@@ -1014,6 +1090,22 @@ function v3Update() {
 function v3Init() {
   const s=setupCvs('cvs3');
   v3ctx=s.ctx; v3W=s.W; v3H=s.H;
+
+  // ── D3 SVG force-label overlay ──
+  if (v3Sim) v3Sim.stop();
+  v3Svg = d3Overlay('cvs3-ov', v3W, v3H);
+  if (v3Svg) {
+    const b=v3GetB();
+    const xMax = Math.max(v3.a, 115);
+    const xR3l=[0,xMax], yR3l=[0,Math.max(55, v3.a/b*1.1)];
+    const [lx0,ly0]=toC(0, v3.a/b, v3W, v3H, xR3l, yR3l);
+    v3Nodes = [ d3LblNode('D', '#1a56db', 'D', 18, lx0, ly0) ];
+    v3Sim = d3LabelSim(v3Nodes);
+    v3Lbl = d3LabelLayer(v3Svg, v3Nodes, ()=>v3Sim);
+    v3Sim.on('tick', ()=>d3LabelTick(v3Nodes, v3Lbl.gs, v3Lbl.conns, v3W, v3H, ML, MR, MT, MB));
+    ['v3-pb','v3-p','v3-slope'].forEach(id=>d3WireSliderSmoothness(document.getElementById(id), ()=>v3Sim));
+  }
+
   v3Draw();
 }
 
@@ -1030,6 +1122,16 @@ const v4Industries = {
   hotel:    { name:'Hotel rooms',     e:-1.8, color:'#1565c0' }
 };
 let v4W, v4H, v4ctx;
+let v4Svg, v4Sim, v4Nodes, v4Lbl;
+
+// Resize a label node's box to fit new text (variable-width value labels)
+function d3ResizeLabel(lblLayer, node, newLw) {
+  if (Math.abs(node.lw - newLw) < 0.5) return;
+  node.lw = newLw;
+  const g = lblLayer.gs.filter(d=>d===node);
+  g.select('rect').attr('width', newLw);
+  g.select('text').attr('x', newLw/2);
+}
 
 function v4Draw() {
   const ctx=v4ctx, W=v4W, H=v4H;
@@ -1089,20 +1191,24 @@ function v4Draw() {
   ctx.fillStyle='#555'; ctx.font='11px DM Sans,sans-serif';
   ctx.fillText(ind.name, ML, MT+28);
 
-  // bar value labels as force labels (repelled from zero line)
-  const zeroLinePts = [];
-  for (let x=ML; x<=W-MR; x+=6) zeroLinePts.push([x, midY]);
+  // bar value labels -- D3 SVG force labels (draggable, anchored to bar tops)
   ctx.font='bold 11px DM Sans,sans-serif';
   const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
   const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
   const pValLblY = pChange>=0 ? midY-pH-8 : midY+pH+14;
   const tValLblY = trChange>=0 ? midY-tH-8 : midY+tH+14;
-  const lbls4=[
-    {ax:cx-barW*1.1,ay:pValLblY,x:cx-barW*1.1,y:pValLblY,w:ctx.measureText(pTxt).width+8,h:14,text:pTxt,color:pChange>=0?'#e74c3c':'#27ae60',fontSize:11,bold:true},
-    {ax:cx+barW*1.1,ay:tValLblY,x:cx+barW*1.1,y:tValLblY,w:ctx.measureText(tTxt).width+8,h:14,text:tTxt,color:trChange>=0?'#27ae60':'#e74c3c',fontSize:11,bold:true},
-  ];
-  resolveLabels(lbls4, zeroLinePts);
-  lbls4.forEach(l=>drawForceLabel(ctx,l));
+  if (v4Nodes) {
+    const nP=v4Nodes[0], nT=v4Nodes[1];
+    nP.label = pTxt; nP.color = pChange>=0?'#e74c3c':'#27ae60';
+    nT.label = tTxt; nT.color = trChange>=0?'#27ae60':'#e74c3c';
+    d3ResizeLabel(v4Lbl, nP, ctx.measureText(pTxt).width+10);
+    d3ResizeLabel(v4Lbl, nT, ctx.measureText(tTxt).width+10);
+    d3MoveAnchor(nP, cx-barW*1.1, pValLblY);
+    d3MoveAnchor(nT, cx+barW*1.1, tValLblY);
+    v4Lbl.gs.select('rect').attr('stroke', d=>d.color);
+    v4Lbl.gs.select('text').attr('fill', d=>d.color).text(d=>d.label);
+    v4Lbl.conns.attr('stroke', d=>d.color);
+  }
 
   document.getElementById('v4-readout').innerHTML=
     `<div class="readout-row">
@@ -1126,6 +1232,38 @@ function v4Update() {
 function v4Init() {
   const s=setupCvs('cvs4');
   v4ctx=s.ctx; v4W=s.W; v4H=s.H;
+
+  // ── D3 SVG force-label overlay (bar value labels %ΔP / %ΔTR) ──
+  if (v4Sim) v4Sim.stop();
+  v4Svg = d3Overlay('cvs4-ov', v4W, v4H);
+  if (v4Svg) {
+    const W=v4W, H=v4H;
+    const key=document.getElementById('v4-ind').value;
+    const ind=v4Industries[key];
+    const dp=parseFloat(document.getElementById('v4-dp').value)/100;
+    const dTR = dp * (1 + ind.e);
+    const pChange=dp*100, trChange=dTR*100;
+    const barW=80, cx=W/2;
+    const chartTop=MT+4, chartBot=H-MB-22;
+    const midY=Math.round((chartTop+chartBot)/2);
+    const halfH=midY-chartTop-2;
+    const pH=Math.min(Math.abs(pChange)/100*halfH, halfH);
+    const tH=Math.min(Math.abs(trChange)/100*halfH, halfH);
+    const pValLblY = pChange>=0 ? midY-pH-8 : midY+pH+14;
+    const tValLblY = trChange>=0 ? midY-tH-8 : midY+tH+14;
+    v4ctx.font='bold 11px DM Sans,sans-serif';
+    const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
+    const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
+    v4Nodes = [
+      d3LblNode('dP', pChange>=0?'#e74c3c':'#27ae60', pTxt, v4ctx.measureText(pTxt).width+10, cx-barW*1.1, pValLblY),
+      d3LblNode('dTR', trChange>=0?'#27ae60':'#e74c3c', tTxt, v4ctx.measureText(tTxt).width+10, cx+barW*1.1, tValLblY),
+    ];
+    v4Sim = d3LabelSim(v4Nodes);
+    v4Lbl = d3LabelLayer(v4Svg, v4Nodes, ()=>v4Sim);
+    v4Sim.on('tick', ()=>d3LabelTick(v4Nodes, v4Lbl.gs, v4Lbl.conns, v4W, v4H, ML, MR, MT, MB));
+    d3WireSliderSmoothness(document.getElementById('v4-dp'), ()=>v4Sim);
+  }
+
   v4Draw();
 }
 
@@ -1271,6 +1409,7 @@ function v6Init() {
 const v7 = { a:40, b:2, Pnorm:5 };
 const xR7=[0,45], yR7=[0,22];
 let v7W, v7H, v7ctx;
+let v7Svg, v7Sim, v7Nodes, v7Lbl;
 
 function v7Q(P) { return Math.max(0, v7.a - v7.b*P); }
 
@@ -1288,12 +1427,10 @@ function v7Draw() {
   ctx.clearRect(0,0,W,H);
   drawAxes(ctx,W,H,xR7,yR7,'Rides','P ($/ride)');
 
-  // demand line -- collect for label repulsion
-  const linePts7=[];
+  // demand line
   ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   const [lx0,ly0]=toC(0,Pchoke,W,H,xR7,yR7);
   const [lx1,ly1]=toC(v7.a,0,W,H,xR7,yR7);
-  for(let t=0;t<=1;t+=0.08) linePts7.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
   const [ox,oy]=toC(0,0,W,H,xR7,yR7);
@@ -1321,17 +1458,11 @@ function v7Draw() {
   ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
   ctx.beginPath(); ctx.moveTo(ML,pyn); ctx.lineTo(W-MR,pyn); ctx.stroke();
   ctx.setLineDash([]);
-  // also treat the dashed normal line as a repulsor
-  for(let x=ML;x<=W-MR;x+=8) linePts7.push([x,pyn]);
 
   dot(ctx,qx,py,8,'#f39c12','#fff');
 
-  // force label for "normal $X"
-  ctx.font='10px DM Sans,sans-serif';
-  const normTxt='normal $'+Pnorm;
-  const lbls7=[{ax:ML+4,ay:pyn-6,x:ML+4+ctx.measureText(normTxt).width/2+6,y:pyn-10,w:ctx.measureText(normTxt).width+8,h:13,text:normTxt,color:'#aaa',fontSize:10,bold:false}];
-  resolveLabels(lbls7,linePts7);
-  lbls7.forEach(l=>drawForceLabel(ctx,l));
+  // D3 SVG force label for "normal $X"
+  if (v7Nodes) d3MoveAnchor(v7Nodes[0], ML+4, pyn-6);
 
   const mult=P/Pnorm;
   document.getElementById('v7-readout').innerHTML=
@@ -1356,6 +1487,21 @@ function v7Update() {
 function v7Init() {
   const s=setupCvs('cvs7');
   v7ctx=s.ctx; v7W=s.W; v7H=s.H;
+
+  // ── D3 SVG force-label overlay ("normal $X" reference label) ──
+  if (v7Sim) v7Sim.stop();
+  v7Svg = d3Overlay('cvs7-ov', v7W, v7H);
+  if (v7Svg) {
+    const [,pyn]=toC(0, v7.Pnorm, v7W, v7H, xR7, yR7);
+    const normTxt='normal $'+v7.Pnorm;
+    v7ctx.font='10px DM Sans,sans-serif';
+    v7Nodes = [ d3LblNode('normal', '#aaa', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn-6) ];
+    v7Sim = d3LabelSim(v7Nodes);
+    v7Lbl = d3LabelLayer(v7Svg, v7Nodes, ()=>v7Sim);
+    v7Sim.on('tick', ()=>d3LabelTick(v7Nodes, v7Lbl.gs, v7Lbl.conns, v7W, v7H, ML, MR, MT, MB));
+    d3WireSliderSmoothness(document.getElementById('v7-p'), ()=>v7Sim);
+  }
+
   v7Draw();
 }
 
@@ -1368,6 +1514,20 @@ function v7Init() {
 const V8A_C1 = {a:30, b:1, color:'#e74c3c'};
 const V8A_C2 = {a:24, b:2, color:'#2980b9'};
 const xR8a=[0,36], yR8a=[0,36];
+
+// Per-canvas D3 SVG overlay state for the 4.8a three-panel animation
+// (cvs8a, cvs8b each get one "Q = a − bP" formula label; cvs8c gets the
+// kink label + two market-formula segment labels).
+const v8aOv = {}; // canvasId -> {svg, sim, nodes, lbl, W, H}
+
+function v8aGetOverlay(canvasId, W, H) {
+  let o = v8aOv[canvasId];
+  if (o && o.W===W && o.H===H) return o;
+  if (o && o.sim) o.sim.stop(); // stop stale sim before rebuilding the SVG
+  const svg = d3Overlay(canvasId+'-ov', W, H);
+  o = v8aOv[canvasId] = { svg, sim:null, nodes:null, lbl:null, W, H };
+  return o;
+}
 
 function v8aQmarket(P) {
   const q1 = Math.max(0, V8A_C1.a - V8A_C1.b*P);
@@ -1412,22 +1572,24 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
     ctx.fillText(`Choke $${choke.toFixed(0)}`,ML2-5,cy+3);
   }
 
-  // Demand formula label -- force label repelled from curve
+  // Demand formula label -- D3 SVG draggable force label
   const midP=clampedChoke*0.5;
   const midQ=a-b*midP;
   const [mlx,mly]=toXY(midQ,midP);
   const formula=b===1?`Q = ${a} − P`:`Q = ${a} − ${b}P`;
-  // Collect line points from this panel's demand line
-  const linePtsP=[];
-  for(let t=0;t<=1;t+=0.1){
-    const px2=x0+t*(x1-x0), py2=y0+t*(y1-y0);
-    linePtsP.push([px2,py2]);
-  }
   ctx.font='bold 8px DM Sans,sans-serif';
   const fW=ctx.measureText(formula).width;
-  const flbls=[{ax:mlx,ay:mly,x:mlx+fW/2+10,y:mly-8,w:fW+8,h:11,text:formula,color:color,fontSize:8,bold:true}];
-  resolveLabels(flbls,linePtsP,80);
-  flbls.forEach(l=>drawForceLabel(ctx,l));
+  {
+    const ov = v8aGetOverlay(canvasId, W, H);
+    if (ov.svg && !ov.nodes) {
+      ov.nodes = [ d3LblNode('formula', color, formula, fW+8, mlx, mly) ];
+      ov.sim = d3LabelSim(ov.nodes);
+      ov.lbl = d3LabelLayer(ov.svg, ov.nodes, ()=>ov.sim);
+      ov.sim.on('tick', ()=>d3LabelTick(ov.nodes, ov.lbl.gs, ov.lbl.conns, W, H, ML2, MR2, MT2, MB2));
+      d3WireSliderSmoothness(document.getElementById('v8a-p'), ()=>ov.sim);
+    }
+    if (ov.nodes) d3MoveAnchor(ov.nodes[0], mlx, mly);
+  }
 
   // Current price dashed lines
   const Q=Math.max(0,a-b*P);
@@ -1513,23 +1675,30 @@ function v8aMarketDraw(P) {
   // Kink dot
   dot(ctx,kx,ky,5,'#888','#fff');
 
-  // Collect market demand line points for repulsion
-  const linePts8m=[];
-  for(let p=yMmax;p>=0;p-=2){
-    const q=v8aQmarket(p); linePts8m.push([...toXY(q,p)]);
-  }
-
-  // Force labels: formula segments + kink label
+  // D3 SVG draggable force labels: kink label + formula segments
   ctx.font='bold 8px DM Sans,sans-serif';
   const [ulx,uly]=toXY(v8aQmarket(23),23);
   const [llx,lly]=toXY(v8aQmarket(6),6);
-  const mktFmtLbls=[
-    {ax:kx,ay:ky,x:kx+12,y:ky-12,w:ctx.measureText('kink P=$12').width+6,h:11,text:'kink P=$12',color:'#888',fontSize:8,bold:false},
-    {ax:ulx,ay:uly,x:ulx-12,y:uly-8,w:ctx.measureText('Qm = 30 − P').width+6,h:11,text:'Qm = 30 − P',color:'#1a56db',fontSize:8,bold:true},
-    {ax:llx,ay:lly,x:llx-12,y:lly-8,w:ctx.measureText('Qm = 54 − 3P').width+6,h:11,text:'Qm = 54 − 3P',color:'#1a56db',fontSize:8,bold:true},
-  ];
-  resolveLabels(mktFmtLbls,linePts8m,60,4);
-  mktFmtLbls.forEach(l=>drawForceLabel(ctx,l));
+  const kinkTxt='kink P=$12', upTxt='Qm = 30 − P', loTxt='Qm = 54 − 3P';
+  {
+    const ov = v8aGetOverlay('cvs8c', W, H);
+    if (ov.svg && !ov.nodes) {
+      ov.nodes = [
+        d3LblNode('kink', '#888', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky),
+        d3LblNode('upper', '#1a56db', upTxt, ctx.measureText(upTxt).width+8, ulx, uly),
+        d3LblNode('lower', '#1a56db', loTxt, ctx.measureText(loTxt).width+8, llx, lly),
+      ];
+      ov.sim = d3LabelSim(ov.nodes);
+      ov.lbl = d3LabelLayer(ov.svg, ov.nodes, ()=>ov.sim);
+      ov.sim.on('tick', ()=>d3LabelTick(ov.nodes, ov.lbl.gs, ov.lbl.conns, W, H, ML2, MR2, MT2, MB2));
+      d3WireSliderSmoothness(document.getElementById('v8a-p'), ()=>ov.sim);
+    }
+    if (ov.nodes) {
+      d3MoveAnchor(ov.nodes[0], kx, ky);
+      d3MoveAnchor(ov.nodes[1], ulx, uly);
+      d3MoveAnchor(ov.nodes[2], llx, lly);
+    }
+  }
 
   // Current price dashed lines
   const Qm=v8aQmarket(P);
@@ -1601,6 +1770,7 @@ function v8aInit() {
 // ══════════════════════════════════════════════════════════════════════
 const xR8=[0,90], yR8=[0,42];
 let v8W, v8H, v8ctx;
+let v8Svg, v8Sim, v8Nodes, v8Lbl, v8NodeSig='';
 
 function v8GetConsumer(i) {
   const aIds=['v8-c1-a-in','v8-c2-a-in'];
@@ -1626,20 +1796,16 @@ function v8Draw() {
   const xRl=[0,Qmax*1.1], yRl=[0,Pmax*1.1];
   drawAxes(ctx,W,H,xRl,yRl,'Q','P($)');
 
-  const linePts8=[];
-
   // Consumer 1 line
   ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.8; ctx.globalAlpha=0.7;
   const [c1x0,c1y0]=toC(0,Math.min(c1.a/c1.b,yRl[1]),W,H,xRl,yRl);
   const [c1x1,c1y1]=toC(Math.min(c1.a,xRl[1]),0,W,H,xRl,yRl);
-  for(let t=0;t<=1;t+=0.1) linePts8.push([c1x0+(c1x1-c1x0)*t,c1y0+(c1y1-c1y0)*t]);
   ctx.moveTo(c1x0,c1y0); ctx.lineTo(c1x1,c1y1); ctx.stroke();
 
   // Consumer 2 line
   ctx.beginPath(); ctx.strokeStyle='#2980b9'; ctx.lineWidth=1.8;
   const [c2x0,c2y0]=toC(0,Math.min(c2.a/c2.b,yRl[1]),W,H,xRl,yRl);
   const [c2x1,c2y1]=toC(Math.min(c2.a,xRl[1]),0,W,H,xRl,yRl);
-  for(let t=0;t<=1;t+=0.1) linePts8.push([c2x0+(c2x1-c2x0)*t,c2y0+(c2y1-c2y0)*t]);
   ctx.moveTo(c2x0,c2y0); ctx.lineTo(c2x1,c2y1); ctx.stroke(); ctx.globalAlpha=1;
 
   // Market demand
@@ -1647,7 +1813,7 @@ function v8Draw() {
   for(let step=0;step<=200;step++){
     const P=Pmax*(1-step/200);
     const Q=v8QmNew(P);
-    if(Q>=0) { const [cx,cy]=toC(Q,P,W,H,xRl,yRl); pts.push([Q,P]); if(step%5===0) linePts8.push([cx,cy]); }
+    if(Q>=0) pts.push([Q,P]);
   }
   ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
   pts.forEach(([Q,P],idx)=>{
@@ -1656,9 +1822,9 @@ function v8Draw() {
   });
   ctx.stroke();
 
-  // Kink dots + kink labels as force labels
-  const kinkLbls=[];
+  // Kink dots
   ctx.font='9px DM Sans,sans-serif';
+  const kinkInfo=[];
   [c1,c2].forEach((c,i)=>{
     const Pk=c.a/c.b;
     if(Pk<=yRl[1]){
@@ -1666,24 +1832,53 @@ function v8Draw() {
       const [kx,ky]=toC(Qk,Pk,W,H,xRl,yRl);
       const col=i===0?'#e74c3c':'#2980b9';
       dot(ctx,kx,ky,5,col,'#fff');
-      const kt=`P=$${Pk.toFixed(0)}`;
-      kinkLbls.push({ax:kx,ay:ky,x:kx+ctx.measureText(kt).width/2+8,y:ky-10,w:ctx.measureText(kt).width+8,h:12,text:kt,color:col,fontSize:9,bold:false});
+      kinkInfo.push({id:'kink'+i, color:col, label:`P=$${Pk.toFixed(0)}`, ax:kx, ay:ky});
     }
   });
 
-  // Force curve labels for D₁, D₂, Market D (also include kink labels)
-  const curveLbls8 = [...kinkLbls];
+  // D₁, D₂, Market D anchors
   const c1midP = c1.a/(2*c1.b);
   const [c1ax,c1ay] = toC(c1.a/2, c1midP, W, H, xRl, yRl);
-  curveLbls8.push({ax:c1ax,ay:c1ay,x:c1ax+22,y:c1ay-10,w:18,h:13,text:'D₁',color:'#e74c3c',fontSize:10,bold:true});
   const c2midP = c2.a/(2*c2.b);
   const [c2ax,c2ay] = toC(c2.a/2, c2midP, W, H, xRl, yRl);
-  curveLbls8.push({ax:c2ax,ay:c2ay,x:c2ax+22,y:c2ay-10,w:18,h:13,text:'D₂',color:'#2980b9',fontSize:10,bold:true});
   const midP=Pmax*0.3;
   const [mx,my]=toC(v8QmNew(midP),midP,W,H,xRl,yRl);
-  curveLbls8.push({ax:mx,ay:my,x:mx+28,y:my-10,w:54,h:13,text:'Market D',color:'#1a56db',fontSize:10,bold:true});
-  resolveLabels(curveLbls8,linePts8);
-  curveLbls8.forEach(lbl=>drawForceLabel(ctx,lbl));
+
+  // Full label spec for this frame (kink labels appear/disappear as the
+  // typed equations cross the visible price range)
+  const labelSpec = [
+    ...kinkInfo,
+    {id:'D1', color:'#e74c3c', label:'D₁', lw:24, ax:c1ax, ay:c1ay},
+    {id:'D2', color:'#2980b9', label:'D₂', lw:24, ax:c2ax, ay:c2ay},
+    {id:'mktD', color:'#1a56db', label:'Market D', lw:60, ax:mx, ay:my},
+  ];
+  ctx.font='bold 10px DM Sans,sans-serif';
+  labelSpec.forEach(s=>{ if(s.lw===undefined) s.lw = ctx.measureText(s.label).width+10; });
+
+  const sig = labelSpec.map(s=>s.id).join(',');
+  if (v8Svg && (sig !== v8NodeSig || !v8Nodes)) {
+    // Node-set changed (kink label appeared/disappeared) -- rebuild layer,
+    // carrying over x/y/fx/fy from matching ids so dragged labels don't jump
+    const old = {}; (v8Nodes||[]).forEach(n=>old[n.id]=n);
+    if (v8Sim) v8Sim.stop();
+    v8Svg.selectAll('*').remove();
+    v8Nodes = labelSpec.map(s=>{
+      const prev = old[s.id];
+      const n = d3LblNode(s.id, s.color, s.label, s.lw, s.ax, s.ay);
+      if (prev) { n.x=prev.x; n.y=prev.y; n.fx=prev.fx; n.fy=prev.fy; n.vx=prev.vx; n.vy=prev.vy; }
+      return n;
+    });
+    v8Sim = d3LabelSim(v8Nodes);
+    v8Lbl = d3LabelLayer(v8Svg, v8Nodes, ()=>v8Sim);
+    v8Sim.on('tick', ()=>d3LabelTick(v8Nodes, v8Lbl.gs, v8Lbl.conns, v8W, v8H, ML, MR, MT, MB));
+    v8NodeSig = sig;
+    v8Sim.alpha(0.6).restart();
+  } else if (v8Nodes) {
+    labelSpec.forEach(s=>{
+      const n = v8Nodes.find(x=>x.id===s.id);
+      if (n) d3MoveAnchor(n, s.ax, s.ay);
+    });
+  }
 }
 
 function v8Update() {
@@ -1719,6 +1914,15 @@ function v8Update() {
 function v8Init() {
   const s=setupCvs('cvs8');
   v8ctx=s.ctx; v8W=s.W; v8H=s.H;
+
+  // ── D3 SVG force-label overlay (rebuilt fresh on resize; node set is
+  // rebuilt inside v8Draw whenever the visible kink-label set changes) ──
+  if (v8Sim) { v8Sim.stop(); v8Sim=null; }
+  v8Nodes=null; v8Lbl=null; v8NodeSig='';
+  v8Svg = d3Overlay('cvs8-ov', v8W, v8H);
+  ['v8-c1-a-in','v8-c1-b-in','v8-c2-a-in','v8-c2-b-in'].forEach(id=>
+    d3WireSliderSmoothness(document.getElementById(id), ()=>v8Sim));
+
   v8Update();
 }
 

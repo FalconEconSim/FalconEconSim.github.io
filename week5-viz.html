@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
@@ -27,6 +28,10 @@
     .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
     .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
     canvas { display:block; width:100%; cursor:default; }
+    .cvs-ovl-host { position:relative; }
+    .cvs-ovl-host > svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; font-family:'DM Sans',system-ui,sans-serif; }
+    .cvs-ovl-host > svg .draggable-label { cursor:grab; pointer-events:auto; }
+    .cvs-ovl-host > svg .draggable-label:active { cursor:grabbing; }
     .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
     .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
     .viz-slider-label { font-family:var(--mono); font-size:0.75rem; color:var(--muted); white-space:nowrap; }
@@ -150,9 +155,9 @@
 
     <div class="cvs-wrap">
       <div class="panel-label">Total Product (TP)</div>
-      <canvas id="cvs51a" height="200"></canvas>
+      <div class="cvs-ovl-host" id="cvs51a-host"><canvas id="cvs51a" height="200"></canvas><svg id="cvs51a-svg"></svg></div>
       <div class="panel-label" style="border-top:1px solid var(--rule);">Marginal Product of Labor (MPL)</div>
-      <canvas id="cvs51b" height="140"></canvas>
+      <div class="cvs-ovl-host" id="cvs51b-host"><canvas id="cvs51b" height="140"></canvas><svg id="cvs51b-svg"></svg></div>
     </div>
     <div class="viz-ctrl-row">
       <div class="viz-slider-group">
@@ -189,15 +194,15 @@
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
       <div class="cvs-wrap">
         <div class="panel-label">Cobb-Douglas</div>
-        <canvas id="cvs52a" style="width:100%;"></canvas>
+        <div class="cvs-ovl-host" id="cvs52a-host"><canvas id="cvs52a" style="width:100%;"></canvas><svg id="cvs52a-svg"></svg></div>
       </div>
       <div class="cvs-wrap">
         <div class="panel-label">Perfect Substitutes (Linear)</div>
-        <canvas id="cvs52b" style="width:100%;"></canvas>
+        <div class="cvs-ovl-host" id="cvs52b-host"><canvas id="cvs52b" style="width:100%;"></canvas><svg id="cvs52b-svg"></svg></div>
       </div>
       <div class="cvs-wrap">
         <div class="panel-label">Perfect Complements (Leontief)</div>
-        <canvas id="cvs52c" style="width:100%;"></canvas>
+        <div class="cvs-ovl-host" id="cvs52c-host"><canvas id="cvs52c" style="width:100%;"></canvas><svg id="cvs52c-svg"></svg></div>
       </div>
     </div>
     <div class="viz-readout" id="v52-readout" style="margin-top:0.75rem;"></div>
@@ -216,7 +221,7 @@
     </p>
     <div class="cvs-wrap">
       <div class="panel-label">Isoquant Q = 4 (K<sup>0.5</sup>L<sup>0.5</sup>) with Tangent (drag left/right)</div>
-      <canvas id="cvs53" height="420" style="width:100%;"></canvas>
+      <div class="cvs-ovl-host" id="cvs53-host"><canvas id="cvs53" height="420" style="width:100%;"></canvas><svg id="cvs53-svg"></svg></div>
     </div>
     <div class="viz-readout" id="v53-readout" style="margin-top:0.75rem;"></div>
   </section>
@@ -246,11 +251,11 @@
     <div class="two-col-panels">
       <div class="cvs-wrap">
         <div class="panel-label">MPL (K fixed = 4)</div>
-        <canvas id="cvs54a" height="220"></canvas>
+        <div class="cvs-ovl-host" id="cvs54a-host"><canvas id="cvs54a" height="220"></canvas><svg id="cvs54a-svg"></svg></div>
       </div>
       <div class="cvs-wrap">
         <div class="panel-label">Scale Both Inputs (L)</div>
-        <canvas id="cvs54b" height="220"></canvas>
+        <div class="cvs-ovl-host" id="cvs54b-host"><canvas id="cvs54b" height="220"></canvas><svg id="cvs54b-svg"></svg></div>
       </div>
     </div>
     <div class="viz-readout" id="v54-readout"></div>
@@ -277,7 +282,7 @@
       </div>
       <span id="v55-verdict" style="font-family:var(--mono);font-size:0.82rem;color:var(--accent);font-weight:600;"></span>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs55" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs55-host"><canvas id="cvs55" height="320"></canvas><svg id="cvs55-svg"></svg></div></div>
     <div class="viz-readout" id="v55-readout"></div>
   </section>
 
@@ -291,7 +296,7 @@
       Two fundamentally different actions can change how a firm produces. Pressing "Substitute Inputs" moves the production bundle along the existing isoquant - technology unchanged.
       Pressing "Improve Technology" shifts the entire isoquant inward - fewer inputs can now produce the same output.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs56" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs56-host"><canvas id="cvs56" height="320"></canvas><svg id="cvs56-svg"></svg></div></div>
     <div class="viz-ctrl-row">
       <button class="viz-btn" onclick="v56SubstituteInputs()">Substitute Inputs</button>
       <button class="viz-btn" onclick="v56ImproveTechnology()">Improve Technology</button>
@@ -320,11 +325,11 @@
     <div class="two-col-panels">
       <div class="cvs-wrap">
         <div class="panel-label">Consumer: Indifference Curve + Budget Line</div>
-        <canvas id="cvs57a" height="240"></canvas>
+        <div class="cvs-ovl-host" id="cvs57a-host"><canvas id="cvs57a" height="240"></canvas><svg id="cvs57a-svg"></svg></div>
       </div>
       <div class="cvs-wrap">
         <div class="panel-label">Firm: Isoquant + Isocost Line</div>
-        <canvas id="cvs57b" height="240"></canvas>
+        <div class="cvs-ovl-host" id="cvs57b-host"><canvas id="cvs57b" height="240"></canvas><svg id="cvs57b-svg"></svg></div>
       </div>
     </div>
     <div class="viz-readout" id="v57-readout"></div>
@@ -376,7 +381,7 @@
         <span class="viz-slider-val" id="v58-lam-val">1.0</span>
       </div>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs58" height="320"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs58-host"><canvas id="cvs58" height="320"></canvas><svg id="cvs58-svg"></svg></div></div>
     <div class="viz-readout" id="v58-readout"></div>
   </section>
 
@@ -390,7 +395,7 @@
       A bakery has a fixed number of machines (K fixed). Hire workers one at a time and watch TP, MPL, and running wage cost update.
       At some point MPL turns negative and the simulator refuses the hire. Optionally buy a new machine to shift the TP curve upward.
     </p>
-    <div class="cvs-wrap"><canvas id="cvs59" height="240"></canvas></div>
+    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs59-host"><canvas id="cvs59" height="240"></canvas><svg id="cvs59-svg"></svg></div></div>
     <div class="viz-ctrl-row">
       <button class="viz-btn" onclick="v59HireWorker()">+ Hire Worker</button>
       <button class="viz-btn" onclick="v59FireWorker()">- Fire Worker</button>
@@ -560,9 +565,156 @@ function dot5(ctx, x, y, r, fill, stroke) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
+// D3 SVG LABEL-OVERLAY SYSTEM (canvas + SVG hybrid — gold-standard S6/S8 pattern)
+// Each canvas figure gets a sibling <svg> sized to the canvas's CSS-pixel W/H
+// (the same coordinate space used by toC()). Descriptive curve/region/point
+// labels are rendered there as real, draggable D3 force-sim DOM elements —
+// exactly like testing.html S6/S8 — instead of being painted onto the canvas.
+// Axis-tick labels stay on canvas (drawn by drawAxesSt) and are untouched.
+// ══════════════════════════════════════════════════════════════════════
+const D5_LABEL_H = 15;
+
+// Returns (creating once) the d3 selection for the overlay <svg id="...-svg">,
+// sized via viewBox to the canvas's current CSS-pixel W×H. Safe to call every
+// draw — only updates the viewBox if W/H changed, and never tears down nodes
+// (so drag state / simulation survive redraws driven by sliders & resize).
+function d5Svg(svgId, W, H) {
+  const sel = d3.select('#'+svgId);
+  if (sel.empty()) return null;
+  const vb = `0 0 ${W} ${H}`;
+  if (sel.attr('data-vb') !== vb) {
+    sel.attr('viewBox', vb).attr('data-vb', vb);
+  }
+  return sel;
+}
+
+// Build a label node in the S6/S8 shape: {id,color,label,lw,ax,ay,fx_anchor,fy_anchor,x,y}
+function d5Node(id, color, label, lw, ax, ay) {
+  return { id, color, label, lw, ax, ay, fx_anchor:ax, fy_anchor:ay,
+           x: ax+(Math.random()-0.5)*50, y: ay+(Math.random()-0.5)*50 };
+}
+
+// Append connector-lines + draggable label groups (white rounded-rect boxes,
+// font-size 9 / weight 600 / 'DM Sans', dashed connectors, NO anchor dot) —
+// returns {gs, conns} so the caller can wire a tick handler.
+function d5AddLabels(svg, nodes, sim) {
+  const conns = svg.append('g').selectAll('line').data(nodes).enter()
+    .append('line')
+    .attr('stroke', d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+  const gs = svg.append('g').selectAll('g').data(nodes).enter()
+    .append('g').attr('class','draggable-label')
+    .call(d3.drag()
+      .on('start',(e,d)=>{ sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag', (e,d)=>{ d.fx=e.x; d.fy=e.y; })
+      .on('end',  (e,d)=>{ sim.alphaTarget(0); d.fx=null; d.fy=null; })
+    );
+  gs.append('rect').attr('width',d=>d.lw).attr('height',D5_LABEL_H).attr('rx',3)
+    .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
+  gs.append('text').attr('x',d=>d.lw/2).attr('y',D5_LABEL_H-4)
+    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+    .text(d=>d.label);
+  return { gs, conns };
+}
+
+// Standard collide + anchor-spring force sim (S6/S8 spec)
+function d5MakeSim(nodes) {
+  return d3.forceSimulation(nodes)
+    .force('collide', d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
+    .force('x', d3.forceX(d=>d.fx_anchor).strength(0.04))
+    .force('y', d3.forceY(d=>d.fy_anchor).strength(0.04));
+}
+
+// Tick handler: clamp into plot bounds [PAD..W-PAD]/[PAD..H-PAD], position
+// label groups + connector lines. PAD here is the canvas ML/MR/MT/MB margin box.
+function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
+  nodes.forEach(d=>{
+    d.x = Math.max(padL-4, Math.min(W-d.lw-4, d.x));
+    d.y = Math.max(padT,   Math.min(H-padB-D5_LABEL_H, d.y));
+  });
+  gs.attr('transform', d=>`translate(${d.x},${d.y})`);
+  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor)
+       .attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+D5_LABEL_H/2);
+}
+
+// Reposition a node's anchor (e.g. after a slider/drag changes curve position)
+// while translating its current x/y by the same delta — avoids drift, the S6 pattern.
+function d5MoveAnchor(node, newAx, newAy) {
+  const dx = newAx - node.fx_anchor, dy = newAy - node.fy_anchor;
+  node.x += dx; node.y += dy;
+  node.vx = 0; node.vy = 0;
+  node.fx_anchor = newAx; node.fy_anchor = newAy;
+}
+
+// Wire mousedown/touchstart -> alphaTarget(0.3).restart() and a shared
+// window mouseup/touchend -> alphaTarget(0) for slider-driven smoothness,
+// exactly like the S6/S8 slider wiring. Call once per slider element.
+function d5WireSliderSmoothness(el, sim) {
+  if (!el || !sim || el._d5Wired) return;
+  el._d5Wired = true;
+  el.addEventListener('mousedown', ()=>sim.alphaTarget(0.3).restart());
+  el.addEventListener('touchstart', ()=>sim.alphaTarget(0.3).restart(), {passive:true});
+}
+let _d5GlobalUpHooked = false;
+const _d5AllSims = [];
+function d5RegisterSim(sim) {
+  _d5AllSims.push(sim);
+  if (!_d5GlobalUpHooked) {
+    _d5GlobalUpHooked = true;
+    window.addEventListener('mouseup', ()=>_d5AllSims.forEach(s=>s.alphaTarget(0)));
+    window.addEventListener('touchend', ()=>_d5AllSims.forEach(s=>s.alphaTarget(0)));
+  }
+  return sim;
+}
+
+// Reset a label-overlay simulation: scatter nodes back near their anchors and reheat.
+function d5ResetSim(nodes, sim) {
+  nodes.forEach(d=>{
+    d.x = d.fx_anchor + (Math.random()-0.5)*60;
+    d.y = d.fy_anchor + (Math.random()-0.5)*60;
+    d.vx = 0; d.vy = 0; d.fx = null; d.fy = null;
+  });
+  sim.alpha(0.5).restart();
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // FIG 5.1 - TP / MPL DUAL-PANEL
 // ══════════════════════════════════════════════════════════════════════
 let v51W, v51H, v51Ha, v51ctxA, v51ctxB;
+
+// D3 SVG label-overlay state (top panel: TP value + slope; bottom panel: MPL value)
+let v51OvlA=null, v51OvlB=null;
+function v51EnsureOverlayA(W,H) {
+  const svg=d5Svg('cvs51a-svg',W,H); if(!svg) return null;
+  if(v51OvlA && v51OvlA.W===W && v51OvlA.H===H) return v51OvlA;
+  svg.selectAll('*').remove();
+  const nodes=[
+    d5Node('tp','#1a56db','TP',46,W/2,H/2),
+    d5Node('slope','#e74c3c','slope',70,W/2,H/2),
+  ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v51OvlA={W,H,nodes,sim,gs,conns};
+  return v51OvlA;
+}
+function v51EnsureOverlayB(W,H) {
+  const svg=d5Svg('cvs51b-svg',W,H); if(!svg) return null;
+  if(v51OvlB && v51OvlB.W===W && v51OvlB.H===H) return v51OvlB;
+  svg.selectAll('*').remove();
+  const nodes=[ d5Node('mpl','#e74c3c','MPL',60,W/2,H/2) ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v51OvlB={W,H,nodes,sim,gs,conns};
+  return v51OvlB;
+}
+function v51WireSliders(){
+  const lEl=document.getElementById('v51-l'), kEl=document.getElementById('v51-k');
+  if(v51OvlA){ d5WireSliderSmoothness(lEl,v51OvlA.sim); d5WireSliderSmoothness(kEl,v51OvlA.sim); }
+  if(v51OvlB){ d5WireSliderSmoothness(lEl,v51OvlB.sim); d5WireSliderSmoothness(kEl,v51OvlB.sim); }
+}
 
 const V51_FORMS = {
   cobb: {
@@ -643,13 +795,11 @@ function v51Draw() {
   ctxA.clearRect(0,0,W,HA);
   drawAxesSt(ctxA,W,HA,xR,yRA,'L (workers)','TP (output)');
 
-  // TP curve -- collect points for label repulsion
-  const linePts51=[];
+  // TP curve
   ctxA.beginPath(); let first=true;
   for(let l=0.1;l<=10;l+=0.05){
     const [cx2,cy2]=toC(l,tp(l),W,HA,xR,yRA);
     if(cy2<MT-5||cy2>HA-MB+5){first=true;continue;}
-    if(l%0.5<0.05) linePts51.push([cx2,cy2]);
     first?(ctxA.moveTo(cx2,cy2),first=false):ctxA.lineTo(cx2,cy2);
   }
   ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2; ctxA.stroke();
@@ -662,23 +812,23 @@ function v51Draw() {
   const y0=tpL+mplL*(x0-L), y1=tpL+mplL*(x1-L);
   const [tx0,ty0]=toC(Math.max(0.05,x0),y0,W,HA,xR,yRA);
   const [tx1,ty1]=toC(Math.min(10,x1),y1,W,HA,xR,yRA);
-  // Add tangent to line pts
-  for(let t=0;t<=1;t+=0.1) linePts51.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
   ctxA.beginPath(); ctxA.setLineDash([5,4]); ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=1.5;
   ctxA.moveTo(tx0,ty0); ctxA.lineTo(tx1,ty1); ctxA.stroke(); ctxA.setLineDash([]);
   dot5(ctxA,cx,cy,7,'#1a56db','#fff');
 
-  // Force labels for TP value + slope annotation
-  const tpTxt=`TP = ${tpL.toFixed(2)}`;
-  const slopeTxt=`slope = MPL = ${mplL.toFixed(3)}`;
-  ctxA.font='bold 10px DM Sans,sans-serif';
-  const tw51a=ctxA.measureText(tpTxt).width, tw51b=ctxA.measureText(slopeTxt).width;
-  const lbls51=[
-    {ax:cx,ay:cy,x:cx+20,y:cy+16,w:tw51a+8,h:13,text:tpTxt,color:'#1a56db',fontSize:10,bold:true},
-    {ax:cx,ay:cy,x:cx+20,y:cy+32,w:tw51b+8,h:13,text:slopeTxt,color:'#e74c3c',fontSize:10,bold:true},
-  ];
-  resolveLabels(lbls51,linePts51,100);
-  lbls51.forEach(l=>drawForceLabel(ctxA,l));
+  // D3 SVG overlay labels for TP value + slope annotation (draggable, force-sim)
+  const ovlA=v51EnsureOverlayA(W,HA);
+  if(ovlA){
+    const tpTxt=`TP = ${tpL.toFixed(2)}`;
+    const slopeTxt=`slope = MPL = ${mplL.toFixed(3)}`;
+    const nTP=ovlA.nodes.find(n=>n.id==='tp'), nSlope=ovlA.nodes.find(n=>n.id==='slope');
+    nTP.label=tpTxt; nSlope.label=slopeTxt;
+    nTP.lw=Math.max(40,tpTxt.length*5.6+10); nSlope.lw=Math.max(40,slopeTxt.length*5.6+10);
+    d5MoveAnchor(nTP,cx,cy);
+    d5MoveAnchor(nSlope,cx,cy);
+    ovlA.gs.select('rect').attr('width',d=>d.lw);
+    ovlA.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+  }
 
   // Phase label (corner -- fixed, no collision)
   const phaseLabel=form.phase(mplL,L);
@@ -695,31 +845,35 @@ function v51Draw() {
   ctxB.clearRect(0,0,W,HB);
   drawAxesSt(ctxB,W,HB,xR,yRB,'L (workers)','MPL');
 
-  // MPL curve -- collect points
-  const linePts51b=[];
+  // MPL curve
   ctxB.beginPath(); first=true;
   for(let l=0.1;l<=10;l+=0.05){
     const m=mpl(l);
     const [cx2,cy2]=toC(l,m,W,HB,xR,yRB);
     if(cy2<MT-5||cy2>HB-MB+5){first=true;continue;}
-    if(l%0.5<0.05) linePts51b.push([cx2,cy2]);
     first?(ctxB.moveTo(cx2,cy2),first=false):ctxB.lineTo(cx2,cy2);
   }
   ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=2; ctxB.stroke();
 
-  // Current MPL point + force label
+  // Current MPL point + D3 SVG overlay label
   const [mx,my]=toC(L,mplL,W,HB,xR,yRB);
   dot5(ctxB,mx,my,7,'#e74c3c','#fff');
-  ctxB.font='10px DM Sans,sans-serif';
-  const mplTxt=`MPL=${mplL.toFixed(3)}`;
-  const lbls51b=[{ax:mx,ay:my,x:mx+20,y:my-8,w:ctxB.measureText(mplTxt).width+8,h:13,text:mplTxt,color:'#e74c3c',fontSize:10,bold:false}];
-  resolveLabels(lbls51b,linePts51b,80);
-  lbls51b.forEach(l=>drawForceLabel(ctxB,l));
+  const ovlB=v51EnsureOverlayB(W,HB);
+  if(ovlB){
+    const mplTxt=`MPL=${mplL.toFixed(3)}`;
+    const nMPL=ovlB.nodes.find(n=>n.id==='mpl');
+    nMPL.label=mplTxt; nMPL.lw=Math.max(50,mplTxt.length*5.6+10);
+    d5MoveAnchor(nMPL,mx,my);
+    ovlB.gs.select('rect').attr('width',d=>d.lw);
+    ovlB.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+  }
 
   // Zero line
   const [,zy]=toC(0,0,W,HB,xR,yRB);
   ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1;
   ctxB.beginPath(); ctxB.moveTo(ML,zy); ctxB.lineTo(W-MR,zy); ctxB.stroke();
+
+  v51WireSliders();
 }
 
 function v51Update() {
@@ -758,6 +912,50 @@ function v52SetMode(m) {
 // Draggable point state for Fig 5.2 (Cobb-Douglas panel only)
 let v52DragL = 4, v52DragK = 4, v52Dragging = false;
 
+// D3 SVG label-overlay state, one per panel (cvs52a/b/c). Each overlay holds
+// up to 3 curve labels (Q=2/4/6) plus — on the Cobb-Douglas panel only — the
+// draggable-point label "P L=…,K=…" and the MRTS/MRS label. The canvas drag
+// math (closestLOnIsoquant) is untouched; this overlay only TRACKS the
+// resulting curve/point positions each redraw via d5MoveAnchor (S6 pattern),
+// so dragging the red dot keeps the SVG labels glued to the curve smoothly.
+const v52Ovl = {a:null, b:null, c:null};
+function v52OvlKeyFor(canvasId){ return canvasId==='cvs52a'?'a':canvasId==='cvs52b'?'b':'c'; }
+function v52EnsureOverlay(canvasId, W, H, withDragLabels) {
+  const key=v52OvlKeyFor(canvasId);
+  const svgId=canvasId+'-svg';
+  const svg=d5Svg(svgId,W,H); if(!svg) return null;
+  let ovl=v52Ovl[key];
+  if(ovl && ovl.W===W && ovl.H===H && ovl.withDrag===withDragLabels) return ovl;
+  svg.selectAll('*').remove();
+  const nodes=[
+    d5Node('q0','#1a56db','Q',34,W/2,H/2),
+    d5Node('q1','#2e8b57','Q',34,W/2,H/2),
+    d5Node('q2','#c0392b','Q',34,W/2,H/2),
+  ];
+  if(withDragLabels){
+    nodes.push(d5Node('P','#e74c3c','P',70,W/2,H/2));
+    nodes.push(d5Node('mrts','#e74c3c','MRTS',70,W/2,H/2));
+  }
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  ovl={W,H,withDrag:withDragLabels,nodes,sim,gs,conns};
+  v52Ovl[key]=ovl;
+  return ovl;
+}
+// Update one curve-label node's anchor/text/width and push to DOM
+function v52SetCurveLabel(ovl, idx, text, color, ax, ay) {
+  const n=ovl.nodes[idx];
+  n.label=text; n.color=color; n.lw=Math.max(30,text.length*6+10);
+  d5MoveAnchor(n,ax,ay);
+}
+function v52RefreshOverlayDom(ovl) {
+  ovl.gs.select('rect').attr('width',d=>d.lw).attr('stroke',d=>d.color);
+  ovl.gs.select('text').attr('x',d=>d.lw/2).attr('fill',d=>d.color).text(d=>d.label);
+  ovl.conns.attr('stroke',d=>d.color);
+}
+
 function v52DrawPanel(canvasId, type, qLevels, mode) {
   const cvs=document.getElementById(canvasId); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
@@ -775,15 +973,16 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
   const label=mode==='iq'?'Q':'U';
   const tangLabel=mode==='iq'?'MRTS':'MRS';
   const colors=['#1a56db','#2e8b57','#c0392b'];
-  const curveLbls=[];
-  const linePts52=[];
+  // D3 SVG overlay: curve labels (+ drag-point labels on the CD panel)
+  const isDragPanel = (canvasId==='cvs52a' && type==='cd');
+  const ovl = v52EnsureOverlay(canvasId, W, H, isDragPanel);
+  const curveAnchors=[]; // {ax,ay,text,color} per curve, fed to overlay nodes after the loop
   qLevels.forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=colors[qi]||'#888'; ctx.lineWidth=2;
     if(type==='cd'){
       for(let l=0.3;l<=10;l+=0.05){
         const k=q*q/l; if(k>10||k<0.1){first=true;continue;}
         const [cx,cy]=toC(l,k,W,H,xR,yR);
-        if(l%0.4<0.05) linePts52.push([cx,cy]);
         first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
       }
     } else if(type==='linear'){
@@ -791,7 +990,6 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
       if(kmax<=yR[1]&&lmax<=xR[1]){
         const [x0,y0]=toC(0,kmax,W,H,xR,yR);
         const [x1,y1]=toC(lmax,0,W,H,xR,yR);
-        for(let t=0;t<=1;t+=0.2) linePts52.push([x0+(x1-x0)*t,y0+(y1-y0)*t]);
         ctx.moveTo(x0,y0); ctx.lineTo(x1,y1);
       }
     } else if(type==='leontief'){
@@ -800,40 +998,33 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
         const [x0,y0]=toC(lk,yR[1]*0.95,W,H,xR,yR);
         const [xc,yc]=toC(lk,kk,W,H,xR,yR);
         const [x1,y1]=toC(xR[1]*0.95,kk,W,H,xR,yR);
-        linePts52.push([x0,y0],[xc,yc],[x1,y1]);
         ctx.moveTo(x0,y0); ctx.lineTo(xc,yc); ctx.lineTo(x1,y1);
       }
     }
     ctx.stroke();
-    // Collect curve labels for force-resolution after all curves drawn
+    // Collect curve-label anchor for the D3 SVG overlay (drawn after the loop)
+    let ax=null, ay=null;
     if(type==='cd'){
       const lK=Math.min(q*q/1.5,9.5);
-      const [ax,ay]=toC(1.5,lK,W,H,xR,yR);
-      ctx.font='10px DM Sans,sans-serif';
-      const txt=`${label}=${q}`;
-      const tw=ctx.measureText(txt).width;
-      curveLbls.push({x:ax+tw/2+4,y:ay-6,ax,ay,text:txt,color:colors[qi]||'#888',fontSize:10,bold:false,w:tw+6,h:13});
+      [ax,ay]=toC(1.5,lK,W,H,xR,yR);
     } else if(type==='linear'){
       const kmax=q;
-      const [ax,ay]=toC(0,kmax,W,H,xR,yR);
-      ctx.font='10px DM Sans,sans-serif';
-      const txt=`${label}=${q}`;
-      const tw=ctx.measureText(txt).width;
-      curveLbls.push({x:ax+tw/2+4,y:ay-6,ax,ay,text:txt,color:colors[qi]||'#888',fontSize:10,bold:false,w:tw+6,h:13});
+      [ax,ay]=toC(0,kmax,W,H,xR,yR);
     } else if(type==='leontief'){
       const kk=2*q;
-      if(q<=xR[1]&&kk<=yR[1]){
-        const [ax,ay]=toC(Math.min(q+0.4,9),kk,W,H,xR,yR);
-        ctx.font='10px DM Sans,sans-serif';
-        const txt=`${label}=${q}`;
-        const tw=ctx.measureText(txt).width;
-        curveLbls.push({x:ax+tw/2+5,y:ay-5,ax,ay,text:txt,color:colors[qi]||'#888',fontSize:10,bold:false,w:tw+6,h:13});
-      }
+      if(q<=xR[1]&&kk<=yR[1]) [ax,ay]=toC(Math.min(q+0.4,9),kk,W,H,xR,yR);
     }
+    if(ax!==null) curveAnchors.push({ax,ay,text:`${label}=${q}`,color:colors[qi]||'#888'});
   });
 
-  // Resolve curve label collisions with line repulsion, then draw
-  if(curveLbls.length) { resolveLabels(curveLbls,linePts52,100,5); curveLbls.forEach(l=>drawForceLabel(ctx,l)); }
+  // Push curve-label anchors into the D3 SVG overlay nodes (q0/q1/q2)
+  if(ovl){
+    curveAnchors.forEach((a,i)=>{
+      if(i<3) v52SetCurveLabel(ovl,i,a.text,a.color,a.ax,a.ay);
+    });
+    // Hide any unused curve-label slots off to the side (shouldn't normally happen — always 3 levels)
+    for(let i=curveAnchors.length;i<3;i++){ ovl.nodes[i].label=''; ovl.nodes[i].lw=0; }
+  }
 
   // Draggable point P only on the Cobb-Douglas panel (cvs52a)
   if(canvasId==='cvs52a' && type==='cd'){
@@ -848,18 +1039,21 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     const [tx1,ty1]=toC(Math.min(9.8,L+dxT),K-mrts*dxT,W,H,xR,yR);
     ctx.setLineDash([4,3]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
-    // Dot P + force labels
+    // Dot P (canvas — kept; SVG overlay carries only the draggable text labels)
     dot5(ctx,px,py,8,'#e74c3c','#fff');
-    // Add tangent to existing linePts52 for repulsion
-    for(let t=0;t<=1;t+=0.1) linePts52.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
-    const pTxt=`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`;
-    const mrtsTxt=`${tangLabel} = ${mrts.toFixed(2)}`;
-    ctx.font='bold 10px DM Sans,sans-serif';
-    const lpDot=[{ax:px,ay:py,x:px+20,y:py-10,w:ctx.measureText(pTxt).width+8,h:13,text:pTxt,color:'#e74c3c',fontSize:10,bold:true},
-                 {ax:px,ay:py,x:px+20,y:py+10,w:ctx.measureText(mrtsTxt).width+8,h:13,text:mrtsTxt,color:'#e74c3c',fontSize:10,bold:true}];
-    resolveLabels(lpDot,linePts52,80);
-    lpDot.forEach(l=>drawForceLabel(ctx,l));
+    // D3 SVG overlay: track the P / MRTS labels to the live drag position
+    if(ovl){
+      const pNode=ovl.nodes.find(n=>n.id==='P'), mrtsNode=ovl.nodes.find(n=>n.id==='mrts');
+      const pTxt=`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`;
+      const mrtsTxt=`${tangLabel} = ${mrts.toFixed(2)}`;
+      pNode.label=pTxt; pNode.lw=Math.max(60,pTxt.length*5.8+10);
+      mrtsNode.label=mrtsTxt; mrtsNode.lw=Math.max(60,mrtsTxt.length*5.8+10);
+      d5MoveAnchor(pNode,px,py);
+      d5MoveAnchor(mrtsNode,px,py);
+    }
   }
+
+  if(ovl) v52RefreshOverlayDom(ovl);
 }
 
 function v52DrawAll() {
@@ -917,6 +1111,27 @@ function v53Q0() { return 4; } // Fixed Q level: Q=K^0.5*L^0.5=4 => K=16/L
 function v53K(L) { return v53Q0()*v53Q0()/L; }
 function v53MRTS(L) { return v53K(L)/L; } // MRTS = K/L for Cobb-Douglas alpha=beta=0.5
 
+// D3 SVG label-overlay state for fig 5.3 (Q label + draggable point's
+// L,K / MRTS / interpretation labels — these track the live drag position).
+let v53Ovl=null;
+function v53EnsureOverlay(W,H) {
+  const svg=d5Svg('cvs53-svg',W,H); if(!svg) return null;
+  if(v53Ovl && v53Ovl.W===W && v53Ovl.H===H) return v53Ovl;
+  svg.selectAll('*').remove();
+  const nodes=[
+    d5Node('q','#1a56db','Q',40,W/2,H/2),
+    d5Node('lk','#2e8b57','L,K',70,W/2,H/2),
+    d5Node('mrts','#e74c3c','MRTS',80,W/2,H/2),
+    d5Node('repl','#e74c3c','replaces',110,W/2,H/2),
+  ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v53Ovl={W,H,nodes,sim,gs,conns};
+  return v53Ovl;
+}
+
 function v53Draw() {
   const cvs=document.getElementById('cvs53'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
@@ -932,13 +1147,11 @@ function v53Draw() {
   const xR=[0,18],yR=[0,18];
   drawAxesSt(ctx,W,H,xR,yR,'L (workers)','K (machines)');
 
-  // Isoquant -- collect line points
-  const linePts53=[];
+  // Isoquant
   ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   for(let l=0.5;l<=17;l+=0.1){
     const k=v53K(l); if(k>17||k<0.1){first=true;continue;}
     const [cx2,cy2]=toC(l,k,W,H,xR,yR);
-    if(l%1<0.1) linePts53.push([cx2,cy2]);
     first?(ctx.moveTo(cx2,cy2),first=false):ctx.lineTo(cx2,cy2);
   }
   ctx.stroke();
@@ -969,27 +1182,30 @@ function v53Draw() {
   ctx.setLineDash([6,4]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
-  // Add tangent line to repulsion points
-  for(let t=0;t<=1;t+=0.1) linePts53.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
   dot5(ctx,cx,cy,9,'#2e8b57','#fff');
 
-  // Force labels for Q label, point coords, MRTS, and interpretation
-  const [dlx,dly]=toC(14,Q0*Q0/14,W,H,xR,yR);
-  const lkTxt=`L = ${L.toFixed(1)},  K = ${K.toFixed(1)}`;
-  const mTxt=`MRTS = K/L = ${mrts.toFixed(2)}`;
-  const replTxt=`1 worker replaces ${mrts.toFixed(2)} machines`;
-  const qTxt=`Q = ${Q0}`;
-  ctx.font='11px DM Sans,sans-serif';
-  const lbls53=[
-    {ax:dlx,ay:dly,x:dlx+ctx.measureText(qTxt).width/2+8,y:dly-10,w:ctx.measureText(qTxt).width+8,h:14,text:qTxt,color:'#1a56db',fontSize:11,bold:false},
-  ];
-  ctx.font='bold 12px DM Sans,sans-serif';
-  lbls53.push({ax:cx,ay:cy,x:cx+20,y:cy+16,w:ctx.measureText(lkTxt).width+8,h:15,text:lkTxt,color:'#2e8b57',fontSize:12,bold:true});
-  ctx.font='12px DM Sans,sans-serif';
-  lbls53.push({ax:cx,ay:cy,x:cx+20,y:cy+34,w:ctx.measureText(mTxt).width+8,h:15,text:mTxt,color:'#e74c3c',fontSize:12,bold:false});
-  lbls53.push({ax:cx,ay:cy,x:cx+20,y:cy+52,w:ctx.measureText(replTxt).width+8,h:15,text:replTxt,color:'#e74c3c',fontSize:12,bold:false});
-  resolveLabels(lbls53,linePts53,100);
-  lbls53.forEach(l=>drawForceLabel(ctx,l));
+  // D3 SVG overlay labels — Q label (fixed anchor on the curve) + the
+  // draggable point's L,K / MRTS / interpretation labels (track live drag pos)
+  const ovl=v53EnsureOverlay(W,H);
+  if(ovl){
+    const [dlx,dly]=toC(14,Q0*Q0/14,W,H,xR,yR);
+    const lkTxt=`L = ${L.toFixed(1)},  K = ${K.toFixed(1)}`;
+    const mTxt=`MRTS = K/L = ${mrts.toFixed(2)}`;
+    const replTxt=`1 worker replaces ${mrts.toFixed(2)} machines`;
+    const qTxt=`Q = ${Q0}`;
+    const nQ=ovl.nodes.find(n=>n.id==='q'), nLK=ovl.nodes.find(n=>n.id==='lk'),
+          nMRTS=ovl.nodes.find(n=>n.id==='mrts'), nRepl=ovl.nodes.find(n=>n.id==='repl');
+    nQ.label=qTxt; nQ.lw=Math.max(36,qTxt.length*6.4+10);
+    nLK.label=lkTxt; nLK.lw=Math.max(60,lkTxt.length*6.4+10);
+    nMRTS.label=mTxt; nMRTS.lw=Math.max(60,mTxt.length*6.4+10);
+    nRepl.label=replTxt; nRepl.lw=Math.max(80,replTxt.length*6.0+10);
+    d5MoveAnchor(nQ,dlx,dly);
+    d5MoveAnchor(nLK,cx,cy);
+    d5MoveAnchor(nMRTS,cx,cy);
+    d5MoveAnchor(nRepl,cx,cy);
+    ovl.gs.select('rect').attr('width',d=>d.lw);
+    ovl.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+  }
 
   document.getElementById('v53-readout').innerHTML=
     `<div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val" style="color:#2e8b57">${L.toFixed(2)}</div></div>
@@ -1043,6 +1259,42 @@ function v53Init() {
 // ══════════════════════════════════════════════════════════════════════
 function v54CD(K,L,a,b){return Math.pow(Math.max(0.001,K),a)*Math.pow(Math.max(0.001,L),b);}
 
+// D3 SVG label-overlay state for fig 5.4 (left: "MPL falls..." caption;
+// right: Q(λ=1)/Q(λ=2) point labels — both retarget on slider input).
+let v54OvlA=null, v54OvlB=null;
+function v54EnsureOverlayA(W,H) {
+  const svg=d5Svg('cvs54a-svg',W,H); if(!svg) return null;
+  if(v54OvlA && v54OvlA.W===W && v54OvlA.H===H) return v54OvlA;
+  svg.selectAll('*').remove();
+  const nodes=[ d5Node('cap','#e74c3c','MPL falls as L rises',120,W/2,H/2) ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v54OvlA={W,H,nodes,sim,gs,conns};
+  return v54OvlA;
+}
+function v54EnsureOverlayB(W,H) {
+  const svg=d5Svg('cvs54b-svg',W,H); if(!svg) return null;
+  if(v54OvlB && v54OvlB.W===W && v54OvlB.H===H) return v54OvlB;
+  svg.selectAll('*').remove();
+  const nodes=[
+    d5Node('q1','#2e8b57','Q(λ=1)',60,W/2,H/2),
+    d5Node('q2','#2e8b57','Q(λ=2)',60,W/2,H/2),
+  ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v54OvlB={W,H,nodes,sim,gs,conns};
+  return v54OvlB;
+}
+function v54WireSliders(){
+  const aEl=document.getElementById('v54-a'), bEl=document.getElementById('v54-b');
+  if(v54OvlA){ d5WireSliderSmoothness(aEl,v54OvlA.sim); d5WireSliderSmoothness(bEl,v54OvlA.sim); }
+  if(v54OvlB){ d5WireSliderSmoothness(aEl,v54OvlB.sim); d5WireSliderSmoothness(bEl,v54OvlB.sim); }
+}
+
 function v54Draw() {
   const a=parseFloat(document.getElementById('v54-a').value);
   const b=parseFloat(document.getElementById('v54-b').value);
@@ -1060,23 +1312,26 @@ function v54Draw() {
   const yMaxMPL=Math.ceil(mplAt1*1.2*2)/2;
   const xRa=[0,12],yRa=[0,yMaxMPL];
   drawAxesSt(ctxA,W,H54,xRa,yRa,'L (workers)','MPL');
-  const linePts54a=[];
   ctxA.beginPath(); let first=true; ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=2;
   for(let l=0.2;l<=12;l+=0.1){
     const mpl=b*v54CD(Kfix,l,a,b)/l;
     const [cx,cy]=toC(l,mpl,W,H54,xRa,yRa);
     if(cy<MT-5||cy>H54-MB+5){first=true;continue;}
-    if(l%2<0.1) linePts54a.push([cx,cy]);
     first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
   }
   ctxA.stroke();
-  ctxA.font='9px DM Sans,sans-serif';
-  const mplLblTxt='MPL falls as L rises (K='+Kfix+' fixed)';
-  const mplMidL=6;
-  const[mplax,mpaly]=toC(mplMidL,b*v54CD(Kfix,mplMidL,a,b)/mplMidL,W,H54,xRa,yRa);
-  const mplLbls=[{ax:mplax,ay:mpaly,x:mplax,y:mpaly-14,w:ctxA.measureText(mplLblTxt).width+8,h:12,text:mplLblTxt,color:'#e74c3c',fontSize:9,bold:false}];
-  resolveLabels(mplLbls,linePts54a,60,5);
-  mplLbls.forEach(l=>drawForceLabel(ctxA,l));
+  // D3 SVG overlay: "MPL falls as L rises" caption tracks the curve midpoint
+  const ovlA=v54EnsureOverlayA(W,H54);
+  if(ovlA){
+    const mplLblTxt='MPL falls as L rises (K='+Kfix+' fixed)';
+    const mplMidL=6;
+    const [mplax,mpaly]=toC(mplMidL,b*v54CD(Kfix,mplMidL,a,b)/mplMidL,W,H54,xRa,yRa);
+    const nCap=ovlA.nodes[0];
+    nCap.label=mplLblTxt; nCap.lw=Math.max(60,mplLblTxt.length*5.2+10);
+    d5MoveAnchor(nCap,mplax,mpaly);
+    ovlA.gs.select('rect').attr('width',d=>d.lw);
+    ovlA.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+  }
 
   // Right panel: scale both inputs
   const cvB=document.getElementById('cvs54b'); if(!cvB) return;
@@ -1088,13 +1343,11 @@ function v54Draw() {
   const yMaxB=Math.ceil(Math.max(q_lam4*1.2, 8));
   const xRb=[0.5,4], yRb=[0,yMaxB];
   drawAxesSt(ctxB,W,H54,xRb,yRb,'Scale λ (lambda)','Output Q');
-  const linePts54b=[];
   ctxB.save(); ctxB.beginPath(); ctxB.rect(ML,MT,W-ML-MR,H54-MT-MB); ctxB.clip();
   ctxB.beginPath(); first=true; ctxB.strokeStyle='#1a56db'; ctxB.lineWidth=2;
   for(let lam=0.5;lam<=4;lam+=0.05){
     const q=v54CD(lam*Kbase,lam*Lbase,a,b);
     const [cx,cy]=toC(lam,q,W,H54,xRb,yRb);
-    if(lam%1<0.05) linePts54b.push([cx,cy]);
     first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
   }
   ctxB.stroke(); ctxB.restore();
@@ -1105,13 +1358,18 @@ function v54Draw() {
   const [dx2,dy2]=toC(2,q2_d,W,H54,xRb,yRb);
   dot5(ctxB,dx1,dy1,7,'#2e8b57','#fff');
   dot5(ctxB,dx2,dy2,7,'#2e8b57','#fff');
-  ctxB.font='9px DM Sans,sans-serif';
-  const dotLbls54=[
-    {ax:dx1,ay:dy1,x:dx1-12,y:dy1-10,w:ctxB.measureText(`Q(λ=1) = ${q1_d.toFixed(2)}`).width+8,h:12,text:`Q(λ=1) = ${q1_d.toFixed(2)}`,color:'#2e8b57',fontSize:9,bold:false},
-    {ax:dx2,ay:dy2,x:dx2-12,y:dy2-10,w:ctxB.measureText(`Q(λ=2) = ${q2_d.toFixed(2)}`).width+8,h:12,text:`Q(λ=2) = ${q2_d.toFixed(2)}`,color:'#2e8b57',fontSize:9,bold:false},
-  ];
-  resolveLabels(dotLbls54,linePts54b,60,5);
-  dotLbls54.forEach(l=>drawForceLabel(ctxB,l));
+  // D3 SVG overlay: Q(λ=1) / Q(λ=2) point labels track the dots
+  const ovlB=v54EnsureOverlayB(W,H54);
+  if(ovlB){
+    const t1=`Q(λ=1) = ${q1_d.toFixed(2)}`, t2=`Q(λ=2) = ${q2_d.toFixed(2)}`;
+    const n1=ovlB.nodes.find(n=>n.id==='q1'), n2=ovlB.nodes.find(n=>n.id==='q2');
+    n1.label=t1; n1.lw=Math.max(60,t1.length*5.6+10);
+    n2.label=t2; n2.lw=Math.max(60,t2.length*5.6+10);
+    d5MoveAnchor(n1,dx1,dy1);
+    d5MoveAnchor(n2,dx2,dy2);
+    ovlB.gs.select('rect').attr('width',d=>d.lw);
+    ovlB.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+  }
 
   const rts=a+b;
   const rtsLabel=rts>1.01?'IRS':rts<0.99?'DRS':'CRS';
@@ -1120,12 +1378,14 @@ function v54Draw() {
       <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(a+b).toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rtsLabel}</div></div>
       <div class="readout-col"><div class="readout-label">MPL (diminishing?)</div><div class="readout-val">Yes: b&lt;1</div></div>
-      <div class="readout-col"><div class="readout-label">Q doubles when scale=2</div><div class="readout-val">${(q2/q1).toFixed(2)}x</div></div>
+      <div class="readout-col"><div class="readout-label">Q doubles when scale=2</div><div class="readout-val">${(q2_d/q1_d).toFixed(2)}x</div></div>
     </div>
     <div style="margin-top:0.5rem;font-size:0.84rem;color:var(--muted)">
       With a=${a.toFixed(2)}, b=${b.toFixed(2)}: Both panels use the same Q = K<sup>${a.toFixed(2)}</sup>L<sup>${b.toFixed(2)}</sup>.
       MPL falls as L rises (left) yet output scales by 2<sup>${(a+b).toFixed(2)}</sup>=${Math.pow(2,a+b).toFixed(2)} when both inputs double (right). These are not contradictory.
     </div>`;
+
+  v54WireSliders();
 }
 
 function v54Update() {
@@ -1137,6 +1397,26 @@ function v54Update() {
 // ══════════════════════════════════════════════════════════════════════
 // FIG 5.5 - RTS ISOQUANT SPACER
 // ══════════════════════════════════════════════════════════════════════
+// D3 SVG label-overlay state for fig 5.5: up to 3 "Q=…" labels at the
+// ray/isoquant intersection points (count varies — unused slots are hidden).
+let v55Ovl=null;
+function v55EnsureOverlay(W,H) {
+  const svg=d5Svg('cvs55-svg',W,H); if(!svg) return null;
+  if(v55Ovl && v55Ovl.W===W && v55Ovl.H===H) return v55Ovl;
+  svg.selectAll('*').remove();
+  const nodes=[
+    d5Node('q0','#2e8b57','Q',32,W/2,H/2),
+    d5Node('q1','#1a56db','Q',32,W/2,H/2),
+    d5Node('q2','#c0392b','Q',32,W/2,H/2),
+  ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v55Ovl={W,H,nodes,sim,gs,conns};
+  return v55Ovl;
+}
+
 function v55Draw() {
   const a=parseFloat(document.getElementById('v55-a').value)||0.5;
   const b=parseFloat(document.getElementById('v55-b').value)||0.5;
@@ -1153,8 +1433,7 @@ function v55Draw() {
   const qLevels=[1,2,4];
   const cols=['#2e8b57','#1a56db','#c0392b'];
   const rayPts=[];
-  const linePts55=[];
-  const flbls55=[];
+  const curveAnchors=[]; // {text,color,ax,ay} for ray-intersection "Q=…" labels (0-3 entries)
 
   // Clip all isoquant drawing to the plot area so lines stop at the axis limits
   ctx.save();
@@ -1166,7 +1445,6 @@ function v55Draw() {
       const K=Math.pow(q/Math.pow(Math.max(l,0.01),b),1/a);
       if(K>10||K<0.01){first=true;continue;}
       const [cx,cy]=toC(l,K,W,H,xR,yR);
-      if(l%2<0.04) linePts55.push([cx,cy]);
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
     ctx.stroke();
@@ -1176,8 +1454,7 @@ function v55Draw() {
       rayPts.push({q,l:lRay,col:cols[qi]});
       const [rx,ry]=toC(lRay,lRay,W,H,xR,yR);
       dot5(ctx,rx,ry,6,cols[qi],'#fff');
-      ctx.font='9px DM Sans,sans-serif';
-      flbls55.push({ax:rx,ay:ry,x:rx-12,y:ry-12,w:ctx.measureText('Q='+q).width+8,h:12,text:'Q='+q,color:cols[qi],fontSize:9,bold:false});
+      curveAnchors.push({text:'Q='+q,color:cols[qi],ax:rx,ay:ry});
     }
   });
 
@@ -1187,10 +1464,22 @@ function v55Draw() {
   ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
   const [r0x,r0y]=toC(0,0,W,H,xR,yR);
   const [r1x,r1y]=toC(9,9,W,H,xR,yR);
-  for(let t=0;t<=1;t+=0.2) linePts55.push([r0x+(r1x-r0x)*t,r0y+(r1y-r0y)*t]);
   ctx.beginPath(); ctx.moveTo(r0x,r0y); ctx.lineTo(r1x,r1y); ctx.stroke(); ctx.setLineDash([]);
-  resolveLabels(flbls55,linePts55,80,5);
-  flbls55.forEach(l=>drawForceLabel(ctx,l));
+
+  // D3 SVG label overlay: fixed pool of 3 nodes, hide unused slots when fewer
+  // than 3 ray-intersection labels are present (variable count 0-3).
+  const ovl55=v55EnsureOverlay(W,H);
+  if(ovl55){
+    for(let i=0;i<ovl55.nodes.length;i++){
+      if(i<curveAnchors.length){
+        const a55=curveAnchors[i];
+        v52SetCurveLabel(ovl55,i,a55.text,a55.color,a55.ax,a55.ay);
+      } else {
+        ovl55.nodes[i].label=''; ovl55.nodes[i].lw=0;
+      }
+    }
+    v52RefreshOverlayDom(ovl55);
+  }
 
   const rts=a+b;
   const verdict=rts>1.01?'IRS: isoquants bunch up (get closer along ray)':rts<0.99?'DRS: isoquants spread out':' CRS: isoquants equally spaced';
@@ -1201,6 +1490,11 @@ function v55Draw() {
       <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rts>1?'IRS':rts<1?'DRS':'CRS'}</div></div>
     </div>
     <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">${verdict}. Q = K<sup>${a}</sup>L<sup>${b}</sup>. Spacing along ray L=K: Q=1 at L=${rayPts[0]?rayPts[0].l.toFixed(2):'?'}, Q=2 at L=${rayPts[1]?rayPts[1].l.toFixed(2):'?'}, Q=4 at L=${rayPts[2]?rayPts[2].l.toFixed(2):'?'}.</div>`;
+
+  if(ovl55){
+    d5WireSliderSmoothness(document.getElementById('v55-a'),ovl55.sim);
+    d5WireSliderSmoothness(document.getElementById('v55-b'),ovl55.sim);
+  }
 }
 
 function v55Update() { v55Draw(); }
@@ -1215,6 +1509,26 @@ const V56_Q_TARGET = 4;  // always producing Q=4 units
 let v56TechLevel=1.0;    // A in Q = A * K^0.5 * L^0.5 (starts at 1, increases with improvements)
 let v56L=4, v56K=4;
 
+// D3 SVG label-overlay state for fig 5.6: isoquant label, bundle label, and an
+// optional "Technology improved" label (shown only when A>1 — hidden otherwise).
+let v56Ovl=null;
+function v56EnsureOverlay(W,H) {
+  const svg=d5Svg('cvs56-svg',W,H); if(!svg) return null;
+  if(v56Ovl && v56Ovl.W===W && v56Ovl.H===H) return v56Ovl;
+  svg.selectAll('*').remove();
+  const nodes=[
+    d5Node('iq','#1a56db','Q = 4',60,W/2,H/2),
+    d5Node('bundle','#2e8b57','L=4, K=4',60,W/2,H/2),
+    d5Node('tech','#c0392b','Technology improved',110,ML+4,MT+28),
+  ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v56Ovl={W,H,nodes,sim,gs,conns};
+  return v56Ovl;
+}
+
 function v56Draw() {
   const cvs=document.getElementById('cvs56'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
@@ -1224,7 +1538,6 @@ function v56Draw() {
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
-  const linePts56=[];
 
   // Show faded original isoquant (A=1, Q=4) for reference
   ctx.globalAlpha=0.25; ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=1.5;
@@ -1242,7 +1555,6 @@ function v56Draw() {
     const k=Math.pow(V56_Q_TARGET/(A*Math.pow(l,0.5)),2);
     if(k>10||k<0.1){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
-    if(l%2<0.08) linePts56.push([cx,cy]);
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
@@ -1251,22 +1563,28 @@ function v56Draw() {
   const [bx,by]=toC(v56L,v56K,W,H,xR,yR);
   dot5(ctx,bx,by,9,'#2e8b57','#fff');
 
-  // Force labels: isoquant + bundle + tech label
-  ctx.font='9px DM Sans,sans-serif';
+  // D3 SVG label overlay: isoquant label, bundle label, optional tech label
   const iqAnchorL=Math.max(0.3,V56_Q_TARGET/A*0.6);
   const iqAnchorK=Math.pow(V56_Q_TARGET/(A*Math.pow(iqAnchorL,0.5)),2);
   const [iqax,iqay]=toC(Math.min(iqAnchorL,10),Math.min(iqAnchorK,10),W,H,xR,yR);
   const lbTxt56=`Q = ${V56_Q_TARGET} (A=${A.toFixed(2)})`;
-  const flbls56=[
-    {ax:iqax,ay:iqay,x:iqax+12,y:iqay-8,w:ctx.measureText(lbTxt56).width+8,h:12,text:lbTxt56,color:'#1a56db',fontSize:9,bold:false},
-    {ax:bx,ay:by,x:bx+12,y:by-8,w:ctx.measureText(`L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}`).width+8,h:12,text:`L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}`,color:'#2e8b57',fontSize:9,bold:false},
-  ];
-  if(A>1.0){
-    const techTxt=`Technology improved (A=${A.toFixed(2)})`;
-    flbls56.push({ax:ML+4,ay:MT+28,x:ML+4,y:MT+28,w:ctx.measureText(techTxt).width+8,h:12,text:techTxt,color:'#c0392b',fontSize:9,bold:false});
+  const bundleTxt56=`L=${v56L.toFixed(1)}, K=${v56K.toFixed(1)}`;
+  const ovl56=v56EnsureOverlay(W,H);
+  if(ovl56){
+    const [iqN,bundleN,techN]=ovl56.nodes;
+    iqN.label=lbTxt56; iqN.lw=Math.max(40,lbTxt56.length*6+10);
+    d5MoveAnchor(iqN,iqax,iqay);
+    bundleN.label=bundleTxt56; bundleN.lw=Math.max(40,bundleTxt56.length*6+10);
+    d5MoveAnchor(bundleN,bx,by);
+    if(A>1.0){
+      const techTxt=`Technology improved (A=${A.toFixed(2)})`;
+      techN.label=techTxt; techN.lw=Math.max(40,techTxt.length*6+10);
+      d5MoveAnchor(techN,ML+4,MT+28);
+    } else {
+      techN.label=''; techN.lw=0;
+    }
+    v52RefreshOverlayDom(ovl56);
   }
-  resolveLabels(flbls56,linePts56,80,5);
-  flbls56.forEach(l=>drawForceLabel(ctx,l));
 }
 
 function v56SubstituteInputs() {
@@ -1301,11 +1619,33 @@ function v56Reset() {
 // ══════════════════════════════════════════════════════════════════════
 // FIG 5.7 - CONSUMER-PRODUCTION ANALOGY
 // ══════════════════════════════════════════════════════════════════════
+// D3 SVG label-overlay state for fig 5.7 (two analogous panels). Each panel
+// gets 3 fixed labels: Optimum / Budget-or-Isocost / IC-or-Isoquant.
+let v57Ovl={a:null,b:null};
+function v57EnsureOverlay(canvasId, key, W, H) {
+  const svg=d5Svg(canvasId+'-svg',W,H); if(!svg) return null;
+  const cur=v57Ovl[key];
+  if(cur && cur.W===W && cur.H===H) return cur;
+  svg.selectAll('*').remove();
+  const nodes=[
+    d5Node('opt','#2e8b57','Optimum',54,W/2,H/2),
+    d5Node('line','#e74c3c','Budget',46,W/2,H/2),
+    d5Node('curve','#1a56db','IC',28,W/2,H/2),
+  ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  const ovl={W,H,nodes,sim,gs,conns};
+  v57Ovl[key]=ovl;
+  return ovl;
+}
+
 function v57Draw() {
   const u=parseFloat(document.getElementById('v57-u').value);
   document.getElementById('v57-u-val').textContent=u.toFixed(1);
 
-  function drawAnalogy(canvasId, type, level) {
+  function drawAnalogy(canvasId, ovlKey, type, level) {
     const cvs=document.getElementById(canvasId); if(!cvs) return;
     const dpr=window.devicePixelRatio||1;
     const W=cvs.clientWidth||300, H=W;
@@ -1316,7 +1656,6 @@ function v57Draw() {
     const xLbl=type==='ic'?'X (good 1)':'L (labor)';
     const yLbl=type==='ic'?'Y (good 2)':'K (capital)';
     drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl);
-    const linePts57=[];
 
     // Multiple curves
     [level-1,level,level+1.5].forEach((q,qi)=>{
@@ -1327,7 +1666,6 @@ function v57Draw() {
       for(let x=0.3;x<=10;x+=0.1){
         const y=q*q/x; if(y>10||y<0.1){first=true;continue;}
         const [cx,cy]=toC(x,y,W,H,xR,yR);
-        if(qi===1&&x%2<0.1) linePts57.push([cx,cy]);
         first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
       }
       ctx.stroke();
@@ -1338,7 +1676,6 @@ function v57Draw() {
     const intercept=2*level;
     const [lx0,ly0]=toC(0,intercept,W,H,xR,yR);
     const [lx1,ly1]=toC(intercept,0,W,H,xR,yR);
-    for(let t=0;t<=1;t+=0.25) linePts57.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);
     ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
@@ -1350,18 +1687,23 @@ function v57Draw() {
     // Anchor isoquant label at a point near x=level*0.6
     const iqAx=level*0.6, iqAy=level*level/iqAx;
     const [icAx,icAy]=toC(Math.min(iqAx,9),Math.min(iqAy,9),W,H,xR,yR);
-    ctx.font='9px DM Sans,sans-serif';
-    const anlbls=[
-      {ax:ox,ay:oy,x:ox+12,y:oy-8,w:ctx.measureText('Optimum').width+8,h:12,text:'Optimum',color:'#2e8b57',fontSize:9,bold:false},
-      {ax:(lx0+lx1)/2,ay:(ly0+ly1)/2,x:(lx0+lx1)/2+8,y:(ly0+ly1)/2-12,w:ctx.measureText(lineLabel).width+8,h:12,text:lineLabel,color:'#e74c3c',fontSize:9,bold:false},
-      {ax:icAx,ay:icAy,x:icAx+8,y:icAy-8,w:ctx.measureText(curveLabel).width+8,h:12,text:curveLabel,color:'#1a56db',fontSize:9,bold:false},
-    ];
-    resolveLabels(anlbls,linePts57,80,5);
-    anlbls.forEach(l=>drawForceLabel(ctx,l));
+
+    const ovl57=v57EnsureOverlay(canvasId,ovlKey,W,H);
+    if(ovl57){
+      const [optN,lineN,curveN]=ovl57.nodes;
+      optN.label='Optimum'; optN.lw=Math.max(40,'Optimum'.length*6+10);
+      d5MoveAnchor(optN,ox,oy);
+      lineN.label=lineLabel; lineN.lw=Math.max(40,lineLabel.length*6+10);
+      d5MoveAnchor(lineN,(lx0+lx1)/2,(ly0+ly1)/2);
+      curveN.label=curveLabel; curveN.lw=Math.max(40,curveLabel.length*6+10);
+      d5MoveAnchor(curveN,icAx,icAy);
+      v52RefreshOverlayDom(ovl57);
+      d5WireSliderSmoothness(document.getElementById('v57-u'),ovl57.sim);
+    }
   }
 
-  drawAnalogy('cvs57a','ic',u);
-  drawAnalogy('cvs57b','iq',u);
+  drawAnalogy('cvs57a','a','ic',u);
+  drawAnalogy('cvs57b','b','iq',u);
 
   document.getElementById('v57-readout').innerHTML=
     `<div class="readout-row">
@@ -1377,6 +1719,22 @@ function v57Update() { v57Draw(); }
 // FIG 5.8 - COBB-DOUGLAS LAB
 // ══════════════════════════════════════════════════════════════════════
 function v58Q(K,L,A,a,b){return A*Math.pow(Math.max(0.001,K),a)*Math.pow(Math.max(0.001,L),b);}
+
+// D3 SVG label-overlay state for fig 5.8: a single conditional "λ = …" label,
+// shown only when the scaled point differs noticeably from the original point.
+let v58Ovl=null;
+function v58EnsureOverlay(W,H) {
+  const svg=d5Svg('cvs58-svg',W,H); if(!svg) return null;
+  if(v58Ovl && v58Ovl.W===W && v58Ovl.H===H) return v58Ovl;
+  svg.selectAll('*').remove();
+  const nodes=[ d5Node('lam','#e74c3c','λ = 1.0 (scaled inputs)',110,W/2,H/2) ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v58Ovl={W,H,nodes,sim,gs,conns};
+  return v58Ovl;
+}
 
 function v58Draw() {
   const A=parseFloat(document.getElementById('v58-A').value);
@@ -1394,7 +1752,6 @@ function v58Draw() {
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
-  const linePts58=[];
 
   // Isoquant map
   const qBase=v58Q(Kpt,Lpt,A,a,b);
@@ -1404,7 +1761,6 @@ function v58Draw() {
       const K=Math.pow(q/(A*Math.pow(l,b)),1/a);
       if(K>10||K<0.1){first=true;continue;}
       const [cx,cy]=toC(l,K,W,H,xR,yR);
-      if(qi===1&&l%2<0.05) linePts58.push([cx,cy]);
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
     ctx.stroke();
@@ -1413,16 +1769,22 @@ function v58Draw() {
   // Current point and scaled point
   const [px,py]=toC(Lpt,Kpt,W,H,xR,yR);
   dot5(ctx,px,py,7,'#2e8b57','#fff');
+  const ovl58=v58EnsureOverlay(W,H);
   if(Math.abs(lam-1)>0.05){
     const [spx,spy]=toC(Lpt*lam,Kpt*lam,W,H,xR,yR);
     dot5(ctx,spx,spy,7,'#e74c3c','#fff');
     ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(spx,spy); ctx.stroke(); ctx.setLineDash([]);
-    ctx.font='9px DM Sans,sans-serif';
-    const lamTxt=`λ = ${lam.toFixed(1)} (scaled inputs)`;
-    const lamLbls=[{ax:spx,ay:spy,x:spx+12,y:spy-12,w:ctx.measureText(lamTxt).width+8,h:12,text:lamTxt,color:'#e74c3c',fontSize:9,bold:false}];
-    resolveLabels(lamLbls,linePts58,60,5);
-    lamLbls.forEach(l=>drawForceLabel(ctx,l));
+    if(ovl58){
+      const lamTxt=`λ = ${lam.toFixed(1)} (scaled inputs)`;
+      const n=ovl58.nodes[0];
+      n.label=lamTxt; n.lw=Math.max(60,lamTxt.length*6+10);
+      d5MoveAnchor(n,spx,spy);
+      v52RefreshOverlayDom(ovl58);
+    }
+  } else if(ovl58){
+    ovl58.nodes[0].label=''; ovl58.nodes[0].lw=0;
+    v52RefreshOverlayDom(ovl58);
   }
 
   const q0=v58Q(Kpt,Lpt,A,a,b);
@@ -1446,6 +1808,12 @@ function v58Draw() {
     <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
       Q = ${A.toFixed(1)} &times; K<sup>${a.toFixed(2)}</sup> &times; L<sup>${b.toFixed(2)}</sup>. Scaling inputs by lambda=${lam.toFixed(1)} scales output by ${(qLam/q0).toFixed(3)} = lambda<sup>${rts.toFixed(2)}</sup>.
     </div>`;
+
+  if(ovl58){
+    ['v58-A','v58-a','v58-b','v58-K','v58-L','v58-lam'].forEach(id=>{
+      d5WireSliderSmoothness(document.getElementById(id),ovl58.sim);
+    });
+  }
 }
 
 function v58Update() {
@@ -1472,6 +1840,22 @@ let v59L=0, v59K=2;
 function v59TP(L,K){return K>0&&L>0?Math.pow(K,0.5)*Math.pow(L,0.5):0;}
 function v59MPL(L,K){return L>0.05?0.5*Math.pow(K,0.5)*Math.pow(L,-0.5):Infinity;}
 
+// D3 SVG label-overlay state for fig 5.9: a single "K = X machines" caption
+// that tracks the TP curve (its anchor moves whenever K or the curve shifts).
+let v59Ovl=null;
+function v59EnsureOverlay(W,H) {
+  const svg=d5Svg('cvs59-svg',W,H); if(!svg) return null;
+  if(v59Ovl && v59Ovl.W===W && v59Ovl.H===H) return v59Ovl;
+  svg.selectAll('*').remove();
+  const nodes=[ d5Node('k','#1a56db','K = 2 machines',82,W/2,H/2) ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v59Ovl={W,H,nodes,sim,gs,conns};
+  return v59Ovl;
+}
+
 function v59Draw() {
   const cvs=document.getElementById('cvs59'); if(!cvs) return;
   const dpr=window.devicePixelRatio||1;
@@ -1483,23 +1867,25 @@ function v59Draw() {
   const xR=[0,Lmax],yR=[0,TPmax];
   drawAxesSt(ctx,W,H,xR,yR,'Workers L','Output (units)');
 
-  // TP curve + collect for repulsion
-  const linePts59=[];
+  // TP curve
   ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   for(let l=0;l<=Lmax;l+=0.1){
     const tp=v59TP(l,v59K);
     const [cx,cy]=toC(l,tp,W,H,xR,yR);
-    if(l%2<0.1) linePts59.push([cx,cy]);
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
-  ctx.font='9px DM Sans,sans-serif';
   const tpMidL=Lmax*0.6;
   const [tpax,tpay]=toC(tpMidL,v59TP(tpMidL,v59K),W,H,xR,yR);
-  const kTxt=`K = ${v59K} machines`;
-  const kLbls=[{ax:tpax,ay:tpay,x:tpax+12,y:tpay-8,w:ctx.measureText(kTxt).width+8,h:12,text:kTxt,color:'#1a56db',fontSize:9,bold:false}];
-  resolveLabels(kLbls,linePts59,60,5);
-  kLbls.forEach(l=>drawForceLabel(ctx,l));
+  const ovl59=v59EnsureOverlay(W,H);
+  if(ovl59){
+    const kTxt=`K = ${v59K} machines`;
+    const n=ovl59.nodes[0];
+    n.label=kTxt; n.lw=Math.max(60,kTxt.length*6+10);
+    d5MoveAnchor(n,tpax,tpay);
+    v52RefreshOverlayDom(ovl59);
+    d5WireSliderSmoothness(document.getElementById('v59-w'),ovl59.sim);
+  }
 
   // Current workers
   if(v59L>0){
@@ -1598,9 +1984,41 @@ function quiz510NewRound() {
     <div id="q510-fb" class="quiz-feedback" style="display:none;"></div>
     <div id="q510-canvas-wrap" style="display:none;margin-bottom:0.75rem;">
       <div class="panel-label">Isoquant rendered:</div>
-      <canvas id="cvs510" height="200"></canvas>
+      <div class="cvs-ovl-host" id="cvs510-host"><canvas id="cvs510" height="200"></canvas><svg id="cvs510-svg"></svg></div>
     </div>
     <button class="quiz-next" onclick="quiz510NewRound()" id="q510-next" style="display:none;">Next function &rarr;</button>`;
+}
+
+// D3 SVG label-overlay state for the fig 5.10 quiz result canvas. The host
+// <div>/<svg> is rebuilt via innerHTML each round (quiz510NewRound), so the
+// overlay cannot persist across rounds — it must be torn down and rebuilt
+// fresh every time quiz510DrawResult runs (no W/H-based caching).
+let v510Ovl=null;
+function v510BuildOverlay(W,H) {
+  const svgEl=document.getElementById('cvs510-svg');
+  if(!svgEl) return null;
+  // Always rebuild: the <svg> element itself is a new DOM node each round,
+  // so any previous d3 selection/sim bound to the old node is now stale.
+  if(v510Ovl && v510Ovl.sim){
+    v510Ovl.sim.stop();
+    const idx=_d5AllSims.indexOf(v510Ovl.sim);
+    if(idx>=0) _d5AllSims.splice(idx,1); // avoid unbounded growth across quiz rounds
+  }
+  delete svgEl.dataset.vb; // allow d5Svg to (re)size this fresh node
+  const svg=d5Svg('cvs510-svg',W,H); if(!svg) return null;
+  svg.selectAll('*').remove();
+  const cols=['#2e8b57','#1a56db','#c0392b'];
+  const nodes=[
+    d5Node('q0',cols[0],'Q=2',28,W/2,H/2),
+    d5Node('q1',cols[1],'Q=4',28,W/2,H/2),
+    d5Node('q2',cols[2],'Q=6',28,W/2,H/2),
+  ];
+  const sim=d5MakeSim(nodes);
+  const {gs,conns}=d5AddLabels(svg,nodes,sim);
+  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5RegisterSim(sim);
+  v510Ovl={W,H,nodes,sim,gs,conns};
+  return v510Ovl;
 }
 
 function quiz510DrawResult(type) {
@@ -1614,8 +2032,8 @@ function quiz510DrawResult(type) {
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
-  const linePts510=[], flbls510=[];
   const cols=['#2e8b57','#1a56db','#c0392b'];
+  const ovl510=v510BuildOverlay(W,H);
   [2,4,6].forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2;
     let ax=0,ay=0;
@@ -1623,14 +2041,12 @@ function quiz510DrawResult(type) {
       for(let l=0.3;l<=10;l+=0.1){
         const k=q*q/l; if(k>10){first=true;continue;}
         const [cx,cy]=toC(l,k,W,H,xR,yR);
-        if(l%2<0.1) linePts510.push([cx,cy]);
         first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
       }
       [ax,ay]=toC(q,q,W,H,xR,yR);
     }else if(type==='linear'){
       const [x0,y0]=toC(0,Math.min(q,yR[1]),W,H,xR,yR);
       const [x1,y1]=toC(Math.min(q/0.5,xR[1]),0,W,H,xR,yR);
-      linePts510.push([x0,y0],[x1,y1]);
       ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);
       ax=(x0+x1)/2; ay=(y0+y1)/2;
     }else if(type==='leontief'){
@@ -1638,16 +2054,18 @@ function quiz510DrawResult(type) {
       const [x0,y0]=toC(lk,Math.min(yR[1]*0.95,10),W,H,xR,yR);
       const [xc,yc]=toC(lk,kk,W,H,xR,yR);
       const [x1,y1]=toC(Math.min(xR[1]*0.95,10),kk,W,H,xR,yR);
-      linePts510.push([x0,y0],[xc,yc],[x1,y1]);
       ctx.moveTo(x0,y0);ctx.lineTo(xc,yc);ctx.lineTo(x1,y1);
       ax=xc; ay=yc;
     }
     ctx.stroke();
-    ctx.font='9px DM Sans,sans-serif';
-    flbls510.push({ax,ay,x:ax+10,y:ay-8,w:ctx.measureText(`Q=${q}`).width+8,h:12,text:`Q=${q}`,color:cols[qi],fontSize:9,bold:false});
+    if(ovl510){
+      const txt=`Q=${q}`;
+      const n=ovl510.nodes[qi];
+      n.label=txt; n.lw=Math.max(28,txt.length*6+10);
+      d5MoveAnchor(n,ax,ay);
+    }
   });
-  resolveLabels(flbls510,linePts510,60,5);
-  flbls510.forEach(l=>drawForceLabel(ctx,l));
+  if(ovl510) v52RefreshOverlayDom(ovl510);
 }
 
 function quiz510Answer(ans) {

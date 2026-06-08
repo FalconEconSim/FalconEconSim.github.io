@@ -555,6 +555,8 @@ td:first-child { font-weight: 600; color: var(--ink); }
   <!-- JSXGraph -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+  <!-- D3 (force-simulation draggable label overlays on top of JSXGraph boards, matching S6/S8 gold-standard pattern) -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <!-- MathJax, load synchronously so it's ready for the full page -->
   <script>
     window.MathJax = {
@@ -597,6 +599,169 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollSpy();
 });
 
+</script>
+<script>
+/* =============================================================================
+   D3 SVG FORCE-LABEL OVERLAY  (gold-standard pattern from testing.html S6/S8)
+   -----------------------------------------------------------------------------
+   JSXGraph keeps rendering the curves/points/board exactly as before - this
+   layer only ADDS draggable, collision-avoiding labels with connector lines
+   on top of a JSXGraph board, in a separate absolutely-positioned <svg>.
+
+   Usage:
+     var ov = jxgLabelOverlay('jxg-budget', bcBoard);
+     ov.setLabels([
+       {id:'slope', color:C.blue, label:'slope = -1.25', lw:64, ux:3, uy:5}
+       // ux,uy = JSXGraph USER coordinates of the anchor point this label refers to
+     ]);
+   Call ov.setLabels(...) again any time the board is rebuilt with new data
+   (e.g. from a slider 'input' handler) - it diffs by id, keeps existing node
+   positions/velocities for matching ids (so labels don't "jump"), and the
+   force simulation re-settles around the new anchors. The overlay also
+   listens for the board's own 'update' event (drags, resizes, animations)
+   and re-projects user-coordinate anchors to fresh pixel coordinates, so the
+   connector lines always track the curves precisely.
+   ============================================================================= */
+var OV_LABEL_H = 15;
+
+function jxgLabelOverlay(containerId, board) {
+  var container = document.getElementById(containerId);
+  if (!container) return null;
+  if (getComputedStyle(container).position === 'static') {
+    container.style.position = 'relative';
+  }
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+  container.appendChild(wrap);
+
+  var W = board.canvasWidth || 1, H = board.canvasHeight || 1;
+  var svg = d3.select(wrap).append('svg')
+    .attr('viewBox', '0 0 ' + W + ' ' + H)
+    .style('width', '100%').style('height', '100%').style('display', 'block')
+    .style('font-family', "'DM Sans',system-ui,sans-serif");
+
+  var nodes = [];
+  var sim = d3.forceSimulation(nodes)
+    .force('collide', d3.forceCollide(function(d){ return d.lw * 0.55 + 4; }).strength(0.85))
+    .force('x', d3.forceX(function(d){ return d.fx_anchor; }).strength(0.04))
+    .force('y', d3.forceY(function(d){ return d.fy_anchor; }).strength(0.04))
+    .on('tick', tick);
+
+  var conns = svg.selectAll(null);
+  var lblGs = svg.selectAll(null);
+
+  function clamp() {
+    nodes.forEach(function(d){
+      d.x = Math.max(2, Math.min(W - d.lw - 2, d.x));
+      d.y = Math.max(2, Math.min(H - OV_LABEL_H - 2, d.y));
+    });
+  }
+
+  function tick() {
+    clamp();
+    lblGs.attr('transform', function(d){ return 'translate(' + d.x + ',' + d.y + ')'; });
+    conns
+      .attr('x1', function(d){ return d.fx_anchor; })
+      .attr('y1', function(d){ return d.fy_anchor; })
+      .attr('x2', function(d){ return d.x + d.lw / 2; })
+      .attr('y2', function(d){ return d.y + OV_LABEL_H / 2; });
+  }
+
+  /* Convert a JSXGraph USER coordinate to pixel coords in the board's canvas
+     (same pixel space the SVG viewBox is sized to). */
+  function toScreen(ux, uy) {
+    try {
+      var c = new JXG.Coords(JXG.COORDS_BY_USER, [ux, uy], board);
+      return { x: c.scrCoords[1], y: c.scrCoords[2] };
+    } catch (e) { return { x: 0, y: 0 }; }
+  }
+
+  function resize() {
+    var w = board.canvasWidth || W, h = board.canvasHeight || H;
+    if (w !== W || h !== H) {
+      W = w; H = h;
+      svg.attr('viewBox', '0 0 ' + W + ' ' + H);
+    }
+  }
+
+  /* Re-project all anchors from their stored user-coordinates to fresh pixel
+     coordinates (board may have panned/zoomed/resized/rebuilt its bbox). */
+  function reproject() {
+    resize();
+    var moved = false;
+    nodes.forEach(function(d){
+      var p = toScreen(d.ux, d.uy);
+      if (Math.abs(p.x - d.fx_anchor) > 0.01 || Math.abs(p.y - d.fy_anchor) > 0.01) moved = true;
+      d.fx_anchor = p.x; d.fy_anchor = p.y;
+    });
+    if (moved) sim.alpha(Math.max(sim.alpha(), 0.25)).restart();
+  }
+
+  board.on('update', reproject);
+
+  /* spec: [{id,color,label,lw,ux,uy}] - ux,uy are JSXGraph USER coordinates */
+  function setLabels(spec) {
+    var byId = {};
+    nodes.forEach(function(d){ byId[d.id] = d; });
+
+    var newNodes = spec.map(function(s){
+      var p = toScreen(s.ux, s.uy);
+      var existing = byId[s.id];
+      if (existing) {
+        existing.color = s.color; existing.label = s.label; existing.lw = s.lw;
+        existing.ux = s.ux; existing.uy = s.uy;
+        existing.ax = p.x; existing.ay = p.y;
+        existing.fx_anchor = p.x; existing.fy_anchor = p.y;
+        return existing;
+      }
+      var ang = Math.random() * 2 * Math.PI, r = 40 + Math.random() * 30;
+      return {
+        id: s.id, color: s.color, label: s.label, lw: s.lw,
+        ux: s.ux, uy: s.uy, ax: p.x, ay: p.y,
+        fx_anchor: p.x, fy_anchor: p.y,
+        x: p.x + r * Math.cos(ang), y: p.y + r * Math.sin(ang)
+      };
+    });
+
+    nodes.length = 0;
+    Array.prototype.push.apply(nodes, newNodes);
+
+    conns = svg.selectAll('.ovconn').data(nodes, function(d){ return d.id; });
+    conns.exit().remove();
+    conns = conns.enter()
+      .append('line').attr('class', 'ovconn')
+      .attr('stroke', function(d){ return d.color; })
+      .attr('stroke-width', 0.9).attr('stroke-dasharray', '4,3').attr('opacity', 0.55)
+      .merge(conns);
+
+    var gsSel = svg.selectAll('.ovlbl').data(nodes, function(d){ return d.id; });
+    gsSel.exit().remove();
+    var gsEnter = gsSel.enter()
+      .append('g').attr('class', 'ovlbl draggable-label')
+      .style('pointer-events', 'auto')
+      .call(d3.drag()
+        .on('start', function(e,d){ sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on('drag',  function(e,d){ d.fx = e.x; d.fy = e.y; })
+        .on('end',   function(e,d){ sim.alphaTarget(0); d.fx = null; d.fy = null; })
+      );
+    gsEnter.append('rect').attr('width', function(d){ return d.lw; }).attr('height', OV_LABEL_H).attr('rx', 3)
+      .attr('fill', 'white').attr('stroke', function(d){ return d.color; }).attr('stroke-width', 0.8).attr('opacity', 0.95);
+    gsEnter.append('text').attr('x', function(d){ return d.lw/2; }).attr('y', OV_LABEL_H - 4)
+      .attr('text-anchor', 'middle').attr('fill', function(d){ return d.color; })
+      .attr('font-size', 9).attr('font-weight', 600)
+      .text(function(d){ return d.label; });
+    lblGs = gsEnter.merge(gsSel);
+    /* keep box/text in sync for nodes that already existed (color/label/width may change) */
+    lblGs.select('rect').attr('width', function(d){ return d.lw; }).attr('stroke', function(d){ return d.color; });
+    lblGs.select('text').attr('x', function(d){ return d.lw/2; }).attr('fill', function(d){ return d.color; }).text(function(d){ return d.label; });
+
+    sim.nodes(nodes);
+    sim.alpha(0.7).restart();
+  }
+
+  return { setLabels: setLabels, reproject: reproject, sim: sim };
+}
 </script>
 <script>
 /* =============================================================================
@@ -1443,11 +1608,13 @@ function initUtilitySurface() {
    Shaded region is fixed polygon - not draggable.
    ============================================================================= */
 var bcBoard;
+var bcOverlay = null;
 
 var bcObjects=[];
 
 function initBudgetBoard() {
   bcBoard = mkBoard('jxg-budget', [-2.5, 45, 45, -2.5]);
+  bcOverlay = jxgLabelOverlay('jxg-budget', bcBoard);
   buildBudgetBoard();
   ['bc-I','bc-Px','bc-Py'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', function() {
@@ -1484,11 +1651,14 @@ function buildBudgetBoard() {
     size:5,color:C.red,fixed:true,highlight:false,withLabel:false
   }));
 
-  /* Slope label - midpoint of the line, offset above-right so it clears the line */
+  /* Slope label - D3 force-label overlay (gold-standard S6/S8 pattern), anchored
+     to the midpoint of the budget line. Replaces the old fixed JSXGraph text. */
   var mx2=xI*0.45, my2=(I-Px*mx2)/Py;
-  bcObjects.push(bcBoard.create('text',[mx2+m*0.04,my2+m*0.05,
-    'slope = \u2212'+(Px/Py).toFixed(2)
-  ],{fontSize:10,color:C.blue,fixed:true,highlight:false,anchorX:'left'}));
+  if (bcOverlay) {
+    bcOverlay.setLabels([
+      {id:'slope', color:C.blue, label:'slope = \u2212'+(Px/Py).toFixed(2), lw:62, ux:mx2, uy:my2}
+    ]);
+  }
 
   /* Sidebar - no plain P_X text */
   document.getElementById('bc-equation').textContent=Px.toFixed(1)+'X + '+Py.toFixed(1)+'Y = '+I.toFixed(0);
@@ -1505,10 +1675,11 @@ function buildBudgetBoard() {
 /* =============================================================================
    4. SHIFT vs PIVOT - button group, clean board
    ============================================================================= */
-var shiftBoard, shiftObjects=[];
+var shiftBoard, shiftObjects=[], shiftOverlay=null;
 
 function initShiftBoard() {
   shiftBoard=mkBoard('jxg-shifts',[-2.5,50,50,-2.5]);
+  shiftOverlay=jxgLabelOverlay('jxg-shifts', shiftBoard);
   /* Fig 2.4: suppress negative tick labels */
   try {
     ['x','y'].forEach(function(ax) {
@@ -1574,20 +1745,19 @@ function buildShiftBoard() {
     {strokeColor:C.red,strokeWidth:2.8,highlight:false});
   shiftObjects.push(l1,l2);
 
-  /* Labels: place both at same x = 35% of smaller intercept, 
-     whichever line is higher at that x gets label above */
+  /* Curve-name labels - D3 force-label overlay (gold-standard S6/S8 pattern).
+     Anchored directly on each line at x = 35% of the smaller intercept; the
+     force simulation (collision + weak spring back to anchor) keeps the two
+     draggable label boxes from overlapping each other or the curves. */
   var labelX = Math.min(xi1, xi2) * 0.35;
   var ly1_at_lx = (I0 - Px0 * labelX) / Py0;
   var ly2_at_lx = (I2 - Px2 * labelX) / Py2;
-  var off = m * 0.12;
-  var off1, off2;
-  if (ly1_at_lx >= ly2_at_lx) { off1 = off; off2 = -off; }
-  else                          { off1 = -off; off2 = off; }
-  var t1 = shiftBoard.create('text', [labelX, ly1_at_lx + off1, 'B\u2080 (original)'],
-    {fontSize:10, color:C.blue, fixed:true, highlight:false, anchorX:'middle'});
-  var t2 = shiftBoard.create('text', [labelX, ly2_at_lx + off2, 'B\u2081 (new)'],
-    {fontSize:10, color:C.red, fixed:true, highlight:false, anchorX:'middle'});
-  shiftObjects.push(t1, t2);
+  if (shiftOverlay) {
+    shiftOverlay.setLabels([
+      {id:'B0', color:C.blue, label:'B\u2080 (original)', lw:74, ux:labelX, uy:ly1_at_lx},
+      {id:'B1', color:C.red,  label:'B\u2081 (new)',      lw:62, ux:labelX, uy:ly2_at_lx}
+    ]);
+  }
 
   /* Orange arrows showing intercept movement; placed just inside the bounding box */
   var arrY = -m*0.09;  /* below x-axis */
@@ -2248,10 +2418,11 @@ function buildMRSSlider() {
 /* =============================================================================
    8. WHY ICs CANNOT CROSS
    ============================================================================= */
-var crossBoard = null, crossObjects = [];
+var crossBoard = null, crossObjects = [], crossOverlay = null;
 
 function initICCross() {
   crossBoard = mkBoard('jxg-iccross', [-0.8, 16, 16, -0.8]);
+  crossOverlay = jxgLabelOverlay('jxg-iccross', crossBoard);
   buildICCross();
   document.getElementById('iccross-u2').addEventListener('input', function() {
     buildICCross();
@@ -2272,18 +2443,24 @@ function buildICCross() {
     return x > 0.1 ? Math.pow(u1/Math.pow(x,a),1/b) : NaN;
   }, 0.1, 14], { strokeColor: '#3d5a80', strokeWidth: 3, highlight: false });
   crossObjects.push(ic1);
-  var lbl1 = crossBoard.create('text', [12.5, Math.pow(u1/Math.pow(12.5,a),1/b)+0.35, 'IC₂ (U=7)'],
-    {fontSize:9, color:'#3d5a80', fixed:true, highlight:false});
-  crossObjects.push(lbl1);
 
   /* Inner IC (amber, moveable) */
   var ic2 = crossBoard.create('functiongraph', [function(x){
     return x > 0.1 ? Math.pow(u2/Math.pow(x,a),1/b) : NaN;
   }, 0.1, 14], { strokeColor: '#d4813a', strokeWidth: 3, highlight: false });
   crossObjects.push(ic2);
-  var lbl2 = crossBoard.create('text', [12.5, Math.pow(u2/Math.pow(12.5,a),1/b)+0.4, function(){return 'IC₁ (U='+parseFloat(document.getElementById('iccross-u2').value).toFixed(1)+')';}],
-    {fontSize:9, color:'#d4813a', fixed:true, highlight:false});
-  crossObjects.push(lbl2);
+
+  /* Curve-name labels - D3 force-label overlay (gold-standard S6/S8 pattern),
+     anchored on each curve near its right end. Replaces the old fixed
+     JSXGraph text labels (which could overlap as the inner curve moves). */
+  if (crossOverlay) {
+    crossOverlay.setLabels([
+      {id:'IC2', color:'#3d5a80', label:'IC₂ (U=7)', lw:60,
+        ux:12.5, uy:Math.pow(u1/Math.pow(12.5,a),1/b)},
+      {id:'IC1', color:'#d4813a', label:'IC₁ (U='+u2.toFixed(1)+')', lw:64,
+        ux:12.5, uy:Math.pow(u2/Math.pow(12.5,a),1/b)}
+    ]);
+  }
 
   /* Check for crossing: ICs cross when u2 > u1 (ic2 above ic1) at some x */
   var crossed = u2 >= u1;
