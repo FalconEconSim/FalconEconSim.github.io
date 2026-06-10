@@ -314,23 +314,23 @@ function typeName(t) {
 // ── Hints ─────────────────────────────────────────────────────
 const HINTS = {
   cobb_douglas: [
-    'Use the tangency condition: set \\(\\mathrm{MRS} = P_X/P_Y\\). For \\(U = X^\\alpha Y^\\beta\\), \\(\\mathrm{MRS} = (\\alpha/\\beta)\\cdot(Y/X)\\).',
-    'Shortcut: \\(X^* = \\alpha \\cdot I/P_X\\) and \\(Y^* = \\beta \\cdot I/P_Y\\). Plug the numbers straight in.'
+    'Use the tangency condition: set \\(\\mathrm{MRS} = P_x/P_y\\). For \\(U = X^\\alpha Y^\\beta\\), \\(\\mathrm{MRS} = (\\alpha/\\beta)\\cdot(Y/X)\\).',
+    'Shortcut: \\(X^* = \\alpha \\cdot I/P_x\\) and \\(Y^* = \\beta \\cdot I/P_y\\). Plug the numbers straight in.'
   ],
   perfect_substitutes: [
-    'Compare bang-for-buck: \\(MU_X/P_X\\) vs \\(MU_Y/P_Y\\). Spend all income on the good with the higher ratio.',
-    'If \\(a/P_X > b/P_Y\\): set \\(X^* = I/P_X\\), \\(Y^*=0\\). If \\(b/P_Y > a/P_X\\): set \\(Y^* = I/P_Y\\), \\(X^*=0\\).'
+    'Compare bang-for-buck: \\(MU_x/P_x\\) vs \\(MU_y/P_y\\). Spend all income on the good with the higher ratio.',
+    'If \\(a/P_x > b/P_y\\): set \\(X^* = I/P_x\\), \\(Y^*=0\\). If \\(b/P_y > a/P_x\\): set \\(Y^* = I/P_y\\), \\(X^*=0\\).'
   ],
   perfect_complements: [
     'At the kink of the L-shape: \\(X/a = Y/b\\). Use this to express \\(Y\\) in terms of \\(X\\).',
-    'Substitute \\(Y=(b/a)X\\) into the budget \\(P_X X + P_Y Y = I\\) and solve for \\(X^*\\), then \\(Y^*\\).'
+    'Substitute \\(Y=(b/a)X\\) into the budget \\(P_x X + P_y Y = I\\) and solve for \\(X^*\\), then \\(Y^*\\).'
   ]
 };
 
 // ── Method blurbs ──────────────────────────────────────────────
 const METHOD = {
-  cobb_douglas:       '<strong>Approach: Interior solution.</strong> Smooth, strictly convex ICs: set \\(\\mathrm{MRS} = P_X/P_Y\\) and combine with the budget constraint.',
-  perfect_substitutes:'<strong>Approach: Corner solution.</strong> Straight-line ICs: compare \\(MU_X/P_X\\) vs \\(MU_Y/P_Y\\) and spend all income on the higher-value good.',
+  cobb_douglas:       '<strong>Approach: Interior solution.</strong> Smooth, strictly convex ICs: set \\(\\mathrm{MRS} = P_x/P_y\\) and combine with the budget constraint.',
+  perfect_substitutes:'<strong>Approach: Corner solution.</strong> Straight-line ICs: compare \\(MU_x/P_x\\) vs \\(MU_y/P_y\\) and spend all income on the higher-value good.',
   perfect_complements:'<strong>Approach: Kink solution.</strong> L-shaped ICs: the optimum is always at the kink. Use the fixed-proportions condition \\(X/a = Y/b\\).'
 };
 
@@ -345,9 +345,9 @@ function intuition(prob, sol) {
       title: 'The Fixed Budget-Share Property',
       body: `Think of a student dividing a $${I} weekly budget between dining out&nbsp;(X) and groceries&nbsp;(Y).
              With \\(\\alpha=${fracTex(a)}\\) and \\(\\beta=${fracTex(1-a)}\\), they will <strong>always spend ${pct_x}% on X and ${pct_y}% on Y</strong>
-             at any prices. Verify: \\(P_X X^* = ${Px}\\times${niceNum(xs)} = ${niceNum(Px*xs)}\\),
+             at any prices. Verify: \\(P_x X^* = ${Px}\\times${niceNum(xs)} = ${niceNum(Px*xs)}\\),
              which is exactly ${pct_x}% of \\(I=${I}\\).
-             This <strong>constant budget-share</strong> result (\\(P_X X^* = \\alpha I\\) always) is why Cobb-Douglas preferences
+             This <strong>constant budget-share</strong> result (\\(P_x X^* = \\alpha I\\) always) is why Cobb-Douglas preferences
              are the workhorse of macroeconomics: household survey data consistently shows remarkably stable
              expenditure shares across income levels and over time.`
     };
@@ -457,7 +457,7 @@ function renderProblem() {
     <div class="prob-card">
       <span class="prob-type-badge">${typeName(t)}</span>
       <div class="prob-statement">
-        A consumer has income \\(I=${I}\\) and faces prices \\(P_X=${Px}\\) and \\(P_Y=${Py}\\).<br>
+        A consumer has income \\(I=${I}\\) and faces prices \\(P_x=${Px}\\) and \\(P_y=${Py}\\).<br>
         Their utility function is ${utilTex(currentProb)}.<br><br>
         <strong>Find the optimal bundle \\((X^*,\\,Y^*)\\) that maximises utility subject to the budget constraint.</strong>
       </div>
@@ -567,25 +567,25 @@ function buildSteps(prob, sol) {
 
   const s1 = step('①', 'Budget Constraint',
     `\\(${Px}X + ${Py}Y = ${I}\\)<br>
-     Intercepts: \\(I/P_X = ${niceNum(xi)}\\), \\(\\;I/P_Y = ${niceNum(yi)}\\)<br>
-     Slope: \\(-P_X/P_Y = ${niceNum(-Px/Py)}\\)`);
+     Intercepts: \\(I/P_x = ${niceNum(xi)}\\), \\(\\;I/P_y = ${niceNum(yi)}\\)<br>
+     Slope: \\(-P_x/P_y = ${niceNum(-Px/Py)}\\)`);
 
   let s2;
   if (t === 'cobb_douglas') {
     const { a, b } = prob;
     s2 = step('②', 'Tangency Condition',
-      `\\(\\mathrm{MRS} = \\frac{\\alpha}{\\beta}\\cdot\\frac{Y}{X} = \\frac{P_X}{P_Y}\\)<br>
-       \\(X^* = \\alpha\\cdot\\frac{I}{P_X} = ${fracTex(a)}\\times\\frac{${I}}{${Px}} = ${niceNum(xs)}\\)<br>
-       \\(Y^* = \\beta\\cdot\\frac{I}{P_Y} = ${fracTex(b)}\\times\\frac{${I}}{${Py}} = ${niceNum(ys)}\\)`);
+      `\\(\\mathrm{MRS} = \\frac{\\alpha}{\\beta}\\cdot\\frac{Y}{X} = \\frac{P_x}{P_y}\\)<br>
+       \\(X^* = \\alpha\\cdot\\frac{I}{P_x} = ${fracTex(a)}\\times\\frac{${I}}{${Px}} = ${niceNum(xs)}\\)<br>
+       \\(Y^* = \\beta\\cdot\\frac{I}{P_y} = ${fracTex(b)}\\times\\frac{${I}}{${Py}} = ${niceNum(ys)}\\)`);
   } else if (t === 'perfect_substitutes') {
     const { a, b } = prob;
     const bx = (a/Px).toFixed(3), by = (b/Py).toFixed(3);
     const xWins = a/Px > b/Py;
     s2 = step('②', 'Bang-for-Buck Comparison',
-      `\\(MU_X/P_X = ${a}/${Px} = ${bx}\\quad\\) vs \\(\\quad MU_Y/P_Y = ${b}/${Py} = ${by}\\)<br>
+      `\\(MU_x/P_x = ${a}/${Px} = ${bx}\\quad\\) vs \\(\\quad MU_y/P_y = ${b}/${Py} = ${by}\\)<br>
        ${xWins
-         ? `X gives more utility per dollar → spend all on X<br>\\(X^*=I/P_X=${niceNum(xs)},\\quad Y^*=0\\)`
-         : `Y gives more utility per dollar → spend all on Y<br>\\(Y^*=I/P_Y=${niceNum(ys)},\\quad X^*=0\\)`}`);
+         ? `X gives more utility per dollar → spend all on X<br>\\(X^*=I/P_x=${niceNum(xs)},\\quad Y^*=0\\)`
+         : `Y gives more utility per dollar → spend all on Y<br>\\(Y^*=I/P_y=${niceNum(ys)},\\quad X^*=0\\)`}`);
   } else {
     const { a, b } = prob;
     s2 = step('②', 'Fixed-Proportions (Kink) Condition',

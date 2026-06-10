@@ -261,7 +261,7 @@ function renderDemandProblem() {
 
   const rows = pxArr.map((Px, i) => `
     <div class="answer-row">
-      <span class="ans-label">\\(P_X=${Px}\\):</span>
+      <span class="ans-label">\\(P_x=${Px}\\):</span>
       <span class="ans-label" style="min-width:28px;">\\(X^*=\\)</span>
       <input class="ans-input" id="ans-x${i}" type="text" placeholder="e.g. ${sols[i].Xstar % 1 === 0 ? sols[i].Xstar : '?'}" autocomplete="off" />
     </div>`).join('');
@@ -270,12 +270,12 @@ function renderDemandProblem() {
     <div class="prob-card">
       <span class="prob-type-badge">Demand Curve Derivation</span>
       <div class="prob-statement">
-        A consumer has income \\(I = ${I}\\) and faces \\(P_Y = ${Py}\\).<br>
+        A consumer has income \\(I = ${I}\\) and faces \\(P_y = ${Py}\\).<br>
         Their utility is \\(U(X,Y) = X^{1/2}Y^{1/2}\\) (Cobb-Douglas, \\(\\alpha = 0.5\\)).<br><br>
-        <strong>(a)</strong> For each price below, compute the optimal \\(X^*\\) using \\(X^* = \\tfrac{I}{2P_X}\\).<br>
-        <strong>(b)</strong> These three \\((X^*, P_X)\\) pairs trace out the demand curve.
+        <strong>(a)</strong> For each price below, compute the optimal \\(X^*\\) using \\(X^* = \\tfrac{I}{2P_x}\\).<br>
+        <strong>(b)</strong> These three \\((X^*, P_x)\\) pairs trace out the demand curve.
       </div>
-      <div class="method-hint"><strong>Approach:</strong> With \\(\\alpha=\\beta=0.5\\), the Cobb-Douglas shortcut gives \\(X^* = I/(2P_X)\\) directly. Compute at each price, then verify \\(P_X X^* + P_Y Y^* = I\\).</div>
+      <div class="method-hint"><strong>Approach:</strong> With \\(\\alpha=\\beta=0.5\\), the Cobb-Douglas shortcut gives \\(X^* = I/(2P_x)\\) directly. Compute at each price, then verify \\(P_x X^* + P_y Y^* = I\\).</div>
     </div>
     <div class="answer-section">
       <div class="answer-section-label">Your Answers</div>
@@ -295,6 +295,7 @@ function renderDemandProblem() {
 }
 
 function checkDemandAnswer() {
+  if (problemType !== 'demand') return; // stale handler / type-switch race guard
   const sols = currentSol;
   const fb = document.getElementById('feedback');
   const answers = sols.map((s, i) => parseAnswer((document.getElementById(`ans-x${i}`) || {}).value || ''));
@@ -312,21 +313,22 @@ function checkDemandAnswer() {
     const tol = Math.max(0.05, s.Xstar * 0.01);
     const ok = near(answers[i], s.Xstar, tol);
     if (!ok) allCorrect = false;
-    resultLines.push(`\\(P_X=${s.Px}\\): ${ok ? '✅' : '❌'} your answer ${niceNum(answers[i])}, correct ${niceNum(s.Xstar)}`);
+    resultLines.push(`\\(P_x=${s.Px}\\): ${ok ? '✅' : '❌'} your answer ${niceNum(answers[i])}, correct ${niceNum(s.Xstar)}`);
   });
 
   if (allCorrect) {
-    fb.innerHTML = `<div class="fb-ok">✅ <strong>All correct!</strong> The three demand points are:<br>${resultLines.join('<br>')}<br>These lie on the demand curve \\(X^* = ${currentProb.I/(2)}\\!/P_X\\).</div>`;
+    fb.innerHTML = `<div class="fb-ok">✅ <strong>All correct!</strong> The three demand points are:<br>${resultLines.join('<br>')}<br>These lie on the demand curve \\(X^* = ${currentProb.I/(2)}\\!/P_x\\).</div>`;
   } else {
     const hint = attempts === 1
-      ? `Recall \\(X^* = \\tfrac{I}{2P_X} = \\tfrac{${currentProb.I}}{2P_X}\\). Substitute each price value directly.`
-      : `Correct answers: ${sols.map(s => `\\(P_X=${s.Px}: X^*=${niceNum(s.Xstar)}\\)`).join(', ')}.`;
+      ? `Recall \\(X^* = \\tfrac{I}{2P_x} = \\tfrac{${currentProb.I}}{2P_x}\\). Substitute each price value directly.`
+      : `Correct answers: ${sols.map(s => `\\(P_x=${s.Px}: X^*=${niceNum(s.Xstar)}\\)`).join(', ')}.`;
     fb.innerHTML = `<div class="fb-partial">${resultLines.join('<br>')}</div><div class="fb-hint"><strong>Hint:</strong> ${hint}</div>`;
   }
   if (window.MathJax) MathJax.typesetPromise([fb]);
 }
 
 function showDemandSolution() {
+  if (problemType !== 'demand') return; // stale handler / type-switch race guard
   if (attempts === 0) {
     const fb = document.getElementById('feedback');
     fb.innerHTML = `<div class="fb-error">Please attempt the problem at least once before viewing the solution.</div>`;
@@ -340,7 +342,7 @@ function showDemandSolution() {
     <div class="step-card">
       <div class="step-num">P=${s.Px}</div>
       <div class="step-body">
-        <div class="step-title">At \\(P_X = ${s.Px}\\)</div>
+        <div class="step-title">At \\(P_x = ${s.Px}\\)</div>
         Budget line: \\(${s.Px}X + ${Py}Y = ${I}\\)<br>
         \\(X^* = \\tfrac{${I}}{2 \\times ${s.Px}} = ${niceNum(s.Xstar)}\\)<br>
         \\(Y^* = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(s.Ystar)}\\)<br>
@@ -348,7 +350,7 @@ function showDemandSolution() {
       </div>
     </div>`).join('');
 
-  const demandEq = `X^* = \\dfrac{${I/2}}{P_X}`;
+  const demandEq = `X^* = \\dfrac{${I/2}}{P_x}`;
 
   document.getElementById('sol-container').innerHTML = `
     <div class="solution-wrapper">
@@ -364,7 +366,7 @@ function showDemandSolution() {
             <div class="step-num">①</div>
             <div class="step-body">
               <div class="step-title">General Formula</div>
-              \\(X^* = \\alpha \\tfrac{I}{P_X} = \\tfrac{${I}}{2P_X}\\) &nbsp;·&nbsp; \\(Y^* = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(I/(2*Py))}\\) (fixed)
+              \\(X^* = \\alpha \\tfrac{I}{P_x} = \\tfrac{${I}}{2P_x}\\) &nbsp;·&nbsp; \\(Y^* = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(I/(2*Py))}\\) (fixed)
             </div>
           </div>
           ${stepsHtml}
@@ -373,7 +375,7 @@ function showDemandSolution() {
             <div class="step-body">
               <div class="step-title">Demand Curve</div>
               \\[${demandEq}\\]
-              As \\(P_X\\) doubles, \\(X^*\\) halves. Law of Demand holds.
+              As \\(P_x\\) doubles, \\(X^*\\) halves. Law of Demand holds.
             </div>
           </div>
         </div>
@@ -384,18 +386,20 @@ function showDemandSolution() {
         <div class="intuition-body">
           Each point on the demand curve is the solution to a full utility-maximisation problem at a different price.
           With Cobb-Douglas preferences, the consumer <strong>always spends exactly 50% of income on X</strong>
-          (since \\(\\alpha=0.5\\)): \\(P_X X^* = 0.5 \\times ${I} = ${I/2}\\) at every price.
-          This is why the demand curve is a rectangular hyperbola \\(X^* = ${I/2}/P_X\\),
+          (since \\(\\alpha=0.5\\)): \\(P_x X^* = 0.5 \\times ${I} = ${I/2}\\) at every price.
+          This is why the demand curve is a rectangular hyperbola \\(X^* = ${I/2}/P_x\\),
           and why the area under the demand curve (total expenditure on X) is constant.
         </div>
       </div>
     </div>`;
 
   const sc = document.getElementById('sol-container');
+  // capture now: the typeset promise may resolve after a problem-type switch
+  const probSnap = currentProb, solSnap = currentSol;
   if (window.MathJax) {
-    MathJax.typesetPromise([sc]).then(() => { drawDemandGraph(currentProb, currentSol); sc.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
+    MathJax.typesetPromise([sc]).then(() => { if (problemType !== 'demand') return; drawDemandGraph(probSnap, solSnap); sc.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
   } else {
-    drawDemandGraph(currentProb, currentSol);
+    drawDemandGraph(probSnap, solSnap);
     sc.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 }
@@ -521,14 +525,14 @@ function renderSlutskyProblem() {
     <div class="prob-card">
       <span class="prob-type-badge">Slutsky Decomposition</span>
       <div class="prob-statement">
-        A consumer has income \\(I = ${I}\\), \\(P_Y = ${Py}\\), and \\(U(X,Y) = X^{1/2}Y^{1/2}\\).<br>
-        The price of X ${direction} from \\(P_X = ${Px_old}\\) to \\(P_X = ${Px_new}\\).<br><br>
-        <strong>(a)</strong> Find bundle A (original optimum at \\(P_X=${Px_old}\\)).<br>
-        <strong>(b)</strong> Find bundle B (new optimum at \\(P_X=${Px_new}\\)).<br>
-        <strong>(c)</strong> Find compensated bundle C using \\(X_C = X_A\\sqrt{P_{X,old}/P_{X,new}}\\), \\(Y_C = X_C \\cdot P_{X,new}/P_Y\\).<br>
+        A consumer has income \\(I = ${I}\\), \\(P_y = ${Py}\\), and \\(U(X,Y) = X^{1/2}Y^{1/2}\\).<br>
+        The price of X ${direction} from \\(P_x = ${Px_old}\\) to \\(P_x = ${Px_new}\\).<br><br>
+        <strong>(a)</strong> Find bundle A (original optimum at \\(P_x=${Px_old}\\)).<br>
+        <strong>(b)</strong> Find bundle B (new optimum at \\(P_x=${Px_new}\\)).<br>
+        <strong>(c)</strong> Find compensated bundle C using \\(X_C = X_A\\sqrt{P_{x,old}/P_{x,new}}\\), \\(Y_C = X_C \\cdot P_{x,new}/P_y\\).<br>
         <strong>(d)</strong> Compute \\(\\mathrm{SE} = X_C - X_A\\) and \\(\\mathrm{IE} = X_B - X_C\\). Verify \\(\\mathrm{SE}+\\mathrm{IE}=X_B-X_A\\).
       </div>
-      <div class="method-hint"><strong>Approach:</strong> Use \\(X^* = I/(2P_X)\\) and \\(Y^* = I/(2P_Y)\\) for Cobb-Douglas with \\(\\alpha=0.5\\). The compensated bundle C lies on the original IC at new prices (compensated budget line is tangent to U\\(_A\\) with slope \\(-P_{X,new}/P_Y\\)).</div>
+      <div class="method-hint"><strong>Approach:</strong> Use \\(X^* = I/(2P_x)\\) and \\(Y^* = I/(2P_y)\\) for Cobb-Douglas with \\(\\alpha=0.5\\). The compensated bundle C lies on the original IC at new prices (compensated budget line is tangent to U\\(_A\\) with slope \\(-P_{x,new}/P_y\\)).</div>
     </div>
     <div class="answer-section">
       <div class="answer-section-label">Your Answers</div>
@@ -563,6 +567,7 @@ function renderSlutskyProblem() {
 }
 
 function checkSlutskyAnswer() {
+  if (problemType !== 'slutsky') return; // stale handler / type-switch race guard
   const s = currentSol;
   const fb = document.getElementById('feedback');
   const ids = ['xa','ya','xb','yb','xc','yc','se','ie'];
@@ -590,7 +595,7 @@ function checkSlutskyAnswer() {
     fb.innerHTML = `<div class="fb-ok">✅ <strong>All correct!</strong> Decomposition verified: \\(\\mathrm{SE}+\\mathrm{IE}=${niceNum(s.SE)}+(${niceNum(s.IE)})=${niceNum(s.TE)}=X_B-X_A\\) ✓<br>X is a <strong>normal good</strong> (IE has the same sign as TE).</div>`;
   } else {
     const hint = attempts === 1
-      ? `Recall: \\(X^* = I/(2P_X)\\). For bundle A: \\(X_A = ${currentProb.I}/(2 \\times ${currentProb.Px_old})\\). Then \\(X_C = X_A\\sqrt{${currentProb.Px_old}/${currentProb.Px_new}}\\).`
+      ? `Recall: \\(X^* = I/(2P_x)\\). For bundle A: \\(X_A = ${currentProb.I}/(2 \\times ${currentProb.Px_old})\\). Then \\(X_C = X_A\\sqrt{${currentProb.Px_old}/${currentProb.Px_new}}\\).`
       : `Correct answers: A=(${niceNum(s.XA)},${niceNum(s.YA)}), B=(${niceNum(s.XB)},${niceNum(s.YB)}), C=(${niceNum(s.XC)},${niceNum(s.YC)}), SE=${niceNum(s.SE)}, IE=${niceNum(s.IE)}.`;
     fb.innerHTML = `<div class="fb-partial">${lines.join('<br>')}</div><div class="fb-hint"><strong>Hint:</strong> ${hint}</div>`;
   }
@@ -598,6 +603,7 @@ function checkSlutskyAnswer() {
 }
 
 function showSlutskySolution() {
+  if (problemType !== 'slutsky') return; // stale handler / type-switch race guard
   if (attempts === 0) {
     const fb = document.getElementById('feedback');
     fb.innerHTML = `<div class="fb-error">Please attempt the problem at least once before viewing the solution.</div>`;
@@ -619,7 +625,7 @@ function showSlutskySolution() {
           <div class="step-card">
             <div class="step-num">①</div>
             <div class="step-body">
-              <div class="step-title">Bundle A (original, \\(P_X=${Px_old}\\))</div>
+              <div class="step-title">Bundle A (original, \\(P_x=${Px_old}\\))</div>
               \\(X_A = \\tfrac{${I}}{2 \\times ${Px_old}} = ${niceNum(s.XA)}\\)<br>
               \\(Y_A = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(s.YA)}\\)<br>
               Check: \\(${Px_old}(${niceNum(s.XA)})+${Py}(${niceNum(s.YA)})=${niceNum(Px_old*s.XA+Py*s.YA)}=${I}\\) ✓
@@ -628,7 +634,7 @@ function showSlutskySolution() {
           <div class="step-card">
             <div class="step-num">②</div>
             <div class="step-body">
-              <div class="step-title">Bundle B (new, \\(P_X=${Px_new}\\))</div>
+              <div class="step-title">Bundle B (new, \\(P_x=${Px_new}\\))</div>
               \\(X_B = \\tfrac{${I}}{2 \\times ${Px_new}} = ${niceNum(s.XB)}\\)<br>
               \\(Y_B = \\tfrac{${I}}{2 \\times ${Py}} = ${niceNum(s.YB)}\\) (unchanged)<br>
               Check: \\(${Px_new}(${niceNum(s.XB)})+${Py}(${niceNum(s.YB)})=${niceNum(Px_new*s.XB+Py*s.YB)}=${I}\\) ✓
@@ -639,7 +645,7 @@ function showSlutskySolution() {
             <div class="step-body">
               <div class="step-title">Compensated Bundle C</div>
               \\(X_C = X_A\\sqrt{\\tfrac{P_{old}}{P_{new}}} = ${niceNum(s.XA)}\\sqrt{\\tfrac{${Px_old}}{${Px_new}}} = ${niceNum(s.XC)}\\)<br>
-              \\(Y_C = X_C \\cdot \\tfrac{P_{X,new}}{P_Y} = ${niceNum(s.XC)} \\cdot \\tfrac{${Px_new}}{${Py}} = ${niceNum(s.YC)}\\)
+              \\(Y_C = X_C \\cdot \\tfrac{P_{x,new}}{P_y} = ${niceNum(s.XC)} \\cdot \\tfrac{${Px_new}}{${Py}} = ${niceNum(s.YC)}\\)
             </div>
           </div>
           <div class="step-card verify">
@@ -658,7 +664,7 @@ function showSlutskySolution() {
         <div class="intuition-label">Economic Intuition</div>
         <div class="intuition-title">Why Both Effects Reinforce for a Normal Good</div>
         <div class="intuition-body">
-          When \\(P_X\\) ${Px_new < Px_old ? 'falls' : 'rises'} from ${Px_old} to ${Px_new}, two forces act on \\(X^*\\):<br><br>
+          When \\(P_x\\) ${Px_new < Px_old ? 'falls' : 'rises'} from ${Px_old} to ${Px_new}, two forces act on \\(X^*\\):<br><br>
           <strong>Substitution effect (${niceNum(s.SE)}):</strong> Holding utility constant, the consumer ${Px_new < Px_old ? 'substitutes toward' : 'substitutes away from'} X because it is now relatively ${Px_new < Px_old ? 'cheaper' : 'more expensive'}. C is the point on the original IC tangent to the new relative price.<br><br>
           <strong>Income effect (${niceNum(s.IE)}):</strong> The price change alters real purchasing power. Since X is a normal good, ${Px_new < Px_old ? 'higher real income pushes demand for X further up.' : 'lower real income reduces demand for X further.'}<br><br>
           Total: \\(\\Delta X^* = ${niceNum(s.TE)}\\) units. Cobb-Douglas always yields a normal good.
@@ -667,10 +673,12 @@ function showSlutskySolution() {
     </div>`;
 
   const sc = document.getElementById('sol-container');
+  // capture now: the typeset promise may resolve after a problem-type switch
+  const probSnap = currentProb, solSnap = currentSol;
   if (window.MathJax) {
-    MathJax.typesetPromise([sc]).then(() => { drawSlutskyGraph(currentProb, currentSol); sc.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
+    MathJax.typesetPromise([sc]).then(() => { if (problemType !== 'slutsky') return; drawSlutskyGraph(probSnap, solSnap); sc.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
   } else {
-    drawSlutskyGraph(currentProb, currentSol);
+    drawSlutskyGraph(probSnap, solSnap);
     sc.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 }
