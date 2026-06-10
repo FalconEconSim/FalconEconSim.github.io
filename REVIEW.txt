@@ -1,4 +1,76 @@
-CHANGES — through 4666c00
+CHANGES — through round 4
+==========================
+
+ROUND 4 — full-site look-over: Week 8 published, week8-viz hardened, sitewide fixes
+------------------------------------------------------------------------------------
+Week 8 is now live sitewide:
+29. New week8.html hub page (textbook / slides-coming-soon / visualizations /
+    Brightspace homework / flashcards), modeled on week7.html
+30. New week8-flashcards.html — 24 cards built from ch08 (CS/PS/DWL, tariffs,
+    two-step rule, Lerner, PD degrees, natural monopoly), incl. all five of the
+    chapter's "Common Exam Mistakes" as Mistake-type cards
+31. Week 8 nav flipped from "upcoming" to published on every page; index.html
+    week-8 card is now a live link titled "Welfare, Monopoly & Price
+    Discrimination" (the old placeholder title was wrong); week-9 placeholder
+    card retitled "Oligopoly & Game Theory" per ch08's preview
+32. week8-viz.html nav/breadcrumb now point at week8.html (were self-links)
+
+week8-viz.html — first real review (headless-browser-tested this time, all 10
+figures exercised programmatically, zero JS errors):
+33. Fig 8.1 — welfare math was wrong away from equilibrium (CS could exceed
+    total surplus and DWL showed $0 under a price ceiling). CS/PS now integrate
+    over the traded quantity only (trapezoids); DWL triangle spans Qtr→Q*
+34. Fig 8.3 — restored the welfare-accounting table cells (ids v83-dcs..net)
+35. Fig 8.4 — labels/sim now persist across slider input (was a full rebuild
+    with random label re-scatter on every input — the banned jank pattern)
+36. Fig 8.6 — gauge needle/anchor angle convention was wrong (needle swept
+    12→6 o'clock instead of left-to-right across the dial); fixed
+37. Fig 8.8 — block-pricing model replaced: was internally inconsistent
+    (profit+CS exceeded total surplus; "DWL≈8/n²" didn't match anything).
+    Now the optimal n-block schedule: n=1 IS the uniform monopolist
+    (Q=4, P=$6, π=$16, DWL=$8), DWL = 32/(n+1)² → PPD as n grows
+38. Fig 8.9 — demand and MR lines were drawn to Qmax instead of their zero
+    crossings (drawn MR was far off the computed optimum dots); fixed
+39. Fig 8.10 — P=MC loss rectangle had negative height (inverted y); fixed
+40. Figs 8.8/8.10 — static curve-name texts converted to draggable D3 force
+    labels (+ Reset labels buttons)
+41. KaTeX auto-render now ignores readouts (it was pairing the $ signs in
+    "P*=$11, profit=$31" into garbage math at load)
+
+Week 7 — the two "known gaps" from round 2 are closed:
+42. Fig 7.10 — SMC' and S' are now draggable D3 force labels (anchored to the
+    shifted curves, hidden when no shock is applied)
+43. Fig 7.9 — the n/P* and P*/π corner texts are now draggable D3 force labels
+    anchored to the equilibrium dot / the firm's optimum; they track the
+    entry-exit animation smoothly (rigid translate, no sim restart)
+
+Sitewide:
+44. Removed all user-visible em dashes from week7-viz (15) and week8-viz (24);
+    weeks 3-6 occurrences were all in code comments (not student-visible)
+45. week2-viz — slider smoothness (S6/S8 alphaTarget heat) wired for all three
+    JSXGraph overlay boards; label reproject now rigid-translates instead of
+    re-running the sim from cold; shift-type buttons kick a one-shot re-settle
+46. week3-viz — fixed Fig 3.3 listener stacking: every Normal/Inferior toggle
+    added another input listener bound to destroyed JSXGraph boards
+47. week2-flashcards — notation normalized P_X/P_Y → P_x/P_y (matches textbook)
+48. Flashcards weeks 5-8 — fixed a MathJax race (typesetPromise called before
+    the library loads; weeks 2-4 already had the correct guard)
+49. Repaired encoding corruption (U+FFFD mojibake) introduced into index.html,
+    week2-viz.html, week3-viz.html during the merge tooling; every corrupted
+    line restored byte-exact from git HEAD (α, ·, ×, §, ∂, —, ° etc.)
+
+WHAT TO REVIEW IN THE BROWSER (Round 4)
+-----------------------------------------
+week8.html + nav: Week 8 reachable from every page; index card links correctly
+week8-viz.html: all 10 figures (esp. 8.1 at off-equilibrium prices, 8.6 needle
+  sweep, 8.8 n-slider, 8.9 optimum dots ON the curves, 8.10 P=MC loss box)
+week8-flashcards.html: 24 cards, math renders, rating/filter/summary work
+week7-viz: fig 7.9 entry/exit (labels track the dot), fig 7.10 shock labels
+week2-viz: slider drag feels smooth on all three boards
+week3-viz: toggle Normal/Inferior repeatedly, then drag income — no slowdown
+
+
+ORIGINAL CHANGES THROUGH 4666c00
 ==========================
 
 ROUND 3 (commit 4666c00) — Prof. Sunder's week-7 feedback, week 8 build, sitewide D3 labels

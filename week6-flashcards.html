@@ -86,7 +86,7 @@
     <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
     <li class="left-nav-item published active"><a href="week6.html">Week 6</a></li>
     <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
@@ -207,7 +207,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};}
 function render(){
   const root=document.getElementById('fc-root');
-  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax)MathJax.typesetPromise([root]);return;}
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
   const c=deck[idx];const col=COL[c.type]||'#0077C8';const bg=BG[c.type]||'#EFF8FF';
   const total=deck.length;
   root.innerHTML=`
@@ -247,7 +247,7 @@ function render(){
         </div>
       </div>
     </div>`;
-  if(window.MathJax)MathJax.typesetPromise([root]);
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});
 }
 function summary(){
   const t=stats.Easy+stats.Good+stats.Hard;

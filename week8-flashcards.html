@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 8: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+    body { background: #f4f7fb; }
+    .fc-wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .fc-hdr { display: flex; align-items: center; justify-content: space-between; }
+    .fc-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; color: #0077C8; }
+    .fc-ctr { font-size: 13px; color: #999; font-weight: 500; }
+    .fc-prog { width: 100%; height: 4px; background: #E8EFF8; border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: #0077C8; border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid #E2EAF4; border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 500; cursor: pointer; background: #fff; color: #666; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+    .fc-ftag.active { background: #0077C8; color: #fff; border-color: #0077C8; }
+    .fc-badge { display: inline-flex; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 99px; width: fit-content; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: #CBD8EC; }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.5; color: #111; flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: 0.88rem; color: #666; font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid #EEF3FA; margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: 0.88rem; line-height: 1.75; color: #333; white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: 12px; color: #BCC8D8; text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: #F0F4FA; border: 1px solid #DDE6F0; border-radius: 4px; padding: 0 5px; font-size: 10px; color: #888; }
+    .fc-rate-label { font-size: 12px; color: #BCC8D8; text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: 10px; opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: #0077C8; }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: 1.5rem; font-weight: 500; }
+    .fc-stat-l { font-size: 11px; font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: #F0F4FA; border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: #0077C8; color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid #E2EAF4; border-radius: 12px; padding: 0.65rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; font-family: 'DM Sans', sans-serif; color: #0077C8; transition: background 0.15s; }
+    .fc-btn-outline:hover { background: #E6F1FB; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published active"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
+    <li class="left-nav-item upcoming"><a href="index.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="index.html">EC224</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <a href="week8.html">Week 8</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <span>Flashcards</span>
+    </div>
+  </div>
+  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"What is consumer surplus? How is it measured on a supply-and-demand diagram?",
+    a:"Consumer Surplus (CS) = Willingness to pay - Price paid.\n\\[CS = WTP - P\\]\nIn aggregate: the area under the demand curve and above the market price.\n\nIntuition: CS is the 'deal' a buyer gets. The demand curve traces willingness to pay for each unit; the gap between WTP and the price actually paid is pure buyer gain.\n\nExample (campus coffee shop, price $4/latte): Alice (WTP $7) gains CS = $3. Ben (WTP $5.50) gains $1.50. Cara (WTP $3.80) does not buy, CS = 0.\n\nWhen price rises, CS falls for two reasons: each remaining buyer keeps less surplus, and some buyers stop buying entirely." },
+
+  { id:2, type:"Def",
+    q:"What is producer surplus? Why is PS not the same thing as profit?",
+    a:"Producer Surplus (PS) = Price received - Willingness to sell (MC).\n\\[PS = P - MC\\]\nIn aggregate: the area above the supply curve and below the market price.\n\nPS vs profit: PS = price minus marginal (variable) cost. Profit = revenue minus TOTAL cost, including fixed costs.\n\n- When fixed costs are zero: PS = profit.\n- When fixed costs are present: profit = PS - fixed costs.\n\nExample: a baker with fixed costs of $100/day, MC = $3/loaf, price $7, 200 loaves sold. PS = (7-3) x 200 = $800. Profit = $800 - $100 = $700.\n\nAlways check whether fixed costs are present before equating PS and profit." },
+
+  { id:3, type:"Def",
+    q:"Define total surplus and economic efficiency. Why is the competitive equilibrium efficient?",
+    a:"Total Surplus: TS = CS + PS. It is the monetary measure of the social value a market creates, so we can compare any two market outcomes on a common scale.\n\nEconomic efficiency: an allocation is efficient if TS is maximised. Equivalently: no mutually beneficial trades remain unexploited.\n\nWhy the competitive equilibrium is efficient: at (P*, Q*), every unit for which WTP > MC is traded, and no unit where WTP < MC is produced. Both conditions hold simultaneously, which is exactly why TS is maximised at Q*.\n\nImportant: efficiency says nothing about how the pie is divided. Efficiency and equity are different dimensions." },
+
+  { id:4, type:"Def",
+    q:"What is deadweight loss? Who 'receives' the DWL?",
+    a:"Deadweight Loss (DWL): the reduction in total surplus caused by a market distortion, an output level different from Q*.\n\\[DWL = TS_{Q^*} - TS_{actual}\\]\nDWL is the value of mutually beneficial trades that do not occur. It is captured by NOBODY: not consumers, not producers, not the government. It is value destroyed outright, not a transfer.\n\nGeometrically: the triangle between the demand and supply curves, between the restricted quantity Q1 and the efficient quantity Q*.\n\nNote: overproduction also destroys value (units where MC > WTP). Q* is the unique output that maximises TS." },
+
+  { id:5, type:"Eq",
+    q:"D: P = 12 - Q and S: P = 2 + Q. Find the equilibrium, then compute CS, PS, and TS.",
+    a:"Equilibrium: 12 - Q = 2 + Q, so Q* = 5 and P* = $7.\n\nCS = area under demand, above price:\nCS = (1/2)(12 - 7)(5) = $12.50\n\nPS = area above supply, below price:\nPS = (1/2)(7 - 2)(5) = $12.50\n\nTS = CS + PS = $25.\n\nCheck with the total-surplus triangle: TS = (1/2)(12 - 2)(5) = 25. Correct.\n\nThis is the chapter's benchmark technique: with linear curves, every welfare quantity is a triangle or rectangle you can compute from intercepts and the equilibrium point." },
+
+  { id:6, type:"Graph",
+    q:"A monopoly raises price from P* to P_M. Decompose the consumers' loss into its two parts. Which part is DWL?",
+    a:"The CS loss has TWO parts:\n\n1. The rectangle (transfer): consumers who still buy now pay P_M instead of P*. That money goes to the seller as profit. It is redistributed, NOT lost to society.\n\n2. The triangle (destruction): consumers priced out of the market entirely. Their would-be surplus vanishes and nobody receives it. This triangle is the DWL.\n\nOnly the triangle is deadweight loss.\n\nIn the chapter benchmark (D: P = 10 - Q, MC = 4): the transfer rectangle = $9 (monopoly profit) and the destroyed triangle = $4.50 (DWL).\n\nAlways decompose a CS loss into transfer + destruction before calling any of it DWL." },
+
+  { id:7, type:"Def",
+    q:"When a country opens to imports at world price P_W < P_D, who wins, who loses, and what happens to total surplus?",
+    a:"Opening trade when P_W < P_D:\n\n- Domestic price falls from P_D to P_W.\n- Domestic demand rises; domestic supply falls; imports fill the gap.\n- CS rises (consumers pay less).\n- PS falls (domestic producers sell less at a lower price).\n- TS RISES: the consumer gain exceeds the producer loss.\n\nThe net gain is the gains-from-trade triangle:\n\\[\\tfrac{1}{2}(P_D - P_W)(Q_1 - Q_2)\\]\nwhere Q1 is post-trade demand and Q2 is post-trade domestic supply.\n\nPolitical economy: producers lobby for protection because their losses are concentrated; consumer gains are large but diffuse." },
+
+  { id:8, type:"Eq",
+    q:"Tariff welfare accounting. D: P = 30 - Q, S: P = 6 + 0.5Q, world price P_W = $10, tariff t = $2. Compute the change in CS, PS, government revenue, and TS.",
+    a:"Tariff raises the domestic price from P_W = 10 to P_R = 12.\n\nAt P_W = 10: Q_s = 8, Q_d = 20, imports = 12.\nAt P_R = 12: Q_s = 12, Q_d = 18, imports = 6.\n\nΔCS = -(price rise) x (average quantity demanded) = -(12 - 10) x (20 + 18)/2 = -$38 (a trapezoid: consumers pay more AND buy less).\nΔPS = +$20 (domestic producers gain).\nGov revenue = t x imports = 2 x 6 = $12.\n\nΔTS = -38 + 20 + 12 = -$6.\n\nThat -$6 is the two DWL triangles: one from inefficient expansion of domestic production, one from reduced consumption. Net: tariffs reduce total surplus." },
+
+  { id:9, type:"Mistake",
+    q:"Common mistake: 'Tariff revenue offsets the deadweight loss.' Why is this wrong?",
+    a:"Wrong. Government tariff revenue is a TRANSFER (from consumers to the government) and is already counted inside TS.\n\nThe two DWL triangles represent value that is destroyed even after counting every dollar of government revenue:\n\n1. Production triangle: domestic firms produce units whose MC exceeds the world price (wasted resources).\n2. Consumption triangle: consumers stop buying units they valued above the world price.\n\nEven if the government refunded every dollar of tariff revenue to consumers, the DWL triangles would remain as lost value.\n\nDWL and tariff revenue are separate components: revenue is redistribution, DWL is destruction." },
+
+  { id:10, type:"Def",
+    q:"What is a monopoly? What keeps competitors out?",
+    a:"Monopoly: a market with a single seller of a good for which there are no close substitutes. The firm IS the market: it faces the entire downward-sloping market demand curve directly, so it is a price MAKER (chooses P), unlike a competitive price taker.\n\nBarriers to entry keep rivals out. Two categories:\n\n- Technical: ownership of a key resource; declining average cost over all output (natural monopoly); superior proprietary technology.\n- Legal: patents, copyrights, exclusive government franchises.\n\nExample: a pharmaceutical patent (typically 20 years) lets the firm price far above MC; after expiry, generic entry pushes price toward MC and DWL shrinks dramatically." },
+
+  { id:11, type:"Eq",
+    q:"State the monopoly two-step rule and apply it to the benchmark: D: P = 10 - Q, MC = AC = $4.",
+    a:"Monopoly Two-Step Rule:\n1. Find Q*_M: set MR = MC and solve for output.\n2. Find P*_M: read the DEMAND curve at Q*_M.\n\nThe monopolist never sets P = MC.\n\nBenchmark: P = 10 - Q, so MR = 10 - 2Q.\nStep 1: 10 - 2Q = 4 gives Q*_M = 3.\nStep 2: P*_M = 10 - 3 = $7.\n\nProfit = Q*_M x (P*_M - AC) = 3 x (7 - 4) = $9.\n\nCompare the competitive outcome: P = MC gives Q_PC = 6, P_PC = $4. The monopolist halves output and nearly doubles price." },
+
+  { id:12, type:"Eq",
+    q:"Why is MR < P for a monopolist? Derive the MR curve for linear demand P = a - bQ.",
+    a:"The monopolist must lower price on ALL units to sell one more:\n\\[MR = P + Q\\frac{dP}{dQ} < P \\quad (since\\; dP/dQ < 0)\\]\n\nTwo effects of selling one more unit:\n1. Gain: revenue from the new unit (= P).\n2. Loss: the price cut applied to every unit already being sold (= Q x dP/dQ).\n\nFor linear demand P = a - bQ:\nTR = aQ - bQ^2, so\n\\[MR = a - 2bQ\\]\nSame y-intercept as demand (a), twice the slope (-2b vs -b), hits zero at Q = a/(2b), half the demand choke quantity. At MR = 0, total revenue is maximised.\n\nContrast: a competitive price taker has MR = P (no price effect)." },
+
+  { id:13, type:"Mistake",
+    q:"Common mistake: a student sets MR = MC, finds Q*_M, and reports P*_M = MC. What went wrong?",
+    a:"They forgot Step 2 of the two-step rule.\n\nMR = MC pins down the QUANTITY only. The price comes from reading the DEMAND curve at that quantity:\n\\[P^*_M = D(Q^*_M)\\]\n\nStopping at Step 1 and reporting P = MC gives the COMPETITIVE price, not the monopoly price.\n\nBenchmark check (D: P = 10 - Q, MC = 4): Step 1 gives Q*_M = 3. The wrong answer reports P = $4. The right answer reads demand: P*_M = 10 - 3 = $7.\n\nMemory hook: Step 1 finds the quantity, Step 2 finds the price. The demand curve determines what price the market will bear at the chosen quantity. Never skip Step 2." },
+
+  { id:14, type:"Mistake",
+    q:"Common mistake: confusing the MR curve with the demand curve. How do you tell them apart, and what error does the confusion cause?",
+    a:"Both start at the same y-intercept (a), which is why students mix them up. But:\n\n- Demand shows what consumers PAY per unit at each quantity.\n- MR shows the ADDITIONAL revenue from selling one more unit.\n- For P = a - bQ, the MR curve is twice as steep: MR = a - 2bQ.\n\nThe error: setting P = MR (or drawing MR as if it were demand) gives the wrong Q*_M.\n\nAlso wrong: setting demand = MC ('P = MC') to find monopoly output. That gives the competitive quantity.\n\nCorrect procedure: intersect MR with MC for quantity, then jump UP to the demand curve for price." },
+
+  { id:15, type:"Graph",
+    q:"Fill in the three-scenario welfare table for the benchmark (D: P = 10 - Q, MC = 4): competition, uniform monopoly, and perfect price discrimination.",
+    a:"CS / Profit / TS / DWL:\n\nPerfect competition (Q = 6, P = 4):\nCS = 18, Profit = 0, TS = 18, DWL = 0\n\nUniform monopoly (Q = 3, P = 7):\nCS = 4.5, Profit = 9, TS = 13.5, DWL = 4.5\n\nPerfect price discrimination (Q = 6):\nCS = 0, Profit = 18, TS = 18, DWL = 0\n\nVerify: CS_PC = (1/2)(10-4)(6) = 18. CS_M = (1/2)(10-7)(3) = 4.5. DWL = (1/2)(7-4)(6-3) = 4.5.\n\nKey lesson: competition and PPD TIE on efficiency (TS = 18, DWL = 0) but are polar opposites on equity. Competition gives the surplus to consumers; PPD gives it all to the producer. Uniform monopoly is neither efficient nor equitable." },
+
+  { id:16, type:"Eq",
+    q:"Define the Lerner Index. A monopolist has L = 0.4 and P = $50. What is its marginal cost?",
+    a:"Lerner Index:\n\\[L = \\frac{P - MC}{P} = -\\frac{1}{\\varepsilon_d}\\]\nL is the fraction of price that is markup above marginal cost.\n\n- L = 0 for a competitive firm (P = MC).\n- L tends to 1 as market power becomes extreme.\n- At the monopoly optimum, L = -1/elasticity: less elastic demand means a higher markup.\n\nSolving: 0.4 = (50 - MC)/50, so MC = 50 x 0.6 = $30.\n\nReal-world anchors: competitive wheat farming L near 0; brand-name pharmaceuticals under patent L of 0.5 to 0.9; Gleevec (imatinib) priced around $92,000/year against manufacturing cost under $1,000/year implies L > 0.98." },
+
+  { id:17, type:"Def",
+    q:"What two conditions must hold for a firm to price discriminate?",
+    a:"Price discrimination: charging different prices for identical (or near-identical) units of output to different buyers.\n\nTwo necessary conditions:\n\n1. Market power: the seller must face downward-sloping demand. A price taker cannot price discriminate; the market sets its price.\n\n2. No arbitrage: the seller must be able to prevent low-price buyers from reselling to high-price buyers. Without this, the price differential collapses as resellers undercut the high price.\n\nExample of arbitrage prevention: airline tickets are non-transferable, require ID, and carry advance-purchase restrictions, so a leisure traveller cannot resell a cheap seat to a last-minute business traveller." },
+
+  { id:18, type:"Def",
+    q:"What is perfect (first-degree) price discrimination? Is it efficient? Is it equitable?",
+    a:"Perfect Price Discrimination (PPD): each consumer is charged exactly their willingness to pay. Every unit sells at the price indicated by the demand curve.\n\nConsequences:\n- CS = 0 (no consumer keeps any surplus).\n- The monopolist sells every unit with WTP >= MC, so output reaches the competitive quantity Q_PC.\n- DWL = 0. All surplus accrues to the monopolist as profit.\n\nEfficient? YES: the right quantity is produced and TS is maximised (ties with perfect competition).\n\nEquitable? NO: consumers get nothing; the seller eats the entire pie.\n\nThis is Week 8's central lesson: efficiency and equity are distinct dimensions. PPD maximises the pie while distributing it as unequally as possible." },
+
+  { id:19, type:"Def",
+    q:"What is second-degree price discrimination? Give two common forms and a real-world example.",
+    a:"Second-degree PD: charging different prices based on the QUANTITY purchased or the VERSION chosen, not on the buyer's identity. The firm cannot observe individual WTP, so it designs a menu that induces buyers to self-select.\n\nTwo common forms:\n1. Quantity discounts: lower per-unit price for larger purchases (wholesale clubs, utility block pricing).\n2. Versioning: multiple product tiers at different prices, so high-WTP buyers self-select into the expensive version.\n\nExample: Microsoft Office 'Home' at $100 vs 'Business' at $300. The extra features cost nearly nothing to provide; the price gap exists to sort buyers. The menu does the work.\n\nWelfare note: second-degree PD typically increases output relative to uniform monopoly pricing, so it REDUCES DWL, though CS stays below the competitive level." },
+
+  { id:20, type:"Eq",
+    q:"Third-degree PD: D1: Q1 = 100 - P1, D2: Q2 = 100 - 2P2, MC = $20. Find each market's price. Which market pays more, and why?",
+    a:"Rule: act as a separate monopolist in each market (set MR_i = MC), then read each demand curve.\n\nMarket 1: P1 = 100 - Q1, MR1 = 100 - 2Q1 = 20 gives Q1* = 40, P1* = $60. Profit = (60-20)(40) = $1,600.\n\nMarket 2: P2 = 50 - Q2/2, MR2 = 50 - Q2 = 20 gives Q2* = 30, P2* = $35. Profit = (35-20)(30) = $450.\n\nTotal discriminating profit = $2,050 vs roughly $1,633 with a single uniform price: discrimination adds about $417.\n\nMarket 1 pays more because its demand is LESS elastic at the optimum. Pricing rule: charge a higher price in the less elastic (captive) market, a lower price in the more elastic market. Airlines: business travellers (must travel, employer pays) face the high fare; flexible leisure travellers get the low one." },
+
+  { id:21, type:"Def",
+    q:"What is a natural monopoly, and what is the regulator's dilemma in pricing it?",
+    a:"Natural monopoly: an industry where ONE firm can produce the market's total output at lower cost than two or more firms could. This happens when average cost declines over the entire relevant output range, typically huge fixed costs plus low marginal costs (water networks, electricity grids, broadband).\n\nThe regulator's dilemma:\n\n- P = MC (marginal-cost pricing): efficient, DWL = 0, BUT the firm makes a loss (P < AC) and needs a subsidy to survive.\n- P = AC (average-cost pricing): the firm breaks even, no subsidy needed, BUT some DWL remains. This is the 'second-best' solution.\n- Unregulated monopoly: profitable but the most inefficient.\n\nMost public utilities are regulated at average-cost pricing: viability without subsidy, at the cost of some efficiency. There is no free lunch." },
+
+  { id:22, type:"Def",
+    q:"What is rent-seeking? Why does it mean the standard DWL triangle understates the social cost of monopoly?",
+    a:"Rent-seeking: resources spent to OBTAIN or MAINTAIN monopoly power: lobbying, patent litigation, regulatory capture, predatory pricing against potential entrants.\n\nThese expenditures are socially wasteful: they redistribute profit toward the monopolist but create no new value.\n\nWhy DWL understates the cost: in the extreme, a firm might spend up to its ENTIRE expected monopoly profit on rent-seeking. Then the true social cost is the DWL triangle PLUS the profit rectangle, a far larger number than the standard DWL calculation suggests.\n\nIn the benchmark: standard DWL = $4.50, but with full rent-seeking the social cost could approach $4.50 + $9 = $13.50." },
+
+  { id:23, type:"Mistake",
+    q:"True or False: 'Monopoly just transfers surplus from consumers to the firm, so society as a whole is no worse off.'",
+    a:"False. The statement describes only the rectangle, not the triangle.\n\nDecompose what consumers lose when output falls from Q_PC to Q_M:\n\n1. The profit rectangle IS a pure transfer: consumers pay more, the firm earns more, society's total is unchanged by this part.\n\n2. The DWL triangle is NOT a transfer: it is the value of trades between Q_M and Q_PC where WTP > MC, trades that simply never happen. No one captures this value.\n\nBenchmark numbers: TS falls from $18 (competition) to $13.5 (monopoly). The missing $4.5 went to nobody.\n\nThis is exactly why antitrust authorities (DOJ, European Commission) evaluate mergers with this framework: blocking a merger preserves efficiency, not just 'fairness.'" },
+
+  { id:24, type:"Mistake",
+    q:"Common mistake: 'Perfect price discrimination is better than uniform monopoly, full stop.' What is missing from this claim?",
+    a:"The claim only looks at efficiency and ignores equity.\n\nWhat is TRUE: PPD achieves the efficient quantity (Q_PC), eliminates the DWL, and maximises TS, tying with perfect competition on efficiency.\n\nWhat is MISSING: under PPD, consumer surplus is ZERO. Every consumer pays exactly their WTP, so consumers are at the worst possible outcome even though society's pie is at its maximum.\n\nA correct answer must acknowledge both dimensions:\n- Efficiency: PPD ties with competition (TS maximised, DWL = 0).\n- Equity: PPD is the worst possible outcome for consumers.\n\nWhether PPD is 'better' than uniform monopoly depends on whether the policymaker weighs total surplus or its distribution. Efficiency is not the same thing as desirability." }
+];
+
+// engine
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'#0077C8',Eq:'#7C3AED',Graph:'#065F46',Mistake:'#B45309'};
+const BG  = {Def:'#EFF8FF',Eq:'#F5F3FF',Graph:'#ECFDF5',Mistake:'#FFFBEB'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All';
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
+  const c=deck[idx];const col=COL[c.type]||'#0077C8';const bg=BG[c.type]||'#EFF8FF';
+  const total=deck.length;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <span class="fc-title">Week 8 &middot; Welfare, Monopoly &amp; Price Discrimination</span>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+            &nbsp;Card ${idx+1}
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:#B45309;border-color:#FDE68A" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:#0077C8;border-color:#BFDBFE" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:#065F46;border-color:#A7F3D0" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:#ECFDF5"><div class="fc-stat-n" style="color:#065F46">${stats.Easy}</div><div class="fc-stat-l" style="color:#065F46">Easy</div></div>
+      <div class="fc-stat" style="background:#EFF8FF"><div class="fc-stat-n" style="color:#0077C8">${stats.Good}</div><div class="fc-stat-l" style="color:#0077C8">Good</div></div>
+      <div class="fc-stat" style="background:#FFFBEB"><div class="fc-stat-n" style="color:#B45309">${stats.Hard}</div><div class="fc-stat-l" style="color:#B45309">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:#34D399"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:#60A5FA"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:#FBBF24"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){deck=shuffle(CARDS.filter(c=>c.type===filter||filter==='All'));idx=0;stats={Easy:0,Good:0,Hard:0};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+</body>
+</html>

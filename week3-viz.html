@@ -179,7 +179,7 @@
     <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
     <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
     <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
-    <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
     <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
@@ -1542,11 +1542,14 @@ function initViz3() {
   redrawV3();
   d3v3InitOverlay(b1, v3IepAnchorX, v3IepAnchorY, v3IepLabel);
 
-  document.getElementById('v3-income').addEventListener('input', function() {
+  /* oninput (not addEventListener): initViz3 re-runs on every Normal/Inferior
+     toggle, and stacking listeners would leave stale handlers redrawing over
+     freed JSXGraph boards. Property assignment replaces the old handler. */
+  document.getElementById('v3-income').oninput = function() {
     v3Income = parseFloat(this.value);
     document.getElementById('v3-i-val').textContent = `$${v3Income}`;
     redrawV3();
-  });
+  };
 }
 
 /* ============================================================

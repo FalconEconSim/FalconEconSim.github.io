@@ -686,19 +686,45 @@ function jxgLabelOverlay(containerId, board) {
   }
 
   /* Re-project all anchors from their stored user-coordinates to fresh pixel
-     coordinates (board may have panned/zoomed/resized/rebuilt its bbox). */
+     coordinates (board may have panned/zoomed/resized/rebuilt its bbox).
+     Nodes are rigidly translated by the same delta as their anchor (the S6
+     _s6setP pattern) so labels track the curves without lagging behind. */
   function reproject() {
     resize();
     var moved = false;
     nodes.forEach(function(d){
       var p = toScreen(d.ux, d.uy);
-      if (Math.abs(p.x - d.fx_anchor) > 0.01 || Math.abs(p.y - d.fy_anchor) > 0.01) moved = true;
+      var dx = p.x - d.fx_anchor, dy = p.y - d.fy_anchor;
+      if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+        moved = true;
+        d.x += dx; d.y += dy;
+        d.vx = 0; d.vy = 0;
+        if (d.fx != null) d.fx += dx;
+        if (d.fy != null) d.fy += dy;
+      }
       d.fx_anchor = p.x; d.fy_anchor = p.y;
     });
-    if (moved) sim.alpha(Math.max(sim.alpha(), 0.25)).restart();
+    if (moved) sim.alpha(Math.max(sim.alpha(), 0.2)).restart();
   }
 
   board.on('update', reproject);
+
+  /* Slider smoothness pattern from S6/S8: while a control is held down the
+     simulation simmers at alphaTarget 0.3 (smooth collision resolution),
+     and cools to 0 on release. Call heatOn([...ids]) once per overlay. */
+  function heatOn(ids) {
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('mousedown',  function(){ sim.alphaTarget(0.3).restart(); });
+      el.addEventListener('touchstart', function(){ sim.alphaTarget(0.3).restart(); }, {passive:true});
+    });
+    window.addEventListener('mouseup',  function(){ sim.alphaTarget(0); });
+    window.addEventListener('touchend', function(){ sim.alphaTarget(0); });
+  }
+
+  /* One-shot re-settle after a discrete change (button click, type switch). */
+  function kick() { sim.alpha(0.5).restart(); }
 
   /* spec: [{id,color,label,lw,ux,uy}] - ux,uy are JSXGraph USER coordinates */
   function setLabels(spec) {
@@ -760,7 +786,7 @@ function jxgLabelOverlay(containerId, board) {
     sim.alpha(0.7).restart();
   }
 
-  return { setLabels: setLabels, reproject: reproject, sim: sim };
+  return { setLabels: setLabels, reproject: reproject, sim: sim, heatOn: heatOn, kick: kick };
 }
 </script>
 <script>
@@ -913,7 +939,7 @@ function initICExplorer() {
     }, box3, box3
   ], {strokeColor:C.blue, strokeWidth:0.55, stepsU:32, stepsV:32});
 
-  /* Cutting plane - 4 corner points at z=U₀ */
+  /* Cutting plane - 4 corner points at z=U0 */
   var corners = [[box3[0],box3[0]],[box3[1],box3[0]],[box3[1],box3[1]],[box3[0],box3[1]]];
   var cPts = corners.map(function(c) {
     var cx=c[0], cy=c[1];
@@ -944,7 +970,7 @@ function initICExplorer() {
     })(fi/numFill);
   }
 
-  /* IC curve at U₀ - the intersection of cutting plane with surface (type-aware) */
+  /* IC curve at U0 - the intersection of cutting plane with surface (type-aware) */
   icView3D.create('curve3d', [function(t) {
     var a=slVal('ic-alpha'), b=1-a, u0=slVal('ic-u0');
     if (u0<=0) return [NaN,NaN,NaN];
@@ -1021,7 +1047,7 @@ function initICExplorer() {
     var u0=parseFloat(this.value);
     document.getElementById('ic-u0-val').textContent=u0.toFixed(1);
     icBoard3D.update();
-    /* Always redraw the 2D IC for the current type at the new U₀ */
+    /* Always redraw the 2D IC for the current type at the new U0 */
     var type=document.querySelector('#ic-type-btns .type-btn.active').dataset.type;
     /* For non-cobb types the bbox scales with u0, so go through drawIC2D */
     if (type !== 'cobb') {
@@ -1098,13 +1124,13 @@ function drawIC2D(type, alpha) {
   var u0=slVal('ic-u0');
   icBoard2D.setBoundingBox([-1.0, 14.5, 14.5, -1.0], false);
 
-  /* Draw ONLY the single IC at current U₀ for the selected type.
+  /* Draw ONLY the single IC at current U0 for the selected type.
      No static family - the one red curve IS the visualization. */
   redrawIC2DAtU0(type, alpha, u0);
   icBoard2D.update();
 }
 
-/* Draw the single IC at U₀ for any preference type, with glider for Cobb-Douglas */
+/* Draw the single IC at U0 for any preference type, with glider for Cobb-Douglas */
 /* Approach 3: single persistent curve reads icU0State from closure.
    Slider sets icU0State and calls board.update(). Zero destroy/recreate. */
 var icU0State = {u0: 2.0, alpha: 0.5};
@@ -1116,7 +1142,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
 
   /* U0 label */
   var elU0 = document.getElementById('ic-u0-display');
-  if (elU0) elU0.textContent = 'U₀ = ' + u0.toFixed(2);
+  if (elU0) elU0.textContent = 'U0 = ' + u0.toFixed(2);
 
   if (type === 'cobb') {
     /* For Cobb: the curve/glider/tangent are persistent and read icU0State live.
@@ -1298,7 +1324,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
     var vl = icBoard2D.create('segment', [[u0,0],[u0,limN]],
       {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
     window.icExtraObjs.push(vl);
-    /* MRS glider - MRS = ∞ on a vertical line */
+    /* MRS glider - MRS = 8 on a vertical line */
     addMRSGlider(vl, u0, limN*0.45, function(){return 'MRS = \u221e (Y irrelevant)';},
       0.28, 0.28, 'bottom');
 
@@ -1615,6 +1641,7 @@ var bcObjects=[];
 function initBudgetBoard() {
   bcBoard = mkBoard('jxg-budget', [-2.5, 45, 45, -2.5]);
   bcOverlay = jxgLabelOverlay('jxg-budget', bcBoard);
+  bcOverlay.heatOn(['bc-I','bc-Px','bc-Py']);
   buildBudgetBoard();
   ['bc-I','bc-Px','bc-Py'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', function() {
@@ -1680,6 +1707,7 @@ var shiftBoard, shiftObjects=[], shiftOverlay=null;
 function initShiftBoard() {
   shiftBoard=mkBoard('jxg-shifts',[-2.5,50,50,-2.5]);
   shiftOverlay=jxgLabelOverlay('jxg-shifts', shiftBoard);
+  shiftOverlay.heatOn(['shift-mag']);
   /* Fig 2.4: suppress negative tick labels */
   try {
     ['x','y'].forEach(function(ax) {
@@ -1705,6 +1733,7 @@ function initShiftBoard() {
     document.querySelectorAll('#shift-btns .shift-btn').forEach(function(b){b.classList.remove('active');});
     btn.classList.add('active');
     buildShiftBoard();
+    if (shiftOverlay) shiftOverlay.kick();
   });
   document.getElementById('shift-mag').addEventListener('input',function(){
     document.getElementById('shift-mag-val').textContent=this.value+'%';
@@ -2423,6 +2452,7 @@ var crossBoard = null, crossObjects = [], crossOverlay = null;
 function initICCross() {
   crossBoard = mkBoard('jxg-iccross', [-0.8, 16, 16, -0.8]);
   crossOverlay = jxgLabelOverlay('jxg-iccross', crossBoard);
+  crossOverlay.heatOn(['iccross-u2']);
   buildICCross();
   document.getElementById('iccross-u2').addEventListener('input', function() {
     buildICCross();
@@ -2455,9 +2485,9 @@ function buildICCross() {
      JSXGraph text labels (which could overlap as the inner curve moves). */
   if (crossOverlay) {
     crossOverlay.setLabels([
-      {id:'IC2', color:'#3d5a80', label:'IC₂ (U=7)', lw:60,
+      {id:'IC2', color:'#3d5a80', label:'IC2 (U=7)', lw:60,
         ux:12.5, uy:Math.pow(u1/Math.pow(12.5,a),1/b)},
-      {id:'IC1', color:'#d4813a', label:'IC₁ (U='+u2.toFixed(1)+')', lw:64,
+      {id:'IC1', color:'#d4813a', label:'IC1 (U='+u2.toFixed(1)+')', lw:64,
         ux:12.5, uy:Math.pow(u2/Math.pow(12.5,a),1/b)}
     ]);
   }
@@ -2497,7 +2527,7 @@ function buildICCross() {
     var statusEl = document.getElementById('iccross-status');
     if (statusEl) {
       statusEl.innerHTML = '<strong style="color:#c0392b">Contradiction!</strong><br>'
-        + 'A is on both ICs: A ~ B (same IC₂) and A ~ C (same IC₁).<br>'
+        + 'A is on both ICs: A ~ B (same IC2) and A ~ C (same IC1).<br>'
         + 'By transitivity: B ~ C. But B has more of both goods than C.<br>'
         + 'More of a good always raises utility. This is impossible.';
       statusEl.className = 'contradiction-flash';
@@ -2509,7 +2539,7 @@ function buildICCross() {
   } else {
     var statusEl = document.getElementById('iccross-status');
     if (statusEl) {
-      statusEl.innerHTML = 'The curves are separated. IC₂ (outer) represents higher utility. Slide right to make them cross and trigger the contradiction.';
+      statusEl.innerHTML = 'The curves are separated. IC2 (outer) represents higher utility. Slide right to make them cross and trigger the contradiction.';
       statusEl.style.background = 'var(--off-white)';
       statusEl.style.borderColor = 'var(--rule)';
       statusEl.style.color = 'inherit';
@@ -3001,7 +3031,7 @@ function buildCornerExplorer() {
       <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
       <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
       <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
-      <li class="left-nav-item upcoming"><a href="index.html">Week 8</a></li>
+      <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
       <li class="left-nav-item upcoming"><a href="index.html">Week 9</a></li>
       <li class="left-nav-item upcoming"><a href="index.html">Week 10</a></li>
       <li class="left-nav-item upcoming"><a href="index.html">Week 11</a></li>
@@ -3082,7 +3112,7 @@ function buildCornerExplorer() {
 
         <div class="lo-callout">
           <span class="lo-label">Economic Intuition - Preference Types &amp; the Shape of ICs</span>
-          The <strong>shape</strong> of the IC encodes everything about preferences. For <em>Cobb-Douglas</em>, α controls the spending share on X: α = 0.7 means 70% of income always goes to X regardless of prices - try it. <em>Perfect substitutes</em> have constant MRS = 1 everywhere, so the consumer is always willing to swap one X for one Y. <em>Perfect complements</em> have ICs that are L-shaped: consuming more of one good without the other adds zero utility (like left and right shoes). Moving to a higher IC always means higher utility - so ICs further from the origin are always preferred.
+          The <strong>shape</strong> of the IC encodes everything about preferences. For <em>Cobb-Douglas</em>, a controls the spending share on X: a = 0.7 means 70% of income always goes to X regardless of prices - try it. <em>Perfect substitutes</em> have constant MRS = 1 everywhere, so the consumer is always willing to swap one X for one Y. <em>Perfect complements</em> have ICs that are L-shaped: consuming more of one good without the other adds zero utility (like left and right shoes). Moving to a higher IC always means higher utility - so ICs further from the origin are always preferred.
         </div>
 
         <!-- IC TYPES EXPLORER -->
@@ -3105,7 +3135,7 @@ function buildCornerExplorer() {
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;width:100%">
                 <div class="ctrl-group" id="u0-ctrl">
-                  <label><span class="tip-icon" data-tip="Moves the cutting plane on the 3D surface up or down. Each level corresponds to one indifference curve in the 2D panel. Higher U₀ = higher IC further from the origin = more satisfaction.">i</span> Utility level U₀ <span class="ctrl-val" id="ic-u0-val">2.0</span></label>
+                  <label><span class="tip-icon" data-tip="Moves the cutting plane on the 3D surface up or down. Each level corresponds to one indifference curve in the 2D panel. Higher U0 = higher IC further from the origin = more satisfaction.">i</span> Utility level U0 <span class="ctrl-val" id="ic-u0-val">2.0</span></label>
                   <input type="range" id="ic-u0" min="0.3" max="5.0" step="any" value="2.0" />
                 </div>
                 <div class="ctrl-group" id="alpha-ctrl">
@@ -3127,7 +3157,7 @@ function buildCornerExplorer() {
                   <div id="jxg-ic-3d" style="width:100%;aspect-ratio:1/1;"></div>
                 </div>
                 <div>
-                  <div style="font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">Single IC at U₀ (drag P to see MRS)</div>
+                  <div style="font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">Single IC at U0 (drag P to see MRS)</div>
                   <div id="jxg-ic-2d" style="width:100%;aspect-ratio:1/1;"></div>
                   <div style="padding:0.3rem 0.8rem;">
                     <div id="ic-u-readout" style="font-family:var(--mono);font-size:0.78rem;color:#d4813a;min-height:1.1rem;"></div>
@@ -3159,7 +3189,7 @@ function buildCornerExplorer() {
                 </div>
                 <div style="text-align:right;white-space:nowrap;">
                   <div style="font-family:var(--mono);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:4px;">Current utility level</div>
-                  <div id="ic-u0-display" style="font-family:var(--mono);font-size:1.1rem;color:#c0392b;font-weight:600;">U₀ = 2.00</div>
+                  <div id="ic-u0-display" style="font-family:var(--mono);font-size:1.1rem;color:#c0392b;font-weight:600;">U0 = 2.00</div>
                 </div>
               </div>
             </div></div>
@@ -3342,8 +3372,8 @@ function buildCornerExplorer() {
               <div style="display:flex;flex-direction:column;gap:0.75rem;">
                 <div>
                   <div style="font-family:var(--mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:6px;">Legend</div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#7f8c8d;border-top:2px dashed #7f8c8d"></div><span style="font-size:0.79rem">B₀ Original</span></div>
-                  <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#c0392b"></div><span style="font-size:0.79rem">B₁ New</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#7f8c8d;border-top:2px dashed #7f8c8d"></div><span style="font-size:0.79rem">B0 Original</span></div>
+                  <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#c0392b"></div><span style="font-size:0.79rem">B1 New</span></div>
                 </div>
                 <hr class="divider-sm"/>
                 <div class="stat-row">
@@ -3435,20 +3465,20 @@ function buildCornerExplorer() {
                 </select>
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher income shifts the budget line outward in parallel. With Cobb-Douglas X* = αI/Px and Y* = (1−α)I/Py both rise proportionally. Spending shares stay constant.">i</span> Income <em>I</em>  <span class="ctrl-val" id="opt-I-val">80</span></label>
+                <label><span class="tip-icon" data-tip="Higher income shifts the budget line outward in parallel. With Cobb-Douglas X* = aI/Px and Y* = (1-a)I/Py both rise proportionally. Spending shares stay constant.">i</span> Income <em>I</em>  <span class="ctrl-val" id="opt-I-val">80</span></label>
                 <input type="range" id="opt-I" min="20" max="200" step="any" value="80" title="Income I: shifts the budget line out. Optimal bundle moves along the income expansion path." />
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher Px pivots the budget line inward around the Y-intercept. X* = αI/Px falls, but the spending share α on X stays constant, the consumer buys less X but spends the same fraction of income on it.">i</span> <em>P<sub>X</sub></em><span class="ctrl-val" id="opt-Px-val">5</span></label>
+                <label><span class="tip-icon" data-tip="Higher Px pivots the budget line inward around the Y-intercept. X* = aI/Px falls, but the spending share a on X stays constant, the consumer buys less X but spends the same fraction of income on it.">i</span> <em>P<sub>X</sub></em><span class="ctrl-val" id="opt-Px-val">5</span></label>
                 <input type="range" id="opt-Px" min="1" max="20" step="any" value="5" title="Price of X: X becomes more expensive. For Cobb-Douglas, X* falls but spending share stays constant." />
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher Py pivots the budget line inward around the X-intercept. Y* = (1−α)I/Py falls, but the spending share 1−α on Y stays constant. This is the Cobb-Douglas fixed-share property.">i</span> <em>P<sub>Y</sub></em><span class="ctrl-val" id="opt-Py-val">4</span></label>
+                <label><span class="tip-icon" data-tip="Higher Py pivots the budget line inward around the X-intercept. Y* = (1-a)I/Py falls, but the spending share 1-a on Y stays constant. This is the Cobb-Douglas fixed-share property.">i</span> <em>P<sub>Y</sub></em><span class="ctrl-val" id="opt-Py-val">4</span></label>
                 <input type="range" id="opt-Py" min="1" max="20" step="any" value="4" title="Price of Y: Y becomes more expensive. For Cobb-Douglas, Y* falls but spending share stays constant." />
               </div>
               <div class="ctrl-group" id="opt-alpha-ctrl">
-                <label><span class="tip-icon" data-tip="α is the spending share on X. X* = αI/Px and Y* = (1−α)I/Py. Higher α shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
-                <input type="range" id="opt-alpha" min="0.1" max="0.9" step="any" value="0.5" title="Alpha α: spending share on X = α. Higher α → more X at the optimum. ICs become steeper." />
+                <label><span class="tip-icon" data-tip="a is the spending share on X. X* = aI/Px and Y* = (1-a)I/Py. Higher a shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
+                <input type="range" id="opt-alpha" min="0.1" max="0.9" step="any" value="0.5" title="Alpha a: spending share on X = a. Higher a ? more X at the optimum. ICs become steeper." />
               </div>
             </div>
                         <div class="viz-two-col">
@@ -3548,7 +3578,7 @@ function buildCornerExplorer() {
             </div>
             <div class="ctrl-group">
               <label><span class="tip-icon" data-tip="Higher α strengthens preference for X: MUx = α · Y/X rises at any bundle. This shifts the optimum to the right and raises MUx/Px relative to MUy/Py until a new equilibrium is reached.">i</span> \(\alpha\)<span class="ctrl-val" id="bfb-alpha-val">0.50</span></label>
-              <input type="range" id="bfb-alpha" min="0.1" max="0.9" step="any" value="0.5" title="α: Cobb-Douglas exponent on X. Higher α = stronger preference for X = higher MU(X) at any bundle." />
+              <input type="range" id="bfb-alpha" min="0.1" max="0.9" step="any" value="0.5" title="a: Cobb-Douglas exponent on X. Higher a = stronger preference for X = higher MU(X) at any bundle." />
             </div>
           </div>
           <div class="viz-two-col">
