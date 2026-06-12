@@ -15,8 +15,8 @@
     .draggable-label{cursor:move;}
     .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
     .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
-    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;}
-    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;position:relative;z-index:1;}
     .viz-instructor{font-size:0.9rem;color:var(--muted);}
     .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
     .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
@@ -687,8 +687,10 @@ function v71Draw(){
   ctxA.beginPath();ctxA.moveTo(curX,MT);ctxA.lineTo(curX,HA-MB);ctxA.stroke();
   ctxA.setLineDash([]);
   const mc=SMC7(q), tr_val=P*q, tc_val=TC7(q), pi=tr_val-tc_val;
-  dot7(ctxA,curX,toC7(q,Math.min(tc_val,29.5),W,HA,xR,yRA)[1],5,'#e74c3c');
-  dot7(ctxA,curX,toC7(q,Math.min(P*q,29.5),W,HA,xR,yRA)[1],5,'#1a56db');
+  // Only draw the TC/TR cursor dots when the value is inside the y-domain;
+  // clamping them to the top edge left dots floating off their curves.
+  if(tc_val<=yRA[1])dot7(ctxA,curX,toC7(q,tc_val,W,HA,xR,yRA)[1],5,'#e74c3c');
+  if(tr_val<=yRA[1])dot7(ctxA,curX,toC7(q,tr_val,W,HA,xR,yRA)[1],5,'#1a56db');
   ctxA.fillStyle=mc>P?'#e74c3c':'#27ae60';
   ctxA.font='bold 10px DM Sans,sans-serif';ctxA.textAlign='left';
   const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
@@ -710,10 +712,12 @@ function v71Draw(){
     first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
   }
   ctxB.strokeStyle='#6b52a8';ctxB.lineWidth=2;ctxB.stroke();
-  // Current point
-  const pi2=Math.max(yRB[0],Math.min(yRB[1],pi));
-  const[piX,piY]=toC7(q,pi2,W,HB,xR,yRB);
-  dot7(ctxB,piX,piY,5,'#6b52a8','#fff');
+  // Current point -- only when inside the y-domain (clamping it to the floor
+  // left the dot sitting on the axis away from the clipped curve)
+  if(pi>=yRB[0]&&pi<=yRB[1]){
+    const[piX,piY]=toC7(q,pi,W,HB,xR,yRB);
+    dot7(ctxB,piX,piY,5,'#6b52a8','#fff');
+  }
   // Vertical cursor in bottom panel
   ctxB.setLineDash([4,4]);ctxB.strokeStyle='#aaa';ctxB.lineWidth=1;
   ctxB.beginPath();ctxB.moveTo(curX,MT);ctxB.lineTo(curX,HB-MB);ctxB.stroke();
@@ -941,7 +945,9 @@ function v72DrawUpdate(P){
     v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',(py+sy)/2+4).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#e74c3c').text('Loss');
   }
   v72rectG.append('circle').attr('cx',x1).attr('cy',py).attr('r',6).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5);
-  v72rectG.append('circle').attr('cx',x1).attr('cy',sy).attr('r',6).attr('fill','#2c3e50').attr('stroke','white').attr('stroke-width',1.5);
+  // SAC(q*) dot only when SAC is inside the y-domain (at very low prices q* is
+  // tiny and SAC(q*) is huge; clamping pinned an orphan dot to the top edge)
+  if(sacQ<yMax)v72rectG.append('circle').attr('cx',x1).attr('cy',sy).attr('r',6).attr('fill','#2c3e50').attr('stroke','white').attr('stroke-width',1.5);
   // Move P label anchor
   const pNode=v72nodes.find(n=>n.id==='P');
   if(pNode){
@@ -950,6 +956,9 @@ function v72DrawUpdate(P){
     pNode.x+=dx;pNode.y+=dy;pNode.vx=0;pNode.vy=0;
     pNode.fx_anchor=nx;pNode.fy_anchor=ny;
   }
+  // Re-render labels immediately: the force sim cools after load, so without
+  // this the moved anchor (P* tracking the price line) never reaches the screen.
+  if(v72gs)d3TickClamp(v72nodes,v72gs,v72conns);
   document.getElementById('v72-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar.toFixed(2)}</div></div>
@@ -1038,6 +1047,8 @@ function v73DrawUpdate(P){
     pNode.x+=dx;pNode.y+=dy;pNode.vx=0;pNode.vy=0;
     pNode.fx_anchor=nx;pNode.fy_anchor=ny;
   }
+  // Re-render labels immediately (sim may be cool, e.g. programmatic slider input)
+  if(v73gs)d3TickClamp2(v73nodes,v73gs,v73conns);
   let zLabel='',zColor='#27ae60',zBg='#f0fdf4';
   if(P<4){zLabel='Shut down: P < min(SAVC) = $4';zColor='#c0392b';zBg='#fff5f5';}
   else if(P<5.5){zLabel='Operate at loss: P > min(SAVC) but < min(SAC)';zColor='#c05800';zBg='#fff7ed';}
@@ -1301,7 +1312,9 @@ let v76_scX=null,v76_scY=null,v76_curveG=null;
 function v76InitSvg(P,q){
   v76svg=d3MakeSvg('cvs76-wrap');
   if(v76mode==='pricetaker'){
-    const yMax=P+2;
+    // Fixed y-domain covering the full slider range (max P=12). Sizing it to the
+    // initial P (P+2) meant higher prices drew the line/shading above the plot.
+    const yMax=14;
     v76_scX=d3.scaleLinear().domain([0,14]).range([D3PAD.left,D3W-D3PAD.right]);
     v76_scY=d3.scaleLinear().domain([0,yMax]).range([D3H-D3PAD.bottom,D3PAD.top]);
     d3AddAxes(v76svg,v76_scX,v76_scY,'Quantity q','$/unit');
@@ -1351,6 +1364,8 @@ function v76Draw(P,q){
     // Update MR node anchor
     const mrNode=v76nodes76.find(n=>n.id==='MR');
     if(mrNode){const nx=scX(7),ny=py;const dx=nx-mrNode.fx_anchor,dy=ny-mrNode.fy_anchor;mrNode.x+=dx;mrNode.y+=dy;mrNode.vx=0;mrNode.vy=0;mrNode.fx_anchor=nx;mrNode.fy_anchor=ny;}
+    // Re-render the label immediately so it tracks the price line even when the sim is cool
+    if(v76gs76)d3TickClamp(v76nodes76,v76gs76,v76conns76);
     document.getElementById('v76-readout').innerHTML=`<strong>Price Taker:</strong> MR = P = $${P.toFixed(2)} at every unit. Each additional unit adds exactly P* to revenue. No red bar; no price effect.`;
   } else {
     if(v76showGainLoss && v76prevQ<9 && q>v76prevQ){
@@ -1468,23 +1483,27 @@ function v77Draw(){
     if(v77step>=panelShiftStep[i]){
       const sh=20;
       g.append('line').attr('x1',ox+10+sh).attr('y1',oy+20).attr('x2',ox+pw-10+sh).attr('y2',bot-10).attr('stroke','#27ae60').attr('stroke-width',2).attr('stroke-dasharray','4,3');
-      g.append('text').attr('x',ox+pw-22).attr('y',oy+20+sh-4).attr('text-anchor','middle').attr('font-size',8).attr('font-weight',600).attr('fill','#1e8449').text('shifted →');
+      // Annotation sits beside the top of the shifted (green dashed) line;
+      // the previous top-right spot collided with the panel's S force label.
+      g.append('text').attr('x',ox+10+sh+10).attr('y',oy+30).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill','#1e8449').text('shifted →');
     }
   });
   // Causal-flow arrows between adjacent panels: 'input' flows Firm→Market→Consumer
   // (left to right); 'sub'/'income' flow Consumer→Market→Firm (right to left).
   const midY=(D3PAD.top+D3H-D3PAD.bottom)/2;
   const arrowGlyph=(sc==='input')?'→':'←';
-  if(v77step>=1){
-    const ax=D3PAD.left+pw+10;
-    g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5);
-    g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
-  }
-  if(v77step>=2){
-    const ax=D3PAD.left+pw*2+20;
-    g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5);
-    g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
-  }
+  // Gutter positions follow the causal direction: 'input' flows Firm→Market→Consumer
+  // so its first arrow is in the LEFT gutter; 'sub'/'income' flow Consumer→Market→Firm
+  // so their first arrow is in the RIGHT gutter (previously step 1 always lit the left
+  // gutter, leaving a stray arrow far from the panel that had actually shifted).
+  const axLeft=D3PAD.left+pw+10, axRight=D3PAD.left+pw*2+20;
+  const arrowOrder=(sc==='input')?[axLeft,axRight]:[axRight,axLeft];
+  arrowOrder.forEach((ax,k)=>{
+    if(v77step>=k+1){
+      g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5);
+      g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
+    }
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1642,17 +1661,12 @@ function v79Draw(){
     d3MoveAnchor(eqN,scXM(Qeq),scYM(Math.min(13.5,P)));
     v79gsA.filter(d=>d.id==='EQ').select('text').text(eqN.label);
   }
-  // Update anchor for S label to current supply mid-point
+  // Update anchor for S label: keep it ON the current supply curve at Q=100,
+  // where P = 4 + 200/n stays inside the plot for every n in the animation
+  // range (the old midpoint-at-P=9 rule needed n < 120, which never happens,
+  // so the label was stranded at its bogus init spot far above the line).
   if(v79nodesA&&v79nodesA[1]){
-    const midP=9;const midQ=Qs(midP);
-    if(midQ>0&&midQ<300){
-      const oldAx=v79nodesA[1].fx_anchor,oldAy=v79nodesA[1].fy_anchor;
-      const nx=scXM(midQ),ny=scYM(midP);
-      v79nodesA[1].fx_anchor=nx;v79nodesA[1].fy_anchor=ny;
-      v79nodesA[1].ax=nx;v79nodesA[1].ay=ny;
-      v79nodesA[1].x+=nx-oldAx;v79nodesA[1].y+=ny-oldAy;
-      v79nodesA[1].vx=0;v79nodesA[1].vy=0;
-    }
+    d3MoveAnchor(v79nodesA[1],scXM(100),scYM(4+200/n));
   }
 
   // Update firm: price line + profit rect
@@ -1680,6 +1694,10 @@ function v79Draw(){
       v79gsB.filter(d=>d.id==='PI').select('text').text(piN.label);
     }
   }
+  // Re-render both panels' labels immediately: the entry/exit animation runs on a
+  // timer (no pointer events), so the cooled sims would otherwise never repaint them.
+  if(v79gsA)d3TickClamp2(v79nodesA,v79gsA,v79connsA);
+  if(v79gsB)d3TickClamp2(v79nodesB,v79gsB,v79connsB);
 
   document.getElementById('v79-readout').innerHTML=
     `<div class="readout-row">
@@ -1833,6 +1851,10 @@ function v710Draw(shock,dw){
   }
   v710gs710b.filter(d=>d.id==='Sp').style('display',dw>0?null:'none');
   v710conns710b.filter(d=>d.id==='Sp').style('display',dw>0?null:'none');
+  // Re-render labels immediately so SMC'/S' track the shifted curves even when
+  // the force sims have cooled (e.g. programmatic slider input).
+  if(v710gs710a)d3TickClamp2(v710nodes710a,v710gs710a,v710conns710a);
+  if(v710gs710b)d3TickClamp2(v710nodes710b,v710gs710b,v710conns710b);
 
   document.getElementById('v710-readout').innerHTML=
     `<table style="width:100%;font-size:0.84rem;border-collapse:collapse;">

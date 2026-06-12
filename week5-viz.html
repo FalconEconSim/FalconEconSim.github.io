@@ -12,8 +12,8 @@
   <style>
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
-    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
-    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; position:relative; z-index:1; }
+    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
     .viz-instructor { font-size:0.9rem; color:var(--muted); }
     .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
     .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
@@ -28,6 +28,10 @@
     .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
     .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
     canvas { display:block; width:100%; cursor:default; }
+    /* square single-canvas figures cap at 480 wide (site standard for square figures) */
+    .cvs-wrap:has(#cvs53-host), .cvs-wrap:has(#cvs55-host), .cvs-wrap:has(#cvs56-host),
+    .cvs-wrap:has(#cvs58-host), .cvs-wrap:has(#cvs59-host) { max-width:482px; margin-left:auto; margin-right:auto; }
+    #cvs510-host { max-width:480px; margin:0 auto; }
     .cvs-ovl-host { position:relative; }
     .cvs-ovl-host > svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; font-family:'DM Sans',system-ui,sans-serif; }
     .cvs-ovl-host > svg .draggable-label { cursor:grab; pointer-events:auto; }
@@ -143,7 +147,7 @@
     <div class="viz-ctrl-row" style="margin-bottom:0.75rem;align-items:center;">
       <span class="viz-slider-label" style="white-space:nowrap;">Production function:</span>
       <select class="viz-select" id="v51-form" onchange="v51ChangeForm()" style="font-size:0.84rem;padding:4px 10px;">
-        <option value="cobb">Cobb-Douglas: Q = K&#x00B2;&#x00B2; &middot; L&#x00B2;&#x00B2;</option>
+        <option value="cobb">Cobb-Douglas: Q = K^0.5 &middot; L^0.5</option>
         <option value="scurve">S-Curve (Cubic): Q = 1.5L&#x00B2; &minus; 0.1L&#x00B3;</option>
         <option value="quad">Quadratic: Q = 3L &minus; 0.15L&#x00B2;</option>
         <option value="linear">Linear: Q = 2.5L</option>
@@ -786,10 +790,24 @@ function v51Draw() {
   const L = parseFloat(document.getElementById('v51-l').value);
   const K = parseInt(document.getElementById('v51-k').value);
   const form = v51GetForm();
-  const xR=[0,10], yRA=form.yRA, yRB=form.yRB;
+  const xR=[0,10];
 
   const tp=l=>form.tp(l,K);
   const mpl=l=>form.mpl(l,K);
+
+  // Dynamic y-ranges so the curves span the full L domain and the current
+  // dot stays visible at every slider position (fixed per-form ranges clipped
+  // the TP curve and lost the dot at extremes).
+  let tpMax=0.001, mplCap=0.001, mplMin=0;
+  for(let l=0.1;l<=10.001;l+=0.05){
+    tpMax=Math.max(tpMax,tp(l));
+    const m=mpl(l);
+    if(l>=0.8) mplCap=Math.max(mplCap,m);
+    mplMin=Math.min(mplMin,m);
+  }
+  const yRA=[0, Math.max(tpMax, tp(L))*1.08];
+  const yTopB=Math.max(mplCap, mpl(L))*1.12;
+  const yRB=[Math.min(mplMin*1.1, -yTopB*0.08), yTopB];
 
   // ─ TOP PANEL (TP) ─
   ctxA.clearRect(0,0,W,HA);
@@ -954,6 +972,10 @@ function v52RefreshOverlayDom(ovl) {
   ovl.gs.select('rect').attr('width',d=>d.lw).attr('stroke',d=>d.color);
   ovl.gs.select('text').attr('x',d=>d.lw/2).attr('fill',d=>d.color).text(d=>d.label);
   ovl.conns.attr('stroke',d=>d.color);
+  // Hide empty labels entirely (a zero-width stroked rect + connector would
+  // otherwise leave a stray tick mark, e.g. fig 5.6 before "Improve Technology")
+  ovl.gs.attr('display',d=>d.label?null:'none');
+  ovl.conns.attr('display',d=>d.label?null:'none');
 }
 
 function v52DrawPanel(canvasId, type, qLevels, mode) {
@@ -1044,7 +1066,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     // D3 SVG overlay: track the P / MRTS labels to the live drag position
     if(ovl){
       const pNode=ovl.nodes.find(n=>n.id==='P'), mrtsNode=ovl.nodes.find(n=>n.id==='mrts');
-      const pTxt=`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`;
+      const pTxt=mode==='iq'?`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`:`P  X=${L.toFixed(1)}, Y=${K.toFixed(1)}`;
       const mrtsTxt=`${tangLabel} = ${mrts.toFixed(2)}`;
       pNode.label=pTxt; pNode.lw=Math.max(60,pTxt.length*5.8+10);
       mrtsNode.label=mrtsTxt; mrtsNode.lw=Math.max(60,mrtsTxt.length*5.8+10);
@@ -1797,8 +1819,8 @@ function v58Draw() {
   document.getElementById('v58-readout').innerHTML=
     `<div class="readout-row" style="flex-wrap:wrap;">
       <div class="readout-col"><div class="readout-label">Q(K,L)</div><div class="readout-val">${q0.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Q(lambda*K, lambda*L)</div><div class="readout-val" style="color:#e74c3c">${qLam.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Ratio = lambda^(a+b)</div><div class="readout-val">${(qLam/q0).toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Q(λK, λL)</div><div class="readout-val" style="color:#e74c3c">${qLam.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Ratio = λ^(a+b)</div><div class="readout-val">${(qLam/q0).toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">MPL at point</div><div class="readout-val">${MPL.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">MPK at point</div><div class="readout-val">${MPK.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">MRTS = MPL/MPK</div><div class="readout-val" style="color:#e74c3c">${MRTS.toFixed(3)}</div></div>
@@ -1806,7 +1828,7 @@ function v58Draw() {
       <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rts>1.01?'IRS':rts<0.99?'DRS':'CRS'}</div></div>
     </div>
     <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
-      Q = ${A.toFixed(1)} &times; K<sup>${a.toFixed(2)}</sup> &times; L<sup>${b.toFixed(2)}</sup>. Scaling inputs by lambda=${lam.toFixed(1)} scales output by ${(qLam/q0).toFixed(3)} = lambda<sup>${rts.toFixed(2)}</sup>.
+      Q = ${A.toFixed(1)} &times; K<sup>${a.toFixed(2)}</sup> &times; L<sup>${b.toFixed(2)}</sup>. Scaling inputs by λ=${lam.toFixed(1)} scales output by ${(qLam/q0).toFixed(3)} = λ<sup>${rts.toFixed(2)}</sup>.
     </div>`;
 
   if(ovl58){

@@ -13,8 +13,8 @@
     /* ── layout ── */
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
-    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
-    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; position:relative; z-index:1; }
+    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
     .viz-instructor { font-size:0.9rem; color:var(--muted); }
 
     /* ── TOC ── */
@@ -33,7 +33,7 @@
     .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
 
     /* ── canvas wrapper ── */
-    .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
+    .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; max-width:482px; margin-left:auto; margin-right:auto; }
     canvas { display:block; width:100%; height:320px; cursor:default; }
 
     /* ── canvas + D3 SVG label overlay ── */
@@ -739,8 +739,8 @@ function v1Draw() {
         <div class="readout-col"><div class="readout-label">Point 2 (e)</div><div class="readout-val" style="color:${eColor(e2)}">${e2.toFixed(3)}</div></div>
       </div>
       <p style="margin-top:0.5rem; font-size:0.83rem; color:var(--muted)">
-        Point 1 is <strong>${ae1>1?'elastic':'inelastic'}</strong> (|e|=${ae1.toFixed(2)});
-        Point 2 is <strong>${ae2>1?'elastic':'inelastic'}</strong> (|e|=${ae2.toFixed(2)}).
+        Point 1 is <strong>${ae1>1?'elastic':ae1<1?'inelastic':'unit elastic'}</strong> (|e|=${ae1.toFixed(2)});
+        Point 2 is <strong>${ae2>1?'elastic':ae2<1?'inelastic':'unit elastic'}</strong> (|e|=${ae2.toFixed(2)}).
       </p>`;
     dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
     dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
@@ -1069,12 +1069,12 @@ function v3Draw() {
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">TR at P<sub>old</sub>=$${Pb}</div><div class="readout-val">$${TRbase.toFixed(0)}</div></div>
       <div class="readout-col"><div class="readout-label">TR at P<sub>new</sub>=$${P}</div><div class="readout-val">$${TRnew.toFixed(0)}</div></div>
-      <div class="readout-col"><div class="readout-label">Change in TR</div><div class="readout-val" style="color:${deltaT>=0?'#e74c3c':'#27ae60'}">${deltaT>=0?'+':''}$${deltaT.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Change in TR</div><div class="readout-val" style="color:${deltaT>=0?'#27ae60':'#e74c3c'}">${deltaT>=0?'+':'-'}$${Math.abs(deltaT).toFixed(0)}</div></div>
       <div class="readout-col"><div class="readout-label">|e| at P<sub>old</sub></div><div class="readout-val" style="color:${eColor(ed)}">${ae.toFixed(2)}</div></div>
     </div>
-    <div class="verdict ${ae>1?'elastic':ae<1?'inelastic':'unit'}" style="margin-top:0.4rem">
-      ${P>Pb?(ae>1?'Price rise hurt TR: demand is elastic (green loss > red gain)':'Price rise helped TR: demand is inelastic (red gain > green loss)'):''}
-      ${P<Pb?(ae>1?'Price cut helped TR: demand is elastic':'Price cut hurt TR: demand is inelastic'):''}
+    <div class="verdict ${Math.abs(P-Pb)<=0.1?'unit':((P>Pb&&deltaT<0)||(P<Pb&&deltaT>0))?'elastic':deltaT===0?'unit':'inelastic'}" style="margin-top:0.4rem">
+      ${P>Pb?(deltaT<0?'Price rise hurt TR: demand is elastic over this range (green loss > red gain)':deltaT>0?'Price rise helped TR: demand is inelastic over this range (red gain > green loss)':'Price rise left TR unchanged: red gain exactly offsets green loss'):''}
+      ${P<Pb?(deltaT>0?'Price cut helped TR: demand is elastic over this range':deltaT<0?'Price cut hurt TR: demand is inelastic over this range':'Price cut left TR unchanged: gains exactly offset losses'):''}
       ${Math.abs(P-Pb)<=0.1?'Change the new price to see how TR responds':''}
     </div>`;
 }

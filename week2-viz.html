@@ -1758,9 +1758,9 @@ function buildShiftBoard() {
   if (type==='income-up')   I2 =I0*(1+mag);
   if (type==='income-down') I2 =I0*(1-mag);
   if (type==='px-up')       Px2=Px0*(1+mag);
-  if (type==='px-down')     Px2=Px0*(1-mag*0.85);
+  if (type==='px-down')     Px2=Px0*(1-mag);
   if (type==='py-up')       Py2=Py0*(1+mag);
-  if (type==='py-down')     Py2=Py0*(1-mag*0.85);
+  if (type==='py-down')     Py2=Py0*(1-mag);
 
   var xi1=I0/Px0, yi1=I0/Py0, xi2=I2/Px2, yi2=I2/Py2;
   var m=Math.max(xi1,yi1,xi2,yi2)*1.35;
@@ -2345,6 +2345,12 @@ function buildMRSSlider() {
   var px0 = u0 > 0 ? Math.pow(u0, 1) * 0.5 + 1 : 4;
   px0 = Math.max(0.5, Math.min(14, px0));
   var py0 = Math.pow(u0 / Math.pow(px0, a), 1/b);
+  /* Keep P inside the visible board: if the IC's y at px0 is above the
+     plot (high alpha), slide the start point right along the IC to y = 15 */
+  if (py0 > 15) {
+    px0 = Math.max(0.5, Math.min(14, Math.pow(u0 / Math.pow(15, b), 1/a)));
+    py0 = Math.pow(u0 / Math.pow(px0, a), 1/b);
+  }
 
   var glider = mrsBoard.create('glider', [px0, py0, ic], {
     name: 'P', size: 7,
@@ -2515,8 +2521,12 @@ function buildICCross() {
     });
     crossObjects.push(ptB);
 
-    /* Point C on inner IC */
+    /* Point C on inner IC - slide right along the curve so it stays on
+       the visible board (y <= 13) even when u2 is large */
     var cx = 3;
+    if (Math.pow(u2/Math.pow(cx,a),1/b) > 13) {
+      cx = Math.pow(u2 / Math.pow(13, b), 1/a);
+    }
     var ptC = crossBoard.create('point', [cx, Math.pow(u2/Math.pow(cx,a),1/b)], {
       name:'C', size:6, fillColor:'#d4813a', strokeColor:'#fff', strokeWidth:2,
       fixed:true, withLabel:true, label:{fontSize:11,color:'#d4813a',offset:[5,5]}
@@ -3372,8 +3382,8 @@ function buildCornerExplorer() {
               <div style="display:flex;flex-direction:column;gap:0.75rem;">
                 <div>
                   <div style="font-family:var(--mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:6px;">Legend</div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#7f8c8d;border-top:2px dashed #7f8c8d"></div><span style="font-size:0.79rem">B0 Original</span></div>
-                  <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#c0392b"></div><span style="font-size:0.79rem">B1 New</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#7f8c8d;border-top:2px dashed #7f8c8d"></div><span style="font-size:0.79rem">B&#8320; Original</span></div>
+                  <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#c0392b"></div><span style="font-size:0.79rem">B&#8321; New</span></div>
                 </div>
                 <hr class="divider-sm"/>
                 <div class="stat-row">

@@ -15,8 +15,8 @@
     .draggable-label { cursor: move; }
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
-    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
-    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; position:relative; z-index:1; }
+    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
     .viz-instructor { font-size:0.9rem; color:var(--muted); }
     .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
     .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
@@ -144,7 +144,7 @@
       </div>
       <button class="viz-btn" id="v61-show-btn" onclick="v61ShowOptimal()">Show Optimal Bundle</button>
     </div>
-    <div class="cvs-wrap"><canvas id="cvs61" height="320"></canvas></div>
+    <div class="cvs-wrap" style="max-width:682px;margin-left:auto;margin-right:auto;"><canvas id="cvs61" height="320"></canvas></div>
     <div class="viz-readout" id="v61-readout"></div>
     <div class="v61-steps" id="v61-steps">
       <div id="v61-steps-content"></div>
@@ -1521,7 +1521,7 @@ window._initFig610=function initFig610(){
   const xAxisG=svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`);
   const yAxisG=svg.append('g').attr('transform',`translate(${PAD.left},0)`);
   const xLblEl=svg.append('text').attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).attr('y',H-6).text('q (output)');
-  svg.append('text').attr('transform','rotate(-90)').attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).attr('y',14).text('$ per unit');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).attr('y',14).text('$ per unit');
 
   // Force label group
   const labelG=svg.append('g');
@@ -1694,7 +1694,9 @@ function openLN()  { document.getElementById('leftNav').classList.add('open'); d
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
 function redrawAll6() {
-  v61Update(); v62Draw();
+  // v61Draw() (no args) re-renders at the CURRENT dot position — calling
+  // v61Update() here would reset the user's drag/revealed solution on resize
+  v61Draw(); v62Draw();
   // D3 SVG figures are responsive via viewBox — no redraw needed on resize
 }
 
@@ -1716,7 +1718,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('resize', () => {
-  v61Update();
+  v61Draw();
   v62Draw();
 });
 </script>

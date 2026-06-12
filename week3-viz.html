@@ -1333,7 +1333,7 @@ function d3v2InitOverlay(b, geo) {
   const anchors = {
     orig:  mk(geo.xiA*0.30,         geo.yi*0.30),
     comp:  mk(geo.xiHicks*0.62,     geo.yHicksInt*0.16),
-    newL:  mk(geo.xiB*0.55,         geo.yi*0.55),
+    newL:  mk(geo.xiB*0.35,         geo.yi*0.65),
     se:    mk((geo.XA+geo.XC)/2,    geo.yBr*2.6),
     ie:    mk((geo.XC+geo.XB)/2,    geo.yBr*2.6),
   };
@@ -1465,8 +1465,10 @@ function initViz3() {
     // Ray from origin slope = (V3_Px/V3_Py) = 2/3
     b1.create('line',[[0,0],[1,V3_Px/V3_Py]],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true,
       point1:{visible:false},point2:{visible:false}});
-    v3IepAnchorX = xmax*0.25;
-    v3IepAnchorY = xmax*0.25*(V3_Px/V3_Py)+1.2;
+    /* Anchor low on the ray: the optimum travels the ray from X*=10 (I=40)
+       to X*=30 (I=120), so keep the label box left of X=10 at all incomes */
+    v3IepAnchorX = xmax*0.12;
+    v3IepAnchorY = xmax*0.12*(V3_Px/V3_Py)+1.2;
     v3IepLabel = 'Income Expansion Path';
   } else {
     // Backward-bending: X decreases as I rises
@@ -1699,19 +1701,19 @@ function initViz5() {
   v5Curve = null; v5Pt = null;
   v5Ov = null; // board is being recreated — overlay must rebuild against the new board
   v5b = JXG.JSXGraph.initBoard('jxg-v5',{
-    boundingbox:[-2,7,80,-0.4],
+    boundingbox:[-2,8.8,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
     defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
                  y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
   });
   const b = v5b;
-  // Horizontal grid lines (price 0-7)
-  for (let gy = 1; gy <= 6; gy++) {
+  // Horizontal grid lines (price 0-8)
+  for (let gy = 1; gy <= 8; gy++) {
     b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
   }
   b.create('text',[76,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
-  b.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#888',fixed:true});
+  b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'#888',fixed:true});
 
   redrawV5();
 
@@ -1752,7 +1754,7 @@ function redrawV5() {
   // Current point
   const curX = safAdj / v5Px;
   v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-    name:`(${Xs.toFixed(1)},${v5Px})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[7,5]}});
+    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[7,5]}});
 
   // "D" demand-curve name label as a draggable D3 SVG force-label overlay
   // (S6/S8 gold-standard style), anchored to a point on the curve.
