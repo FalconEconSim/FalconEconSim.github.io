@@ -664,7 +664,7 @@ function v81Draw(){
     v81conns.filter(d=>d.id==='DWL').style('display','none');
   }
   // price line + guide
-  v81dyn._pLine.attr('x1',scX(0)).attr('x2',scX(Math.max(QD,QS)+0.5)).attr('y1',scY(P)).attr('y2',scY(P));
+  v81dyn._pLine.attr('x1',scX(0)).attr('x2',scX(Qtr)).attr('y1',scY(P)).attr('y2',scY(P));
   v81dyn._vLine.attr('x1',scX(Qtr)).attr('x2',scX(Qtr)).attr('y1',scY(P)).attr('y2',scY(0));
   v81dyn._qDot.attr('cx',scX(Qtr)).attr('cy',scY(P));
   // move CS/PS label anchors with price
@@ -707,7 +707,7 @@ function v82Init(){
   v82dyn._vLine=v82svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
   v82dyn._dot=v82svg.append('circle').attr('r',5).attr('fill','#7d3c98').attr('stroke','#fff').attr('stroke-width',1.5);
   v82nodes=[
-    d3Node('D','#1a56db','D: P=10−Q',64,scX(7),scY(4)),
+    d3Node('D','#1a56db','D: P=10−Q',64,scX(7),scY(3)),
     d3Node('MC','#a07800','MC = 2',40,scX(9),scY(2)),
     d3Node('T','#a07800','Transfer',48,scX(2),scY(5)),
     d3Node('DWL','#c0392b','DWL',32,scX(6),scY(4)),
@@ -818,8 +818,8 @@ function v83Draw(){
     v83dyn.append('polygon').attr('points',`${scX(QS_free)},${scY(PW)} ${scX(QS_eff)},${scY(Peff)} ${scX(QS_eff)},${scY(PW)}`).attr('fill',FILL_DWL);
     v83dyn.append('polygon').attr('points',`${scX(QD_eff)},${scY(Peff)} ${scX(QD_free)},${scY(PW)} ${scX(QD_eff)},${scY(PW)}`).attr('fill',FILL_DWL);
   }
-  v83dyn._pw.attr('x1',scX(0)).attr('x2',scX(QD_free+0.5)).attr('y1',scY(PW)).attr('y2',scY(PW));
-  if(tAct>0.05){v83dyn._peff.attr('x1',scX(0)).attr('x2',scX(QD_eff+0.5)).attr('y1',scY(Peff)).attr('y2',scY(Peff)).style('display',null);}
+  v83dyn._pw.attr('x1',scX(0)).attr('x2',scX(QD_free)).attr('y1',scY(PW)).attr('y2',scY(PW));
+  if(tAct>0.05){v83dyn._peff.attr('x1',scX(0)).attr('x2',scX(QD_eff)).attr('y1',scY(Peff)).attr('y2',scY(Peff)).style('display',null);}
   else v83dyn._peff.style('display','none');
   // anchors
   d3MoveAnchor(v83nodes.find(n=>n.id==='CS'),scX(QD_eff*0.35),scY((20+Peff)/2));
@@ -980,6 +980,8 @@ function v85Draw(){
   const Qc=a-mc,Pc=mc,Qm=(a-mc)/2,Pm=(a+mc)/2;
   v85dyn.selectAll('polygon,rect').remove();
   v85dyn._mc.attr('x1',scX(0)).attr('x2',scX(11)).attr('y1',scY(mc)).attr('y2',scY(mc));
+  // keep the MC label anchored ON the MC line as it moves with the slider
+  d3MoveAnchor(v85nodes.find(n=>n.id==='MC'),scX(9.5),scY(mc));
   const show=id=>{v85gs.filter(d=>d.id===id).style('display',null);v85conns.filter(d=>d.id===id).style('display',null);};
   const hide=id=>{v85gs.filter(d=>d.id===id).style('display','none');v85conns.filter(d=>d.id===id).style('display','none');};
   if(v85state==='comp'){
@@ -1082,7 +1084,7 @@ function v87Init(){
   d3Seg(v87svg,scX,scY,0,2,10,2,STROKE_PS,2,'4,3');     // MC
   d3Seg(v87svg,scX,scY,0,10,10,0,STROKE_CS,2);          // D
   v87nodes=[
-    d3Node('D',STROKE_CS,'D',22,scX(8.5),scY(2.2)),
+    d3Node('D',STROKE_CS,'D',22,scX(7.5),scY(2.5)),
     d3Node('MC','#a07800','MC=2',40,scX(9),scY(2)),
     d3Node('CS','#1a56db','CS',24,scX(2),scY(6)),
     d3Node('PI','#a07800','π',20,scX(2),scY(3.5)),

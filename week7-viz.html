@@ -659,7 +659,11 @@ function v71Draw(){
 
   // Force labels TC and TR
   ctxA.font='bold 10px DM Sans,sans-serif';
-  const[tcLx,tcLy]=toC7(8,TC7(8),W,HA,xR,yRA);
+  // Anchor the TC label on the VISIBLE part of the TC curve. TC(8)=103.7 is far
+  // above the y-domain (max 30), so anchoring at q=8 pushed the label offscreen
+  // and it never rendered at any price. Walk down to the last q where TC fits.
+  let qTC=8; while(qTC>0.6 && TC7(qTC)>yRA[1]*0.9) qTC-=0.05;
+  const[tcLx,tcLy]=toC7(qTC,TC7(qTC),W,HA,xR,yRA);
   const trLblQ = Math.min(8, trQmax*0.85);
   const[trlx,trly]=toC7(trLblQ,P*trLblQ,W,HA,xR,yRA);
   const lbls71=[
@@ -926,8 +930,10 @@ function v72DrawUpdate(P){
   const x0=scX(0),x1=scX(qStar),py=scY(Math.min(P,yMax-0.01));
   const sy=scY(Math.min(sacQ,yMax-0.01));
   const vy=scY(Math.min(savcQ,yMax-0.01));
-  // Price line
-  v72pLine.attr('x1',scX(0.3)).attr('x2',scX(8.8)).attr('y1',py).attr('y2',py);
+  // Price line. Start no later than q* so the equilibrium dot always sits ON the
+  // line (at P<$3, q* clamps to 0.1, left of the line's usual 0.3 start, which
+  // left the dot floating in a visible gap before the first dash).
+  v72pLine.attr('x1',scX(Math.min(0.3,qStar))).attr('x2',scX(8.8)).attr('y1',py).attr('y2',py);
   // Rectangles
   v72rectG.selectAll('*').remove();
   if(v72showMistakes&&P>4&&P>savcQ){
@@ -1171,17 +1177,25 @@ function v75InitSvg(){
   v75svgA=d3MakeSvg2('cvs75a-wrap');
   d3AddAxes2(v75svgA,v75scXa,v75scYa,'q','$/unit');
   d3AddCurve(v75svgA,SAVC7,v75scXa,v75scYa,'#f39c12',yMax);
-  // SMC below PSD (gray)
-  {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<0||v>yMax||v>PSD75)continue;pts.push([v75scXa(q),v75scYa(v)]);}
+  // The supply portion of SMC is its RISING branch above the shutdown price
+  // (q >= 3, where SMC(3) = 4 = min SAVC). Filtering on v >= PSD alone also caught
+  // the parabola's DESCENDING branch (q <= 1, where SMC is also >= 4), and
+  // d3.line() bridged the two branches with a spurious horizontal chord at P=4
+  // from q=1 to q=3, cutting straight across the dip. Split by q instead
+  // (with a hair of overlap at q=3 so the gray and blue strokes join seamlessly).
+  // SMC non-supply portion (gray): everything left of q=3
+  {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<0||v>yMax||q>3.05)continue;pts.push([v75scXa(q),v75scYa(v)]);}
   v75svgA.append('path').attr('fill','none').attr('stroke','#aaa').attr('stroke-width',2).attr('d',d3.line()(pts));}
-  // SMC above PSD (supply, blue, highlighted)
-  {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax)continue;pts.push([v75scXa(q),v75scYa(v)]);}
+  // SMC above PSD (supply, blue, highlighted): rising branch only
+  {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v>yMax||q<2.95)continue;pts.push([v75scXa(q),v75scYa(v)]);}
   v75smcHi=v75svgA.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(pts));}
   v75pLineEl=v75svgA.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
   // Vertical drop-line from the P=MC intersection down to the q-axis (shows "this price gives this quantity")
   v75dropLine=v75svgA.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
-  // q label at the foot of the drop-line
-  v75qLabel=v75svgA.append('text').attr('text-anchor','middle').attr('font-size',9).attr('font-weight',700).attr('fill','#7d3c98').attr('opacity',0);
+  // q label at the foot of the drop-line (sits just above the axis, to the right
+  // of the drop-line: drawn IN the tick row it collided with tick numbers
+  // whenever q passed an integer during the sweep)
+  v75qLabel=v75svgA.append('text').attr('text-anchor','start').attr('font-size',9).attr('font-weight',700).attr('fill','#7d3c98').attr('opacity',0);
   // Intersection dot where the price line crosses MC -- the (q, P) pairing made visible
   v75isectDot=v75svgA.append('circle').attr('r',5).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5).attr('opacity',0);
   // Labels for left panel
@@ -1199,7 +1213,9 @@ function v75InitSvg(){
   d3AddAxes2(v75svgB,v75scXb,v75scYb,'q (supply)','P');
   // Faint reference overlay of the MC curve (above shutdown point), revealed once the
   // sweep completes -- so students can see the accumulated dots land exactly on it.
-  {const pts=[];for(let q=0.4;q<=7;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax)continue;pts.push([v75scXb(q),v75scYb(v)]);}
+  // (rising branch only — see the chord note above; q<2.95 excludes the
+  // descending branch that also satisfies v >= PSD)
+  {const pts=[];for(let q=0.4;q<=7;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax||q<2.95)continue;pts.push([v75scXb(q),v75scYb(v)]);}
   v75mcOverlay=v75svgB.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2.5)
     .attr('stroke-dasharray','2,3').attr('opacity',0).attr('d',d3.line()(pts));}
   v75supplyDots=v75svgB.append('g');
@@ -1221,7 +1237,7 @@ function v75DrawPanels(){
     const baseY=v75scYa(0);
     v75isectDot.attr('cx',ix).attr('cy',iy).attr('opacity',1);
     v75dropLine.attr('x1',ix).attr('x2',ix).attr('y1',iy).attr('y2',baseY).attr('opacity',0.7);
-    v75qLabel.attr('x',ix).attr('y',baseY+13).text('q='+q.toFixed(1)).attr('opacity',1);
+    v75qLabel.attr('x',ix+6).attr('y',baseY-6).text('q='+q.toFixed(1)).attr('opacity',1);
   } else {
     v75isectDot.attr('opacity',0);
     v75dropLine.attr('opacity',0);
@@ -1815,9 +1831,17 @@ function v710Draw(shock,dw){
     if(pts.length>1)gF.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('stroke-dasharray','5,4').attr('d',d3.line()(pts));
   }
   // SMC' is a draggable D3 force label anchored on the shifted curve;
-  // hidden whenever there is no shock
+  // hidden whenever there is no shock. The anchor q is chosen dynamically so the
+  // point (qT, vT) lies ON the visible shifted curve for BOTH shock types: a fixed
+  // q=5 with a clamped y left the anchor floating off-curve for wage shocks > 1.5
+  // (the shifted curve exits the top of the plot before q=5). Shifted curve:
+  // v = q^2 - 4q + 7 + shiftD, so its rising branch gives q = 2 + sqrt(v-3-shiftD).
   const smcp=v710nodes710a.find(n=>n.id==='SMCp');
-  if(dw>0)d3MoveAnchor(smcp,scXF(5),scYF(Math.max(0.5,Math.min(SMC7(5)+shiftD,13.5))));
+  if(dw>0){
+    const vT=Math.max(0.5,Math.min(SMC7(5)+shiftD,13.5));
+    const qT=2+Math.sqrt(Math.max(0,vT-3-shiftD));
+    d3MoveAnchor(smcp,scXF(qT),scYF(vT));
+  }
   v710gs710a.filter(d=>d.id==='SMCp').style('display',dw>0?null:'none');
   v710conns710a.filter(d=>d.id==='SMCp').style('display',dw>0?null:'none');
 
@@ -1842,12 +1866,15 @@ function v710Draw(shock,dw){
     gM.append('circle').attr('cx',scXM(Math.max(0,QeqAfter))).attr('cy',scYM(Math.min(13.9,PeqAfter))).attr('r',5).attr('fill','#e74c3c').attr('stroke','white').attr('stroke-width',1.5);
   }
   // S' is a draggable D3 force label anchored on the shifted supply curve;
-  // hidden whenever there is no shock
+  // hidden whenever there is no shock. The anchor P is chosen dynamically on the
+  // visible curve range for BOTH shock types: a fixed P=6 ran off the curve for
+  // wage shocks >= 2 (the shifted curve's P-intercept rises past 6, so Q clamped
+  // to 0 and the anchor stranded on the y-axis below the curve). Anchoring at a
+  // fixed Q=60 keeps the point on the curve for every shock: P = PSD_new + 60/50.
   const spNode=v710nodes710b.find(n=>n.id==='Sp');
   if(dw>0){
     const PSD_new2=4+shiftD;
-    const s2Q=50*Math.max(0,6-PSD_new2);
-    d3MoveAnchor(spNode,scXM(Math.min(s2Q,190)),scYM(6)); // on the shifted curve at P=6
+    d3MoveAnchor(spNode,scXM(60),scYM(PSD_new2+1.2)); // on the shifted curve at Q=60
   }
   v710gs710b.filter(d=>d.id==='Sp').style('display',dw>0?null:'none');
   v710conns710b.filter(d=>d.id==='Sp').style('display',dw>0?null:'none');
@@ -1904,15 +1931,27 @@ window.addEventListener('DOMContentLoaded',()=>{
     sl.addEventListener('mousedown',()=>{ if(v76sim76) v76sim76.alphaTarget(0.3).restart(); });
     sl.addEventListener('touchstart',()=>{ if(v76sim76) v76sim76.alphaTarget(0.3).restart(); },{passive:true});
   })();
+  // Fig 7.10 (both panels' sims: without this the SMC/SMC' label boxes overlap
+  // during a held drag because their anchors converge while the sims are cool)
+  (function(){
+    const sl=document.getElementById('v710-shock-mag');
+    const heat=()=>{ if(v710sim710a) v710sim710a.alphaTarget(0.3).restart(); if(v710sim710b) v710sim710b.alphaTarget(0.3).restart(); };
+    sl.addEventListener('mousedown',heat);
+    sl.addEventListener('touchstart',heat,{passive:true});
+  })();
   window.addEventListener('mouseup',()=>{
     if(v72sim) v72sim.alphaTarget(0);
     if(v73sim) v73sim.alphaTarget(0);
     if(v76sim76) v76sim76.alphaTarget(0);
+    if(v710sim710a) v710sim710a.alphaTarget(0);
+    if(v710sim710b) v710sim710b.alphaTarget(0);
   });
   window.addEventListener('touchend',()=>{
     if(v72sim) v72sim.alphaTarget(0);
     if(v73sim) v73sim.alphaTarget(0);
     if(v76sim76) v76sim76.alphaTarget(0);
+    if(v710sim710a) v710sim710a.alphaTarget(0);
+    if(v710sim710b) v710sim710b.alphaTarget(0);
   });
 
   // ResizeObserver only for canvas-based figures (7.1 uses canvas)

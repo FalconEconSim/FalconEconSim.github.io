@@ -1263,7 +1263,7 @@ function drawV2() {
   // Horizontal grid lines
   const gridStep2 = Math.max(1, Math.round(ymax / 5));
   for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
-    b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+    b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
   b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'#888',fixed:true});
   b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#888',fixed:true});
@@ -1330,9 +1330,12 @@ function d3v2InitOverlay(b, geo) {
   // Hidden anchor points (data-space) whose scrCoords give pixel positions that
   // automatically track the board's bounding box / zoom / pan.
   const mk = (x,y) => b.create('point',[x,y],{visible:false,fixed:true,withLabel:false});
+  // NB: a point ON a budget line from (0,yInt) to (xInt,0) needs its two
+  // factors to sum to 1: (xInt*t, yInt*(1-t)). Keep that invariant here or
+  // the connectors point at empty space.
   const anchors = {
-    orig:  mk(geo.xiA*0.30,         geo.yi*0.30),
-    comp:  mk(geo.xiHicks*0.62,     geo.yHicksInt*0.16),
+    orig:  mk(geo.xiA*0.30,         geo.yi*0.70),
+    comp:  mk(geo.xiHicks*0.62,     geo.yHicksInt*0.38),
     newL:  mk(geo.xiB*0.35,         geo.yi*0.65),
     se:    mk((geo.XA+geo.XC)/2,    geo.yBr*2.6),
     ie:    mk((geo.XC+geo.XB)/2,    geo.yBr*2.6),
@@ -1446,11 +1449,11 @@ function initViz3() {
   const b1 = v3b1, b2 = v3b2;
   // Horizontal grid lines for b1
   for (let gy = 5; gy < ymax; gy += 5) {
-    b1.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+    b1.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
   // Horizontal grid lines for b2 (price axis: 0-7)
   for (let gy = 1; gy <= 6; gy++) {
-    b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+    b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
   b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'#888',fixed:true});
   b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'#888',fixed:true});
@@ -1710,7 +1713,7 @@ function initViz5() {
   const b = v5b;
   // Horizontal grid lines (price 0-8)
   for (let gy = 1; gy <= 8; gy++) {
-    b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+    b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
   b.create('text',[76,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
   b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'#888',fixed:true});

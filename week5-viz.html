@@ -1027,8 +1027,10 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     // Collect curve-label anchor for the D3 SVG overlay (drawn after the loop)
     let ax=null, ay=null;
     if(type==='cd'){
-      const lK=Math.min(q*q/1.5,9.5);
-      [ax,ay]=toC(1.5,lK,W,H,xR,yR);
+      // anchor on the curve: clamp K to 9.5, then put L back on the isoquant
+      let aL=1.5, aK=q*q/1.5;
+      if(aK>9.5){ aK=9.5; aL=q*q/9.5; }
+      [ax,ay]=toC(aL,aK,W,H,xR,yR);
     } else if(type==='linear'){
       const kmax=q;
       [ax,ay]=toC(0,kmax,W,H,xR,yR);
@@ -1066,7 +1068,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     // D3 SVG overlay: track the P / MRTS labels to the live drag position
     if(ovl){
       const pNode=ovl.nodes.find(n=>n.id==='P'), mrtsNode=ovl.nodes.find(n=>n.id==='mrts');
-      const pTxt=mode==='iq'?`P  L=${L.toFixed(1)}, K=${K.toFixed(1)}`:`P  X=${L.toFixed(1)}, Y=${K.toFixed(1)}`;
+      const pTxt=mode==='iq'?`P: L=${L.toFixed(1)}, K=${K.toFixed(1)}`:`P: X=${L.toFixed(1)}, Y=${K.toFixed(1)}`;
       const mrtsTxt=`${tangLabel} = ${mrts.toFixed(2)}`;
       pNode.label=pTxt; pNode.lw=Math.max(60,pTxt.length*5.8+10);
       mrtsNode.label=mrtsTxt; mrtsNode.lw=Math.max(60,mrtsTxt.length*5.8+10);

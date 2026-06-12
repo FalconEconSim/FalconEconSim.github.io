@@ -831,7 +831,7 @@ function mkBoard(id, bbox) {
   var gridY0=Math.ceil(ylo/step)*step;
   for (var gy=gridY0; gy<=yhi; gy=Math.round((gy+step)*1000)/1000) {
     if (Math.abs(gy)<step*0.01) continue;
-    b.create('segment',[[xlo,gy],[xhi,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+    b.create('segment',[[xlo,gy],[xhi,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
   return b;
 }
@@ -1385,7 +1385,7 @@ function mkBoard(id, bbox) {
   var gridY0=Math.ceil(ylo/step)*step;
   for (var gy=gridY0; gy<=yhi; gy=Math.round((gy+step)*1000)/1000) {
     if (Math.abs(gy)<step*0.01) continue;
-    b.create('segment',[[xlo,gy],[xhi,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false});
+    b.create('segment',[[xlo,gy],[xhi,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
   return b;
 }
@@ -2454,6 +2454,7 @@ function buildMRSSlider() {
    8. WHY ICs CANNOT CROSS
    ============================================================================= */
 var crossBoard = null, crossObjects = [], crossOverlay = null;
+var prevICCrossAbove = null;  /* was IC1 (inner) above IC2 at the label anchor x? */
 
 function initICCross() {
   crossBoard = mkBoard('jxg-iccross', [-0.8, 16, 16, -0.8]);
@@ -2496,6 +2497,24 @@ function buildICCross() {
       {id:'IC1', color:'#d4813a', label:'IC1 (U='+u2.toFixed(1)+')', lw:64,
         ux:12.5, uy:Math.pow(u2/Math.pow(12.5,a),1/b)}
     ]);
+    /* When the slider pushes IC1 past IC2 the two anchors swap vertical
+       order; swap the label boxes' current positions in step so the force
+       layout doesn't strand each label beside the other curve with the
+       connectors crossed (layout hysteresis). */
+    var nowAbove = u2 >= u1;
+    if (prevICCrossAbove !== null && nowAbove !== prevICCrossAbove) {
+      var icNodes = crossOverlay.sim.nodes(), nIC1 = null, nIC2 = null;
+      icNodes.forEach(function(d){
+        if (d.id === 'IC1') nIC1 = d; else if (d.id === 'IC2') nIC2 = d;
+      });
+      if (nIC1 && nIC2) {
+        var sx = nIC1.x, sy = nIC1.y;
+        nIC1.x = nIC2.x; nIC1.y = nIC2.y; nIC2.x = sx; nIC2.y = sy;
+        nIC1.vx = nIC1.vy = nIC2.vx = nIC2.vy = 0;
+        crossOverlay.sim.alpha(Math.max(crossOverlay.sim.alpha(), 0.4)).restart();
+      }
+    }
+    prevICCrossAbove = nowAbove;
   }
 
   /* Check for crossing: ICs cross when u2 > u1 (ic2 above ic1) at some x */

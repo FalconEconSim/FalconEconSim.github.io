@@ -1217,7 +1217,9 @@ function v4Draw() {
       <div class="readout-col"><div class="readout-label">Predicted %ΔTR</div><div class="readout-val" style="color:${trChange>=0?'#27ae60':'#e74c3c'}">${trChange>=0?'+':''}${trChange.toFixed(1)}%</div></div>
     </div>
     <div class="verdict ${Math.abs(ind.e)>1?'elastic':'inelastic'}" style="margin-top:0.5rem">
-      ${Math.abs(ind.e)>1
+      ${pChange===0
+        ? `${Math.abs(ind.e)>1?'Elastic':'Inelastic'} good: move the price slider to see the revenue effect.`
+        : Math.abs(ind.e)>1
         ? `Elastic good: a ${pChange>0?'price rise hurts':'price cut grows'} total revenue.`
         : `Inelastic good: a ${pChange>0?'price rise grows':'price cut hurts'} total revenue.`}
     </div>`;
@@ -1462,7 +1464,7 @@ function v7Draw() {
   dot(ctx,qx,py,8,'#f39c12','#fff');
 
   // D3 SVG force label for "normal $X"
-  if (v7Nodes) d3MoveAnchor(v7Nodes[0], ML+4, pyn-6);
+  if (v7Nodes) d3MoveAnchor(v7Nodes[0], ML+4, pyn);
 
   const mult=P/Pnorm;
   document.getElementById('v7-readout').innerHTML=
@@ -1495,7 +1497,7 @@ function v7Init() {
     const [,pyn]=toC(0, v7.Pnorm, v7W, v7H, xR7, yR7);
     const normTxt='normal $'+v7.Pnorm;
     v7ctx.font='10px DM Sans,sans-serif';
-    v7Nodes = [ d3LblNode('normal', '#aaa', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn-6) ];
+    v7Nodes = [ d3LblNode('normal', '#aaa', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn) ];
     v7Sim = d3LabelSim(v7Nodes);
     v7Lbl = d3LabelLayer(v7Svg, v7Nodes, ()=>v7Sim);
     v7Sim.on('tick', ()=>d3LabelTick(v7Nodes, v7Lbl.gs, v7Lbl.conns, v7W, v7H, ML, MR, MT, MB));
