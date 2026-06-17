@@ -202,9 +202,9 @@ const CARDS = [
 const TYPES = [...new Set(CARDS.map(c=>c.type))];
 const COL = {Def:'#0077C8',Eq:'#7C3AED',Graph:'#065F46',Mistake:'#B45309'};
 const BG  = {Def:'#EFF8FF',Eq:'#F5F3FF',Graph:'#ECFDF5',Mistake:'#FFFBEB'};
-let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All';
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All',ratings={};
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};}
 function render(){
   const root=document.getElementById('fc-root');
   if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
@@ -212,7 +212,7 @@ function render(){
   const total=deck.length;
   root.innerHTML=`
     <div class="fc-hdr">
-      <span class="fc-title">Week 6 · Cost Theory</span>
+      <span class="fc-title">EC224 · Week 6 · Cost Theory</span>
       <span class="fc-ctr">${idx+1} / ${total}</span>
     </div>
     <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
@@ -271,6 +271,7 @@ function summary(){
 }
 function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
 function rate(r){
+  const c=deck[idx];if(c)ratings[c.id]=r;
   stats[r]++;flipped=false;idx++;
   const zone=document.getElementById('fc-card-zone');
   if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
@@ -278,7 +279,7 @@ function rate(r){
 }
 function setFilter(f){filter=f;rebuildDeck();render();}
 function restart(){rebuildDeck();render();}
-function restartHard(){deck=shuffle(CARDS.filter(c=>c.type===filter||filter==='All'));idx=0;stats={Easy:0,Good:0,Hard:0};render();}
+function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
 document.addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();flipCard();}
   if(e.code==='Digit1')rate('Hard');
