@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>[DEV] Week 2 Visualizations - Design Preview</title>
+  <title>[DEV] Week 2 Visualizations – UX/A11y Rebuild · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -18,14 +18,14 @@
   --bg-card:   #ffffff;
   --ink:       #1a1a1a;
   --ink-light: #6b6b6b;
-  --faint:     #9aa3b2;
+  --faint:     #596373;
   --accent:    #1a56db;
   --accent-lt: #eff4ff;
   --rule:      #e4e4e4;
   --code-bg:   #1e2233;
   --code-text: #cdd9e5;
-  --green:     #16a34a;
-  --red:       #dc2626;
+  --green:     #2e8b57;
+  --red:       #c0392b;
   --amber:     #d4813a;
   --purple:    #6b52a8;
 }
@@ -277,12 +277,20 @@ input[type="range"] {
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px; height: 16px;
+  width: 22px; height: 22px;
   border-radius: 50%;
   background: var(--accent);
   cursor: pointer;
   border: 2px solid #fff;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.22);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.22);
 }
 select {
   font-family: var(--font);
@@ -611,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
    Usage:
      var ov = jxgLabelOverlay('jxg-budget', bcBoard);
      ov.setLabels([
-       {id:'slope', color:C.red, label:'slope = -1.25', lw:64, ux:3, uy:5}
+       {id:'slope', color:C.blue, label:'slope = -1.25', lw:64, ux:3, uy:5}
        // ux,uy = JSXGraph USER coordinates of the anchor point this label refers to
      ]);
    Call ov.setLabels(...) again any time the board is rebuilt with new data
@@ -847,21 +855,13 @@ function mk3DBoard(id, bbox) {
   });
 }
 
-/* Design-spec change 1: unified semantic color theme (ECON_THEME) */
-var ECON_THEME = {
-  PREFERENCE: '#0284c7',  /* Sky Blue - ICs, utility surfaces */
-  BUDGET:     '#dc2626',  /* Crimson - budget constraints, prices, income */
-  OPTIMUM:    '#16a34a',  /* Vibrant Green - optimal bundles, tangency points */
-  BASELINE:   '#9ca3af'   /* Slate Gray - pre-change baselines, shadow overlays */
-};
-
 var C = {
-  blue:  '#0284c7',
-  blue2: '#38bdf8',
-  blue3: '#bae6fd',
-  red:   '#dc2626',
+  blue:  '#3d5a80',
+  blue2: '#6b8cae',
+  blue3: '#c5d9eb',
+  red:   '#c0392b',
   amber: '#d4813a',
-  green: '#16a34a',
+  green: '#2e8b57',
   ink:   '#1a1a2a'
 };
 
@@ -959,7 +959,7 @@ function initICExplorer() {
   /* 4 edges of the plane */
   [[0,1],[1,2],[2,3],[3,0]].forEach(function(p) {
     icView3D.create('line3d', [cPts[p[0]], cPts[p[1]]],
-      {strokeColor:C.blue, strokeWidth:1.5});
+      {strokeColor:C.red, strokeWidth:1.5});
   });
 
   /* Fill the cutting plane with evenly spaced horizontal lines (hatch fill).
@@ -1012,7 +1012,7 @@ function initICExplorer() {
     if (!isFinite(z)) z=u0;
     return [t, y, z];
   }, [box3[0]+0.02, box3[1]]
-  ], {strokeColor:C.blue, strokeWidth:3});
+  ], {strokeColor:C.red, strokeWidth:3});
 
   /* Vertical arm of complements: X=u0, Y from u0 to box3[1]
      Drawn as a second curve3d parameterised over Y */
@@ -1028,7 +1028,7 @@ function initICExplorer() {
     if (x<box3[0]||x>box3[1]||y<kink2||y>box3[1]) return [NaN,NaN,NaN];
     return [x, y, Math.min(x,y)];
   }, [0, box3[1]]
-  ], {strokeColor:C.blue, strokeWidth:3});
+  ], {strokeColor:C.red, strokeWidth:3});
 
   /* ── 2D board ── */
   icBoard2D = mkBoard('jxg-ic-2d', [-1.0, 14.5, 14.5, -1.0]);
@@ -1160,11 +1160,11 @@ function redrawIC2DAtU0(type, alpha, u0) {
       icHighlightFn = icBoard2D.create('functiongraph', [function(x) {
         var a = icU0State.alpha, b = 1 - a, u = icU0State.u0;
         return x > 0.05 ? Math.pow(u / Math.pow(x, a), 1 / b) : NaN;
-      }, 0.05, 13.2], {strokeColor: C.blue, strokeWidth: 3, highlight: false});
+      }, 0.05, 13.2], {strokeColor: C.red, strokeWidth: 3, highlight: false});
 
       icGlider2D = icBoard2D.create('glider', [u0, u0, icHighlightFn], {
         name: '', size: 7,
-        fillColor: C.green, strokeColor: '#fff', strokeWidth: 2,
+        fillColor: C.amber, strokeColor: '#fff', strokeWidth: 2,
         withLabel: false,
         showInfobox: false
       });
@@ -1179,7 +1179,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
         var slope = -(a * gy) / ((1 - a) * gx);
         var y = gy + slope * (x - gx);
         return (y >= 0 && x >= 0.01) ? y : NaN;
-      }, 0.01, 13.0], {strokeColor: C.green, strokeWidth: 2.5, dash: 3, highlight: false});
+      }, 0.01, 13.0], {strokeColor: C.amber, strokeWidth: 2.5, dash: 3, highlight: false});
 
       icDropH = icBoard2D.create('segment', [
         [0, function() { return icGlider2D ? Math.max(0, icGlider2D.Y()) : 0; }],
@@ -1222,7 +1222,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
           if (gx <= 0.01 || a <= 0 || a >= 1) return '';
           return 'MRS = ' + (a * gy / ((1 - a) * gx)).toFixed(3);
         }
-      ], {fontSize: 9, color: C.green, fixed: false, highlight: false,
+      ], {fontSize: 9, color: C.amber, fixed: false, highlight: false,
           anchorX: 'left', anchorY: 'bottom'});
     }
     /* Reset glider to equal-goods point (x=y=u0) so MRS=1 by default */
@@ -1254,7 +1254,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
     try {
       gl = icBoard2D.create('glider', [initX, initY, curve], {
         name:'', size:7,
-        fillColor:C.green, strokeColor:'#fff', strokeWidth:2,
+        fillColor:C.amber, strokeColor:'#fff', strokeWidth:2,
         withLabel:false, showInfobox:false
       });
     } catch(e) { return; }
@@ -1316,11 +1316,11 @@ function redrawIC2DAtU0(type, alpha, u0) {
     /* L-shaped: horizontal arm y=u0 from x=u0 rightward, vertical arm x=u0 from y=u0 upward */
     var limC = 13.9;
     var s1 = icBoard2D.create('segment', [[u0,u0],[limC,u0]],
-      {strokeColor:C.blue,strokeWidth:3,fixed:true,highlight:false});
+      {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
     var s2 = icBoard2D.create('segment', [[u0,u0],[u0,limC]],
-      {strokeColor:C.blue,strokeWidth:3,fixed:true,highlight:false});
+      {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
     var kk = icBoard2D.create('point', [u0, u0],
-      {size:6,color:C.blue,fixed:true,highlight:false,withLabel:false});
+      {size:6,color:C.red,fixed:true,highlight:false,withLabel:false});
     window.icExtraObjs.push(s1, s2, kk);
     /* MRS glider on horizontal arm - MRS=0 there */
     addMRSGlider(s1, u0 + (limC-u0)*0.4, u0,
@@ -1330,7 +1330,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
     /* Vertical line x=u0 */
     var limN = 13.9;
     var vl = icBoard2D.create('segment', [[u0,0],[u0,limN]],
-      {strokeColor:C.blue,strokeWidth:3,fixed:true,highlight:false});
+      {strokeColor:C.red,strokeWidth:3,fixed:true,highlight:false});
     window.icExtraObjs.push(vl);
     /* MRS glider - MRS = 8 on a vertical line */
     addMRSGlider(vl, u0, limN*0.45, function(){return 'MRS = \u221e (Y irrelevant)';},
@@ -1341,7 +1341,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
     var limB = 13.9;
     icHighlightFn = icBoard2D.create('functiongraph',
       [function(x){return x-u0;}, u0, limB],
-      {strokeColor:C.blue,strokeWidth:3,highlight:false});
+      {strokeColor:C.red,strokeWidth:3,highlight:false});
     var initBX = u0 + (limB-u0)*0.45;
     /* Label goes bottom-right of the dot (anchorY:'top' = text drawn below coordinate) */
     addMRSGlider(icHighlightFn, initBX, initBX-u0,
@@ -1410,12 +1410,12 @@ function mk3DBoard(id, bbox) {
 }
 
 var C = {
-  blue:  '#0284c7',
-  blue2: '#38bdf8',
-  blue3: '#bae6fd',
-  red:   '#dc2626',
+  blue:  '#3d5a80',
+  blue2: '#6b8cae',
+  blue3: '#c5d9eb',
+  red:   '#c0392b',
   amber: '#d4813a',
-  green: '#16a34a',
+  green: '#2e8b57',
   ink:   '#1a1a2a'
 };
 
@@ -1494,7 +1494,7 @@ function drawICFamily(type, alpha) {
   icFamilyObjects=[];
 
   var levels=[1.0,3.0,5.5,8.0,11.0];
-  var cols=['#bae6fd','#7dd3fc','#38bdf8',C.blue,'#075985'];
+  var cols=['#c5d9eb','#9db5cc','#6b8cae',C.blue,'#1e3a5f'];
   var b=1-alpha;
 
   levels.forEach(function(k,idx){
@@ -1594,13 +1594,13 @@ function initUtilitySurface() {
   ],{strokeColor:C.blue,strokeWidth:0.5,stepsU:36,stepsV:36});
 
   var floorPt=view.create('point3d',[2.5,2.5,0],
-    {withLabel:false,size:6,fillColor:C.green,strokeColor:'#fff',showInfobox:false});
+    {withLabel:false,size:6,fillColor:C.amber,strokeColor:'#fff',showInfobox:false});
 
   var surfPt=view.create('point3d',[function(){
     var a=slVal('surf-alpha');
     var px=safePos(floorPt.X(),0.12,5.9),py=safePos(floorPt.Y(),0.12,5.9);
     return [px,py,px>0&&py>0?Math.pow(px,a)*Math.pow(py,1-a):0];
-  }],{withLabel:false,fixed:true,size:5,fillColor:C.green,strokeColor:'#fff',showInfobox:false});
+  }],{withLabel:false,fixed:true,size:5,fillColor:C.red,strokeColor:'#fff',showInfobox:false});
 
   view.create('line3d',[floorPt,surfPt],{dash:2,strokeColor:'#bbb',strokeWidth:1});
 
@@ -1618,7 +1618,7 @@ function initUtilitySurface() {
     var y=t>0.05?Math.pow(k/Math.pow(t,a),1/b):NaN;
     if (!isFinite(y)||y<box[0]||y>box[1]) return [NaN,NaN,NaN];
     return [t,y,Math.pow(t,a)*Math.pow(y,b)];
-  },[box[0]+0.05,box[1]]],{strokeColor:C.blue,strokeWidth:2.5});
+  },[box[0]+0.05,box[1]]],{strokeColor:C.red,strokeWidth:2.5});
 
   floorPt.on('drag',function(){
     var a=slVal('surf-alpha');
@@ -1691,7 +1691,7 @@ function buildBudgetBoard() {
   var mx2=xI*0.45, my2=(I-Px*mx2)/Py;
   if (bcOverlay) {
     bcOverlay.setLabels([
-      {id:'slope', color:C.red, label:'slope = \u2212'+(Px/Py).toFixed(2), lw:62, ux:mx2, uy:my2}
+      {id:'slope', color:C.blue, label:'slope = \u2212'+(Px/Py).toFixed(2), lw:62, ux:mx2, uy:my2}
     ]);
   }
 
@@ -1776,7 +1776,7 @@ function buildShiftBoard() {
 
   /* Original (grey, dashed reference) */
   var l1=shiftBoard.create('functiongraph',[function(x){return(I0-Px0*x)/Py0;},0,xi1],
-    {strokeColor:'#9ca3af',strokeWidth:1.5,dash:3,highlight:false});
+    {strokeColor:'#7f8c8d',strokeWidth:2,dash:3,highlight:false});
   /* New (solid, red = change) */
   var l2=shiftBoard.create('functiongraph',[function(x){return(I2-Px2*x)/Py2;},0,xi2],
     {strokeColor:C.red,strokeWidth:2.8,highlight:false});
@@ -1791,7 +1791,7 @@ function buildShiftBoard() {
   var ly2_at_lx = (I2 - Px2 * labelX) / Py2;
   if (shiftOverlay) {
     shiftOverlay.setLabels([
-      {id:'B0', color:'#9ca3af', label:'B\u2080 (original)', lw:74, ux:labelX, uy:ly1_at_lx},
+      {id:'B0', color:C.blue, label:'B\u2080 (original)', lw:74, ux:labelX, uy:ly1_at_lx},
       {id:'B1', color:C.red,  label:'B\u2081 (new)',      lw:62, ux:labelX, uy:ly2_at_lx}
     ]);
   }
@@ -1916,7 +1916,7 @@ function buildOptimumBoard() {
 
   /* Budget line - solid teal for all preference types */
   optObjects.push(optBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
-    {strokeColor:C.red,strokeWidth:2.6,highlight:false}));
+    {strokeColor:'#0d7377',strokeWidth:2.6,highlight:false}));
 
   /* Drop lines only: X and Y star go to sidebar, not on board */
   if(xs>0&&ys>0){
@@ -1924,10 +1924,7 @@ function buildOptimumBoard() {
       optBoard.create('segment',[[0,ys],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
       optBoard.create('segment',[[xs,0],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false})
     );
-  }
-  /* Write values to sidebar result bar - always live, including corner solutions
-     (design-spec change 4: no stale dashboards) */
-  {
+    /* Write values to sidebar result bar */
     var elXs=document.getElementById('opt-x-star');
     var elYs=document.getElementById('opt-y-star');
     var elU =document.getElementById('opt-utility');
@@ -1942,13 +1939,13 @@ function buildOptimumBoard() {
         steps=[
           {label:'Step 1 - Tangency: MRS = Px/Py', body:'&alpha;Y / ((1-&alpha;)X) = Px/Py<br>This is the tangency condition: the slope of the IC equals the slope of the budget line.'},
           {label:'Step 2 - Substitute Y from budget', body:'From budget: Y = (I - Px&middot;X) / Py<br>Substitute into tangency: &alpha; &middot; (I - Px&middot;X) / ((1-&alpha;)&middot;Py&middot;X) = Px/Py'},
-          {label:'Step 3 - Solve for X* and Y*', body:'Simplify: &alpha;&middot;I = Px&middot;X<br><strong style="color:#dc2626">X* = &alpha;&middot;I / Px = '+xs.toFixed(3)+'</strong><br><strong style="color:#dc2626">Y* = (1-&alpha;)&middot;I / Py = '+ys.toFixed(3)+'</strong><br><small>Budget check: Px&middot;'+xs.toFixed(2)+' + Py&middot;'+ys.toFixed(2)+' = I ✓</small>', final:true}
+          {label:'Step 3 - Solve for X* and Y*', body:'Simplify: &alpha;&middot;I = Px&middot;X<br><strong style="color:#c0392b">X* = &alpha;&middot;I / Px = '+xs.toFixed(3)+'</strong><br><strong style="color:#c0392b">Y* = (1-&alpha;)&middot;I / Py = '+ys.toFixed(3)+'</strong><br><small>Budget check: Px&middot;'+xs.toFixed(2)+' + Py&middot;'+ys.toFixed(2)+' = I ✓</small>', final:true}
         ];
       } else if(type==='complements'){
         steps=[
           {label:'Step 1 - Kink condition', body:'At the kink of the L-shape, both arms are exhausted: X* = Y* (the 45° ray for min(X,Y))'},
           {label:'Step 2 - Substitute into budget', body:'Pₓ&middot;X* + Pᵧ&middot;X* = I<br>('+Px.toFixed(1)+' + '+Py.toFixed(1)+')&middot;X* = '+I.toFixed(0)},
-          {label:'Step 3 - Solve', body:'<strong style="color:#dc2626">X* = Y* = I/(Px+Py) = '+xs.toFixed(3)+'</strong><br>Budget check: '+Px.toFixed(1)+'('+xs.toFixed(2)+') + '+Py.toFixed(1)+'('+ys.toFixed(2)+') = I ✓', final:true}
+          {label:'Step 3 - Solve', body:'<strong style="color:#c0392b">X* = Y* = I/(Px+Py) = '+xs.toFixed(3)+'</strong><br>Budget check: '+Px.toFixed(1)+'('+xs.toFixed(2)+') + '+Py.toFixed(1)+'('+ys.toFixed(2)+') = I ✓', final:true}
         ];
       } else if(type==='substitutes'){
         var bx=(1/Px).toFixed(3), by=(1/Py).toFixed(3);
@@ -1956,13 +1953,13 @@ function buildOptimumBoard() {
         steps=[
           {label:'Step 1 - Compare bang-for-buck', body:'MUx/Px = 1/'+Px.toFixed(1)+' = '+bx+'<br>MUy/Py = 1/'+Py.toFixed(1)+' = '+by+'<br>'+winner+' gives more utility per dollar.'},
           {label:'Step 2 - Corner solution rule', body:'Perfect substitutes: spend <em>all</em> income on the higher-value good. The optimal IC just touches one axis.'},
-          {label:'Step 3 - Solve', body:'<strong style="color:#dc2626">X* = '+xs.toFixed(3)+'<br>Y* = '+ys.toFixed(3)+'</strong>', final:true}
+          {label:'Step 3 - Solve', body:'<strong style="color:#c0392b">X* = '+xs.toFixed(3)+'<br>Y* = '+ys.toFixed(3)+'</strong>', final:true}
         ];
       } else if(type==='ql'){
         steps=[
-          {label:'Step 1 - Tangency: MUx/Px = MUy/Py', body:'MUx = 1/X, MUy = 1<br>Tangency: 1/(Px&middot;X) = 1/Py<br><strong style="color:#dc2626">X* = Py/Px = '+xs.toFixed(3)+'</strong>'},
+          {label:'Step 1 - Tangency: MUx/Px = MUy/Py', body:'MUx = 1/X, MUy = 1<br>Tangency: 1/(Px&middot;X) = 1/Py<br><strong style="color:#c0392b">X* = Py/Px = '+xs.toFixed(3)+'</strong>'},
           {label:'Step 2 - Remaining income on Y', body:'Budget: Px&middot;X* + Py&middot;Y* = I<br>Y* = (I - Px&middot;X*) / Py = '+ys.toFixed(3)},
-          {label:'Step 3 - U* = ln(X*) + Y*', body:'<strong style="color:#dc2626">U* = ln('+xs.toFixed(3)+') + '+ys.toFixed(3)+' = '+uStar.toFixed(4)+'</strong>', final:true}
+          {label:'Step 3 - U* = ln(X*) + Y*', body:'<strong style="color:#c0392b">U* = ln('+xs.toFixed(3)+') + '+ys.toFixed(3)+' = '+uStar.toFixed(4)+'</strong>', final:true}
         ];
       }
       window._optSteps = steps;
@@ -1971,15 +1968,11 @@ function buildOptimumBoard() {
     }
   }
 
-  /* Optimal point - glowing green node (design-spec change 1: ECON_THEME.OPTIMUM) */
+  /* Optimal point */
   optObjects.push(optBoard.create('point',[xs,ys],{
-    color:C.green,size:13,fillOpacity:0.25,strokeWidth:0,fixed:true,
-    withLabel:false,highlight:false
-  }));
-  optObjects.push(optBoard.create('point',[xs,ys],{
-    color:C.green,size:7,strokeColor:'#fff',strokeWidth:2,fixed:true,
+    color:C.red,size:7,fixed:true,
     name:'Optimum',
-    withLabel:true,label:{offset:[9,6],fontSize:11,color:C.green},highlight:false
+    withLabel:true,label:{offset:[9,6],fontSize:11},highlight:false
   }));
 
   optBoard.update();
@@ -2001,12 +1994,12 @@ function renderOptDerivPanel() {
     steps.forEach(function(s, i) {
       var isFinal = s.final;
       html += '<div style="margin-bottom:0.55rem;animation:opt-step-in 0.25s ease both;animation-delay:'+(i*0.08)+'s">'
-        + '<div style="font-family:var(--mono);font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+(isFinal?'#dc2626':'#888')+';">' + s.label + '</div>'
-        + '<div style="background:'+(isFinal?'#fff0f0':'#f0f4fb')+';border-left:3px solid '+(isFinal?'#dc2626':'#0284c7')+';padding:5px 10px;margin-top:3px;border-radius:0 4px 4px 0;font-family:monospace;font-size:0.85rem;">' + s.body + '</div>'
+        + '<div style="font-family:var(--mono);font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+(isFinal?'#c0392b':'#888')+';">' + s.label + '</div>'
+        + '<div style="background:'+(isFinal?'#fff0f0':'#f0f4fb')+';border-left:3px solid '+(isFinal?'#c0392b':'#3d5a80')+';padding:5px 10px;margin-top:3px;border-radius:0 4px 4px 0;font-family:monospace;font-size:0.85rem;">' + s.body + '</div>'
         + '</div>';
     });
     dp.innerHTML = html;
-    if (btn) { btn.textContent = 'Hide Steps'; btn.style.background = '#fff0f0'; btn.style.color = '#dc2626'; btn.style.borderColor = '#dc2626'; }
+    if (btn) { btn.textContent = 'Hide Steps'; btn.style.background = '#fff0f0'; btn.style.color = '#c0392b'; btn.style.borderColor = '#c0392b'; }
   }
 }
 
@@ -2085,14 +2078,10 @@ function buildBFBBoard() {
   });
   bfbFreeBundle=freeBundle;
 
-  /* Optimum marker - glowing green node (ECON_THEME.OPTIMUM) */
-  bfbObjects.push(mupBoard.create('point',[_xOpt,_yOpt],{
-    color:C.green,size:13,fillOpacity:0.25,strokeWidth:0,fixed:true,
-    withLabel:false,highlight:false
-  }));
+  /* Optimum marker - red, distinct from teal budget line */
   var optPt=mupBoard.create('point',[_xOpt,_yOpt],{
-    color:C.green,size:7,strokeColor:'#fff',strokeWidth:2,fixed:true,highlight:false,
-    name:'Optimum',withLabel:true,label:{offset:[9,6],fontSize:11,color:C.green}
+    color:C.red,size:7,fixed:true,highlight:false,
+    name:'Optimum',withLabel:true,label:{offset:[9,6],fontSize:11}
   });
   bfbObjects.push(optPt);
 
@@ -2167,7 +2156,7 @@ function buildBFBBoard() {
       var ex=fx+(_xOpt-fx)*0.93;
       return (_I-_Px*ex)/_Py;
     }]
-  ],{strokeColor:'#dc2626',strokeWidth:2.5,highlight:false,visible:false});
+  ],{strokeColor:'#c0392b',strokeWidth:2.5,highlight:false,visible:false});
   bfbObjects.push(bfbArrow2);
 
   /* Drop lines for bundle */
@@ -2187,7 +2176,7 @@ function buildBFBBoard() {
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:4px;background:#4a4e8c"></div><span style="font-size:0.8rem">Indifference curve</span></div>'+
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:4px;background:#d4813a"></div><span style="font-size:0.8rem">Bundle (drag me!)</span></div>'+
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:4px;background:#e67e22"></div><span style="font-size:0.8rem">Move to budget</span></div>'+
-    '<div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#dc2626"></div><span style="font-size:0.8rem">Slide to optimum</span></div>';
+    '<div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#c0392b"></div><span style="font-size:0.8rem">Slide to optimum</span></div>';
 
   function updateBFBArrows(){
     var fx=Math.max(0.05,freeBundle.X());
@@ -2238,7 +2227,7 @@ function buildCobbBoard() {
 
   var scales=[0.5,1.0,1.5];
   /* Three solid distinct colors: steel blue, amber, green */
-  var bCols=['#38bdf8',C.amber,'#16a34a'];
+  var bCols=['#6b8cae',C.amber,'#2e8b57'];
   var bW=[1.8,2.8,1.8];
 
   /* Three budget lines - all SOLID */
@@ -2357,7 +2346,7 @@ function buildMRSSlider() {
   /* IC curve */
   var ic = mrsBoard.create('functiongraph', [function(x) {
     return x > 0.1 ? Math.pow(u0 / Math.pow(x, a), 1/b) : NaN;
-  }, 0.1, 16], { strokeColor: '#0284c7', strokeWidth: 2.5, highlight: false });
+  }, 0.1, 16], { strokeColor: '#3d5a80', strokeWidth: 2.5, highlight: false });
   mrsObjects.push(ic);
 
   /* Draggable glider on IC */
@@ -2404,12 +2393,12 @@ function buildMRSSlider() {
 
   /* Horizontal leg (DeltaX = triDx) */
   var legH = mrsBoard.create('segment', [triPts[0], triPts[1]], {
-    strokeColor: '#16a34a', strokeWidth: 2.5, highlight: false, fixed: true
+    strokeColor: '#2e8b57', strokeWidth: 2.5, highlight: false, fixed: true
   });
   mrsObjects.push(legH);
   /* Vertical leg (DeltaY = drop along IC) */
   var legV = mrsBoard.create('segment', [triPts[1], triPts[2]], {
-    strokeColor: '#dc2626', strokeWidth: 2.5, highlight: false, fixed: true
+    strokeColor: '#c0392b', strokeWidth: 2.5, highlight: false, fixed: true
   });
   mrsObjects.push(legV);
 
@@ -2418,7 +2407,7 @@ function buildMRSSlider() {
     function(){return glider.X() + triDx/2;},
     function(){return glider.Y() - 0.7;},
     'ΔX'
-  ], {fontSize:9, color:'#16a34a', fixed:false, highlight:false, anchorX:'middle'});
+  ], {fontSize:9, color:'#2e8b57', fixed:false, highlight:false, anchorX:'middle'});
   mrsObjects.push(lblDx);
 
   /* ΔY label on vertical leg */
@@ -2430,7 +2419,7 @@ function buildMRSSlider() {
       return (gy + y2) / 2;
     },
     'ΔY'
-  ], {fontSize:9, color:'#dc2626', fixed:false, highlight:false, anchorX:'left'});
+  ], {fontSize:9, color:'#c0392b', fixed:false, highlight:false, anchorX:'left'});
   mrsObjects.push(lblDy);
 
   /* Drop lines */
@@ -2457,10 +2446,10 @@ function buildMRSSlider() {
     var logMRS = Math.log(Math.max(0.05, mrs));
     var logLow = Math.log(0.15), logHigh = Math.log(15);
     var pct = Math.min(97, Math.max(3, ((logMRS - logLow) / (logHigh - logLow)) * 100));
-    var barColor = mrs > 3 ? '#dc2626' : mrs > 1 ? '#d4813a' : '#16a34a';
+    var barColor = mrs > 3 ? '#c0392b' : mrs > 1 ? '#d4813a' : '#2e8b57';
     if (elBar) { elBar.style.width = pct + '%'; elBar.style.background = barColor; }
     /* Tangent color update */
-    var col = mrs > 3 ? '#dc2626' : mrs > 1 ? '#d4813a' : '#16a34a';
+    var col = mrs > 3 ? '#c0392b' : mrs > 1 ? '#d4813a' : '#2e8b57';
     tangent.setAttribute({ strokeColor: col });
   };
   mrsBoard.on('update', updateFn);
@@ -2497,7 +2486,7 @@ function buildICCross() {
   /* Outer IC (blue, fixed) */
   var ic1 = crossBoard.create('functiongraph', [function(x){
     return x > 0.1 ? Math.pow(u1/Math.pow(x,a),1/b) : NaN;
-  }, 0.1, 14], { strokeColor: '#0284c7', strokeWidth: 3, highlight: false });
+  }, 0.1, 14], { strokeColor: '#3d5a80', strokeWidth: 3, highlight: false });
   crossObjects.push(ic1);
 
   /* Inner IC (amber, moveable) */
@@ -2511,7 +2500,7 @@ function buildICCross() {
      JSXGraph text labels (which could overlap as the inner curve moves). */
   if (crossOverlay) {
     crossOverlay.setLabels([
-      {id:'IC2', color:'#0284c7', label:'IC2 (U=7)', lw:60,
+      {id:'IC2', color:'#3d5a80', label:'IC2 (U=7)', lw:60,
         ux:12.5, uy:Math.pow(u1/Math.pow(12.5,a),1/b)},
       {id:'IC1', color:'#d4813a', label:'IC1 (U='+u2.toFixed(1)+')', lw:64,
         ux:12.5, uy:Math.pow(u2/Math.pow(12.5,a),1/b)}
@@ -2546,16 +2535,16 @@ function buildICCross() {
 
     /* Point A at crossing zone */
     var ptA = crossBoard.create('point', [xcross, ycross], {
-      name:'A', size:6, fillColor:'#dc2626', strokeColor:'#fff', strokeWidth:2,
-      fixed:true, withLabel:true, label:{fontSize:11,color:'#dc2626',offset:[5,5]}
+      name:'A', size:6, fillColor:'#c0392b', strokeColor:'#fff', strokeWidth:2,
+      fixed:true, withLabel:true, label:{fontSize:11,color:'#c0392b',offset:[5,5]}
     });
     crossObjects.push(ptA);
 
     /* Point B on outer IC */
     var bx = 9;
     var ptB = crossBoard.create('point', [bx, Math.pow(u1/Math.pow(bx,a),1/b)], {
-      name:'B', size:6, fillColor:'#0284c7', strokeColor:'#fff', strokeWidth:2,
-      fixed:true, withLabel:true, label:{fontSize:11,color:'#0284c7',offset:[5,5]}
+      name:'B', size:6, fillColor:'#3d5a80', strokeColor:'#fff', strokeWidth:2,
+      fixed:true, withLabel:true, label:{fontSize:11,color:'#3d5a80',offset:[5,5]}
     });
     crossObjects.push(ptB);
 
@@ -2574,13 +2563,13 @@ function buildICCross() {
     /* Status panel */
     var statusEl = document.getElementById('iccross-status');
     if (statusEl) {
-      statusEl.innerHTML = '<strong style="color:#dc2626">Contradiction!</strong><br>'
+      statusEl.innerHTML = '<strong style="color:#c0392b">Contradiction!</strong><br>'
         + 'A is on both ICs: A ~ B (same IC2) and A ~ C (same IC1).<br>'
         + 'By transitivity: B ~ C. But B has more of both goods than C.<br>'
         + 'More of a good always raises utility. This is impossible.';
       statusEl.className = 'contradiction-flash';
       statusEl.style.background = '#fff0f0';
-      statusEl.style.borderColor = '#dc2626';
+      statusEl.style.borderColor = '#c0392b';
       statusEl.style.color = '#7f1d1d';
       setTimeout(function(){ statusEl.className=''; }, 1000);
     }
@@ -2615,14 +2604,8 @@ function initCornerExplorer() {
   });
 }
 
-var cornerOptPt = null, cornerPrevOpt = null;
-
 function buildCornerExplorer() {
   if (!cornerBoard) return;
-  /* Design-spec change 5: remember the displayed optimum so the new dot can
-     animate from it ("elastic snapping") instead of teleporting across axes */
-  if (cornerOptPt) { try { cornerPrevOpt = [cornerOptPt.X(), cornerOptPt.Y()]; } catch (e) {} }
-  cornerOptPt = null;
   cornerObjects.forEach(function(o){try{cornerBoard.removeObject(o,false);}catch(e){}});
   cornerObjects = [];
 
@@ -2638,7 +2621,7 @@ function buildCornerExplorer() {
 
   /* Budget line */
   var bl = cornerBoard.create('segment', [[0, yi],[xi, 0]], {
-    strokeColor: C.red, strokeWidth: 2.5, fixed: true, highlight: false
+    strokeColor: '#1a1a1a', strokeWidth: 2.5, fixed: true, highlight: false
   });
   cornerObjects.push(bl);
 
@@ -2658,7 +2641,7 @@ function buildCornerExplorer() {
     x1 = Math.min(x1, m * 1.1);
     y0 = Math.min(y0, m * 1.1);
     var seg = cornerBoard.create('segment', [[x0, y0],[x1, y1]], {
-      strokeColor: '#7dd3fc', strokeWidth: i === uLevels.length-1 ? 2 : 1.2,
+      strokeColor: '#a8c4e8', strokeWidth: i === uLevels.length-1 ? 2 : 1.2,
       highlight: false, fixed: true, dash: i === uLevels.length-1 ? 0 : 0
     });
     cornerObjects.push(seg);
@@ -2686,7 +2669,7 @@ function buildCornerExplorer() {
     var x0o = 0, y0o = uOpt/b, x1o = uOpt/a, y1o = 0;
     x1o = Math.min(x1o, m*1.1); y0o = Math.min(y0o, m*1.1);
     var optIC = cornerBoard.create('segment', [[x0o, y0o],[x1o, y1o]], {
-      strokeColor: '#0284c7', strokeWidth: 3, highlight: false, fixed: true
+      strokeColor: '#3d5a80', strokeWidth: 3, highlight: false, fixed: true
     });
     cornerObjects.push(optIC);
   }
@@ -2695,28 +2678,17 @@ function buildCornerExplorer() {
   if (atKnife) {
     /* Highlight entire budget line in green */
     var hlBL = cornerBoard.create('segment', [[0, yi],[xi, 0]], {
-      strokeColor: '#16a34a', strokeWidth: 5, highlight: false, fixed: true, opacity: 0.5
+      strokeColor: '#2e8b57', strokeWidth: 5, highlight: false, fixed: true, opacity: 0.5
     });
     cornerObjects.push(hlBL);
   } else {
-    /* Glowing green optimum that lerps to its new position (spec changes 1 + 5) */
-    var startPos = cornerPrevOpt || [xStar, yStar];
-    var halo = cornerBoard.create('point', startPos, {
-      size: 13, fillColor: '#16a34a', fillOpacity: 0.25, strokeWidth: 0,
-      fixed: true, highlight: false, withLabel: false
-    });
-    var optPt = cornerBoard.create('point', startPos, {
-      size: 7, fillColor: '#16a34a', strokeColor: '#fff', strokeWidth: 2.5,
+    var optPt = cornerBoard.create('point', [xStar, yStar], {
+      size: 7, fillColor: '#c0392b', strokeColor: '#fff', strokeWidth: 2.5,
       fixed: true, highlight: false,
       name: '('+xStar.toFixed(1)+', '+yStar.toFixed(1)+')',
-      withLabel: true, label: { fontSize: 11, color: '#16a34a', offset: [8, 8] }
+      withLabel: true, label: { fontSize: 11, color: '#c0392b', offset: [8, 8] }
     });
-    if (cornerPrevOpt && (Math.abs(cornerPrevOpt[0]-xStar) > 0.01 || Math.abs(cornerPrevOpt[1]-yStar) > 0.01)) {
-      halo.moveTo([xStar, yStar], 350, { effect: '<>' });
-      optPt.moveTo([xStar, yStar], 350, { effect: '<>' });
-    }
-    cornerOptPt = optPt;
-    cornerObjects.push(halo, optPt);
+    cornerObjects.push(optPt);
   }
 
   /* Update side panel */
@@ -2732,12 +2704,12 @@ function buildCornerExplorer() {
   if (elVerd) {
     var isX = bfbX > bfbY, isY = bfbY > bfbX;
     elVerd.innerHTML = atKnife
-      ? '<strong style="color:#16a34a">Knife-edge case:</strong> Px/Py = MRS exactly. The consumer is indifferent across the entire budget line.'
+      ? '<strong style="color:#2e8b57">Knife-edge case:</strong> Px/Py = MRS exactly. The consumer is indifferent across the entire budget line.'
       : (isX
-        ? '<strong style="color:#dc2626">X dominates:</strong> MUx/Px = '+bfbX.toFixed(3)+' &gt; MUy/Py = '+bfbY.toFixed(3)+'.<br>Spend all $'+I+' on X.'
-        : '<strong style="color:#0284c7">Y dominates:</strong> MUy/Py = '+bfbY.toFixed(3)+' &gt; MUx/Px = '+bfbX.toFixed(3)+'.<br>Spend all $'+I+' on Y.');
+        ? '<strong style="color:#c0392b">X dominates:</strong> MUx/Px = '+bfbX.toFixed(3)+' &gt; MUy/Py = '+bfbY.toFixed(3)+'.<br>Spend all $'+I+' on X.'
+        : '<strong style="color:#3d5a80">Y dominates:</strong> MUy/Py = '+bfbY.toFixed(3)+' &gt; MUx/Px = '+bfbX.toFixed(3)+'.<br>Spend all $'+I+' on Y.');
     elVerd.style.background = atKnife ? '#f0fdf4' : (isX ? '#fff0f0' : '#eff4ff');
-    elVerd.style.borderColor = atKnife ? '#16a34a' : (isX ? '#dc2626' : '#0284c7');
+    elVerd.style.borderColor = atKnife ? '#16a34a' : (isX ? '#c0392b' : '#3d5a80');
   }
 
   cornerBoard.update();
@@ -2862,6 +2834,7 @@ function buildCornerExplorer() {
     .stat-row .stat-val.accent { color: var(--accent); }
     .stat-row .stat-val.green { color: var(--green); }
     .stat-row .stat-val.red { color: var(--red); }
+    .stat-row .stat-val.optimum { color: #0d7377; font-weight: 600; }
     .divider-sm { border: none; border-top: 1px solid var(--rule); margin: 0.3rem 0; }
     .ic-3d-canvas-wrap { position: relative; }
     .canvas-3d { display: block; border-radius: 0; cursor: grab; }
@@ -2912,20 +2885,23 @@ function buildCornerExplorer() {
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
-  padding-right: 0.5rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.3rem;
+  border-radius: 6px;
   position: relative;
+  transition: background 0.15s;
 }
+.section-header-row:hover { background: var(--accent-lt); }
 .section-header-row:hover h2 { color: var(--accent); }
 .section-header-row::after {
   content: 'click to collapse ▲';
   position: absolute;
-  bottom: -1.1rem;
+  bottom: -1rem;
   right: 0.5rem;
   font-family: var(--mono);
   font-size: 0.58rem;
   letter-spacing: 0.06em;
   color: var(--faint);
-  opacity: 0;
+  opacity: 0.45;
   transition: opacity 0.2s;
   pointer-events: none;
 }
@@ -3037,28 +3013,7 @@ function buildCornerExplorer() {
 }
 .tip-icon:hover { background: var(--accent); color: #fff; }
 
-/* Global tooltip; rendered at body level via JS so it escapes overflow:hidden */
-#tip-global {
-  position: fixed;
-  background: #1a1a2a; color: #dde6f0;
-  font-family: var(--font);
-  font-size: 0.76rem; line-height: 1.55;
-  padding: 0.6rem 0.85rem; border-radius: 6px;
-  max-width: 260px; width: max-content;
-  text-align: left;
-  z-index: 9999; pointer-events: none;
-  white-space: normal; font-weight: 400;
-  box-shadow: 0 6px 22px rgba(0,0,0,0.32);
-  display: none;
-}
-#tip-global::after {
-  content: '';
-  position: absolute;
-  left: 50%; bottom: -8px;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #1a1a2a;
-}
+/* #tip-global replaced by .tip-popover (click-toggle, touch-safe) */
 
 /* MRS label anti-flicker */
 .jxg-mrs-label { fill: #d4813a !important; }
@@ -3080,10 +3035,57 @@ function buildCornerExplorer() {
   100% { background: #fff0f0; }
 }
 .contradiction-flash { animation: flash-red 0.9s ease; }
+
+/* BFB optimum reached pulse */
+@keyframes verdict-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(13,115,119,0.5); }
+  60%  { box-shadow: 0 0 0 10px rgba(13,115,119,0); }
+  100% { box-shadow: 0 0 0 0 rgba(13,115,119,0); }
+}
+.verdict-at-optimum { animation: verdict-pulse 0.75s ease; border-color: #0d7377 !important; background: #f0fdfd !important; }
+
+/* 3D canvas wrapper: relative so reset button can be positioned inside */
+.canvas-3d-wrap { position: relative; display: block; width: 100%; }
+.btn-reset-3d {
+  position: absolute; top: 7px; right: 7px;
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  color: var(--ink-light); background: rgba(255,255,255,0.88);
+  border: 1px solid var(--rule); border-radius: 5px;
+  padding: 3px 9px; cursor: pointer; z-index: 20;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.btn-reset-3d:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
+
+/* Dev banner */
+.dev-banner {
+  background: #fffbeb; border-bottom: 2px solid #f59e0b;
+  padding: 0.55rem 2rem; display: flex; align-items: center; gap: 0.75rem;
+  font-size: 0.84rem; color: #78350f;
+}
+.dev-banner-tag {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: #f59e0b; color: #fff; border-radius: 4px; padding: 2px 8px; flex-shrink: 0;
+}
+
+/* Tooltip popover (replaces hover-only) */
+.tip-popover {
+  position: fixed; z-index: 9999;
+  background: #1a1a2a; color: #dde6f0;
+  font-family: var(--font); font-size: 0.76rem; line-height: 1.55;
+  padding: 0.6rem 0.85rem; border-radius: 6px;
+  max-width: 260px; width: max-content;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.32);
+  pointer-events: none; display: none;
+}
+.tip-popover.visible { display: block; }
+.tip-icon[aria-expanded="true"] { background: var(--accent); color: #fff; }
+
+/* Slider ghost: low-opacity dashed reference line drawn on JSXGraph canvas */
+
 </style>
 </head>
 <body>
-<div style="background:#92400e;color:#fff;font:600 0.75rem/1.7 'DM Sans',system-ui,sans-serif;text-align:center;padding:4px 10px;letter-spacing:0.06em;">DEVELOPER PREVIEW - design-spec build of the Week 2 visualizations; the student page is unchanged</div>
 
   <!-- Left nav (weeks drawer) -->
   <div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
@@ -3121,6 +3123,13 @@ function buildCornerExplorer() {
       </div>
     </div>
     <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+  </div>
+
+  <!-- DEV BANNER -->
+  <div class="dev-banner" role="status">
+    <span class="dev-banner-tag">Dev Preview</span>
+    UX/A11y rebuild of Week 2 — applying the Cengage EdTech review. Not live for students.
+    <span style="margin-left:auto;font-family:var(--mono);font-size:0.72rem;opacity:0.6;">week2-viz-dev.html</span>
   </div>
 
   <!-- HERO -->
@@ -3201,11 +3210,11 @@ function buildCornerExplorer() {
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;width:100%">
                 <div class="ctrl-group" id="u0-ctrl">
-                  <label><span class="tip-icon" data-tip="Moves the cutting plane on the 3D surface up or down. Each level corresponds to one indifference curve in the 2D panel. Higher U0 = higher IC further from the origin = more satisfaction.">i</span> Utility level U0 <span class="ctrl-val" id="ic-u0-val">2.0</span></label>
+                  <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Moves the cutting plane on the 3D surface up or down. Each level corresponds to one indifference curve in the 2D panel. Higher U0 = higher IC further from the origin = more satisfaction.">i</span> Utility level U0 <span class="ctrl-val" id="ic-u0-val">2.0</span></label>
                   <input type="range" id="ic-u0" min="0.3" max="5.0" step="any" value="2.0" />
                 </div>
                 <div class="ctrl-group" id="alpha-ctrl">
-                  <label><span class="tip-icon" data-tip="α is the exponent on X in U = XᵅY¹⁻ᵅ. Higher α means stronger preference for X. The consumer always spends fraction α of income on X regardless of prices; watch the IC tilt as you adjust.">i</span> α (Cobb-Douglas spending share on X)<span class="ctrl-val" id="alpha-val">0.5</span></label>
+                  <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="α is the exponent on X in U = XᵅY¹⁻ᵅ. Higher α means stronger preference for X. The consumer always spends fraction α of income on X regardless of prices; watch the IC tilt as you adjust.">i</span> α (Cobb-Douglas spending share on X)<span class="ctrl-val" id="alpha-val">0.5</span></label>
                   <input type="range" id="ic-alpha" min="0.1" max="0.9" step="any" value="0.5" />
                 </div>
               </div>
@@ -3220,13 +3229,16 @@ function buildCornerExplorer() {
               <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule);">
                 <div style="border-right:1px solid var(--rule);">
                   <div style="font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">3D Utility Surface</div>
-                  <div id="jxg-ic-3d" style="width:100%;aspect-ratio:1/1;"></div>
+                  <div class="canvas-3d-wrap">
+                    <div id="jxg-ic-3d" style="width:100%;aspect-ratio:1/1;"></div>
+                    <button class="btn-reset-3d" onclick="resetIC3DView()" title="Reset 3D camera angle">↺ Reset view</button>
+                  </div>
                 </div>
                 <div>
                   <div style="font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">Single IC at U0 (drag P to see MRS)</div>
                   <div id="jxg-ic-2d" style="width:100%;aspect-ratio:1/1;"></div>
                   <div style="padding:0.3rem 0.8rem;">
-                    <div id="ic-u-readout" style="font-family:var(--mono);font-size:0.78rem;color:#16a34a;min-height:1.1rem;"></div>
+                    <div id="ic-u-readout" style="font-family:var(--mono);font-size:0.78rem;color:#d4813a;min-height:1.1rem;"></div>
                   </div>
                 </div>
               </div>
@@ -3255,7 +3267,7 @@ function buildCornerExplorer() {
                 </div>
                 <div style="text-align:right;white-space:nowrap;">
                   <div style="font-family:var(--mono);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:4px;">Current utility level</div>
-                  <div id="ic-u0-display" style="font-family:var(--mono);font-size:1.1rem;color:#dc2626;font-weight:600;">U0 = 2.00</div>
+                  <div id="ic-u0-display" style="font-family:var(--mono);font-size:1.1rem;color:#c0392b;font-weight:600;">U0 = 2.00</div>
                 </div>
               </div>
             </div></div>
@@ -3308,15 +3320,15 @@ function buildCornerExplorer() {
             </div>
             <div class="viz-controls">
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Income determines the size of the affordable set. A higher I shifts both intercepts outward proportionally; a parallel outward shift. The slope −Px/Py stays fixed because relative prices haven't changed.">i</span> Income <em>I</em>  <span class="ctrl-val" id="bc-I-val">100</span></label>
+                <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Income determines the size of the affordable set. A higher I shifts both intercepts outward proportionally; a parallel outward shift. The slope −Px/Py stays fixed because relative prices haven't changed.">i</span> Income <em>I</em>  <span class="ctrl-val" id="bc-I-val">100</span></label>
                 <input type="range" id="bc-I" min="40" max="200" step="any" value="100" title="Income I: higher I shifts both intercepts outward proportionally. Slope -Px/Py is unchanged." />
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Px only moves the X-intercept (I/Px). The Y-intercept I/Py is fixed because neither I nor Py changed. The line pivots inward around the Y-intercept and the slope steepens; X becomes relatively more expensive.">i</span> Price of X  <em>P<sub>X</sub></em><span class="ctrl-val" id="bc-Px-val">5</span></label>
+                <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Px only moves the X-intercept (I/Px). The Y-intercept I/Py is fixed because neither I nor Py changed. The line pivots inward around the Y-intercept and the slope steepens; X becomes relatively more expensive.">i</span> Price of X  <em>P<sub>X</sub></em><span class="ctrl-val" id="bc-Px-val">5</span></label>
                 <input type="range" id="bc-Px" min="1" max="20" step="any" value="5" title="Price of X (Px): higher Px moves the X-intercept inward. The line pivots around the Y-intercept. Slope steepens." />
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Py only moves the Y-intercept (I/Py). The X-intercept I/Px is fixed because neither I nor Px changed. The line pivots inward around the X-intercept and the slope flattens; Y becomes relatively more expensive.">i</span> Price of Y  <em>P<sub>Y</sub></em><span class="ctrl-val" id="bc-Py-val">4</span></label>
+                <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Py only moves the Y-intercept (I/Py). The X-intercept I/Px is fixed because neither I nor Px changed. The line pivots inward around the X-intercept and the slope flattens; Y becomes relatively more expensive.">i</span> Price of Y  <em>P<sub>Y</sub></em><span class="ctrl-val" id="bc-Py-val">4</span></label>
                 <input type="range" id="bc-Py" min="1" max="20" step="any" value="4" title="Price of Y (Py): higher Py moves the Y-intercept inward. The line pivots around the X-intercept. Slope flattens." />
               </div>
             </div>
@@ -3325,7 +3337,7 @@ function buildCornerExplorer() {
               <div class="viz-panel-left">
                 <div id="jxg-budget" style="width:100%;aspect-ratio:1/1;"></div>
               </div>
-              <div class="viz-panel-right" style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem 1.4rem;align-content:start;padding:1.2rem 1.1rem;">
+              <div class="viz-panel-right" aria-live="polite" style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem 1.4rem;align-content:start;padding:1.2rem 1.1rem;">
                 <!-- LEFT SUB-COL: live stats -->
                 <div style="display:flex;flex-direction:column;gap:0.75rem;">
                   <div class="stat-row">
@@ -3425,7 +3437,7 @@ function buildCornerExplorer() {
               </div>
             </div>
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="Controls the size of the change. For income changes both intercepts shift out proportionally. For price changes only one intercept moves. The slope only changes with price changes.">i</span> Magnitude <span class="ctrl-val" id="shift-mag-val">30%</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Controls the size of the change. For income changes both intercepts shift out proportionally. For price changes only one intercept moves. The slope only changes with price changes.">i</span> Magnitude <span class="ctrl-val" id="shift-mag-val">30%</span></label>
               <input type="range" id="shift-mag" min="5" max="80" step="any" value="30" />
             </div>
           </div>
@@ -3438,8 +3450,8 @@ function buildCornerExplorer() {
               <div style="display:flex;flex-direction:column;gap:0.75rem;">
                 <div>
                   <div style="font-family:var(--mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);margin-bottom:6px;">Legend</div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#9ca3af;border-top:2px dashed #9ca3af"></div><span style="font-size:0.79rem">B&#8320; Original</span></div>
-                  <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#dc2626"></div><span style="font-size:0.79rem">B&#8321; New</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#7f8c8d;border-top:2px dashed #7f8c8d"></div><span style="font-size:0.79rem">B&#8320; Original</span></div>
+                  <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:4px;background:#c0392b"></div><span style="font-size:0.79rem">B&#8321; New</span></div>
                 </div>
                 <hr class="divider-sm"/>
                 <div class="stat-row">
@@ -3531,19 +3543,19 @@ function buildCornerExplorer() {
                 </select>
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher income shifts the budget line outward in parallel. With Cobb-Douglas X* = aI/Px and Y* = (1-a)I/Py both rise proportionally. Spending shares stay constant.">i</span> Income <em>I</em>  <span class="ctrl-val" id="opt-I-val">80</span></label>
+                <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Higher income shifts the budget line outward in parallel. With Cobb-Douglas X* = aI/Px and Y* = (1-a)I/Py both rise proportionally. Spending shares stay constant.">i</span> Income <em>I</em>  <span class="ctrl-val" id="opt-I-val">80</span></label>
                 <input type="range" id="opt-I" min="20" max="200" step="any" value="80" title="Income I: shifts the budget line out. Optimal bundle moves along the income expansion path." />
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher Px pivots the budget line inward around the Y-intercept. X* = aI/Px falls, but the spending share a on X stays constant, the consumer buys less X but spends the same fraction of income on it.">i</span> <em>P<sub>X</sub></em><span class="ctrl-val" id="opt-Px-val">5</span></label>
+                <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Higher Px pivots the budget line inward around the Y-intercept. X* = aI/Px falls, but the spending share a on X stays constant, the consumer buys less X but spends the same fraction of income on it.">i</span> <em>P<sub>X</sub></em><span class="ctrl-val" id="opt-Px-val">5</span></label>
                 <input type="range" id="opt-Px" min="1" max="20" step="any" value="5" title="Price of X: X becomes more expensive. For Cobb-Douglas, X* falls but spending share stays constant." />
               </div>
               <div class="ctrl-group">
-                <label><span class="tip-icon" data-tip="Higher Py pivots the budget line inward around the X-intercept. Y* = (1-a)I/Py falls, but the spending share 1-a on Y stays constant. This is the Cobb-Douglas fixed-share property.">i</span> <em>P<sub>Y</sub></em><span class="ctrl-val" id="opt-Py-val">4</span></label>
+                <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Higher Py pivots the budget line inward around the X-intercept. Y* = (1-a)I/Py falls, but the spending share 1-a on Y stays constant. This is the Cobb-Douglas fixed-share property.">i</span> <em>P<sub>Y</sub></em><span class="ctrl-val" id="opt-Py-val">4</span></label>
                 <input type="range" id="opt-Py" min="1" max="20" step="any" value="4" title="Price of Y: Y becomes more expensive. For Cobb-Douglas, Y* falls but spending share stays constant." />
               </div>
               <div class="ctrl-group" id="opt-alpha-ctrl">
-                <label><span class="tip-icon" data-tip="a is the spending share on X. X* = aI/Px and Y* = (1-a)I/Py. Higher a shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
+                <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="a is the spending share on X. X* = aI/Px and Y* = (1-a)I/Py. Higher a shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
                 <input type="range" id="opt-alpha" min="0.1" max="0.9" step="any" value="0.5" title="Alpha a: spending share on X = a. Higher a ? more X at the optimum. ICs become steeper." />
               </div>
             </div>
@@ -3551,7 +3563,7 @@ function buildCornerExplorer() {
               <div class="viz-panel-left">
                 <div id="jxg-optimum" style="width:100%;aspect-ratio:1/1;"></div>
               </div>
-              <div class="viz-panel-right" style="justify-content:flex-start;gap:0.7rem;">
+              <div class="viz-panel-right" aria-live="polite" style="justify-content:flex-start;gap:0.7rem;">
                 <div style="border-bottom:1px solid var(--rule);padding-bottom:0.4rem;margin-bottom:0.2rem;">
                   <span style="font-family:var(--mono);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);">Live Derivation</span>
                 </div>
@@ -3562,11 +3574,11 @@ function buildCornerExplorer() {
                 <hr class="divider-sm"/>
                 <div class="stat-row">
                   <span class="stat-label">X* (optimal X)</span>
-                  <span class="stat-val red" id="opt-x-star">-</span>
+                  <span class="stat-val optimum" id="opt-x-star">-</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">Y* (optimal Y)</span>
-                  <span class="stat-val red" id="opt-y-star">-</span>
+                  <span class="stat-val optimum" id="opt-y-star">-</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">U* (max utility)</span>
@@ -3574,10 +3586,10 @@ function buildCornerExplorer() {
                 </div>
                 <hr class="divider-sm"/>
                 <div id="opt-legend" style="margin-top:0.3rem">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#bae6fd"></div><span style="font-size:0.78rem;color:#555">IC (below/above)</span></div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:4px;background:#0284c7"></div><span style="font-size:0.78rem;color:#555">Optimal IC</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:3px;background:#c5d9eb"></div><span style="font-size:0.78rem;color:#555">IC (below/above)</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:4px;background:#3d5a80"></div><span style="font-size:0.78rem;color:#555">Optimal IC</span></div>
                   <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="width:32px;height:4px;background:#0d7377"></div><span style="font-size:0.78rem;color:#555">Budget line</span></div>
-                  <div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:#dc2626;flex-shrink:0"></div><span style="font-size:0.78rem;color:#555">Optimum</span></div>
+                  <div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:#c0392b;flex-shrink:0"></div><span style="font-size:0.78rem;color:#555">Optimum</span></div>
                 </div>
               </div>
             </div>
@@ -3631,19 +3643,19 @@ function buildCornerExplorer() {
           </div>
           <div class="viz-controls">
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="Sets where the orange Bundle starts. At the optimum MUx/Px = MUy/Py. If the bundle is off the budget line drag it up to the green line first, then slide along it until the ratios equalize.">i</span> Starting dollars on X<span class="ctrl-val" id="bfb-spendX-val">50</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Sets where the orange Bundle starts. At the optimum MUx/Px = MUy/Py. If the bundle is off the budget line drag it up to the green line first, then slide along it until the ratios equalize.">i</span> Starting dollars on X<span class="ctrl-val" id="bfb-spendX-val">50</span></label>
               <input type="range" id="bfb-spendX" min="5" max="95" step="any" value="50" />
             </div>
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="Higher Px reduces MUx/Px, making Y relatively more attractive per dollar. If MUx/Px falls below MUy/Py the action panel will tell you to shift spending toward Y.">i</span> \(P_X\)<span class="ctrl-val" id="bfb-Px-val">5</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Higher Px reduces MUx/Px, making Y relatively more attractive per dollar. If MUx/Px falls below MUy/Py the action panel will tell you to shift spending toward Y.">i</span> \(P_X\)<span class="ctrl-val" id="bfb-Px-val">5</span></label>
               <input type="range" id="bfb-Px" min="1" max="15" step="any" value="5" title="Px: higher price of X reduces MU(X)/Px, so MU(Y)/Py > MU(X)/Px → shift spending to Y." />
             </div>
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="Higher Py reduces MUy/Py, making X relatively more attractive per dollar. If MUy/Py falls below MUx/Px the action panel will tell you to shift spending toward X.">i</span> \(P_Y\)<span class="ctrl-val" id="bfb-Py-val">4</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Higher Py reduces MUy/Py, making X relatively more attractive per dollar. If MUy/Py falls below MUx/Px the action panel will tell you to shift spending toward X.">i</span> \(P_Y\)<span class="ctrl-val" id="bfb-Py-val">4</span></label>
               <input type="range" id="bfb-Py" min="1" max="15" step="any" value="4" title="Py: higher price of Y reduces MU(Y)/Py, so MU(X)/Px > MU(Y)/Py → shift spending to X." />
             </div>
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="Higher α strengthens preference for X: MUx = α · Y/X rises at any bundle. This shifts the optimum to the right and raises MUx/Px relative to MUy/Py until a new equilibrium is reached.">i</span> \(\alpha\)<span class="ctrl-val" id="bfb-alpha-val">0.50</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Higher α strengthens preference for X: MUx = α · Y/X rises at any bundle. This shifts the optimum to the right and raises MUx/Px relative to MUy/Py until a new equilibrium is reached.">i</span> \(\alpha\)<span class="ctrl-val" id="bfb-alpha-val">0.50</span></label>
               <input type="range" id="bfb-alpha" min="0.1" max="0.9" step="any" value="0.5" title="a: Cobb-Douglas exponent on X. Higher a = stronger preference for X = higher MU(X) at any bundle." />
             </div>
           </div>
@@ -3651,7 +3663,7 @@ function buildCornerExplorer() {
             <div class="viz-panel-left">
               <div id="jxg-bfb" style="width:100%;aspect-ratio:1/1;"></div>
             </div>
-            <div class="viz-panel-right">
+            <div class="viz-panel-right" aria-live="polite">
               <div class="stat-row">
                 <span class="stat-label">MU(X) / P(X), bang for buck on X</span>
                 <span class="stat-val" id="bfb-mux-px">-</span>
@@ -3728,11 +3740,11 @@ function buildCornerExplorer() {
           </div>
           <div class="viz-controls">
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="Alpha controls the tilt of the indifference curve. Higher alpha makes ICs steeper, meaning MRS is higher at any given X.">i</span> &alpha; (preference for X) <span class="ctrl-val" id="mrs-alpha-val">0.5</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Alpha controls the tilt of the indifference curve. Higher alpha makes ICs steeper, meaning MRS is higher at any given X.">i</span> &alpha; (preference for X) <span class="ctrl-val" id="mrs-alpha-val">0.5</span></label>
               <input type="range" id="mrs-alpha" min="0.1" max="0.9" step="any" value="0.5" />
             </div>
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="Sets the utility level of the indifference curve you are exploring.">i</span> Utility level U&nbsp;<span class="ctrl-val" id="mrs-u0-val">5.0</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Sets the utility level of the indifference curve you are exploring.">i</span> Utility level U&nbsp;<span class="ctrl-val" id="mrs-u0-val">5.0</span></label>
               <input type="range" id="mrs-u0" min="1" max="10" step="any" value="5" />
             </div>
           </div>
@@ -3835,7 +3847,7 @@ function buildCornerExplorer() {
           </div>
           <div class="viz-controls">
             <div class="ctrl-group">
-              <label><span class="tip-icon" data-tip="As Px rises, the budget line pivots inward. When Px/Py crosses the MRS threshold (a/b), the consumer flips from buying all X to buying all Y. The threshold is where they are indifferent.">i</span> Price of X (P<sub>x</sub>) <span class="ctrl-val" id="corner-px-val">4</span></label>
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="As Px rises, the budget line pivots inward. When Px/Py crosses the MRS threshold (a/b), the consumer flips from buying all X to buying all Y. The threshold is where they are indifferent.">i</span> Price of X (P<sub>x</sub>) <span class="ctrl-val" id="corner-px-val">4</span></label>
               <input type="range" id="corner-px" min="1" max="12" step="any" value="4" />
             </div>
             <div class="ctrl-group">
@@ -3929,82 +3941,298 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
 });
 </script>
 
-<div id="tip-global"></div>
+<div id="tip-global" class="tip-popover" role="tooltip"></div>
 <script>
-/* Global tooltip, attached to <body> so position:fixed escapes all overflow:hidden */
+/* Tap-to-toggle tooltip popover — works on touch AND mouse/keyboard.
+   Replaces the hover-only pattern from the original. Each .tip-icon toggles
+   its own popover; clicking anywhere else (or pressing Escape) closes it. */
 (function() {
   var tip = document.getElementById('tip-global');
-  var currentIcon = null;
+  var openIcon = null;
 
   function showTip(icon) {
     var text = icon.getAttribute('data-tip');
     if (!text) return;
-    currentIcon = icon;
+    if (openIcon && openIcon !== icon) closeTip();
+    openIcon = icon;
+    icon.setAttribute('aria-expanded', 'true');
     tip.textContent = text;
-    tip.style.display = 'block';
-    positionTip(icon);
+    tip.classList.add('visible');
+    placeTip(icon);
   }
 
-  function positionTip(icon) {
+  function closeTip() {
+    if (!openIcon) return;
+    openIcon.setAttribute('aria-expanded', 'false');
+    openIcon = null;
+    tip.classList.remove('visible');
+  }
+
+  function placeTip(icon) {
     var rect = icon.getBoundingClientRect();
-    var tipW = tip.offsetWidth;
-    var tipH = tip.offsetHeight;
-    var arrowH = 10;
-
-    /* Try above the icon first */
-    var top = rect.top - tipH - arrowH;
-    var left = rect.left + rect.width / 2 - tipW / 2;
-
-    /* Flip below if not enough room above */
-    var below = false;
-    if (top < 8) {
-      top = rect.bottom + arrowH;
-      below = true;
-    }
-
-    /* Clamp horizontally within viewport */
-    left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
-
+    tip.style.display = 'block'; /* force reflow for offsetWidth */
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var top = rect.top - th - 10;
+    var left = rect.left + rect.width / 2 - tw / 2;
+    if (top < 8) top = rect.bottom + 8;
+    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
     tip.style.top  = top + 'px';
     tip.style.left = left + 'px';
-
-    /* Arrow: points down when tip is above icon, up when below */
-    var arrow = tip.style;
-    if (below) {
-      tip.style.setProperty('--arrow-top', '-8px');
-      tip.style.setProperty('--arrow-border', 'transparent transparent #1a1a2a transparent');
-    }
   }
 
-  function hideTip() {
-    tip.style.display = 'none';
-    currentIcon = null;
-  }
-
-  /* Delegate from document so all .tip-icon elements work */
-  document.addEventListener('mouseover', function(e) {
-    var icon = e.target.closest('.tip-icon');
-    if (icon && icon !== currentIcon) showTip(icon);
-  });
-
-  document.addEventListener('mouseout', function(e) {
+  /* Click / tap on icon → toggle */
+  document.addEventListener('click', function(e) {
     var icon = e.target.closest('.tip-icon');
     if (icon) {
-      /* Only hide if not moving to a child of icon */
-      var to = e.relatedTarget;
-      if (!icon.contains(to)) hideTip();
+      e.stopPropagation();
+      if (openIcon === icon) { closeTip(); } else { showTip(icon); }
+    } else {
+      closeTip();
     }
   });
 
-  /* Reposition on scroll/resize */
-  window.addEventListener('scroll', function() {
-    if (currentIcon) positionTip(currentIcon);
-  }, true);
-  window.addEventListener('resize', function() {
-    if (currentIcon) positionTip(currentIcon);
+  /* Hover still works on non-touch devices as a bonus */
+  document.addEventListener('mouseover', function(e) {
+    var icon = e.target.closest('.tip-icon');
+    if (icon && openIcon !== icon) showTip(icon);
   });
+  document.addEventListener('mouseout', function(e) {
+    var icon = e.target.closest('.tip-icon');
+    if (icon && !icon.contains(e.relatedTarget)) {
+      /* Only auto-close on mouseout if it was opened by hover (not a deliberate click) */
+      if (openIcon === icon) closeTip();
+    }
+  });
+
+  /* Keyboard: Enter/Space on focused icon; Escape closes */
+  document.addEventListener('keydown', function(e) {
+    if ((e.key === 'Enter' || e.key === ' ') && document.activeElement) {
+      var icon = document.activeElement.closest('.tip-icon');
+      if (icon) { e.preventDefault(); if (openIcon===icon){closeTip();}else{showTip(icon);} }
+    }
+    if (e.key === 'Escape') closeTip();
+  });
+
+  /* Reposition on scroll / resize */
+  window.addEventListener('scroll', function() { if (openIcon) placeTip(openIcon); }, true);
+  window.addEventListener('resize', function() { if (openIcon) placeTip(openIcon); });
 })();
 </script>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DEV UX ENHANCEMENTS — slider fill, 3D reset, ghost overlays,
+   BFB optimum pulse
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1. SLIDER TRACK FILL ──────────────────────────────────────
+   Dynamically colors the left portion of each range track so
+   users get a "progress" fill matching the thumb position. */
+(function() {
+  function syncFill(el) {
+    var mn = parseFloat(el.min) || 0;
+    var mx = parseFloat(el.max) || 100;
+    var v  = parseFloat(el.value) || 0;
+    var p  = ((v - mn) / (mx - mn) * 100).toFixed(1);
+    el.style.background =
+      'linear-gradient(to right,var(--accent) 0%,var(--accent) ' + p +
+      '%,var(--accent-lt) ' + p + '%,var(--accent-lt) 100%)';
+  }
+  /* Live update on any range change */
+  document.addEventListener('input', function(e) {
+    if (e.target.type === 'range') syncFill(e.target);
+  });
+  /* Initialize all sliders once DOM is ready */
+  function initFills() {
+    document.querySelectorAll('input[type="range"]').forEach(syncFill);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFills);
+  } else {
+    initFills();
+  }
+})();
+
+/* ── 2. 3D CANVAS RESET VIEW ───────────────────────────────────
+   Frees and re-initialises the IC Explorer boards so the camera
+   snaps back to the default central projection angle. */
+function resetIC3DView() {
+  try {
+    /* Save current UI state */
+    var activeBtn = document.querySelector('#ic-type-btns .type-btn.active');
+    var type = activeBtn ? activeBtn.dataset.type : 'cobb';
+    var alpha = slVal('ic-alpha');
+    /* Free boards */
+    if (icBoard3D) JXG.JSXGraph.freeBoard(icBoard3D);
+    if (icBoard2D) JXG.JSXGraph.freeBoard(icBoard2D);
+    /* Reset all globals */
+    icBoard3D = null; icBoard2D = null; icView3D = null;
+    icGlider2D = null; icTangent2D = null; icMRSText = null;
+    icDropH = null; icDropV = null; icHighlightFn = null;
+    icCurves2D = [];
+    if (window.icExtraObjs)     window.icExtraObjs = [];
+    if (window.icExtraLabels)   window.icExtraLabels = [];
+    if (window.icExtraUpdaters) window.icExtraUpdaters = [];
+    /* Re-initialise */
+    initICExplorer();
+    /* Restore preference type if not cobb */
+    if (type !== 'cobb') {
+      drawIC2D(type, alpha);
+      setICInfo(type);
+      document.getElementById('alpha-ctrl').style.display = 'none';
+      icBoard3D.update();
+    }
+  } catch(e) { console.warn('resetIC3DView:', e); }
+}
+
+/* ── 3. GHOST BASELINE OVERLAYS ────────────────────────────────
+   When a slider is pressed, the current curve is snapshotted as
+   a faint dashed "before" ghost. Released → fades (removed) after 700 ms.
+   Implemented for §2 Budget, §3 Shift/Pivot, §4 Optimum. */
+
+/* Budget ghost */
+var _bcGhost = null, _bcGhostTimer = null;
+function _makeBCGhost() {
+  clearTimeout(_bcGhostTimer);
+  if (_bcGhost && bcBoard) { try { bcBoard.removeObject(_bcGhost, false); } catch(e) {} _bcGhost = null; }
+  if (!bcBoard) return;
+  var I = slVal('bc-I'), Px = slVal('bc-Px'), Py = slVal('bc-Py');
+  var xi = I / Px;
+  var gI = I, gPx = Px, gPy = Py;
+  try {
+    _bcGhost = bcBoard.create('functiongraph',
+      [function(x) { return (gI - gPx * x) / gPy; }, 0, xi],
+      { strokeColor: '#888', strokeWidth: 1.5, strokeOpacity: 0.28, dash: 2, highlight: false, fixed: true });
+    bcBoard.update();
+  } catch(e) {}
+}
+function _clearBCGhost() {
+  _bcGhostTimer = setTimeout(function() {
+    if (_bcGhost && bcBoard) {
+      try { bcBoard.removeObject(_bcGhost, false); bcBoard.update(); } catch(e) {}
+      _bcGhost = null;
+    }
+  }, 700);
+}
+
+/* Shift/pivot ghost */
+var _shiftGhost = null, _shiftGhostTimer = null;
+function _makeShiftGhost() {
+  clearTimeout(_shiftGhostTimer);
+  if (_shiftGhost && shiftBoard) { try { shiftBoard.removeObject(_shiftGhost, false); } catch(e) {} _shiftGhost = null; }
+  if (!shiftBoard) return;
+  var I0 = 100, Px0 = 5, Py0 = 4;
+  var mag = slVal('shift-mag') / 100;
+  var type = getShiftType();
+  var I2 = I0, Px2 = Px0, Py2 = Py0;
+  if (type === 'income-up')   I2  = I0  * (1 + mag);
+  if (type === 'income-down') I2  = I0  * (1 - mag);
+  if (type === 'px-up')       Px2 = Px0 * (1 + mag);
+  if (type === 'px-down')     Px2 = Px0 * (1 - mag);
+  if (type === 'py-up')       Py2 = Py0 * (1 + mag);
+  if (type === 'py-down')     Py2 = Py0 * (1 - mag);
+  var xi2 = I2 / Px2;
+  var gI2 = I2, gPx2 = Px2, gPy2 = Py2;
+  try {
+    _shiftGhost = shiftBoard.create('functiongraph',
+      [function(x) { return (gI2 - gPx2 * x) / gPy2; }, 0, xi2],
+      { strokeColor: '#888', strokeWidth: 1.2, strokeOpacity: 0.28, dash: 3, highlight: false });
+    shiftBoard.update();
+  } catch(e) {}
+}
+function _clearShiftGhost() {
+  _shiftGhostTimer = setTimeout(function() {
+    if (_shiftGhost && shiftBoard) {
+      try { shiftBoard.removeObject(_shiftGhost, false); shiftBoard.update(); } catch(e) {}
+      _shiftGhost = null;
+    }
+  }, 700);
+}
+
+/* Optimum ghost (budget line) */
+var _optGhost = null, _optGhostTimer = null;
+function _makeOptGhost() {
+  clearTimeout(_optGhostTimer);
+  if (_optGhost && optBoard) { try { optBoard.removeObject(_optGhost, false); } catch(e) {} _optGhost = null; }
+  if (!optBoard) return;
+  var I = slVal('opt-I'), Px = slVal('opt-Px'), Py = slVal('opt-Py');
+  var xi = I / Px;
+  var gI = I, gPx = Px, gPy = Py;
+  try {
+    _optGhost = optBoard.create('functiongraph',
+      [function(x) { return (gI - gPx * x) / gPy; }, 0, xi],
+      { strokeColor: '#888', strokeWidth: 1.5, strokeOpacity: 0.25, dash: 2, highlight: false, fixed: true });
+    optBoard.update();
+  } catch(e) {}
+}
+function _clearOptGhost() {
+  _optGhostTimer = setTimeout(function() {
+    if (_optGhost && optBoard) {
+      try { optBoard.removeObject(_optGhost, false); optBoard.update(); } catch(e) {}
+      _optGhost = null;
+    }
+  }, 700);
+}
+
+/* Wire ghost events once boards exist */
+document.addEventListener('DOMContentLoaded', function() {
+  /* Budget ghost */
+  ['bc-I','bc-Px','bc-Py'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('mousedown',  _makeBCGhost);
+    el.addEventListener('touchstart', _makeBCGhost, {passive:true});
+    el.addEventListener('mouseup',    _clearBCGhost);
+    el.addEventListener('touchend',   _clearBCGhost);
+  });
+  window.addEventListener('mouseup', _clearBCGhost);
+
+  /* Shift ghost */
+  var shiftMagEl = document.getElementById('shift-mag');
+  if (shiftMagEl) {
+    shiftMagEl.addEventListener('mousedown',  _makeShiftGhost);
+    shiftMagEl.addEventListener('touchstart', _makeShiftGhost, {passive:true});
+    shiftMagEl.addEventListener('mouseup',    _clearShiftGhost);
+    shiftMagEl.addEventListener('touchend',   _clearShiftGhost);
+  }
+  document.getElementById('shift-btns') && document.getElementById('shift-btns').addEventListener('click', _clearShiftGhost);
+
+  /* Optimum ghost */
+  ['opt-I','opt-Px','opt-Py','opt-alpha'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('mousedown',  _makeOptGhost);
+    el.addEventListener('touchstart', _makeOptGhost, {passive:true});
+    el.addEventListener('mouseup',    _clearOptGhost);
+    el.addEventListener('touchend',   _clearOptGhost);
+  });
+});
+
+/* ── 4. BFB OPTIMUM PULSE ──────────────────────────────────────
+   Patches doUpdate (called inside buildBFBBoard's closure) to
+   trigger a green CSS pulse on the Verdict element when the bundle
+   hits the optimum. We hook it by watching for the ✔ text. */
+(function() {
+  var _verdictEl = null;
+  var _lastEq = false;
+  var _patchInterval = setInterval(function() {
+    var el = document.getElementById('bfb-verdict');
+    if (!el) return;
+    clearInterval(_patchInterval);
+    _verdictEl = el;
+    var obs = new MutationObserver(function() {
+      var isEq = (_verdictEl.textContent.indexOf('✔') !== -1);
+      if (isEq && !_lastEq) {
+        _verdictEl.classList.remove('verdict-at-optimum');
+        void _verdictEl.offsetWidth; /* force reflow to restart animation */
+        _verdictEl.classList.add('verdict-at-optimum');
+      }
+      _lastEq = isEq;
+    });
+    obs.observe(_verdictEl, { childList: true, subtree: true, characterData: true });
+  }, 200);
+})();
+</script>
+
 <footer style="max-width:1520px;margin:0 auto;padding:1.8rem 3rem 2rem;border-top:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
   <div style="font-size:0.82rem;color:var(--ink-light);">
     <a href="https://www.bentley.edu" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Bentley University</a>
