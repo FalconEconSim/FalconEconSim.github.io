@@ -1974,6 +1974,8 @@ function v59Update() {
 // ══════════════════════════════════════════════════════════════════════
 // FIG 5.10 - ISOQUANT SHAPE QUIZ
 // ══════════════════════════════════════════════════════════════════════
+// Convert "X^Y" to "X<sup>Y</sup>" for display in quiz prompts.
+function quizFnHtml(s){ return s.replace(/\^([0-9.]+)/g,'<sup>$1</sup>'); }
 const QUIZ510_FUNCTIONS = [
   {fn:'Q = L^0.5 * K^0.5',type:'cd', desc:'Cobb-Douglas with equal exponents: smooth convex isoquants, MRTS diminishes.'},
   {fn:'Q = L + 2K',type:'linear', desc:'Linear: perfect substitutes. Isoquant is a straight line with slope -1/2.'},
@@ -1997,7 +1999,7 @@ function quiz510NewRound() {
   const root=document.getElementById('quiz510-root');
   root.innerHTML=`
     <div class="quiz-scenario">
-      Given the production function <strong>${fn.fn}</strong>, what shape are the isoquants?
+      Given the production function <strong>${quizFnHtml(fn.fn)}</strong>, what shape are the isoquants?
     </div>
     <div class="quiz-score" style="font-family:var(--mono);font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Score: ${q510Score} / ${q510Total}</div>
     <div class="quiz-btns">
