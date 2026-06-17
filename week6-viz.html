@@ -1087,7 +1087,9 @@ window._initFig66=function initFig66(){
         dotLayer.append('circle').attr('cx',scX(qOpt)).attr('cy',scY(acOpt))
           .attr('r',4).attr('fill',col).attr('stroke','white').attr('stroke-width',1.5);
       }
-      const qLbl=Math.max(0.5,qOpt*0.35), acLbl=v66SRAC(qLbl,K);
+      // Stagger label anchors so small-K curves don't all clump at q=0.5
+      const qLblRaw=Math.max(0.5,qOpt*0.35);
+      const qLbl=Math.max(qLblRaw, 0.4 + ki*0.35), acLbl=v66SRAC(qLbl,K);
       if(acLbl<=yMax){
         const txt='SRAC'+SUBS[ki];
         nodeList.push({id:'SRAC'+K,color:col,label:txt,lw:txt.length*6+10,
@@ -1354,9 +1356,13 @@ window._initFig68=function initFig68(){
       '<div class="readout-col"><div class="readout-label">New TC</div><div class="readout-val" style="color:#e74c3c">$'+optNew.TC.toFixed(2)+'</div></div>' +
       '</div>' +
       '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">' +
-      (w>wBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
-        w<wBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
-        'Wage at baseline $'+wBase+'. The firm is at the original optimum.') +
+      (w>wBase&&v===vBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
+        w<wBase&&v===vBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
+        w>wBase&&v>vBase?'Both costs rose. K/L changes from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
+        w===wBase&&v>vBase?'Capital cost rose from $'+vBase+' to $'+v+'. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
+        w===wBase&&v<vBase?'Capital cost fell from $'+vBase+' to $'+v+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost falls to $'+optNew.TC.toFixed(2)+'.':
+        w===wBase&&v===vBase?'Wage at baseline $'+wBase+', capital cost at baseline $'+vBase+'. The firm is at the original optimum.':
+        'Costs shifted. K/L changes from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost is now $'+optNew.TC.toFixed(2)+'.') +
       '</div>';
   }
 
