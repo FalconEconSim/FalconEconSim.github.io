@@ -129,7 +129,7 @@
       deadweight loss), then use it to dissect monopoly and the three degrees of price discrimination.
     </p>
     <nav class="toc">
-      <div class="toc-title">Nine Tools</div>
+      <div class="toc-title">Ten Tools</div>
       <ol>
         <li><a href="#sec-81">Fig 8.1: CS/PS Triangle Anatomy</a></li>
         <li><a href="#sec-82">Fig 8.2: Transfer vs. Destruction (DWL Decomposition)</a></li>
@@ -140,6 +140,7 @@
         <li><a href="#sec-88">Fig 8.8: Block Pricing (2nd Degree)</a></li>
         <li><a href="#sec-89">Fig 8.9: Market Separation (3rd Degree)</a></li>
         <li><a href="#sec-810">Fig 8.10: Natural Monopoly Regulation Dilemma</a></li>
+        <li><a href="#sec-811">Fig 8.11: Two-Tier Pricing &amp; Cross-Subsidization</a></li>
       </ol>
     </nav>
   </div>
@@ -513,6 +514,44 @@
     <div class="insight-box">
       <strong>Regulator&rsquo;s dilemma:</strong> P = MC is efficient but causes losses that demand a subsidy. P = AC is
       second-best: the firm breaks even but some deadweight loss remains. There is no free lunch.
+    </div>
+  </section>
+
+  <!-- FIG 8.11 -->
+  <section class="fig-section" id="sec-811">
+    <div class="fig-hdr">
+      <span class="fig-label">Fig 8.11</span>
+      <span class="fig-title">Two-Tier Pricing &amp; Cross-Subsidization</span>
+    </div>
+    <p class="fig-intro">
+      A monopolist serving two consumer groups charges a high price P<sub>A</sub> to high-value customers
+      (earning a <strong style="color:#1e8449;">green profit</strong> relative to AC) and a low price P<sub>R</sub>
+      to price-sensitive customers (incurring a <strong style="color:#c0392b;">red loss</strong> relative to AC).
+      High-tier profits <em>cross-subsidize</em> low-tier losses, allowing the firm to reach more consumers.
+      Net profit = green area &minus; red area. Drag the sliders to explore when cross-subsidization works.
+      Model: D: P = 20 &minus; Q; TC = 50 + 2Q; AC = 50/Q + 2; MC = $2.
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs811-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">High-tier price P<sub>A</sub>:</span>
+        <input type="range" class="viz-slider" id="v811-pa" min="5" max="18" step="0.5" value="9" oninput="v811Update()">
+        <span class="viz-slider-val" id="v811-pa-val">$9</span>
+      </div>
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Low-tier price P<sub>R</sub>:</span>
+        <input type="range" class="viz-slider" id="v811-pr" min="2" max="7" step="0.5" value="2" oninput="v811Update()">
+        <span class="viz-slider-val" id="v811-pr-val">$2</span>
+      </div>
+      <button class="viz-btn" onclick="v811BreakEven()">Find Min P<sub>A</sub> for Break-Even</button>
+      <button class="viz-btn" onclick="v811Reset()">Reset</button>
+    </div>
+    <div class="viz-readout" id="v811-readout"></div>
+    <div class="insight-box gold">
+      <strong>Key insight:</strong> Cross-subsidization requires AC(Q<sub>R</sub>) to sit between P<sub>R</sub> and P<sub>A</sub>.
+      High-tier markup covers fixed costs <em>and</em> subsidises below-AC pricing for the low tier.
+      When green &gt; red, net profit &gt; 0; when green = red, the firm exactly breaks even &mdash; identical to the AC-pricing
+      solution in Fig 8.10. Use the button to find the minimum P<sub>A</sub> that achieves break-even for the current P<sub>R</sub>.
     </div>
   </section>
 
@@ -1521,12 +1560,167 @@ function v810Draw(){
 }
 
 // ═════════════════════════════════════════════════════════════════════════
+// FIG 8.11 — TWO-TIER PRICING / CROSS-SUBSIDIZATION
+// D: P=20−Q, MR: P=20−2Q, TC=50+2Q, AC=50/Q+2, MC=2.
+// P_A = high-tier price charged to Q_A consumers (0..Q_A on demand curve).
+// P_R = low-tier price charged to Q_A..Q_R consumers.
+// Green rect = (P_A − AC(Q_R)) · Q_A   [profit from high tier relative to AC]
+// Red rect   = (AC(Q_R) − P_R) · (Q_R − Q_A)  [loss from low tier relative to AC]
+// Identity: green − red = P_A·Q_A + P_R·(Q_R−Q_A) − TC(Q_R) = net profit.
+// ═════════════════════════════════════════════════════════════════════════
+let v811svg=null,v811sim=null,v811nodes=null,v811gs=null,v811conns=null,v811dyn=null;
+const V811={scX:null,scY:null};
+function v811Init(){
+  const scX=d3.scaleLinear().domain([0,22]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,22]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  V811.scX=scX;V811.scY=scY;
+  v811svg=d3MakeSvg('cvs811-wrap');
+  d3AddAxes(v811svg,scX,scY,'Quantity per week','Price ($)',d=>'$'+d);
+  // D: (0,20)→(20,0)
+  d3Seg(v811svg,scX,scY,0,20,20,0,STROKE_CS,2);
+  // MR: (0,20)→(10,0)
+  d3Seg(v811svg,scX,scY,0,20,10,0,'#7d3c98',1.6,'5,3');
+  // MC=2 horizontal
+  d3Seg(v811svg,scX,scY,0,2,21,2,'#1e8449',1.6,'4,3');
+  // AC curve: 50/Q+2 from Q=2.5 to Q=21
+  const acPts=d3.range(2.5,21,0.2).map(q=>[scX(q),scY(50/q+2)]).filter(p=>p[1]>=D3PAD.top);
+  v811svg.append('path').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',2).attr('d',d3.line()(acPts));
+  // Dynamic layer drawn on top
+  v811dyn=v811svg.append('g');
+  // Force-sim labels for static curves
+  v811nodes=[
+    d3Node('D811',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
+    d3Node('MR811','#7d3c98','MR',26,scX(8.5),scY(3.5)),
+    d3Node('MC811','#1e8449','MC',26,scX(19.5),scY(2.3)),
+    d3Node('AC811','#c0392b','AC',26,scX(4.5),scY(50/4.5+2)),
+  ];
+  v811sim=d3MakeSim(v811nodes);
+  const els=d3AddLabels(v811svg,v811nodes,v811sim);
+  v811gs=els.gs;v811conns=els.conns;
+  v811sim.on('tick',()=>d3TickClamp(v811nodes,v811gs,v811conns));
+  v811Draw();
+}
+function v811Draw(){
+  if(!v811svg)return;
+  const PA=parseFloat(document.getElementById('v811-pa').value);
+  const PR=parseFloat(document.getElementById('v811-pr').value);
+  const scX=V811.scX,scY=V811.scY;
+  const QA=Math.max(0,20-PA), QR=Math.max(0,20-PR);
+  if(QR<=QA||QR<=0){
+    document.getElementById('v811-readout').textContent='P_R must be lower than P_A to serve a second tier.';
+    return;
+  }
+  const AC_QR=50/QR+2;
+  const TR=PA*QA+PR*(QR-QA);
+  const TC=50+2*QR;
+  const profit=TR-TC;
+  // Per-tier contributions: (price − AC) × qty; positive = profit, negative = loss
+  const highContrib=(PA-AC_QR)*QA;
+  const lowContrib=(PR-AC_QR)*(QR-QA);
+  const greenArea=Math.max(0,highContrib)+Math.max(0,lowContrib);
+  const redArea=Math.max(0,-highContrib)+Math.max(0,-lowContrib);
+  v811dyn.selectAll('*').remove();
+  // High-tier rectangle (0 to QA): green above AC, red below (rare at slider range)
+  if(QA>0){
+    if(PA>AC_QR){
+      const h=scY(AC_QR)-scY(PA);
+      v811dyn.append('rect').attr('x',scX(0)).attr('y',scY(PA)).attr('width',scX(QA)-scX(0)).attr('height',h)
+        .attr('fill','rgba(39,174,96,0.28)').attr('stroke','#1e8449').attr('stroke-width',1);
+      if(highContrib>3) v811dyn.append('text').attr('x',(scX(0)+scX(QA))/2).attr('y',(scY(PA)+scY(AC_QR))/2+4)
+        .attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#0e6b32')
+        .text('Profit=$'+highContrib.toFixed(0));
+    } else if(PA<AC_QR){
+      const h=scY(PA)-scY(AC_QR);
+      v811dyn.append('rect').attr('x',scX(0)).attr('y',scY(AC_QR)).attr('width',scX(QA)-scX(0)).attr('height',h)
+        .attr('fill',FILL_DWL).attr('stroke',STROKE_DWL).attr('stroke-width',1);
+    }
+  }
+  // Low-tier rectangle (QA to QR): red when PR < AC, green when PR > AC
+  if(QR>QA){
+    if(PR<AC_QR){
+      const h=scY(PR)-scY(AC_QR);
+      v811dyn.append('rect').attr('x',scX(QA)).attr('y',scY(AC_QR)).attr('width',scX(QR)-scX(QA)).attr('height',h)
+        .attr('fill',FILL_DWL).attr('stroke',STROKE_DWL).attr('stroke-width',1);
+      if(-lowContrib>3) v811dyn.append('text').attr('x',(scX(QA)+scX(QR))/2).attr('y',(scY(AC_QR)+scY(PR))/2+4)
+        .attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#922b21')
+        .text('Loss=$'+(-lowContrib).toFixed(0));
+    } else if(PR>AC_QR){
+      const h=scY(AC_QR)-scY(PR);
+      v811dyn.append('rect').attr('x',scX(QA)).attr('y',scY(PR)).attr('width',scX(QR)-scX(QA)).attr('height',h)
+        .attr('fill','rgba(39,174,96,0.28)').attr('stroke','#1e8449').attr('stroke-width',1);
+      if(lowContrib>3) v811dyn.append('text').attr('x',(scX(QA)+scX(QR))/2).attr('y',(scY(PR)+scY(AC_QR))/2+4)
+        .attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#0e6b32')
+        .text('+$'+lowContrib.toFixed(0));
+    }
+  }
+  // AC(Q_R) dashed horizontal reference
+  v811dyn.append('line').attr('x1',scX(0)).attr('x2',scX(QR+0.8)).attr('y1',scY(AC_QR)).attr('y2',scY(AC_QR))
+    .attr('stroke','#c0392b').attr('stroke-width',1.3).attr('stroke-dasharray','3,4').attr('opacity',0.75);
+  // P_A horizontal dash from y-axis to Q_A
+  v811dyn.append('line').attr('x1',scX(0)).attr('x2',scX(QA+0.3)).attr('y1',scY(PA)).attr('y2',scY(PA))
+    .attr('stroke','#2c3e50').attr('stroke-width',1.4).attr('stroke-dasharray','5,3');
+  // P_R horizontal dash from y-axis to Q_R
+  v811dyn.append('line').attr('x1',scX(0)).attr('x2',scX(QR+0.3)).attr('y1',scY(PR)).attr('y2',scY(PR))
+    .attr('stroke','#2c3e50').attr('stroke-width',1.4).attr('stroke-dasharray','5,3');
+  // Q_A vertical drop
+  v811dyn.append('line').attr('x1',scX(QA)).attr('x2',scX(QA)).attr('y1',scY(PA)).attr('y2',scY(0))
+    .attr('stroke','#bbb').attr('stroke-width',1.1).attr('stroke-dasharray','4,4');
+  // Q_R vertical drop
+  v811dyn.append('line').attr('x1',scX(QR)).attr('x2',scX(QR)).attr('y1',scY(PR)).attr('y2',scY(0))
+    .attr('stroke','#bbb').attr('stroke-width',1.1).attr('stroke-dasharray','4,4');
+  // Demand-curve intersection dots
+  v811dyn.append('circle').attr('cx',scX(QA)).attr('cy',scY(PA)).attr('r',4).attr('fill',STROKE_CS).attr('stroke','#fff').attr('stroke-width',1.5);
+  v811dyn.append('circle').attr('cx',scX(QR)).attr('cy',scY(PR)).attr('r',4).attr('fill',STROKE_CS).attr('stroke','#fff').attr('stroke-width',1.5);
+  // Y-axis price labels
+  v811dyn.append('text').attr('x',D3PAD.left-4).attr('y',scY(PA)+4).attr('text-anchor','end').attr('font-size',9).attr('font-weight',700).attr('fill','#2c3e50').text('PA=$'+PA.toFixed(0));
+  v811dyn.append('text').attr('x',D3PAD.left-4).attr('y',scY(AC_QR)+4).attr('text-anchor','end').attr('font-size',9).attr('fill','#c0392b').text('AC=$'+AC_QR.toFixed(1));
+  v811dyn.append('text').attr('x',D3PAD.left-4).attr('y',scY(PR)+4).attr('text-anchor','end').attr('font-size',9).attr('font-weight',700).attr('fill','#2c3e50').text('PR=$'+PR.toFixed(0));
+  // X-axis quantity labels
+  v811dyn.append('text').attr('x',scX(QA)).attr('y',scY(0)+15).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#2c3e50').text('QA='+QA.toFixed(0));
+  v811dyn.append('text').attr('x',scX(QR)).attr('y',scY(0)+15).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#2c3e50').text('QR='+QR.toFixed(0));
+  document.getElementById('v811-pa-val').textContent='$'+PA.toFixed(0);
+  document.getElementById('v811-pr-val').textContent='$'+PR.toFixed(0);
+  const netColor=profit>0.5?'#1e8449':profit<-0.5?'#c0392b':'#2c3e50';
+  const bothAboveAC=PA>AC_QR&&PR>AC_QR;
+  const netMsg=Math.abs(profit)<1?
+    '<span style="color:#1e8449;font-weight:600;">Cross-subsidization is exactly balanced: net profit ≈ $0 (break-even).</span>':
+    bothAboveAC?`Both tiers are above AC &mdash; no cross-subsidization needed. Total profit $${profit.toFixed(0)} = high-tier $${highContrib.toFixed(0)} + low-tier $${lowContrib.toFixed(0)}.`:
+    profit>0?`Green ($${greenArea.toFixed(0)}) &gt; Red ($${redArea.toFixed(0)}): high-tier profits more than cover low-tier losses &mdash; firm is profitable.`:
+    `<span style="color:#c0392b;">Red ($${redArea.toFixed(0)}) &gt; Green ($${greenArea.toFixed(0)}): high-tier markup is insufficient &mdash; raise P<sub>A</sub> or narrow the low tier.</span>`;
+  document.getElementById('v811-readout').innerHTML=`<div class="readout-row">
+    <div class="readout-col"><div class="readout-label">Q<sub>A</sub></div><div class="readout-val">${QA.toFixed(1)}</div></div>
+    <div class="readout-col"><div class="readout-label">Q<sub>R</sub></div><div class="readout-val">${QR.toFixed(1)}</div></div>
+    <div class="readout-col"><div class="readout-label">AC(Q<sub>R</sub>)</div><div class="readout-val" style="color:#c0392b">$${AC_QR.toFixed(2)}</div></div>
+    <div class="readout-col"><div class="readout-label">Green profit</div><div class="readout-val" style="color:#1e8449">$${greenArea.toFixed(1)}</div></div>
+    <div class="readout-col"><div class="readout-label">Red loss</div><div class="readout-val" style="color:#c0392b">$${redArea.toFixed(1)}</div></div>
+    <div class="readout-col"><div class="readout-label">Net profit</div><div class="readout-val" style="color:${netColor}">$${profit.toFixed(1)}</div></div>
+  </div><div style="margin-top:.4rem;">${netMsg}</div>`;
+}
+function v811Update(){v811Draw();}
+function v811BreakEven(){
+  // Net profit = 0 gives: PA² − (20+PR)·PA + (PR²−2·PR+90) = 0
+  const PR=parseFloat(document.getElementById('v811-pr').value);
+  const B=-(20+PR), C=PR*PR-2*PR+90;
+  const disc=B*B-4*C;
+  if(disc<0){alert('No real break-even P_A at this P_R. Try a lower P_R.');return;}
+  const PA_lo=(-B-Math.sqrt(disc))/2;  // smaller root = lower premium required
+  const PA=Math.max(5,Math.min(18,PA_lo>PR+0.5?PA_lo:(-B+Math.sqrt(disc))/2));
+  document.getElementById('v811-pa').value=PA.toFixed(1);
+  v811Draw();
+}
+function v811Reset(){
+  document.getElementById('v811-pa').value=9;
+  document.getElementById('v811-pr').value=2;
+  v811Draw();
+}
+
+// ═════════════════════════════════════════════════════════════════════════
 // INIT
 // ═════════════════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
   if(typeof d3==='undefined')return;
   v81Init();v82Init();v83Init();v84Init();v85Init();
-  v87Init();v88Init();v89Init();v810Init();
+  v87Init();v88Init();v89Init();v810Init();v811Init();
 
   // S6/S8 alphaTarget smooth-drag pattern for every slider that drives a force-sim figure
   registerSliderSim('v81-p',()=>v81sim);
@@ -1539,6 +1733,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   registerSliderSim('v85-mc',()=>v85sim);
   registerSliderSim('v87-a',()=>v87sim);
   registerSliderSim('v87-mc',()=>v87sim);
+  registerSliderSim('v811-pa',()=>v811sim);
+  registerSliderSim('v811-pr',()=>v811sim);
   const releaseAll=()=>SIM_REGISTRY.forEach(g=>{const s=g();if(s)s.alphaTarget(0);});
   window.addEventListener('mouseup',releaseAll);
   window.addEventListener('touchend',releaseAll);
