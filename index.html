@@ -273,9 +273,12 @@
   document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.week-card:not(.upcoming)');
     cards.forEach(el => el.classList.add('fade-up'));
+    // rootMargin extends the observation area well past the bottom of the
+    // viewport so every card (even deep below the fold) is triggered as soon
+    // as the page paints rather than only when the user scrolls to it.
     const io = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-    }, { threshold: 0.08 });
+    }, { threshold: 0.01, rootMargin: '0px 0px 9999px 0px' });
     cards.forEach(el => io.observe(el));
 
     // Animate progress bar
