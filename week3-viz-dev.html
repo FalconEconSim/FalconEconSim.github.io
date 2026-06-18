@@ -1957,6 +1957,7 @@ function closeLN() { document.getElementById('leftNav').classList.remove('open')
   var tip = document.getElementById('tip-global');
   if (!tip) return;
   var openIcon = null;
+  var openedByClick = false;  /* true = pinned via click/keyboard; hover must not auto-close it */
 
   function showTip(icon) {
     var text = icon.getAttribute('data-tip');
@@ -1964,6 +1965,7 @@ function closeLN() { document.getElementById('leftNav').classList.remove('open')
     if (openIcon && openIcon !== icon) closeTip();
     openIcon = icon;
     icon.setAttribute('aria-expanded', 'true');
+    icon.setAttribute('aria-describedby', 'tip-global');  /* SR reads the explanation, not just "expanded" */
     tip.textContent = text;
     tip.classList.add('visible');
     placeTip(icon);
@@ -1971,7 +1973,9 @@ function closeLN() { document.getElementById('leftNav').classList.remove('open')
   function closeTip() {
     if (!openIcon) return;
     openIcon.setAttribute('aria-expanded', 'false');
+    openIcon.removeAttribute('aria-describedby');
     openIcon = null;
+    openedByClick = false;
     tip.classList.remove('visible');
   }
   function placeTip(icon) {
@@ -1990,25 +1994,26 @@ function closeLN() { document.getElementById('leftNav').classList.remove('open')
     var icon = e.target.closest('.tip-icon');
     if (icon) {
       e.stopPropagation();
-      if (openIcon === icon) { closeTip(); } else { showTip(icon); }
+      if (openIcon === icon) { closeTip(); } else { showTip(icon); openedByClick = true; }
     } else {
       closeTip();
     }
   });
   document.addEventListener('mouseover', function(e) {
     var icon = e.target.closest('.tip-icon');
-    if (icon && openIcon !== icon) showTip(icon);
+    if (icon && openIcon !== icon) { showTip(icon); openedByClick = false; }
   });
   document.addEventListener('mouseout', function(e) {
     var icon = e.target.closest('.tip-icon');
     if (icon && !icon.contains(e.relatedTarget)) {
-      if (openIcon === icon) closeTip();
+      /* Only auto-close on mouseout if it was opened by HOVER. A click/keyboard pin stays. */
+      if (openIcon === icon && !openedByClick) closeTip();
     }
   });
   document.addEventListener('keydown', function(e) {
     if ((e.key === 'Enter' || e.key === ' ') && document.activeElement) {
       var icon = document.activeElement.closest('.tip-icon');
-      if (icon) { e.preventDefault(); if (openIcon===icon){closeTip();}else{showTip(icon);} }
+      if (icon) { e.preventDefault(); if (openIcon===icon){closeTip();}else{showTip(icon); openedByClick = true;} }
     }
     if (e.key === 'Escape') closeTip();
   });
@@ -2141,6 +2146,7 @@ document.addEventListener('DOMContentLoaded', function() {
       _lastCorrect = isCorrect;
     });
     obs.observe(root, { childList:true, subtree:true, characterData:true });
+    window.addEventListener('pagehide', function(){ try{ obs.disconnect(); }catch(e){} }, { once: true });
   });
 })();
 </script>

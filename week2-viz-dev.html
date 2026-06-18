@@ -1035,7 +1035,11 @@ function initICExplorer() {
   drawIC2D('cobb', slVal('ic-alpha'));
   setICInfo('cobb');
 
-  /* Wire controls */
+  /* Wire controls — ONCE. These control elements live OUTSIDE the board divs, so
+     freeBoard()/re-init (via resetIC3DView) never removes them; re-adding listeners on
+     each reset would stack duplicate handlers. Guard so they attach a single time. */
+  if (!window._icControlsWired) {
+    window._icControlsWired = true;
   document.getElementById('ic-alpha').addEventListener('input', function() {
     var v = parseFloat(this.value);
     document.getElementById('alpha-val').textContent = v.toFixed(2);
@@ -1087,6 +1091,7 @@ function initICExplorer() {
       canvas3d.style.opacity = '1';
     }, 180);
   });
+  }
 }
 
 /* redrawIC2DHighlight removed - see redrawIC2DAtU0 */
@@ -1918,12 +1923,16 @@ function buildOptimumBoard() {
   optObjects.push(optBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
     {strokeColor:'#0d7377',strokeWidth:2.6,highlight:false}));
 
-  /* Drop lines only: X and Y star go to sidebar, not on board */
+  /* Drop lines only when interior (both coords > 0); corner solutions skip the segments */
   if(xs>0&&ys>0){
     optObjects.push(
       optBoard.create('segment',[[0,ys],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false}),
       optBoard.create('segment',[[xs,0],[xs,ys]],{strokeColor:'#ddd',strokeWidth:1,dash:2,fixed:true,highlight:false})
     );
+  }
+  /* Write values + derivation ALWAYS — corner solutions (substitutes / quasilinear)
+     have xs or ys = 0, and must still update the sidebar and the Show-Steps panel. */
+  {
     /* Write values to sidebar result bar */
     var elXs=document.getElementById('opt-x-star');
     var elYs=document.getElementById('opt-y-star');
@@ -1970,9 +1979,9 @@ function buildOptimumBoard() {
 
   /* Optimal point */
   optObjects.push(optBoard.create('point',[xs,ys],{
-    color:C.red,size:7,fixed:true,
+    fillColor:'#0d7377',strokeColor:'#ffffff',strokeWidth:2,size:7,fixed:true,
     name:'Optimum',
-    withLabel:true,label:{offset:[9,6],fontSize:11},highlight:false
+    withLabel:true,label:{offset:[9,6],fontSize:11,cssStyle:'font-weight:600'},highlight:false
   }));
 
   optBoard.update();
@@ -3044,6 +3053,17 @@ function buildCornerExplorer() {
 }
 .verdict-at-optimum { animation: verdict-pulse 0.75s ease; border-color: #0d7377 !important; background: #f0fdfd !important; }
 
+/* Respect the OS "reduce motion" setting: keep the static end-states, drop the motion.
+   The verdict box still goes teal (border/background), it just doesn't pulse/flash/slide. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* 3D canvas wrapper: relative so reset button can be positioned inside */
 .canvas-3d-wrap { position: relative; display: block; width: 100%; }
 .btn-reset-3d {
@@ -3725,7 +3745,7 @@ function buildCornerExplorer() {
       <section class="section-block" id="sec-mrs-slider">
         <div class="section-header-row" onclick="toggleSection(this.closest('.section-block'))">
           <div style="flex:1">
-            <span class="section-number">§ New</span>
+            <span class="section-number">§ 2.10</span>
             <h2>MRS Intuition: Watch It Fall Along the Curve</h2>
           </div>
           <span class="section-chevron">▾</span>
@@ -3788,7 +3808,7 @@ function buildCornerExplorer() {
       <section class="section-block" id="sec-ic-cross">
         <div class="section-header-row" onclick="toggleSection(this.closest('.section-block'))">
           <div style="flex:1">
-            <span class="section-number">§ New</span>
+            <span class="section-number">§ 2.11</span>
             <h2>Why Indifference Curves Cannot Cross</h2>
           </div>
           <span class="section-chevron">▾</span>
@@ -3832,7 +3852,7 @@ function buildCornerExplorer() {
       <section class="section-block" id="sec-corner">
         <div class="section-header-row" onclick="toggleSection(this.closest('.section-block'))">
           <div style="flex:1">
-            <span class="section-number">§ New</span>
+            <span class="section-number">§ 2.12</span>
             <h2>Corner Solution Explorer: Perfect Substitutes</h2>
           </div>
           <span class="section-chevron">▾</span>
@@ -3949,6 +3969,7 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
 (function() {
   var tip = document.getElementById('tip-global');
   var openIcon = null;
+  var openedByClick = false;  /* true = pinned via click/keyboard; hover must not auto-close it */
 
   function showTip(icon) {
     var text = icon.getAttribute('data-tip');
@@ -3956,6 +3977,7 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
     if (openIcon && openIcon !== icon) closeTip();
     openIcon = icon;
     icon.setAttribute('aria-expanded', 'true');
+    icon.setAttribute('aria-describedby', 'tip-global');  /* SR reads the explanation, not just "expanded" */
     tip.textContent = text;
     tip.classList.add('visible');
     placeTip(icon);
@@ -3964,7 +3986,9 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
   function closeTip() {
     if (!openIcon) return;
     openIcon.setAttribute('aria-expanded', 'false');
+    openIcon.removeAttribute('aria-describedby');
     openIcon = null;
+    openedByClick = false;
     tip.classList.remove('visible');
   }
 
@@ -3985,7 +4009,7 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
     var icon = e.target.closest('.tip-icon');
     if (icon) {
       e.stopPropagation();
-      if (openIcon === icon) { closeTip(); } else { showTip(icon); }
+      if (openIcon === icon) { closeTip(); } else { showTip(icon); openedByClick = true; }
     } else {
       closeTip();
     }
@@ -3994,13 +4018,13 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
   /* Hover still works on non-touch devices as a bonus */
   document.addEventListener('mouseover', function(e) {
     var icon = e.target.closest('.tip-icon');
-    if (icon && openIcon !== icon) showTip(icon);
+    if (icon && openIcon !== icon) { showTip(icon); openedByClick = false; }
   });
   document.addEventListener('mouseout', function(e) {
     var icon = e.target.closest('.tip-icon');
     if (icon && !icon.contains(e.relatedTarget)) {
-      /* Only auto-close on mouseout if it was opened by hover (not a deliberate click) */
-      if (openIcon === icon) closeTip();
+      /* Only auto-close on mouseout if it was opened by HOVER. A click/keyboard pin stays. */
+      if (openIcon === icon && !openedByClick) closeTip();
     }
   });
 
@@ -4008,7 +4032,7 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
   document.addEventListener('keydown', function(e) {
     if ((e.key === 'Enter' || e.key === ' ') && document.activeElement) {
       var icon = document.activeElement.closest('.tip-icon');
-      if (icon) { e.preventDefault(); if (openIcon===icon){closeTip();}else{showTip(icon);} }
+      if (icon) { e.preventDefault(); if (openIcon===icon){closeTip();}else{showTip(icon); openedByClick = true;} }
     }
     if (e.key === 'Escape') closeTip();
   });
@@ -4205,6 +4229,10 @@ document.addEventListener('DOMContentLoaded', function() {
     el.addEventListener('mouseup',    _clearOptGhost);
     el.addEventListener('touchend',   _clearOptGhost);
   });
+  /* Safety net: if the mouse is released OFF the slider, the slider's own mouseup
+     never fires, leaving the ghost drawn. Clear on the window too (mirrors budget ghost). */
+  window.addEventListener('mouseup', _clearShiftGhost);
+  window.addEventListener('mouseup', _clearOptGhost);
 });
 
 /* ── 4. BFB OPTIMUM PULSE ──────────────────────────────────────
@@ -4229,6 +4257,7 @@ document.addEventListener('DOMContentLoaded', function() {
       _lastEq = isEq;
     });
     obs.observe(_verdictEl, { childList: true, subtree: true, characterData: true });
+    window.addEventListener('pagehide', function(){ try{ obs.disconnect(); }catch(e){} }, { once: true });
   }, 200);
 })();
 </script>
