@@ -666,6 +666,28 @@ function d3MoveAnchor(node,nx,ny){
   node.fx_anchor=nx;node.fy_anchor=ny;
 }
 
+// White-background "halo" behind a value label so it reads ahead of curves,
+// fills, dashed guides and axis ticks — the same treatment d3AddLabels gives
+// its force-laid-out labels. Measures the rendered text via getBBox and inserts
+// a rounded white rect just behind it. Use for static/positioned labels that
+// would otherwise collide (fig 8.3 panels, fig 8.11 axis-edge readouts).
+function d3HaloLabel(g,x,y,txt,opts){
+  opts=opts||{};
+  var t=g.append('text').attr('x',x).attr('y',y)
+    .attr('text-anchor',opts.anchor||'middle')
+    .attr('font-size',opts.size||9)
+    .attr('font-weight',opts.weight!=null?opts.weight:600)
+    .attr('fill',opts.color||'#2c3e50').text(txt);
+  var bb=t.node().getBBox();
+  var px=opts.padX!=null?opts.padX:2.5, py=opts.padY!=null?opts.padY:1;
+  g.insert('rect',function(){return t.node();})
+    .attr('x',bb.x-px).attr('y',bb.y-py)
+    .attr('width',bb.width+2*px).attr('height',bb.height+2*py).attr('rx',2.5)
+    .attr('fill','#ffffff').attr('fill-opacity',opts.bgOpacity!=null?opts.bgOpacity:0.85)
+    .attr('stroke',opts.stroke||'none').attr('stroke-width',0.7).attr('stroke-opacity',0.4);
+  return t;
+}
+
 // Registry of sims for the global mousedown/mouseup alphaTarget pattern.
 const SIM_REGISTRY=[];
 function registerSliderSim(sliderId,getSim){
@@ -933,10 +955,10 @@ function v83DrawAutarky(p){
   dyn.append('circle').attr('cx',xS(8)).attr('cy',yS(12)).attr('r',4).attr('fill','#2c3e50').attr('stroke','#fff').attr('stroke-width',1.5);
   dyn.append('line').attr('x1',xS(0)).attr('x2',xS(8)).attr('y1',yS(12)).attr('y2',yS(12)).attr('stroke','#2c3e50').attr('stroke-width',1.2).attr('stroke-dasharray','4,3');
   dyn.append('line').attr('x1',xS(8)).attr('x2',xS(8)).attr('y1',yS(12)).attr('y2',yS(0)).attr('stroke','#2c3e50').attr('stroke-width',1.2).attr('stroke-dasharray','4,3');
-  dyn.append('text').attr('x',xS(2.5)).attr('y',yS(14.8)).attr('text-anchor','middle').attr('font-size',11).attr('font-weight',700).attr('fill','#1a56db').text('CS = $32');
-  dyn.append('text').attr('x',xS(2.5)).attr('y',yS(7.5)).attr('text-anchor','middle').attr('font-size',11).attr('font-weight',700).attr('fill','#a07800').text('PS = $32');
-  dyn.append('text').attr('x',p.PAD.left-3).attr('y',yS(12)+4).attr('text-anchor','end').attr('font-size',8).attr('fill','#2c3e50').text('$12');
-  dyn.append('text').attr('x',xS(8)).attr('y',yS(0)+13).attr('text-anchor','middle').attr('font-size',8).attr('fill','#2c3e50').text('8');
+  d3HaloLabel(dyn,xS(2.5),yS(14.8),'CS = $32',{color:'#1a56db',size:11,weight:700});
+  d3HaloLabel(dyn,xS(2.5),yS(7.5),'PS = $32',{color:'#a07800',size:11,weight:700});
+  d3HaloLabel(dyn,p.PAD.left+4,yS(12)-3,'P*=$12',{anchor:'start',color:'#2c3e50',size:8,weight:600});
+  d3HaloLabel(dyn,xS(8),yS(0)+14,'Q*=8',{color:'#2c3e50',size:8,weight:600});
 }
 function v83DrawFreeTrade(p,Pw){
   const {xS,yS,dyn}=p;
@@ -954,12 +976,12 @@ function v83DrawFreeTrade(p,Pw){
   // imports bracket at Pw level
   if(QD-QS>0.5){
     dyn.append('line').attr('x1',xS(QS)).attr('x2',xS(QD)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke','#7d3c98').attr('stroke-width',3).attr('opacity',0.5);
-    dyn.append('text').attr('x',xS((QS+QD)/2)).attr('y',yS(Pw)-6).attr('text-anchor','middle').attr('font-size',8).attr('fill','#7d3c98').attr('font-weight',600).text('Imports='+(QD-QS).toFixed(0));
+    d3HaloLabel(dyn,xS((QS+QD)/2),yS(Pw)-7,'Imports='+(QD-QS).toFixed(0),{color:'#7d3c98',size:8,weight:600});
   }
-  dyn.append('text').attr('x',p.PAD.left-3).attr('y',yS(Pw)+4).attr('text-anchor','end').attr('font-size',8).attr('fill','#7d3c98').text('$'+Pw.toFixed(0));
+  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)-3,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:'#7d3c98',size:8,weight:600});
   const CS_new=0.5*(20-Pw)*(20-Pw), PS_new=0.5*QS*QS;
-  dyn.append('text').attr('x',xS(QD*0.3)).attr('y',yS((20+Pw)/2)).attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#1a56db').text('CS=$'+CS_new.toFixed(0));
-  if(QS>1.5) dyn.append('text').attr('x',xS(QS*0.35)).attr('y',yS((4+Pw)/2)).attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#a07800').text('PS=$'+PS_new.toFixed(0));
+  d3HaloLabel(dyn,xS(QD*0.3),yS((20+Pw)/2),'CS=$'+CS_new.toFixed(0),{color:'#1a56db',size:10,weight:700});
+  if(QS>1.5) d3HaloLabel(dyn,xS(QS*0.35),yS((4+Pw)/2),'PS=$'+PS_new.toFixed(0),{color:'#a07800',size:10,weight:700});
 }
 function v83DrawTariff(p,Pw,t){
   const {xS,yS,dyn}=p;
@@ -974,11 +996,11 @@ function v83DrawTariff(p,Pw,t){
   dyn.append('polygon').attr('points',`${xS(0)},${yS(4)} ${xS(QS_eff)},${yS(Peff)} ${xS(0)},${yS(Peff)}`).attr('fill',FILL_PS);
   // world price reference
   dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_free+1)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke','#7d3c98').attr('stroke-width',1.4).attr('stroke-dasharray','4,3').attr('opacity',0.6);
-  dyn.append('text').attr('x',p.PAD.left-3).attr('y',yS(Pw)+4).attr('text-anchor','end').attr('font-size',7).attr('fill','#7d3c98').text('Pᵥᵥ=$'+Pw.toFixed(0));
+  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)+9,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:'#7d3c98',size:7,weight:600});
   if(tAct>0.1){
     // tariff-inclusive price line
     dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_eff+0.5)).attr('y1',yS(Peff)).attr('y2',yS(Peff)).attr('stroke','#c0392b').attr('stroke-width',1.8).attr('stroke-dasharray','5,3');
-    dyn.append('text').attr('x',p.PAD.left-3).attr('y',yS(Peff)+4).attr('text-anchor','end').attr('font-size',8).attr('fill','#c0392b').text('$'+Peff.toFixed(0));
+    d3HaloLabel(dyn,p.PAD.left+4,yS(Peff)-3,'Pₜ=$'+Peff.toFixed(0),{anchor:'start',color:'#c0392b',size:8,weight:600});
     // Gov revenue rectangle
     if(imports_eff>0.5) dyn.append('rect').attr('x',xS(QS_eff)).attr('y',yS(Peff)).attr('width',xS(QD_eff)-xS(QS_eff)).attr('height',yS(Pw)-yS(Peff)).attr('fill',FILL_REV).attr('stroke','#2c3e50').attr('stroke-width',1);
     // DWL production triangle
@@ -986,13 +1008,13 @@ function v83DrawTariff(p,Pw,t){
     // DWL consumption triangle
     if(QD_free-QD_eff>0.3) dyn.append('polygon').attr('points',`${xS(QD_eff)},${yS(Peff)} ${xS(QD_free)},${yS(Pw)} ${xS(QD_eff)},${yS(Pw)}`).attr('fill',FILL_DWL);
     // Labels for revenue and DWL
-    if(imports_eff>2) dyn.append('text').attr('x',xS((QS_eff+QD_eff)/2)).attr('y',yS((Pw+Peff)/2)+4).attr('text-anchor','middle').attr('font-size',8).attr('font-weight',600).attr('fill','#2c3e50').text('Rev=$'+(tAct*imports_eff).toFixed(0));
-    if(QS_eff-QS_free>0.6) dyn.append('text').attr('x',xS((QS_free+QS_eff)/2)).attr('y',yS(Pw)+14).attr('text-anchor','middle').attr('font-size',7).attr('fill','#c0392b').attr('font-weight',700).text('DWL');
-    if(QD_free-QD_eff>0.6) dyn.append('text').attr('x',xS((QD_eff+QD_free)/2)).attr('y',yS(Pw)+14).attr('text-anchor','middle').attr('font-size',7).attr('fill','#c0392b').attr('font-weight',700).text('DWL');
+    if(imports_eff>2) d3HaloLabel(dyn,xS((QS_eff+QD_eff)/2),yS((Pw+Peff)/2)+4,'Rev=$'+(tAct*imports_eff).toFixed(0),{color:'#2c3e50',size:8,weight:600});
+    if(QS_eff-QS_free>0.6) d3HaloLabel(dyn,xS((QS_free+QS_eff)/2),yS(Pw)+15,'DWL',{color:'#c0392b',size:7,weight:700});
+    if(QD_free-QD_eff>0.6) d3HaloLabel(dyn,xS((QD_eff+QD_free)/2),yS(Pw)+15,'DWL',{color:'#c0392b',size:7,weight:700});
   }
   const CS_eff=0.5*(20-Peff)*(20-Peff), PS_eff=0.5*QS_eff*QS_eff;
-  dyn.append('text').attr('x',xS(QD_eff*0.28)).attr('y',yS((20+Peff)/2)).attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#1a56db').text('CS=$'+CS_eff.toFixed(0));
-  if(QS_eff>1.5) dyn.append('text').attr('x',xS(QS_eff*0.35)).attr('y',yS((4+Peff)/2)).attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#a07800').text('PS=$'+PS_eff.toFixed(0));
+  d3HaloLabel(dyn,xS(QD_eff*0.28),yS((20+Peff)/2),'CS=$'+CS_eff.toFixed(0),{color:'#1a56db',size:10,weight:700});
+  if(QS_eff>1.5) d3HaloLabel(dyn,xS(QS_eff*0.35),yS((4+Peff)/2),'PS=$'+PS_eff.toFixed(0),{color:'#a07800',size:10,weight:700});
 }
 function v83Init(){
   v83panelAL=v83MakePanel('cvs83a-wrap');
@@ -1673,13 +1695,14 @@ function v811Draw(){
   // Demand-curve intersection dots
   v811dyn.append('circle').attr('cx',scX(QA)).attr('cy',scY(PA)).attr('r',4).attr('fill',STROKE_CS).attr('stroke','#fff').attr('stroke-width',1.5);
   v811dyn.append('circle').attr('cx',scX(QR)).attr('cy',scY(PR)).attr('r',4).attr('fill',STROKE_CS).attr('stroke','#fff').attr('stroke-width',1.5);
-  // Y-axis price labels
-  v811dyn.append('text').attr('x',D3PAD.left-4).attr('y',scY(PA)+4).attr('text-anchor','end').attr('font-size',9).attr('font-weight',700).attr('fill','#2c3e50').text('PA=$'+PA.toFixed(0));
-  v811dyn.append('text').attr('x',D3PAD.left-4).attr('y',scY(AC_QR)+4).attr('text-anchor','end').attr('font-size',9).attr('fill','#c0392b').text('AC=$'+AC_QR.toFixed(1));
-  v811dyn.append('text').attr('x',D3PAD.left-4).attr('y',scY(PR)+4).attr('text-anchor','end').attr('font-size',9).attr('font-weight',700).attr('fill','#2c3e50').text('PR=$'+PR.toFixed(0));
-  // X-axis quantity labels
-  v811dyn.append('text').attr('x',scX(QA)).attr('y',scY(0)+15).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#2c3e50').text('QA='+QA.toFixed(0));
-  v811dyn.append('text').attr('x',scX(QR)).attr('y',scY(0)+15).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#2c3e50').text('QR='+QR.toFixed(0));
+  // Price labels — sit just inside the axis on each dashed line, haloed so they
+  // clear the y-axis $ ticks and the guide lines instead of stacking on them.
+  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PA)-3,'PA=$'+PA.toFixed(0),{anchor:'start',color:'#2c3e50',size:9,weight:700});
+  d3HaloLabel(v811dyn,D3PAD.left+5,scY(AC_QR)-3,'AC=$'+AC_QR.toFixed(1),{anchor:'start',color:'#c0392b',size:9,weight:600});
+  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PR)-3,'PR=$'+PR.toFixed(0),{anchor:'start',color:'#2c3e50',size:9,weight:700});
+  // Quantity labels — own row below the x-axis tick numbers, haloed.
+  d3HaloLabel(v811dyn,scX(QA),scY(0)+24,'QA='+QA.toFixed(0),{color:'#2c3e50',size:9,weight:600});
+  d3HaloLabel(v811dyn,scX(QR),scY(0)+24,'QR='+QR.toFixed(0),{color:'#2c3e50',size:9,weight:600});
   document.getElementById('v811-pa-val').textContent='$'+PA.toFixed(0);
   document.getElementById('v811-pr-val').textContent='$'+PR.toFixed(0);
   const netColor=profit>0.5?'#1e8449':profit<-0.5?'#c0392b':'#2c3e50';
