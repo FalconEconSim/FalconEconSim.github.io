@@ -110,8 +110,9 @@
   .chat-input textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(26,86,219,0.12); }
   .chat-send { font-family:inherit; font-size:0.88rem; font-weight:600; color:#fff; background:var(--accent); border:none; border-radius:9px; padding:0.6rem 1rem; cursor:pointer; flex-shrink:0; }
   .chat-send:disabled { opacity:0.5; cursor:not-allowed; }
-  .chat-foot { display:flex; align-items:center; justify-content:space-between; gap:0.6rem; padding:0.45rem 1.1rem 0.7rem; min-height:1.4rem; }
-  #chatStatus { font-size:0.76rem; color:var(--muted); }
+  .chat-foot { display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem 0.7rem; padding:0.45rem 1.1rem 0.7rem; min-height:1.4rem; }
+  .chat-model { font-family:inherit; font-size:0.76rem; color:var(--text); background:var(--white); border:1px solid var(--rule); border-radius:7px; padding:0.25rem 0.4rem; cursor:pointer; }
+  #chatStatus { font-size:0.76rem; color:var(--muted); flex:1; min-width:120px; }
   .chat-notes { font-family:inherit; font-size:0.78rem; font-weight:600; color:var(--accent); background:none; border:1px solid var(--accent-mid); border-radius:7px; padding:0.3rem 0.7rem; cursor:pointer; }
   .chat-notes:hover { background:var(--accent-light); }
   .chat-disabled { font-size:0.84rem; color:#92400e; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:0.7rem 0.9rem; margin:0.9rem 1.1rem; line-height:1.55; }
@@ -124,7 +125,7 @@
   <a class="back-link" href="dev.html">&larr; EC224 Developer Pages</a>
   <span class="dev-tag">Developer Only &middot; Concept Prototype</span>
   <h1 class="dev-title">Weekly Recap Video &amp; NotebookLM Bridge</h1>
-  <p class="dev-sub">Two working pieces: (1) a real &le;5-min NotebookLM-generated <strong>recap video</strong> for the top of each week, watched before the next class, and (2) a live <strong>&ldquo;Ask Claude&rdquo;</strong> chat wired into the course material &mdash; the practical answer to the professor&rsquo;s &ldquo;notebook that always knows the latest site&rdquo; idea. Scroll to the bottom for the honest feasibility assessment.</p>
+  <p class="dev-sub">Two working pieces: (1) a real &le;5-min NotebookLM-generated <strong>recap video</strong> for the top of each week, watched before the next class, and (2) a live <strong>&ldquo;Ask the Course AI&rdquo;</strong> chat &mdash; a free, open-source model that runs in the browser (no key, no cost) &mdash; the practical answer to the professor&rsquo;s &ldquo;notebook that always knows the latest site&rdquo; idea. Scroll to the bottom for the honest feasibility assessment.</p>
   <p class="dev-from">Prompted by <strong>Prof. Naveen</strong>&rsquo;s note &mdash; explored ahead of the conversation. Nothing here is wired into the live student site.</p>
 
   <!-- ============ SECTION 1: RECAP VIDEO ============ -->
@@ -165,13 +166,13 @@
   <!-- ============ SECTION 2: ASK CLAUDE (LIVE) ============ -->
   <section class="block">
     <div class="block-kicker">Idea 2 &middot; Ask the course</div>
-    <h2>Ask Claude about EC224</h2>
-    <p class="lead">The professor wanted a link to a NotebookLM that always reflects the latest site content &mdash; but NotebookLM can&rsquo;t stay auto-synced. So instead, this is <strong>Claude wired directly into the course material</strong>. It has the Week&nbsp;2 textbook chapter, the concept deck, and the lecture-video transcripts loaded, plus a map of the whole site. Ask it anything, or have it write you study notes you can download.</p>
+    <h2>Ask the Course AI</h2>
+    <p class="lead">The professor wanted a link to a NotebookLM that always reflects the latest site content &mdash; but NotebookLM can&rsquo;t stay auto-synced. So instead, this is a <strong>free, open-source AI that runs entirely in your browser</strong> &mdash; no sign-up, no API key, no cost, ever. It&rsquo;s loaded with the Week&nbsp;2 essentials and a map of the site, so you can ask questions or have it draft study notes to download. The first time you use it, a small model downloads to your browser once, then runs locally on your own machine.</p>
 
     <div class="chat" id="chat">
       <div class="chat-log" id="chatLog" aria-live="polite">
         <div class="msg bot">
-          <div class="bubble">Hi! I&rsquo;m the EC224 study assistant. I know the Week&nbsp;2 material (preferences, indifference curves, the budget constraint, and the consumer optimum) and where everything lives on the site. Ask me a question, or tap a starter below.</div>
+          <div class="bubble">Hi! I&rsquo;m a small open-source AI running right in your browser &mdash; free, private, no sign-up. I&rsquo;ve got the Week&nbsp;2 essentials loaded (preferences, indifference curves, the budget constraint, the optimum). Ask me a question or tap a starter. Heads-up: I&rsquo;m a lightweight model, so sanity-check anything important.</div>
         </div>
       </div>
 
@@ -187,12 +188,17 @@
         <button class="chat-send" id="chatSend" type="submit" aria-label="Send">Send</button>
       </form>
       <div class="chat-foot">
+        <select id="modelSel" class="chat-model" aria-label="Choose model">
+          <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Fastest &middot; Llama 3.2 1B (~0.9&nbsp;GB)</option>
+          <option value="Qwen2.5-1.5B-Instruct-q4f16_1-MLC" selected>Balanced &middot; Qwen2.5 1.5B (~1.2&nbsp;GB)</option>
+          <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Best &middot; Llama 3.2 3B (~2.3&nbsp;GB)</option>
+        </select>
         <span id="chatStatus"></span>
         <button class="chat-notes" id="chatNotes" type="button" hidden>&#8681; Download last answer as notes</button>
       </div>
     </div>
 
-    <div class="note"><strong>How it works:</strong> the chat calls a small Cloudflare Worker that holds the Anthropic API key as a server-side secret &mdash; students never see or need a key. The Worker injects the Week&nbsp;2 course content as context, so answers are grounded in <em>your</em> material and notation. Scoped to Week&nbsp;2 for this prototype; the same setup extends to every week.</div>
+    <div class="note"><strong>How it works:</strong> the model runs 100% in your browser via WebGPU &mdash; nothing is sent to a server, there&rsquo;s no API key, and it costs nothing to run. The Week&nbsp;2 course content is baked into the page as the model&rsquo;s context. Needs a recent <strong>Chrome or Edge</strong> and a reasonably capable computer; the first message triggers a one-time model download. Scoped to Week&nbsp;2 for this prototype; the same setup extends to every week.</div>
   </section>
 
   <!-- ============ SECTION 3: FEASIBILITY ============ -->
@@ -200,8 +206,8 @@
     <summary>Developer Notes &amp; Feasibility</summary>
     <div class="feas-body">
 
-      <div class="feas-q"><span class="verdict v-yes">Chosen</span>Why Claude chat instead of a NotebookLM &ldquo;bridge&rdquo; link?</div>
-      <p>The professor wanted a NotebookLM link that always reflects the latest site content. The blocker (below) is that NotebookLM has <strong>no real API and can&rsquo;t stay auto-synced</strong> &mdash; sources are refreshed by hand. So Idea&nbsp;2 is now a Claude chat embedded directly in the page: a small <strong>Cloudflare Worker</strong> holds the Anthropic API key as a server-side secret and injects the course content as context, so students just ask &mdash; no key, no separate app. Updating its knowledge is a content rebuild + redeploy, fully under our control. Scoped to Week&nbsp;2 for this prototype.</p>
+      <div class="feas-q"><span class="verdict v-yes">Chosen</span>Why an in-browser open-source AI instead of a NotebookLM &ldquo;bridge&rdquo;?</div>
+      <p>The professor wanted a NotebookLM link that always reflects the latest site content. The blocker (below) is that NotebookLM has <strong>no real API and can&rsquo;t stay auto-synced</strong>. The constraint we then chose: <strong>zero cost, no API keys, nothing to maintain</strong>. The fit is an open-source model run client-side via <a href="https://github.com/mlc-ai/web-llm" target="_blank" rel="noopener">WebLLM / WebGPU</a> (e.g. Llama&nbsp;3.2, Qwen2.5): it&rsquo;s free forever, needs no server or key, hosts on plain GitHub Pages, and keeps every conversation private on the student&rsquo;s machine. Trade-offs we accepted: the model is much smaller than a hosted frontier model (weaker answers), there&rsquo;s a one-time ~1&nbsp;GB download, and it needs a WebGPU browser + decent hardware. Course content is baked into the page; updating it is a content edit + push. Scoped to Week&nbsp;2 for this prototype. (A paid/keyed option like a Cloudflare Worker + the Anthropic API gives far better answers if budget ever allows.)</p>
 
       <div class="feas-q"><span class="verdict v-partial">Partial</span>Can we auto-sync GitHub content into NotebookLM?</div>
       <p>Not cleanly, and not officially. There is no public NotebookLM API. The community CLI <a href="https://github.com/tmc/nlm" target="_blank" rel="noopener">tmc/nlm</a> can create/list notebooks, add sources (URLs, PDFs, text), generate audio/video overviews, and run with <code>--json</code> for scripting &mdash; so a GitHub Action <em>could</em> re-push sources whenever the site changes. The catch: it authenticates by <strong>extracting browser cookies/auth tokens</strong> (Chrome/Brave/Edge) rather than a real API key. Those tokens expire, so an unattended CI job would break periodically and need a human to refresh credentials. Treat automation as &ldquo;possible but fragile,&rdquo; not &ldquo;set and forget.&rdquo;</p>
@@ -218,7 +224,7 @@
       <div class="rec">
         <h3>Recommendation</h3>
         <p><strong>Recap video:</strong> Worth piloting &mdash; but treat NotebookLM as a <em>production tool</em>, not an integration. Generate the recap, download it, and host it the same way as the existing lecture videos so it loads reliably and looks on-brand. Pilot one week (the Week&nbsp;2&rarr;3 recap you already made) before committing to all eight.</p>
-        <p><strong>&ldquo;Ask the course&rdquo;:</strong> Went with the embedded Claude chat over a NotebookLM bridge &mdash; it&rsquo;s live in-page, needs no student logins or keys (the Worker hides the API key), and its knowledge is fully under our control. Next steps if it pilots well: extend the corpus to all eight weeks, and before opening it to the whole class add rate limiting / Cloudflare Turnstile and per-week scoping. A public NotebookLM notebook (below) remains a fine zero-code fallback.</p>
+        <p><strong>&ldquo;Ask the course&rdquo;:</strong> Went with a free, open-source AI running in the browser (WebLLM) over a NotebookLM bridge &mdash; it&rsquo;s live in-page, costs nothing, needs no keys or student logins, and keeps chats private on-device. Next steps if it pilots well: extend the baked-in content to all eight weeks, try a slightly larger model for better answers, and add a clear &ldquo;first-load downloads ~1&nbsp;GB&rdquo; heads-up. If answer quality proves too limiting for students, the keyed Cloudflare Worker + Anthropic path (kept on hand) is the upgrade. A public NotebookLM notebook (below) remains a fine zero-code fallback.</p>
       </div>
 
       <div class="srcs">
@@ -236,32 +242,46 @@
 </div>
 
 <script>
+/* EC224 "Ask the Course AI" — a free, open-source model running entirely in the
+ * browser via WebLLM/WebGPU. No API key, no server, no cost. The Week 2 course
+ * content is base64-baked below and injected as the model's context. */
 (function () {
-  // ===== CONFIG =====
-  // Paste your deployed Cloudflare Worker URL here (see claude-worker/README.md).
-  // Until then the chat shows a "not connected yet" state.
-  const CLAUDE_ENDPOINT = "";
+  // ---- Week 2 course context (cleaned concept deck + site map, base64) ----
+  const CTX_B64 = "RUMyMjQgU0lURSBNQVAgKEludGVybWVkaWF0ZSBNaWNyb2Vjb25vbWljcywgQmVudGxleSBVbml2ZXJzaXR5KToKRWFjaCB3ZWVrIE4gaGFzOiB3ZWVrTi5odG1sIChodWIpLCB3ZWVrTi1zbGlkZXMuaHRtbCAoc2xpZGVzKSwgd2Vla04tdmlkZW9zLmh0bWwgKGxlY3R1cmUgdmlkZW9zKSwKd2Vla04tZmxhc2hjYXJkcy5odG1sIChjb25jZXB0IGZsYXNoY2FyZHMpLCB3ZWVrTi12aXouaHRtbCAoaW50ZXJhY3RpdmUgRDMgZmlndXJlcyksIHNvbWUgd2Vla04tcHJhY3RpY2UuaHRtbC4KV2Vla3MgMS04IGV4aXN0LiBXZWVrIDIgPSBjb25zdW1lciBjaG9pY2UgKHRoaXMgYXNzaXN0YW50J3Mgc3BlY2lhbHR5KS4gV2VlayAzID0gZGVtYW5kICYgU2x1dHNreS9IaWNrcyBlZmZlY3RzLgoKIyBXZWVrIDIg4oCUIEtleSBDb25jZXB0cyAmIEZvcm11bGFlIChFQzIyNCkKCj4gQ29uc3VtZXIgQ2hvaWNlIOKAlCBQcmVmZXJlbmNlcywgQnVkZ2V0IENvbnN0cmFpbnRzICYgdGhlIE9wdGltdW0uIERpc3RpbGxlZCBmcm9tIHRoZSBXZWVrIDIgcmV2aWV3IGRlY2sgb2YgdGhlIEVDMjI0IGNvdXJzZSBzaXRlLiBVc2UgYXMgYSBOb3RlYm9va0xNIHNvdXJjZSBhbG9uZ3NpZGUgdGhlIHRleHRib29rIGNoYXB0ZXIsIHNsaWRlIFBERnMsIGFuZCAod2hlbiBhZGRlZCkgdGhlIHZpZGVvIHRyYW5zY3JpcHRzLgoKIyMjIDEuIFdoYXQgaXMgYSBidWRnZXQgY29uc3RyYWludCwgYW5kIHdoYXQgZG9lcyBpdCByZXByZXNlbnQgZ2VvbWV0cmljYWxseT8gCkFsbCBjb21iaW5hdGlvbnMgb2YgZ29vZHMgYSBjb25zdW1lciBjYW4gYWZmb3JkIGdpdmVuIGluY29tZSBJIGFuZCBwcmljZXMgUHgsIFB5LiBHZW9tZXRyaWNhbGx5OiBhIHN0cmFpZ2h0IGxpbmUgd2l0aCB4LWludGVyY2VwdCBJL1B4LCB5LWludGVyY2VwdCBJL1B5LCBhbmQgc2xvcGUgLVB4L1B5LiBQb2ludHMgb24gb3IgaW5zaWRlIHRoZSBsaW5lIGFyZSBmZWFzaWJsZS4KCiMjIyAyLiBXaGF0IGRvZXMgdGhlIHNsb3BlIG9mIHRoZSBidWRnZXQgbGluZSBlcXVhbCwgYW5kIHdoYXQgZG9lcyBpdCBtZWFuIGVjb25vbWljYWxseT8gClNsb3BlID0gLVB4L1B5LiBUaGUgbWFya2V0J3MgcmF0ZSBvZiBleGNoYW5nZTogaG93IG1hbnkgdW5pdHMgb2YgWSB5b3UgbXVzdCBnaXZlIHVwIHRvIGJ1eSBvbmUgbW9yZSB1bml0IG9mIFguIFRoaXMgaXMgdGhlIG9wcG9ydHVuaXR5IGNvc3Qgb2YgWCBpbiB0ZXJtcyBvZiBZLgoKIyMjIDMuIFdoYXQgaXMgYW4gaW5kaWZmZXJlbmNlIGN1cnZlLCBhbmQgd2hhdCBwcm9wZXJ0eSBndWFyYW50ZWVzIHRoZXkgbmV2ZXIgY3Jvc3M/IApBIGN1cnZlIHNob3dpbmcgYWxsIGJ1bmRsZXMgeWllbGRpbmcgdGhlIHNhbWUgdXRpbGl0eS4gVGhleSBuZXZlciBjcm9zcyBiZWNhdXNlIHByZWZlcmVuY2VzIGFyZSB0cmFuc2l0aXZlIGFuZCBtb25vdG9uZS4gSWYgdHdvIGN1cnZlcyBjcm9zc2VkLCBhIHNpbmdsZSBidW5kbGUgd291bGQgaW1wbHkgdHdvIGRpZmZlcmVudCB1dGlsaXR5IGxldmVscywgYSBjb250cmFkaWN0aW9uLgoKIyMjIDQuIERlZmluZSB0aGUgTWFyZ2luYWwgUmF0ZSBvZiBTdWJzdGl0dXRpb24uIEhvdyBpcyBpdCByZWxhdGVkIHRvIG1hcmdpbmFsIHV0aWxpdGllcz8gCk1SUyA9IHRoZSByYXRlIGF0IHdoaWNoIGEgY29uc3VtZXIgd2lsbGluZ2x5IHRyYWRlcyBZIGZvciBvbmUgbW9yZSBYLCBob2xkaW5nIHV0aWxpdHkgY29uc3RhbnQuIE1SUyA9IC1NVXggLyBNVXkuIEl0IGVxdWFscyB0aGUgKG5lZ2F0aXZlKSBzbG9wZSBvZiB0aGUgaW5kaWZmZXJlbmNlIGN1cnZlIGF0IGFueSBidW5kbGU7IHxNUlN8IGVxdWFscyB0aGUgYWJzb2x1dGUgc2xvcGUuCgojIyMgNS4gV2hhdCBpcyB0aGUgY29uc3VtZXIgb3B0aW11bT8gU3RhdGUgaXQgaW4gYm90aCBncmFwaGljYWwgYW5kIGFsZ2VicmFpYyB0ZXJtcy4gClRoZSBhZmZvcmRhYmxlIGJ1bmRsZSBtYXhpbWlzaW5nIHV0aWxpdHkuIEdyYXBoaWNhbGx5OiB0aGUgaGlnaGVzdCBpbmRpZmZlcmVuY2UgY3VydmUgdGFuZ2VudCB0byB0aGUgYnVkZ2V0IGxpbmUuIEFsZ2VicmFpY2FsbHk6IE1SUyA9IFB4L1B5IGFuZCBQeCB4ICsgUHkgeSA9IEkgYm90aCBob2xkIHNpbXVsdGFuZW91c2x5LgoKIyMjIDYuIFdoYXQgZGlzdGluZ3Vpc2hlcyBhIGNvcm5lciBzb2x1dGlvbiBmcm9tIGFuIGludGVyaW9yIHNvbHV0aW9uPyAKQW4gaW50ZXJpb3Igc29sdXRpb24gaGFzIHgqPjAgYW5kIHkqPjAgd2l0aCB0YW5nZW5jeSBjb25kaXRpb24gTVJTPVB4L1B5LiBBIGNvcm5lciBzb2x1dGlvbiBoYXMgeCo9MCBvciB5Kj0wLiBUaGUgY29uc3VtZXIgc3BlbmRzIGFsbCBpbmNvbWUgb24gb25lIGdvb2QgKGUuZy4gcGVyZmVjdCBzdWJzdGl0dXRlcyB3aGVuIE1SUyBkb2VzIG5vdCBlcXVhbCBQeC9QeSBhdCBhbnkgaW50ZXJpb3IgcG9pbnQpLgoKIyMjIDcuIEEgc3RlZXBlciBpbmRpZmZlcmVuY2UgY3VydmUgaW1wbGllcyBhIGhpZ2hlciBNUlMuIApUcnVlLiBNUlMgZXF1YWxzIHRoZSBhYnNvbHV0ZSBzbG9wZSBvZiB0aGUgaW5kaWZmZXJlbmNlIGN1cnZlLiBTdGVlcGVyID0gbGFyZ2VyIE1SUy4gVGhlIGNvbnN1bWVyIHJlcXVpcmVzIG1vcmUgWSB0byBjb21wZW5zYXRlIGZvciBsb3Npbmcgb25lIHVuaXQgb2YgWCwgcmVmbGVjdGluZyBzdHJvbmdlciBwcmVmZXJlbmNlIGZvciBYIGF0IHRoYXQgYnVuZGxlLgoKIyMjIDguIElmIGluY29tZSBkb3VibGVzIGFuZCBib3RoIHByaWNlcyBkb3VibGUsIHRoZSBidWRnZXQgc2V0IGlzIHVuY2hhbmdlZC4gClRydWUuIFRoZSBidWRnZXQgc2V0IGlzIFB4IHggKyBQeSB5IOKJpCBJLiBNdWx0aXBseWluZyBJLCBQeCwgYW5kIFB5IGJ5IHRoZSBzYW1lIGNvbnN0YW50IGxlYXZlcyBpbnRlcmNlcHRzIEkvUHggYW5kIEkvUHkgdW5jaGFuZ2VkLiBPbmx5IHJlbGF0aXZlIHByaWNlcyBhbmQgcmVhbCBpbmNvbWUgbWF0dGVyLgoKIyMjIDkuIFR3byBpbmRpZmZlcmVuY2UgY3VydmVzIGZvciB0aGUgc2FtZSBjb25zdW1lciBjYW4gaW50ZXJzZWN0IGlmIHRoZSBjb25zdW1lciBpcyBpbmRpZmZlcmVudCBiZXR3ZWVuIHRoZSBidW5kbGVzLiAKRmFsc2UuIElmIHRoZXkgY3Jvc3NlZCwgdGhlIGludGVyc2VjdGlvbiBidW5kbGUgd291bGQgbGllIG9uIGJvdGggY3VydmVzLCBpbXBseWluZyB0d28gZGlmZmVyZW50IHV0aWxpdHkgbGV2ZWxzIHNpbXVsdGFuZW91c2x5LCB2aW9sYXRpbmcgdHJhbnNpdGl2ZSwgY29uc2lzdGVudCBwcmVmZXJlbmNlcy4KCiMjIyAxMC4gQXQgdGhlIGNvbnN1bWVyIG9wdGltdW0sIHRoZSBjb25zdW1lciBoYXMgZXhoYXVzdGVkIGFsbCBnYWlucyBmcm9tIHRyYWRlIHdpdGggdGhlIG1hcmtldC4gClRydWUuIEF0IE1SUz1QeC9QeSwgc3ViamVjdGl2ZSB2YWx1YXRpb24gZXF1YWxzIHRoZSBtYXJrZXQncyBleGNoYW5nZSByYXRlLiBObyByZWFsbG9jYXRpb24gb2Ygc3BlbmRpbmcgY2FuIGluY3JlYXNlIHV0aWxpdHkuIEFsbCBtdXR1YWxseSBiZW5lZmljaWFsIHRyYWRlcyBoYXZlIGJlZW4gbWFkZS4KCiMjIyAxMS4gRm9yIHBlcmZlY3QgY29tcGxlbWVudHMsIHRoZSBNUlMgaXMgZGVmaW5lZCBldmVyeXdoZXJlIGFsb25nIHRoZSBpbmRpZmZlcmVuY2UgY3VydmUuIApGYWxzZS4gUGVyZmVjdCBjb21wbGVtZW50IGN1cnZlcyBhcmUgTC1zaGFwZWQuIEF0IHRoZSBraW5rICh2ZXJ0ZXgpIE1SUyBpcyB1bmRlZmluZWQuIEFsb25nIHZlcnRpY2FsL2hvcml6b250YWwgc2VnbWVudHMgdGhlIHNsb3BlIGlzIDAgb3IgaW5maW5pdHkuCgojIyMgMTIuIEEgcmlzZSBpbiBQeCByb3RhdGVzIHRoZSBidWRnZXQgbGluZSBpbndhcmQgYWxvbmcgdGhlIHgtYXhpcyBvbmx5LCBsZWF2aW5nIHRoZSB5LWludGVyY2VwdCB1bmNoYW5nZWQuIApUcnVlLiBUaGUgeS1pbnRlcmNlcHQgSS9QeSBpcyB1bmFmZmVjdGVkIGJ5IGEgY2hhbmdlIGluIFB4LiBUaGUgeC1pbnRlcmNlcHQgSS9QeCBmYWxscyBhcyBQeCByaXNlcy4gVGhlIGxpbmUgcGl2b3RzIGlud2FyZCBhcm91bmQgdGhlIHktaW50ZXJjZXB0LCBiZWNvbWluZyBzdGVlcGVyLgoKIyMjIDEzLiBBdCB0aGUgY29uc3VtZXIgb3B0aW11bSwgTVJTID0gX19fIApNUlMgPSBQeCAvIFB5IFRoZSB0YW5nZW5jeSBjb25kaXRpb24uIENvbnN1bWVyJ3Mgd2lsbGluZ25lc3MgdG8gdHJhZGUgbXVzdCBlcXVhbCB0aGUgbWFya2V0J3MgcmF0ZSBvZiBleGNoYW5nZS4gSWYgTVJTID4gUHgvUHksIHRoZSBjb25zdW1lciB2YWx1ZXMgWCBtb3JlIHRoYW4gdGhlIG1hcmtldCBhbmQgc2hvdWxkIGJ1eSBtb3JlIFguCgojIyMgMTQuIEZvciBVID0gWF5czrEgWV5cYmV0YSAoQ29iYi1Eb3VnbGFzKSwgdGhlIG9wdGltYWwgc2hhcmUgb2YgaW5jb21lIHNwZW50IG9uIFggaXMgX19fIApQeCB4KiA9IFxkZnJhY1zOsVzOsStcYmV0YSAqIEkgQSBmaXhlZCBmcmFjdGlvbiBczrEvKFzOsStcYmV0YSkgb2YgaW5jb21lIGlzIGFsd2F5cyBzcGVudCBvbiBYLCByZWdhcmRsZXNzIG9mIHByaWNlcy4gRGVtYW5kIGZvciBYIGlzIGluZGVwZW5kZW50IG9mIFB5LgoKIyMjIDE1LiBUaGUgYnVkZ2V0IGNvbnN0cmFpbnQgY2FuIGJlIHdyaXR0ZW4gYXMgX19fID0gSSAKUHggKiB4ICsgUHkgKiB5ID0gSSBTcGVuZGluZyBvbiBYIHBsdXMgWSBleGhhdXN0cyBpbmNvbWUuIFBvaW50cyBiZWxvdyB0aGUgbGluZSBsZWF2ZSBpbmNvbWUgdW5zcGVudCwgd2hpY2ggaXMgc3Vib3B0aW1hbCB1bmRlciBtb25vdG9uZSBwcmVmZXJlbmNlcy4KCiMjIyAxNi4gTVJTID0gTVV4L01VeS4gRm9yIFUgPSB4eSwgY29tcHV0ZSBNUlMgYXQgYnVuZGxlICgyLCA0KS4gCk1VeCA9IHkgPSA0LFwgICBNVXkgPSB4ID0gMiBNUlMgPSAtTVV4L01VeSA9IC00LzIgPSAtMiBBdCAoMiwgNCkgdGhlIGNvbnN1bWVyIGlzIHdpbGxpbmcgdG8gZ2l2ZSB1cCAyIHVuaXRzIG9mIFkgZm9yIDEgbW9yZSBYICh8TVJTfD0yKS4gSWYgUHgvUHkgPCAyLCB0aGV5IHNob3VsZCBidXkgbW9yZSBYLgoKIyMjIDE3LiBGb3IgcGVyZmVjdCBzdWJzdGl0dXRlcyBVID0gYVggKyBiWSwgd2hhdCBpcyB0aGUgb3B0aW11bSB3aGVuIFB4L1B5IDwgYS9iPyAKQ29ybmVyIHNvbHV0aW9uOiB4KiA9IEkvUHgsIHkqID0gMCBYIGlzIGNoZWFwIHJlbGF0aXZlIHRvIGhvdyBtdWNoIHRoZSBjb25zdW1lciB2YWx1ZXMgaXQuIEV2ZXJ5IGRvbGxhciBidXlzIG1vcmUgdXRpbGl0eSB2aWEgWCwgc28gc3BlbmQgYWxsIGluY29tZSBvbiBYLiBNUlMgPSBhL2IgPiBQeC9QeSBhdCBldmVyeSBpbnRlcmlvciBwb2ludC4KCiMjIyAxOC4gQSBidW5kbGUgbGllcyBzdHJpY3RseSBiZWxvdyB0aGUgYnVkZ2V0IGxpbmUuIElzIGl0IGZlYXNpYmxlPyBJcyBpdCBvcHRpbWFsPyBXaHkgb3Igd2h5IG5vdD8gCkZlYXNpYmxlOiBZZXMsIHNpbmNlIFB4IHggKyBQeSB5IDwgSS4gT3B0aW1hbDogTm8uIFVuZGVyIG1vbm90b25lIHByZWZlcmVuY2VzIHRoZXJlIGFsd2F5cyBleGlzdHMgYSBidW5kbGUgb24gdGhlIGJ1ZGdldCBsaW5lIHdpdGggbW9yZSBvZiBhdCBsZWFzdCBvbmUgZ29vZC4gTGVhdmluZyBpbmNvbWUgdW5zcGVudCBjYW5ub3QgYmUgb3B0aW1hbC4KCiMjIyAxOS4gVGhlIGJ1ZGdldCBsaW5lIGN1dHMgdGhyb3VnaCBhbiBpbmRpZmZlcmVuY2UgY3VydmUgKG5vdCB0YW5nZW50KS4gQ2FuIHRoZSBjb25zdW1lciBkbyBiZXR0ZXI/IApZZXMuIFdoZW4gdGhlIGxpbmUgY3Jvc3NlcyB0aGUgY3VydmUsIHBhcnQgb2YgdGhlIGJ1ZGdldCBsaW5lIGxpZXMgYWJvdmUgaXQsIHJlYWNoaW5nIGEgaGlnaGVyIGluZGlmZmVyZW5jZSBjdXJ2ZS4gVGhlIGNvbnN1bWVyIG1vdmVzIGFsb25nIHRoZSBidWRnZXQgbGluZSB0byBoaWdoZXIgdXRpbGl0eS4gT25seSBhdCB0YW5nZW5jeSBpcyBubyBpbXByb3ZlbWVudCBwb3NzaWJsZS4KCiMjIyAyMC4gSG93IGRvZXMgdGhlIG9wdGltYWwgYnVuZGxlIHNoaWZ0IHdoZW4gUHggZmFsbHMsIGZvciBhIENvYmItRG91Z2xhcyBjb25zdW1lcj8gV2hpY2ggY3VydmUgbW92ZXM/IApCdWRnZXQgbGluZSByb3RhdGVzIG91dHdhcmQgKHktaW50ZXJjZXB0IGZpeGVkOyB4LWludGVyY2VwdCByaXNlcykuIEluZGlmZmVyZW5jZSBjdXJ2ZSBtYXAgaXMgZml4ZWQuIE5ldyBvcHRpbXVtIGlzIG9uIGEgaGlnaGVyIGN1cnZlLiB4KiA9IFzOsSBJL1soXM6xK1xiZXRhKVB4XSByaXNlczsgeSogdW5jaGFuZ2VkLgo=";
+  const COURSE = new TextDecoder().decode(Uint8Array.from(atob(CTX_B64), c => c.charCodeAt(0)));
 
-  const log = document.getElementById('chatLog');
-  const form = document.getElementById('chatForm');
-  const box = document.getElementById('chatBox');
-  const sendBtn = document.getElementById('chatSend');
-  const statusEl = document.getElementById('chatStatus');
-  const notesBtn = document.getElementById('chatNotes');
-  const startersWrap = document.getElementById('starters');
+  const SYSTEM =
+    "You are the EC224 study assistant for Bentley University's Intermediate Microeconomics course. " +
+    "You help economics and finance undergraduates understand Week 2 (consumer choice). " +
+    "Use the COURSE NOTES below and prefer the course's own notation: MRS = MUx/MUy, budget slope = -Px/Py, " +
+    "consumer optimum = (MRS = Px/Py) together with (Px*x + Py*y = I). " +
+    "Give the intuition first, then the math. Be clear and concise. " +
+    "If a question is outside the notes, answer from general microeconomics and say so briefly. " +
+    "You can write study notes, summaries, and worked examples on request.\n\n=== COURSE NOTES ===\n" + COURSE;
 
-  const history = [];          // [{role, content}]
-  let busy = false;
-  let lastAnswer = '';
+  const els = {
+    log: document.getElementById('chatLog'),
+    form: document.getElementById('chatForm'),
+    box: document.getElementById('chatBox'),
+    send: document.getElementById('chatSend'),
+    status: document.getElementById('chatStatus'),
+    notes: document.getElementById('chatNotes'),
+    starters: document.getElementById('starters'),
+    model: document.getElementById('modelSel'),
+  };
 
-  // ---- minimal, safe markdown (escape first, then bold/code) ----
+  const history = [];
+  let engine = null, loadedModel = null, busy = false, lastAnswer = '';
+  let createEngine = null; // lazily imported from the CDN
+
   function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function md(s){
     return esc(s)
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/`([^`]+)`/g, '<code>$1</code>');
   }
-  function scroll(){ log.scrollTop = log.scrollHeight; }
+  function scrollDown(){ els.log.scrollTop = els.log.scrollHeight; }
+  function modelLabel(){ return els.model.options[els.model.selectedIndex].text.replace(/ /g,' '); }
 
   function addMsg(role, html){
     const wrap = document.createElement('div');
@@ -270,127 +290,128 @@
     b.className = 'bubble';
     b.innerHTML = html;
     wrap.appendChild(b);
-    log.appendChild(wrap);
-    scroll();
+    els.log.appendChild(wrap);
+    scrollDown();
     return b;
   }
 
-  // If no endpoint is configured, disable input with a clear message.
-  if (!CLAUDE_ENDPOINT) {
+  // ---- WebGPU gate: if unsupported, disable the chat with a clear message ----
+  if (!('gpu' in navigator)) {
     const note = document.createElement('div');
     note.className = 'chat-disabled';
-    note.innerHTML = '<strong>Not connected yet.</strong> Deploy the Cloudflare Worker ' +
-      '(see <code>claude-worker/README.md</code>), then paste its URL into ' +
-      '<code>CLAUDE_ENDPOINT</code> near the top of this page&rsquo;s script. ' +
-      'The chat below goes live the moment that&rsquo;s set.';
-    form.parentNode.insertBefore(note, form);
-    box.disabled = true; sendBtn.disabled = true;
-    box.placeholder = 'Chat disabled until the Worker URL is set…';
-    startersWrap.querySelectorAll('.starter').forEach(s => s.disabled = true);
+    note.innerHTML = '<strong>This browser can&rsquo;t run the in-browser AI.</strong> It needs ' +
+      '<strong>WebGPU</strong> &mdash; please open this page in a recent desktop <strong>Chrome</strong> ' +
+      'or <strong>Edge</strong>. Everything else on this page still works.';
+    els.form.parentNode.insertBefore(note, els.form);
+    els.box.disabled = true; els.send.disabled = true; els.model.disabled = true;
+    els.box.placeholder = 'Needs a WebGPU browser (Chrome/Edge)…';
+    els.starters.querySelectorAll('.starter').forEach(s => s.disabled = true);
     return;
   }
 
-  function setBusy(on){
-    busy = on;
-    sendBtn.disabled = on;
-    box.disabled = on;
-    statusEl.textContent = on ? 'Claude is thinking…' : '';
+  async function loadLib(){
+    if (!createEngine) {
+      const mod = await import('https://esm.run/@mlc-ai/web-llm');
+      createEngine = mod.CreateMLCEngine;
+    }
+    return createEngine;
   }
+
+  async function ensureEngine(){
+    const want = els.model.value;
+    if (engine && loadedModel === want) return engine;
+    engine = null;
+    els.model.disabled = true;
+    els.status.textContent = 'Starting the AI engine…';
+    const create = await loadLib();
+    els.status.textContent = 'Loading ' + modelLabel() + ' — first time downloads the model…';
+    engine = await create(want, {
+      initProgressCallback: (r) => { els.status.textContent = (r && r.text) ? r.text : ('Loading ' + modelLabel() + '…'); },
+    });
+    loadedModel = want;
+    els.model.disabled = false;
+    els.status.textContent = 'Model ready — running locally in your browser.';
+    return engine;
+  }
+
+  function setBusy(on){ busy = on; els.send.disabled = on; els.box.disabled = on; }
 
   async function ask(text){
     if (busy || !text.trim()) return;
-    startersWrap.style.display = 'none';
-    notesBtn.hidden = true;
+    els.starters.style.display = 'none';
+    els.notes.hidden = true;
     addMsg('user', md(text));
     history.push({ role: 'user', content: text });
 
     setBusy(true);
-    // streaming bot bubble with typing dots
     const bubble = addMsg('bot', '<span class="typing"><span></span><span></span><span></span></span>');
     let acc = '';
-
     try {
-      const resp = await fetch(CLAUDE_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+      const eng = await ensureEngine();
+      els.status.textContent = 'Thinking…';
+      // keep the context small: system prompt + last 8 turns
+      const msgs = [{ role: 'system', content: SYSTEM }].concat(history.slice(-8));
+      const stream = await eng.chat.completions.create({
+        messages: msgs, stream: true, temperature: 0.6, max_tokens: 800,
       });
-      if (!resp.ok) {
-        let d = ''; try { d = (await resp.json()).detail || ''; } catch(e){}
-        throw new Error('Server error (' + resp.status + '). ' + d);
+      for await (const chunk of stream) {
+        const d = chunk.choices && chunk.choices[0] && chunk.choices[0].delta && chunk.choices[0].delta.content;
+        if (d) { acc += d; bubble.innerHTML = md(acc); scrollDown(); }
       }
-
-      const reader = resp.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const events = buf.split('\n\n');
-        buf = events.pop();
-        for (const ev of events) {
-          const line = ev.split('\n').find(l => l.startsWith('data:'));
-          if (!line) continue;
-          const payload = line.slice(5).trim();
-          if (!payload || payload === '[DONE]') continue;
-          let obj; try { obj = JSON.parse(payload); } catch(e){ continue; }
-          if (obj.type === 'content_block_delta' && obj.delta && obj.delta.text) {
-            acc += obj.delta.text;
-            bubble.innerHTML = md(acc);
-            scroll();
-          } else if (obj.type === 'error') {
-            throw new Error((obj.error && obj.error.message) || 'stream error');
-          }
-        }
-      }
-
-      if (!acc) { bubble.innerHTML = md('(No response received.)'); }
+      if (!acc.trim()) { bubble.innerHTML = md('(No response — try asking again.)'); }
       else {
         lastAnswer = acc;
         history.push({ role: 'assistant', content: acc });
-        notesBtn.hidden = false;
+        els.notes.hidden = false;
+        els.status.textContent = 'Model ready — running locally in your browser.';
       }
     } catch (err) {
       bubble.classList.add('err');
-      bubble.innerHTML = '⚠ ' + esc(err.message || String(err));
+      bubble.innerHTML = '⚠ ' + esc((err && err.message) || String(err)) +
+        '<br><span style="font-weight:400">If this looks like an out-of-memory error, try the <strong>Fastest</strong> model in the dropdown.</span>';
+      els.status.textContent = '';
     } finally {
       setBusy(false);
-      box.focus();
+      els.box.focus();
     }
   }
 
-  // ---- events ----
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const t = box.value;
-    box.value = ''; autosize();
-    ask(t);
-  });
+  function autosize(){ els.box.style.height = 'auto'; els.box.style.height = Math.min(els.box.scrollHeight, 140) + 'px'; }
 
-  box.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
-  });
-
-  function autosize(){ box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 140) + 'px'; }
-  box.addEventListener('input', autosize);
-
-  startersWrap.querySelectorAll('.starter').forEach(function (btn) {
-    btn.addEventListener('click', function () { ask(btn.textContent.trim()); });
-  });
-
-  notesBtn.addEventListener('click', function () {
+  function downloadNotes(){
     if (!lastAnswer) return;
     const stamp = new Date().toISOString().slice(0, 10);
     const body = '# EC224 Week 2 — Study Notes\n\n' +
-      '_Generated by the EC224 study assistant · ' + stamp + '_\n\n' + lastAnswer + '\n';
+      '_Generated by the EC224 in-browser study assistant · ' + stamp + '_\n\n' + lastAnswer + '\n';
     const blob = new Blob([body], { type: 'text/markdown' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'EC224-Week2-notes-' + stamp + '.md';
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  // ---- events ----
+  els.form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const t = els.box.value;
+    els.box.value = ''; autosize();
+    ask(t);
   });
+  els.box.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); els.form.requestSubmit(); }
+  });
+  els.box.addEventListener('input', autosize);
+  els.starters.querySelectorAll('.starter').forEach(function (btn) {
+    btn.addEventListener('click', function () { ask(btn.textContent.trim()); });
+  });
+  els.model.addEventListener('change', function () {
+    if (loadedModel && els.model.value !== loadedModel) {
+      engine = null;
+      els.status.textContent = 'Will switch to ' + modelLabel() + ' on your next message.';
+    }
+  });
+  els.notes.addEventListener('click', downloadNotes);
 })();
 </script>
 </body>
