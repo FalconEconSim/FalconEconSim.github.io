@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>[DEV · Claude] Week 2 Visualizations - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script defer src="assets/dev/d3kit.js"></script>
+  <style>
+    .demo-svg-wrap{padding:0;}
+    .demo-svg-wrap svg{display:block;width:100%;}
+    .draggable-label{cursor:move;}
+    .dev-banner{background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;font-size:0.8rem;font-weight:600;text-align:center;padding:6px 12px;letter-spacing:0.02em;}
+    .dev-banner a{color:#92400e;text-decoration:underline;}
+    .viz-hero{padding:2.6rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
+    .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;position:relative;z-index:1;}
+    .viz-instructor{font-size:0.9rem;color:var(--muted);}
+    .viz-bridge{font-size:0.92rem;color:var(--muted);line-height:1.7;max-width:680px;margin-top:0.7rem;}
+    .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
+    .toc li{font-size:0.855rem;color:var(--muted);}
+    .toc a{color:var(--accent);text-decoration:none;}
+    .toc a:hover{text-decoration:underline;}
+    .sec-divider{font-family:var(--mono);font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:3.2rem 0 0;padding-bottom:0.4rem;}
+    .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
+    .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
+    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
+    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
+    .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
+    .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
+    .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
+    .viz-slider-label{font-family:var(--mono);font-size:0.75rem;color:var(--muted);white-space:nowrap;}
+    .viz-slider{width:130px;accent-color:var(--accent);}
+    .viz-slider:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:3px;}
+    .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:42px;}
+    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+    .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
+    .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
+    .readout-col{flex:1;min-width:90px;}
+    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+    .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
+    .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
+    .insight-box.gold{background:#fdf8ec;border-color:#e6cf94;}
+    .insight-box.red{background:#fff5f5;border-color:#f5c6c6;}
+    .hub-footer{border-top:1px solid var(--rule);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
+    .hub-footer-left{font-size:0.82rem;color:var(--muted);}
+    .hub-footer-left a{color:var(--muted);text-decoration:none;}
+  </style>
+</head>
+<body>
+
+<div class="dev-banner">DEV PREVIEW · Claude rebuild of Week 2 in the Fig 8.1 D3 style · not linked from the student site · <a href="dev.html">← all dev pages</a></div>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="dev.html">Dev</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <span>Claude · Week 2</span>
+    </div>
+  </div>
+</div>
+
+<main class="main" style="max-width:1400px;">
+  <div class="viz-hero">
+    <div class="viz-ghost">02</div>
+    <p class="viz-week-label">Week 2 &middot; Interactive Visualizations &middot; Claude D3 rebuild</p>
+    <h1 class="viz-title">Preferences, Budgets &amp; the Consumer's Best Choice</h1>
+    <p class="viz-instructor">Prof. Naveen Sunder</p>
+    <p class="viz-bridge">
+      A rebuild of the Week 2 consumer-theory figures using the same D3/SVG toolkit as the Week 8 welfare diagrams
+      (Fig 8.1): force-laid-out draggable labels, light grids, smooth sliders. Indifference curves and budget lines
+      meet at the tangency that defines the consumer's optimum.
+    </p>
+    <nav class="toc">
+      <div class="toc-title">Figures</div>
+      <ol>
+        <li><a href="#sec-21">Fig 2.1: The Indifference Map &amp; a Falling MRS</a></li>
+        <li><a href="#sec-22">Fig 2.2: The Budget Constraint</a></li>
+        <li><a href="#sec-23">Fig 2.3: The Consumer's Optimum (Tangency)</a></li>
+        <li><a href="#sec-24">Fig 2.4: Income &amp; Price Changes</a></li>
+        <li><a href="#sec-25">Fig 2.5: Why Indifference Curves Cannot Cross</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="sec-divider">Section 1 &middot; Preferences</div>
+
+  <!-- FIG 2.1 -->
+  <section class="fig-section" id="sec-21">
+    <div class="fig-hdr"><span class="fig-label">Fig 2.1</span><span class="fig-title">The Indifference Map &amp; a Falling MRS</span></div>
+    <p class="fig-intro">
+      For Cobb-Douglas preferences U = X<sup>0.5</sup>Y<sup>0.5</sup>, every curve is a set of bundles the consumer ranks
+      equally; curves further from the origin are preferred. The <strong>marginal rate of substitution</strong> (MRS) is
+      the slope of the tangent line &mdash; how many Y the consumer will give up for one more X. Slide the point along the
+      middle curve and watch the MRS fall as X rises: diminishing MRS.
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs21-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group">
+        <span class="viz-slider-label">Bundle position (X):</span>
+        <input type="range" class="viz-slider" id="v21-x" min="2.2" max="16" step="any" value="6" oninput="v21Draw()" aria-label="Bundle X position">
+        <span class="viz-slider-val" id="v21-x-val">6.0</span>
+      </div>
+      <button class="viz-btn" onclick="v21Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v21-readout"></div>
+    <div class="insight-box"><strong>Key insight:</strong> Diminishing MRS makes indifference curves bow toward the origin (convex). As you move down a curve, each extra X is worth fewer and fewer Y.</div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; Constraints &amp; Choice</div>
+
+  <!-- FIG 2.2 -->
+  <section class="fig-section" id="sec-22">
+    <div class="fig-hdr"><span class="fig-label">Fig 2.2</span><span class="fig-title">The Budget Constraint</span></div>
+    <p class="fig-intro">
+      The budget line P<sub>X</sub>&middot;X + P<sub>Y</sub>&middot;Y = M is every bundle the consumer can just afford.
+      Its intercepts are M/P<sub>X</sub> and M/P<sub>Y</sub>; its slope is &minus;P<sub>X</sub>/P<sub>Y</sub>, the rate the
+      market lets you trade X for Y. Move the sliders to see income shifts (parallel) versus price changes (pivots).
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs22-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Income M:</span>
+        <input type="range" class="viz-slider" id="v22-m" min="60" max="180" step="any" value="120" oninput="v22Draw()" aria-label="Income M">
+        <span class="viz-slider-val" id="v22-m-val">$120</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Price of X:</span>
+        <input type="range" class="viz-slider" id="v22-px" min="3" max="15" step="any" value="6" oninput="v22Draw()" aria-label="Price of X">
+        <span class="viz-slider-val" id="v22-px-val">$6.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Price of Y:</span>
+        <input type="range" class="viz-slider" id="v22-py" min="3" max="15" step="any" value="6" oninput="v22Draw()" aria-label="Price of Y">
+        <span class="viz-slider-val" id="v22-py-val">$6.0</span></div>
+      <button class="viz-btn" onclick="v22Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v22-readout"></div>
+    <div class="insight-box gold"><strong>Read it:</strong> A change in M slides the line in and out keeping the slope; a change in a price spins the line around the unaffected axis intercept.</div>
+  </section>
+
+  <!-- FIG 2.3 -->
+  <section class="fig-section" id="sec-23">
+    <div class="fig-hdr"><span class="fig-label">Fig 2.3</span><span class="fig-title">The Consumer's Optimum (Tangency)</span></div>
+    <p class="fig-intro">
+      Put preferences and the budget together. The best affordable bundle sits where the budget line is
+      <strong>tangent</strong> to the highest reachable indifference curve &mdash; the point where MRS = P<sub>X</sub>/P<sub>Y</sub>.
+      For Cobb-Douglas U = X<sup>&alpha;</sup>Y<sup>1&minus;&alpha;</sup>, that is X* = &alpha;M/P<sub>X</sub>,
+      Y* = (1&minus;&alpha;)M/P<sub>Y</sub>. Change any slider and the tangency tracks it.
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs23-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Income M:</span>
+        <input type="range" class="viz-slider" id="v23-m" min="60" max="180" step="any" value="120" oninput="v23Draw()" aria-label="Income M">
+        <span class="viz-slider-val" id="v23-m-val">$120</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Price of X:</span>
+        <input type="range" class="viz-slider" id="v23-px" min="3" max="15" step="any" value="6" oninput="v23Draw()" aria-label="Price of X">
+        <span class="viz-slider-val" id="v23-px-val">$6.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Price of Y:</span>
+        <input type="range" class="viz-slider" id="v23-py" min="3" max="15" step="any" value="6" oninput="v23Draw()" aria-label="Price of Y">
+        <span class="viz-slider-val" id="v23-py-val">$6.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">X-preference &alpha;:</span>
+        <input type="range" class="viz-slider" id="v23-a" min="0.2" max="0.8" step="any" value="0.5" oninput="v23Draw()" aria-label="Alpha preference">
+        <span class="viz-slider-val" id="v23-a-val">0.50</span></div>
+      <button class="viz-btn" onclick="v23Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v23-readout"></div>
+    <div class="insight-box"><strong>The condition:</strong> At the optimum the curve and the line have the same slope: the consumer's willingness to trade (MRS) exactly equals the market's rate of exchange (the price ratio).</div>
+  </section>
+
+  <!-- FIG 2.4 -->
+  <section class="fig-section" id="sec-24">
+    <div class="fig-hdr"><span class="fig-label">Fig 2.4</span><span class="fig-title">Income &amp; Price Changes</span></div>
+    <p class="fig-intro">
+      Start at the baseline optimum (shown as a faint <span style="color:#9aa3b2;">ghost</span>). Change income or the price
+      of X and watch the new budget line, the new tangent indifference curve, and the new optimum. The horizontal jump in
+      X* as P<sub>X</sub> changes is exactly what the demand curve records.
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs24-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Income M:</span>
+        <input type="range" class="viz-slider" id="v24-m" min="60" max="180" step="any" value="120" oninput="v24Draw()" aria-label="Income M">
+        <span class="viz-slider-val" id="v24-m-val">$120</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Price of X:</span>
+        <input type="range" class="viz-slider" id="v24-px" min="3" max="15" step="any" value="6" oninput="v24Draw()" aria-label="Price of X">
+        <span class="viz-slider-val" id="v24-px-val">$6.0</span></div>
+      <button class="viz-btn" onclick="v24SetBaseline()">Set current as baseline</button>
+      <button class="viz-btn" onclick="v24Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v24-readout"></div>
+    <div class="insight-box gold"><strong>From choice to demand:</strong> Drop P<sub>X</sub> and X* rises &mdash; trace that (P<sub>X</sub>, X*) relationship and you have drawn the demand curve, the bridge into Week 3.</div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; Consistency</div>
+
+  <!-- FIG 2.5 -->
+  <section class="fig-section" id="sec-25">
+    <div class="fig-hdr"><span class="fig-label">Fig 2.5</span><span class="fig-title">Why Indifference Curves Cannot Cross</span></div>
+    <p class="fig-intro">
+      Suppose two indifference curves crossed at point A. Then A and B lie on one curve (equally good), and A and C lie on
+      the other (equally good), so by transitivity B and C must be equally good &mdash; yet C has more of both goods than B.
+      That contradicts "more is better." Press play to walk the contradiction.
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs25-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" id="v25-step-btn" onclick="v25Step()">Next step &rarr;</button>
+      <button class="viz-btn" onclick="v25Reset()">Restart</button>
+    </div>
+    <div class="viz-readout" id="v25-readout"></div>
+    <div class="insight-box red"><strong>Conclusion:</strong> The only way to avoid the contradiction is that indifference curves never cross.</div>
+  </section>
+
+  <div class="hub-footer">
+    <div class="hub-footer-left"><a href="dev.html">&larr; Back to dev pages</a> &middot; Claude D3 rebuild &middot; uses <code>assets/dev/d3kit.js</code></div>
+  </div>
+</main>
+
+<script>
+const COL = { x:'#1a56db', y:'#a07800', ic:'#7d3c98', icGhost:'#cbb8dd', budget:'#1e8449', opt:'#c0392b', ghost:'#9aa3b2' };
+
+// ── FIG 2.1 — Indifference map + MRS (Cobb-Douglas a=0.5: U = sqrt(XY)) ──
+let v21svg=null,v21sim=null,v21nodes=null,v21gs=null,v21conns=null,v21dyn=null;
+const V21={scX:null,scY:null,dom:18,levels:[6,10,14],mid:10};
+function v21Init(){
+  const dom=V21.dom;
+  const scX=d3.scaleLinear().domain([0,dom]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,dom]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  V21.scX=scX;V21.scY=scY;
+  v21svg=d3MakeSvg('cvs21-wrap');
+  d3AddAxes(v21svg,scX,scY,'Good X','Good Y');
+  // indifference curves y = U^2 / x
+  V21.levels.forEach((U,i)=>{
+    const isMid=Math.abs(U-V21.mid)<0.01;
+    d3Curve(v21svg,scX,scY,x=>U*U/x, U*U/dom, dom, isMid?COL.ic:COL.icGhost, isMid?2.2:1.4);
+  });
+  v21dyn=v21svg.append('g');
+  v21dyn._tan=v21svg.append('line').attr('stroke',COL.opt).attr('stroke-width',1.8).attr('stroke-dasharray','');
+  v21dyn._dot=v21svg.append('circle').attr('r',5).attr('fill',COL.ic).attr('stroke','#fff').attr('stroke-width',1.5);
+  v21nodes=[
+    d3Node('mid',COL.ic,'U = 10',38,scX(10),scY(10)),
+    d3Node('lo',COL.icGhost,'U = 6',32,scX(4.5),scY(8)),
+    d3Node('hi',COL.icGhost,'U = 14',34,scX(13),scY(15)),
+    d3Node('mrs',COL.opt,'MRS',30,scX(6),scY(100/6)),
+  ];
+  v21sim=d3MakeSim(v21nodes);
+  const els=d3AddLabels(v21svg,v21nodes,v21sim);v21gs=els.gs;v21conns=els.conns;
+  v21sim.on('tick',()=>d3TickClamp(v21nodes,v21gs,v21conns));
+  registerSliderSim('v21-x',()=>v21sim);
+  v21Draw();
+}
+function v21Draw(){
+  if(!v21svg)return;
+  const x=parseFloat(document.getElementById('v21-x').value);
+  const scX=V21.scX,scY=V21.scY,U=V21.mid;
+  const y=U*U/x;            // point on the U=10 curve
+  const mrs=y/x;            // a=0.5 → MRS = y/x ; slope = -mrs
+  // tangent segment around the point
+  const dx=3.2;
+  const x1=Math.max(0.1,x-dx), x2=x+dx;
+  const y1=y+mrs*(x-x1), y2=y-mrs*(x2-x);
+  v21dyn._tan.attr('x1',scX(x1)).attr('y1',scY(y1)).attr('x2',scX(x2)).attr('y2',scY(y2));
+  v21dyn._dot.attr('cx',scX(x)).attr('cy',scY(y));
+  d3MoveAnchor(v21nodes.find(n=>n.id==='mrs'),scX(x),scY(y));
+  document.getElementById('v21-x-val').textContent=x.toFixed(1);
+  document.getElementById('v21-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Bundle</div><div class="readout-val">(${x.toFixed(1)}, ${y.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">MRS = Y/X</div><div class="readout-val" style="color:${COL.opt}">${mrs.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Utility</div><div class="readout-val">${Math.sqrt(x*y).toFixed(1)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">Willing to give up <strong>${mrs.toFixed(2)} Y</strong> for one more X at this bundle.</div>`;
+  if(v21gs)d3TickClamp(v21nodes,v21gs,v21conns);
+}
+function v21Reset(){d3ScatterLabels(v21nodes,v21sim);}
+
+// ── FIG 2.2 — Budget constraint ──
+let v22svg=null,v22sim=null,v22nodes=null,v22gs=null,v22conns=null,v22dyn=null;
+const V22={scX:null,scY:null,dom:34};
+function v22Init(){
+  const dom=V22.dom;
+  const scX=d3.scaleLinear().domain([0,dom]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,dom]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  V22.scX=scX;V22.scY=scY;
+  v22svg=d3MakeSvg('cvs22-wrap');
+  d3AddAxes(v22svg,scX,scY,'Good X','Good Y');
+  v22dyn=v22svg.append('g');
+  v22dyn._fill=v22svg.append('polygon').attr('fill','rgba(30,132,73,0.12)');
+  v22dyn._line=v22svg.append('line').attr('stroke',COL.budget).attr('stroke-width',2.4);
+  v22dyn._xi=v22svg.append('circle').attr('r',4).attr('fill',COL.budget).attr('stroke','#fff').attr('stroke-width',1.3);
+  v22dyn._yi=v22svg.append('circle').attr('r',4).attr('fill',COL.budget).attr('stroke','#fff').attr('stroke-width',1.3);
+  v22nodes=[
+    d3Node('bl',COL.budget,'Budget line',58,scX(14),scY(14)),
+    d3Node('xi',COL.budget,'M/Px',34,scX(20),scY(0)),
+    d3Node('yi',COL.budget,'M/Py',34,scX(0),scY(20)),
+  ];
+  v22sim=d3MakeSim(v22nodes);
+  const els=d3AddLabels(v22svg,v22nodes,v22sim);v22gs=els.gs;v22conns=els.conns;
+  v22sim.on('tick',()=>d3TickClamp(v22nodes,v22gs,v22conns));
+  ['v22-m','v22-px','v22-py'].forEach(id=>registerSliderSim(id,()=>v22sim));
+  v22Draw();
+}
+function v22Draw(){
+  if(!v22svg)return;
+  const M=parseFloat(document.getElementById('v22-m').value);
+  const px=parseFloat(document.getElementById('v22-px').value);
+  const py=parseFloat(document.getElementById('v22-py').value);
+  const scX=V22.scX,scY=V22.scY;
+  const xi=M/px, yi=M/py;
+  v22dyn._line.attr('x1',scX(0)).attr('y1',scY(yi)).attr('x2',scX(xi)).attr('y2',scY(0));
+  v22dyn._fill.attr('points',`${scX(0)},${scY(0)} ${scX(0)},${scY(yi)} ${scX(xi)},${scY(0)}`);
+  v22dyn._xi.attr('cx',scX(xi)).attr('cy',scY(0));
+  v22dyn._yi.attr('cx',scX(0)).attr('cy',scY(yi));
+  d3MoveAnchor(v22nodes.find(n=>n.id==='bl'),scX(xi/2),scY(yi/2));
+  d3MoveAnchor(v22nodes.find(n=>n.id==='xi'),scX(xi),scY(0));
+  d3MoveAnchor(v22nodes.find(n=>n.id==='yi'),scX(0),scY(yi));
+  document.getElementById('v22-m-val').textContent='$'+M.toFixed(0);
+  document.getElementById('v22-px-val').textContent='$'+px.toFixed(1);
+  document.getElementById('v22-py-val').textContent='$'+py.toFixed(1);
+  document.getElementById('v22-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">X-intercept M/Px</div><div class="readout-val">${xi.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Y-intercept M/Py</div><div class="readout-val">${yi.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Slope &minus;Px/Py</div><div class="readout-val">${(-px/py).toFixed(2)}</div></div>
+     </div>`;
+  if(v22gs)d3TickClamp(v22nodes,v22gs,v22conns);
+}
+function v22Reset(){d3ScatterLabels(v22nodes,v22sim);}
+
+// ── FIG 2.3 — Optimum / tangency (Cobb-Douglas) ──
+let v23svg=null,v23sim=null,v23nodes=null,v23gs=null,v23conns=null,v23dyn=null;
+const V23={scX:null,scY:null};
+function v23Init(){
+  v23svg=d3MakeSvg('cvs23-wrap');
+  v23dyn=v23svg.append('g');
+  v23nodes=[
+    d3Node('bl',COL.budget,'Budget',38,0,0),
+    d3Node('ic',COL.ic,'IC at U*',42,0,0),
+    d3Node('E',COL.opt,'Optimum E',52,0,0),
+  ];
+  v23sim=d3MakeSim(v23nodes);
+  const els=d3AddLabels(v23svg,v23nodes,v23sim);v23gs=els.gs;v23conns=els.conns;
+  v23sim.on('tick',()=>d3TickClamp(v23nodes,v23gs,v23conns));
+  ['v23-m','v23-px','v23-py','v23-a'].forEach(id=>registerSliderSim(id,()=>v23sim));
+  v23Draw();
+}
+function v23Draw(){
+  const M=parseFloat(document.getElementById('v23-m').value);
+  const px=parseFloat(document.getElementById('v23-px').value);
+  const py=parseFloat(document.getElementById('v23-py').value);
+  const a=parseFloat(document.getElementById('v23-a').value);
+  const xi=M/px, yi=M/py;
+  const xs=a*M/px, ys=(1-a)*M/py;          // Cobb-Douglas optimum
+  const dom=Math.max(xi,yi)*1.12;
+  const scX=d3.scaleLinear().domain([0,dom]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,dom]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  V23.scX=scX;V23.scY=scY;
+  // full redraw (domain changes with sliders)
+  v23svg.selectAll('*').remove();
+  d3AddAxes(v23svg,scX,scY,'Good X','Good Y');
+  v23dyn=v23svg.append('g');
+  // tangent indifference curve through (xs,ys): U = xs^a ys^(1-a) → y=(U/x^a)^(1/(1-a))
+  const U=Math.pow(xs,a)*Math.pow(ys,1-a);
+  const icY=x=>Math.pow(U/Math.pow(x,a),1/(1-a));
+  // ghost lower/higher curves for context
+  d3Curve(v23dyn,scX,scY,x=>Math.pow((U*0.7)/Math.pow(x,a),1/(1-a)),0.2,dom,COL.icGhost,1.3);
+  d3Curve(v23dyn,scX,scY,x=>Math.pow((U*1.3)/Math.pow(x,a),1/(1-a)),0.2,dom,COL.icGhost,1.3);
+  d3Curve(v23dyn,scX,scY,icY,0.2,dom,COL.ic,2.2);
+  // budget line
+  d3Seg(v23dyn,scX,scY,0,yi,xi,0,COL.budget,2.4);
+  // guides + optimum dot
+  v23dyn.append('line').attr('x1',scX(xs)).attr('y1',scY(ys)).attr('x2',scX(xs)).attr('y2',scY(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  v23dyn.append('line').attr('x1',scX(xs)).attr('y1',scY(ys)).attr('x2',scX(0)).attr('y2',scY(ys)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  v23dyn.append('circle').attr('cx',scX(xs)).attr('cy',scY(ys)).attr('r',5.5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(v23dyn,scX(xs),scY(0)+13,'X*='+xs.toFixed(1),{color:COL.opt});
+  d3HaloLabel(v23dyn,D3PAD.left+2,scY(ys)-4,'Y*='+ys.toFixed(1),{color:COL.opt,anchor:'start'});
+  // labels (re-attached after wipe)
+  const els=d3AddLabels(v23svg,v23nodes,v23sim);v23gs=els.gs;v23conns=els.conns;
+  v23sim.on('tick',()=>d3TickClamp(v23nodes,v23gs,v23conns));
+  d3MoveAnchor(v23nodes.find(n=>n.id==='bl'),scX(xi*0.72),scY(yi*0.28));
+  d3MoveAnchor(v23nodes.find(n=>n.id==='ic'),scX(xs*1.5),scY(icY(xs*1.5)));
+  d3MoveAnchor(v23nodes.find(n=>n.id==='E'),scX(xs),scY(ys));
+  v23sim.alpha(0.3).restart();
+  document.getElementById('v23-m-val').textContent='$'+M.toFixed(0);
+  document.getElementById('v23-px-val').textContent='$'+px.toFixed(1);
+  document.getElementById('v23-py-val').textContent='$'+py.toFixed(1);
+  document.getElementById('v23-a-val').textContent=a.toFixed(2);
+  document.getElementById('v23-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">X* = &alpha;M/Px</div><div class="readout-val">${xs.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Y* = (1&minus;&alpha;)M/Py</div><div class="readout-val" style="color:${COL.y}">${ys.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MRS = Y*&middot;&alpha;/((1&minus;&alpha;)X*)</div><div class="readout-val">${((a/(1-a))*(ys/xs)).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Px/Py</div><div class="readout-val">${(px/py).toFixed(2)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:#1e8449;font-weight:600;">At E the tangency condition holds: MRS = Px/Py.</div>`;
+}
+function v23Reset(){d3ScatterLabels(v23nodes,v23sim);}
+
+// ── FIG 2.4 — Income & price changes, baseline ghost ──
+let v24svg=null,v24sim=null,v24nodes=null,v24gs=null,v24conns=null;
+const V24={a:0.5,base:null};
+function v24Init(){
+  v24svg=d3MakeSvg('cvs24-wrap');
+  v24nodes=[d3Node('E',COL.opt,'New E',40,0,0),d3Node('b',COL.ghost,'Baseline',46,0,0)];
+  v24sim=d3MakeSim(v24nodes);
+  const els=d3AddLabels(v24svg,v24nodes,v24sim);v24gs=els.gs;v24conns=els.conns;
+  v24sim.on('tick',()=>d3TickClamp(v24nodes,v24gs,v24conns));
+  ['v24-m','v24-px'].forEach(id=>registerSliderSim(id,()=>v24sim));
+  V24.base={M:120,px:6};
+  v24Draw();
+}
+function v24Draw(){
+  const M=parseFloat(document.getElementById('v24-m').value);
+  const px=parseFloat(document.getElementById('v24-px').value);
+  const a=V24.a, py=6;
+  const calc=(M,px)=>({xi:M/px,yi:M/py,xs:a*M/px,ys:(1-a)*M/py,U:Math.pow(a*M/px,a)*Math.pow((1-a)*M/py,1-a)});
+  const cur=calc(M,px), base=calc(V24.base.M,V24.base.px);
+  const dom=Math.max(cur.xi,cur.yi,base.xi,base.yi)*1.1;
+  const scX=d3.scaleLinear().domain([0,dom]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,dom]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v24svg.selectAll('*').remove();
+  d3AddAxes(v24svg,scX,scY,'Good X','Good Y');
+  const g=v24svg.append('g');
+  const icY=(U,x)=>Math.pow(U/Math.pow(x,a),1/(1-a));
+  // ghost baseline
+  d3Seg(g,scX,scY,0,base.yi,base.xi,0,COL.ghost,1.6,'5,4');
+  d3Curve(g,scX,scY,x=>icY(base.U,x),0.2,dom,COL.ghost,1.4,'5,4');
+  g.append('circle').attr('cx',scX(base.xs)).attr('cy',scY(base.ys)).attr('r',4).attr('fill','none').attr('stroke',COL.ghost).attr('stroke-width',1.6);
+  // current
+  d3Seg(g,scX,scY,0,cur.yi,cur.xi,0,COL.budget,2.4);
+  d3Curve(g,scX,scY,x=>icY(cur.U,x),0.2,dom,COL.ic,2.2);
+  g.append('line').attr('x1',scX(cur.xs)).attr('y1',scY(cur.ys)).attr('x2',scX(cur.xs)).attr('y2',scY(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  g.append('circle').attr('cx',scX(cur.xs)).attr('cy',scY(cur.ys)).attr('r',5.5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(g,scX(cur.xs),scY(0)+13,'X*='+cur.xs.toFixed(1),{color:COL.opt});
+  const els=d3AddLabels(v24svg,v24nodes,v24sim);v24gs=els.gs;v24conns=els.conns;
+  v24sim.on('tick',()=>d3TickClamp(v24nodes,v24gs,v24conns));
+  d3MoveAnchor(v24nodes.find(n=>n.id==='E'),scX(cur.xs),scY(cur.ys));
+  d3MoveAnchor(v24nodes.find(n=>n.id==='b'),scX(base.xs),scY(base.ys));
+  v24sim.alpha(0.3).restart();
+  document.getElementById('v24-m-val').textContent='$'+M.toFixed(0);
+  document.getElementById('v24-px-val').textContent='$'+px.toFixed(1);
+  const dX=cur.xs-base.xs;
+  document.getElementById('v24-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Baseline X*</div><div class="readout-val" style="color:${COL.ghost}">${base.xs.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">New X*</div><div class="readout-val">${cur.xs.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">&Delta;X*</div><div class="readout-val" style="color:${dX>=0?'#1e8449':COL.opt}">${dX>=0?'+':''}${dX.toFixed(2)}</div></div>
+     </div>`;
+}
+function v24SetBaseline(){V24.base={M:parseFloat(document.getElementById('v24-m').value),px:parseFloat(document.getElementById('v24-px').value)};v24Draw();}
+function v24Reset(){d3ScatterLabels(v24nodes,v24sim);}
+
+// ── FIG 2.5 — ICs cannot cross (stepped argument) ──
+let v25svg=null,v25step=0;
+const V25={scX:null,scY:null};
+const v25Msgs=[
+  'Two indifference curves are drawn crossing at point A. Press "Next step".',
+  'A and B sit on the BLUE curve → the consumer is indifferent between A and B.',
+  'A and C sit on the PURPLE curve → the consumer is indifferent between A and C.',
+  'By transitivity, B and C must be equally good. But C has more of BOTH goods than B…',
+  'More-is-better says C ≻ B. Contradiction! So indifference curves can never cross.'
+];
+function v25Init(){
+  const dom=18;
+  const scX=d3.scaleLinear().domain([0,dom]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,dom]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  V25.scX=scX;V25.scY=scY;
+  v25Reset();
+}
+function v25dot(g,scX,scY,x,y,lbl,col){
+  g.append('circle').attr('cx',scX(x)).attr('cy',scY(y)).attr('r',5).attr('fill',col).attr('stroke','#fff').attr('stroke-width',1.5);
+  d3HaloLabel(g,scX(x)+9,scY(y)-7,lbl,{color:col,anchor:'start',size:11,weight:700});
+}
+function v25Draw(){
+  const scX=V25.scX,scY=V25.scY;
+  v25svg=d3MakeSvg('cvs25-wrap');
+  d3AddAxes(v25svg,scX,scY,'Good X','Good Y');
+  const g=v25svg.append('g');
+  // Curve 1 (blue) through A(8,8) and B(13,5.5); Curve 2 (purple) through A(8,8) and C(13,11)
+  const c1=x=>64/x*1.0;              // blue: y=64/x  → A(8,8), B(16,4)
+  const c2=x=>8+ (x-8)*0.42;         // purple line-ish through A(8,8), C(15,~10.9)
+  d3Curve(g,scX,scY,c1,3.6,17,COL.x,2.2);
+  d3Curve(g,scX,scY,c2,2,17,COL.ic,2.2);
+  const A=[8,8], B=[16,4], C=[15,8+(15-8)*0.42];
+  if(v25step>=1){v25dot(g,scX,scY,A[0],A[1],'A','#2c3e50');}
+  if(v25step>=1){v25dot(g,scX,scY,B[0],B[1],'B',COL.x);}
+  if(v25step>=2){v25dot(g,scX,scY,C[0],C[1],'C',COL.ic);}
+  if(v25step>=3){
+    g.append('rect').attr('x',scX(Math.min(B[0],C[0]))).attr('y',scY(Math.max(B[1],C[1])))
+      .attr('width',Math.abs(scX(C[0])-scX(B[0]))).attr('height',Math.abs(scY(B[1])-scY(C[1])))
+      .attr('fill','rgba(192,57,43,0.10)').attr('stroke',COL.opt).attr('stroke-dasharray','4,3').attr('stroke-width',1);
+  }
+  document.getElementById('v25-readout').innerHTML=`<strong>Step ${v25step}/4:</strong> ${v25Msgs[v25step]}`;
+  document.getElementById('v25-step-btn').textContent=v25step>=4?'Done':'Next step →';
+}
+function v25Step(){if(v25step<4)v25step++;v25Draw();}
+function v25Reset(){v25step=0;v25Draw();}
+
+// init all
+window.addEventListener('DOMContentLoaded',()=>{
+  function boot(){
+    if(typeof d3==='undefined'||typeof d3MakeSvg==='undefined'){return setTimeout(boot,40);}
+    v21Init();v22Init();v23Init();v24Init();v25Init();
+  }
+  boot();
+});
+</script>
+</body>
+</html>

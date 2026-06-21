@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>[DEV · Claude] Week 3 Visualizations - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script defer src="assets/dev/d3kit.js"></script>
+  <style>
+    .demo-svg-wrap{padding:0;}
+    .demo-svg-wrap svg{display:block;width:100%;}
+    .draggable-label{cursor:move;}
+    .dev-banner{background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;font-size:0.8rem;font-weight:600;text-align:center;padding:6px 12px;letter-spacing:0.02em;}
+    .dev-banner a{color:#92400e;text-decoration:underline;}
+    .viz-hero{padding:2.6rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
+    .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;position:relative;z-index:1;}
+    .viz-instructor{font-size:0.9rem;color:var(--muted);}
+    .viz-bridge{font-size:0.92rem;color:var(--muted);line-height:1.7;max-width:680px;margin-top:0.7rem;}
+    .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
+    .toc li{font-size:0.855rem;color:var(--muted);}
+    .toc a{color:var(--accent);text-decoration:none;}
+    .toc a:hover{text-decoration:underline;}
+    .sec-divider{font-family:var(--mono);font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:3.2rem 0 0;padding-bottom:0.4rem;}
+    .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
+    .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
+    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
+    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
+    .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
+    .panel-label{font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule);}
+    .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
+    .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
+    .viz-slider-label{font-family:var(--mono);font-size:0.75rem;color:var(--muted);white-space:nowrap;}
+    .viz-slider{width:130px;accent-color:var(--accent);}
+    .viz-slider:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:3px;}
+    .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:42px;}
+    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
+    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:#c0392b;}
+    .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
+    .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
+    .readout-col{flex:1;min-width:90px;}
+    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+    .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
+    .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
+    .insight-box.gold{background:#fdf8ec;border-color:#e6cf94;}
+    .insight-box.red{background:#fff5f5;border-color:#f5c6c6;}
+    .drill-card{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:1.4rem 1.5rem;text-align:center;}
+    .drill-q{font-size:1.05rem;font-weight:600;margin-bottom:1rem;line-height:1.5;}
+    .drill-verdict{margin-top:1rem;font-weight:600;min-height:1.4rem;}
+    .hub-footer{border-top:1px solid var(--rule);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
+    .hub-footer-left{font-size:0.82rem;color:var(--muted);}
+    .hub-footer-left a{color:var(--muted);text-decoration:none;}
+  </style>
+</head>
+<body>
+
+<div class="dev-banner">DEV PREVIEW · Claude rebuild of Week 3 in the Fig 8.1 D3 style · not linked from the student site · <a href="dev.html">← all dev pages</a></div>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="dev.html">Dev</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <span>Claude · Week 3</span>
+    </div>
+  </div>
+</div>
+
+<main class="main" style="max-width:1400px;">
+  <div class="viz-hero">
+    <div class="viz-ghost">03</div>
+    <p class="viz-week-label">Week 3 &middot; Interactive Visualizations &middot; Claude D3 rebuild</p>
+    <h1 class="viz-title">From Choice to the Demand Curve</h1>
+    <p class="viz-instructor">Prof. Naveen Sunder</p>
+    <p class="viz-bridge">
+      Week 2 found the consumer's optimum. Now we vary the price of X and watch the optimum trace out the demand curve,
+      then split a price change into its substitution and income effects. Same D3 toolkit as the Week 8 welfare diagrams.
+    </p>
+    <nav class="toc">
+      <div class="toc-title">Figures</div>
+      <ol>
+        <li><a href="#sec-31">Fig 3.1: Two-Panel Demand Derivation</a></li>
+        <li><a href="#sec-32">Fig 3.2: Slutsky Decomposition (substitution + income)</a></li>
+        <li><a href="#sec-33">Fig 3.3: Income Effects &amp; Demand Shifts</a></li>
+        <li><a href="#sec-34">Fig 3.4: Shift vs. Movement Drill</a></li>
+        <li><a href="#sec-35">Fig 3.5: Demand Function Explorer</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="sec-divider">Section 1 &middot; Deriving Demand</div>
+
+  <!-- FIG 3.1 -->
+  <section class="fig-section" id="sec-31">
+    <div class="fig-hdr"><span class="fig-label">Fig 3.1</span><span class="fig-title">Two-Panel Demand Derivation</span></div>
+    <p class="fig-intro">
+      The top panel is the consumer's choice problem (X-Y space); the bottom panel is the demand curve (P<sub>X</sub>-X space),
+      drawn directly below so the X axes line up. Lower P<sub>X</sub> and the optimum in the top panel slides right; the dot in
+      the bottom panel slides down the demand curve. The dashed line ties the two together at the same X*.
+    </p>
+    <div class="cvs-wrap">
+      <div class="panel-label">Consumer choice (indifference curve &amp; budget)</div>
+      <div class="demo-svg-wrap" id="cvs31a-wrap"></div>
+      <div class="panel-label" style="border-top:1px solid var(--rule);">Resulting demand curve</div>
+      <div class="demo-svg-wrap" id="cvs31b-wrap"></div>
+    </div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Price of X:</span>
+        <input type="range" class="viz-slider" id="v31-px" min="2.5" max="12" step="any" value="6" oninput="v31Draw()" aria-label="Price of X">
+        <span class="viz-slider-val" id="v31-px-val">$6.0</span></div>
+      <button class="viz-btn" onclick="v31Trace()">Show traced demand points</button>
+      <button class="viz-btn" onclick="v31Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v31-readout"></div>
+    <div class="insight-box"><strong>That is the demand curve:</strong> each price you set produces one optimal X*, and the locus of (P<sub>X</sub>, X*) pairs <em>is</em> the demand curve. Demand is derived, not assumed.</div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; Decomposing a Price Change</div>
+
+  <!-- FIG 3.2 -->
+  <section class="fig-section" id="sec-32">
+    <div class="fig-hdr"><span class="fig-label">Fig 3.2</span><span class="fig-title">Slutsky Decomposition</span></div>
+    <p class="fig-intro">
+      When P<sub>X</sub> rises, total demand falls from A to C. Slutsky splits that into two steps. <strong style="color:#1e8449;">Substitution effect</strong>
+      (A&rarr;B): rotate the new, steeper budget line until it can <em>just afford the original bundle A</em> &mdash; the move along the curve
+      from relative-price change alone. <strong style="color:#d4813a;">Income effect</strong> (B&rarr;C): remove that compensation and the
+      consumer slides down to their actual new budget. Note: this is the <em>Slutsky</em> compensation (afford old bundle), not the Hicks
+      compensation (hold utility constant).
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs32-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">New (higher) Price of X:</span>
+        <input type="range" class="viz-slider" id="v32-px" min="6" max="14" step="any" value="10" oninput="v32Draw()" aria-label="New price of X">
+        <span class="viz-slider-val" id="v32-px-val">$10.0</span></div>
+      <button class="viz-btn" onclick="v32Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v32-readout"></div>
+    <div class="insight-box gold"><strong>Why it matters:</strong> the substitution effect is always negative (price up &rarr; quantity down along the curve). The income effect's sign depends on whether the good is normal or inferior.</div>
+  </section>
+
+  <!-- FIG 3.3 -->
+  <section class="fig-section" id="sec-33">
+    <div class="fig-hdr"><span class="fig-label">Fig 3.3</span><span class="fig-title">Income Effects &amp; Demand Shifts</span></div>
+    <p class="fig-intro">
+      Hold prices fixed and change income M. In the top relationship the optimum bundle moves out along the income-expansion
+      path; in the demand panel the <em>whole demand curve shifts</em> rather than moving along it. That is the difference
+      between a shifter (income) and a price change.
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs33-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Income M:</span>
+        <input type="range" class="viz-slider" id="v33-m" min="60" max="200" step="any" value="120" oninput="v33Draw()" aria-label="Income M">
+        <span class="viz-slider-val" id="v33-m-val">$120</span></div>
+      <button class="viz-btn" onclick="v33Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v33-readout"></div>
+    <div class="insight-box"><strong>Shift, not movement:</strong> a higher income shifts demand right at every price. Only a change in the good's own price moves you <em>along</em> a fixed demand curve.</div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; Practice</div>
+
+  <!-- FIG 3.4 -->
+  <section class="fig-section" id="sec-34">
+    <div class="fig-hdr"><span class="fig-label">Fig 3.4</span><span class="fig-title">Shift vs. Movement Drill</span></div>
+    <p class="fig-intro">
+      For each event, decide: does the demand curve for coffee <strong>shift</strong>, or do we just <strong>move along</strong> it?
+      Own-price changes are movements; everything else is a shift. The deck reshuffles forever.
+    </p>
+    <div class="drill-card">
+      <div class="drill-q" id="v34-q">&nbsp;</div>
+      <button class="viz-btn green" onclick="v34Answer('shift')">Shift of the curve</button>
+      <button class="viz-btn" onclick="v34Answer('move')">Movement along the curve</button>
+      <div class="drill-verdict" id="v34-verdict">&nbsp;</div>
+      <div style="margin-top:0.6rem;font-size:0.82rem;color:var(--muted);" id="v34-score">Score: 0 / 0</div>
+    </div>
+  </section>
+
+  <!-- FIG 3.5 -->
+  <section class="fig-section" id="sec-35">
+    <div class="fig-hdr"><span class="fig-label">Fig 3.5</span><span class="fig-title">Demand Function Explorer</span></div>
+    <p class="fig-intro">
+      The Cobb-Douglas demand function is X* = &alpha;M/P<sub>X</sub>. Change P<sub>X</sub> to <em>move along</em> the curve;
+      change income M or the preference weight &alpha; to <em>shift / rotate</em> the whole curve. The faint
+      <span style="color:#9aa3b2;">ghost</span> is the baseline.
+    </p>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs35-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Read price P<sub>X</sub>:</span>
+        <input type="range" class="viz-slider" id="v35-px" min="2" max="14" step="any" value="6" oninput="v35Draw()" aria-label="Read price">
+        <span class="viz-slider-val" id="v35-px-val">$6.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Income M:</span>
+        <input type="range" class="viz-slider" id="v35-m" min="60" max="200" step="any" value="120" oninput="v35Draw()" aria-label="Income M">
+        <span class="viz-slider-val" id="v35-m-val">$120</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">&alpha;:</span>
+        <input type="range" class="viz-slider" id="v35-a" min="0.2" max="0.8" step="any" value="0.5" oninput="v35Draw()" aria-label="Alpha">
+        <span class="viz-slider-val" id="v35-a-val">0.50</span></div>
+      <button class="viz-btn" onclick="v35SetBaseline()">Set baseline</button>
+      <button class="viz-btn" onclick="v35Reset()">Reset labels</button>
+    </div>
+    <div class="viz-readout" id="v35-readout"></div>
+    <div class="insight-box gold"><strong>Movement vs shift:</strong> the P<sub>X</sub> slider walks the dot along one fixed curve; the M and &alpha; sliders move the curve itself.</div>
+  </section>
+
+  <div class="hub-footer">
+    <div class="hub-footer-left"><a href="dev.html">&larr; Back to dev pages</a> &middot; Claude D3 rebuild &middot; uses <code>assets/dev/d3kit.js</code></div>
+  </div>
+</main>
+
+<script>
+const COL = { ic:'#7d3c98', icGhost:'#cbb8dd', budget:'#1e8449', opt:'#c0392b', demand:'#1a56db', ghost:'#9aa3b2', sub:'#1e8449', inc:'#d4813a' };
+const A_PREF=0.5, PY=6;   // shared Cobb-Douglas params for derivation figures
+
+// ── FIG 3.1 — Two-panel demand derivation (stacked SVGs, aligned X axes) ──
+let v31a=null,v31b=null,v31traced=[];
+const V31={domX:24,domP:14,M:120};
+function v31Init(){
+  V31.traceOn=false;
+  v31Draw();
+}
+function v31Draw(){
+  const px=parseFloat(document.getElementById('v31-px').value);
+  const M=V31.M, a=A_PREF;
+  const xs=a*M/px, ys=(1-a)*M/PY;
+  const xi=M/px, yi=M/PY;
+  const domX=V31.domX, domP=V31.domP;
+  // ---- top panel: consumer choice ----
+  const scX=d3.scaleLinear().domain([0,domX]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,domX]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v31a=d3MakeSvg('cvs31a-wrap');
+  d3AddAxes(v31a,scX,scY,'Good X','Good Y');
+  const U=Math.pow(xs,a)*Math.pow(ys,1-a);
+  d3Curve(v31a,scX,scY,x=>Math.pow(U/Math.pow(x,a),1/(1-a)),0.3,domX,COL.ic,2.2);
+  d3Seg(v31a,scX,scY,0,yi,xi,0,COL.budget,2.2);
+  v31a.append('line').attr('x1',scX(xs)).attr('y1',scY(ys)).attr('x2',scX(xs)).attr('y2',scY(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  v31a.append('circle').attr('cx',scX(xs)).attr('cy',scY(ys)).attr('r',5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.5);
+  d3HaloLabel(v31a,scX(xs*1.55),scY(ys*1.35),'optimum',{color:COL.opt});
+  // ---- bottom panel: demand curve ----
+  const sX=d3.scaleLinear().domain([0,domX]).range([D3PAD.left,D3W-D3PAD.right]);
+  const sP=d3.scaleLinear().domain([0,domP]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v31b=d3MakeSvg('cvs31b-wrap');
+  d3AddAxes(v31b,sX,sP,'Good X (quantity)','Price Px',d=>'$'+d);
+  // demand X*=aM/P → P = aM/X ; draw over price range
+  d3Curve(v31b,sX,sP,x=>a*M/x, a*M/domP, domX, COL.demand,2.4);
+  if(V31.traceOn){
+    v31traced.forEach(p=>v31b.append('circle').attr('cx',sX(p.x)).attr('cy',sP(p.p)).attr('r',3).attr('fill','none').attr('stroke',COL.demand).attr('stroke-width',1.4));
+  }
+  v31b.append('line').attr('x1',sX(xs)).attr('y1',sP(px)).attr('x2',sX(xs)).attr('y2',sP(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  v31b.append('line').attr('x1',D3PAD.left).attr('y1',sP(px)).attr('x2',sX(xs)).attr('y2',sP(px)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  v31b.append('circle').attr('cx',sX(xs)).attr('cy',sP(px)).attr('r',5).attr('fill',COL.demand).attr('stroke','#fff').attr('stroke-width',1.5);
+  d3HaloLabel(v31b,sX(xs*1.4),sP(px)+13,'(X*, Px)',{color:COL.demand});
+  d3HaloLabel(v31b,sX(domX*0.78),sP(a*M/(domX*0.78))-6,'Demand',{color:COL.demand,size:11,weight:700});
+  document.getElementById('v31-px-val').textContent='$'+px.toFixed(1);
+  document.getElementById('v31-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Price Px</div><div class="readout-val">$${px.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Optimal X*</div><div class="readout-val" style="color:${COL.opt}">${xs.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Optimal Y*</div><div class="readout-val">${ys.toFixed(2)}</div></div>
+     </div>`;
+}
+function v31Trace(){
+  v31traced=[];
+  for(let p=2.5;p<=12;p+=0.75) v31traced.push({p,x:A_PREF*V31.M/p});
+  V31.traceOn=true;v31Draw();
+}
+function v31Reset(){v31traced=[];V31.traceOn=false;v31Draw();}
+
+// ── FIG 3.2 — Slutsky decomposition (compensation = afford original bundle A) ──
+let v32svg=null;
+const V32={px0:6,M:120};
+function v32Init(){v32Draw();}
+function v32Draw(){
+  const px0=V32.px0, M=V32.M, a=A_PREF, py=PY;
+  const px1=parseFloat(document.getElementById('v32-px').value);
+  // A: original optimum
+  const Ax=a*M/px0, Ay=(1-a)*M/py;
+  // C: new optimum at higher px1, same M
+  const Cx=a*M/px1, Cy=(1-a)*M/py;
+  // Slutsky compensated income: just affords A at new prices
+  const Ms=px1*Ax+py*Ay;
+  const Bx=a*Ms/px1, By=(1-a)*Ms/py;   // B: compensated optimum
+  const domX=Math.max(M/px0, Ms/px1, 24)*1.05;
+  const domY=Math.max(M/py, Ms/py)*1.08;
+  const dom=Math.max(domX,domY);
+  const scX=d3.scaleLinear().domain([0,dom]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,dom]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v32svg=d3MakeSvg('cvs32-wrap');
+  d3AddAxes(v32svg,scX,scY,'Good X','Good Y');
+  const icY=(U,x)=>Math.pow(U/Math.pow(x,a),1/(1-a));
+  const Ua=Math.pow(Ax,a)*Math.pow(Ay,1-a), Uc=Math.pow(Cx,a)*Math.pow(Cy,1-a);
+  // budget lines
+  d3Seg(v32svg,scX,scY,0,M/py,M/px0,0,COL.ghost,2,'');         // original (through A)
+  d3Seg(v32svg,scX,scY,0,Ms/py,Ms/px1,0,COL.sub,1.8,'6,4');    // compensated (through A, new slope)
+  d3Seg(v32svg,scX,scY,0,M/py,M/px1,0,COL.opt,2.2,'');         // new (through C)
+  // indifference curves through A and C
+  d3Curve(v32svg,scX,scY,x=>icY(Ua,x),0.3,dom,COL.ic,2);
+  d3Curve(v32svg,scX,scY,x=>icY(Uc,x),0.3,dom,COL.icGhost,1.8);
+  // points
+  const pt=(x,y,c)=>v32svg.append('circle').attr('cx',scX(x)).attr('cy',scY(y)).attr('r',5).attr('fill',c).attr('stroke','#fff').attr('stroke-width',1.5);
+  pt(Ax,Ay,'#2c3e50');pt(Bx,By,COL.sub);pt(Cx,Cy,COL.opt);
+  d3HaloLabel(v32svg,scX(Ax),scY(Ay)-9,'A',{color:'#2c3e50',size:12,weight:700});
+  d3HaloLabel(v32svg,scX(Bx),scY(By)-9,'B',{color:COL.sub,size:12,weight:700});
+  d3HaloLabel(v32svg,scX(Cx),scY(Cy)-9,'C',{color:COL.opt,size:12,weight:700});
+  // effect brackets along x-axis
+  const yb=D3H-D3PAD.bottom+14;
+  const arrow=(x1,x2,col,lbl,yoff)=>{
+    v32svg.append('line').attr('x1',scX(x1)).attr('y1',yb+yoff).attr('x2',scX(x2)).attr('y2',yb+yoff).attr('stroke',col).attr('stroke-width',1.4).attr('marker-end','');
+    d3HaloLabel(v32svg,scX((x1+x2)/2),yb+yoff-3,lbl,{color:col,size:8.5});
+  };
+  // substitution: Ax→Bx ; income: Bx→Cx (drawn just below axis)
+  document.getElementById('v32-px-val').textContent='$'+px1.toFixed(1);
+  const subE=Bx-Ax, incE=Cx-Bx, totE=Cx-Ax;
+  document.getElementById('v32-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Substitution A&rarr;B</div><div class="readout-val" style="color:${COL.sub}">${subE.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Income B&rarr;C</div><div class="readout-val" style="color:${COL.inc}">${incE.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Total A&rarr;C</div><div class="readout-val" style="color:${COL.opt}">${totE.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Px: ${px0} &rarr; ${px1.toFixed(1)}</div><div class="readout-val">X: ${Ax.toFixed(1)}&rarr;${Cx.toFixed(1)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">Both effects are negative here, so X is a <strong>normal good</strong>: substitution and income reinforce each other.</div>`;
+}
+function v32Reset(){v32Draw();}
+
+// ── FIG 3.3 — Income effect & demand shift (two stacked panels) ──
+let v33a=null,v33b=null;
+const V33={px:6,domX:34,domP:14};
+function v33Init(){v33Draw();}
+function v33Draw(){
+  const M=parseFloat(document.getElementById('v33-m').value);
+  const a=A_PREF, px=V33.px, py=PY;
+  const xs=a*M/px, ys=(1-a)*M/py, xi=M/px, yi=M/py;
+  const domX=V33.domX;
+  // top: choice
+  const scX=d3.scaleLinear().domain([0,domX]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scY=d3.scaleLinear().domain([0,domX]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v33a=d3MakeSvg('cvs33-wrap');
+  // need a 2nd wrap; create dynamically once
+  if(!document.getElementById('cvs33b-wrap')){
+    const w=document.createElement('div');w.className='demo-svg-wrap';w.id='cvs33b-wrap';
+    const pl=document.createElement('div');pl.className='panel-label';pl.style.borderTop='1px solid var(--rule)';pl.textContent='Demand for X shifts with income';
+    const host=document.getElementById('cvs33-wrap').parentNode;
+    host.appendChild(pl);host.appendChild(w);
+  }
+  d3AddAxes(v33a,scX,scY,'Good X','Good Y');
+  const U=Math.pow(xs,a)*Math.pow(ys,1-a);
+  d3Curve(v33a,scX,scY,x=>Math.pow(U/Math.pow(x,a),1/(1-a)),0.3,domX,COL.ic,2.2);
+  d3Seg(v33a,scX,scY,0,yi,xi,0,COL.budget,2.2);
+  // income expansion path: optimum proportional to M → straight ray through origin & current optimum
+  d3Seg(v33a,scX,scY,0,0,domX, (((1-a)/py)/((a)/px))*domX ,COL.inc,1.4,'5,4');
+  v33a.append('circle').attr('cx',scX(xs)).attr('cy',scY(ys)).attr('r',5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.5);
+  d3HaloLabel(v33a,scX(domX*0.62),scY((((1-a)/py)/((a)/px))*domX*0.62)-6,'income path',{color:COL.inc,size:9});
+  // bottom: demand shift
+  const sX=d3.scaleLinear().domain([0,domX]).range([D3PAD.left,D3W-D3PAD.right]);
+  const sP=d3.scaleLinear().domain([0,V33.domP]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v33b=d3MakeSvg('cvs33b-wrap');
+  d3AddAxes(v33b,sX,sP,'Good X (quantity)','Price Px',d=>'$'+d);
+  // baseline demand (M=120) ghost + current demand
+  d3Curve(v33b,sX,sP,x=>a*120/x, a*120/V33.domP, domX, COL.ghost,1.6,'5,4');
+  d3Curve(v33b,sX,sP,x=>a*M/x, a*M/V33.domP, domX, COL.demand,2.4);
+  v33b.append('line').attr('x1',sX(xs)).attr('y1',sP(px)).attr('x2',sX(xs)).attr('y2',sP(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  v33b.append('circle').attr('cx',sX(xs)).attr('cy',sP(px)).attr('r',5).attr('fill',COL.demand).attr('stroke','#fff').attr('stroke-width',1.5);
+  d3HaloLabel(v33b,sX(domX*0.8),sP(a*M/(domX*0.8))-6,'D(M)',{color:COL.demand,size:10,weight:700});
+  document.getElementById('v33-m-val').textContent='$'+M.toFixed(0);
+  document.getElementById('v33-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Income M</div><div class="readout-val">$${M.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">X* at Px=$${px}</div><div class="readout-val" style="color:${COL.opt}">${xs.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">vs baseline (M=120)</div><div class="readout-val">${(a*120/px).toFixed(2)}</div></div>
+     </div>`;
+}
+function v33Reset(){v33Draw();}
+
+// ── FIG 3.4 — Shift vs movement drill ──
+const v34Deck=[
+  {t:"The price of coffee falls from $4 to $3.", a:'move'},
+  {t:"A study reports coffee boosts productivity (tastes shift toward coffee).", a:'shift'},
+  {t:"Average consumer income rises (coffee is a normal good).", a:'shift'},
+  {t:"The price of tea (a substitute) rises sharply.", a:'shift'},
+  {t:"The price of coffee itself rises from $3 to $5.", a:'move'},
+  {t:"The price of milk (a complement) falls.", a:'shift'},
+  {t:"Consumers expect coffee prices to spike next month.", a:'shift'},
+  {t:"A frost cuts the coffee harvest, pushing coffee's own price up.", a:'move'},
+  {t:"The number of coffee drinkers in the market grows.", a:'shift'},
+];
+let v34Order=[],v34i=0,v34right=0,v34total=0;
+function v34Shuffle(){v34Order=d3.shuffle(v34Deck.map((_,i)=>i));v34i=0;}
+function v34Init(){v34Shuffle();v34Show();}
+function v34Show(){
+  if(v34i>=v34Order.length)v34Shuffle();
+  document.getElementById('v34-q').textContent=v34Deck[v34Order[v34i]].t;
+  document.getElementById('v34-verdict').innerHTML='&nbsp;';
+}
+function v34Answer(ans){
+  const correct=v34Deck[v34Order[v34i]].a;
+  v34total++;
+  const v=document.getElementById('v34-verdict');
+  if(ans===correct){v34right++;v.style.color='#16a34a';v.textContent='✓ Correct — '+(correct==='move'?'own-price change ⇒ movement along the curve.':'a non-price factor ⇒ the curve shifts.');}
+  else{v.style.color='#c0392b';v.textContent='✗ Not quite — '+(correct==='move'?'this is the good\'s OWN price ⇒ movement along the curve.':'this is a demand shifter ⇒ the curve shifts.');}
+  document.getElementById('v34-score').textContent=`Score: ${v34right} / ${v34total}`;
+  v34i++;
+  setTimeout(v34Show,1300);
+}
+
+// ── FIG 3.5 — Demand function explorer ──
+let v35svg=null,v35sim=null,v35nodes=null,v35gs=null,v35conns=null;
+const V35={domX:34,domP:16,base:null};
+function v35Init(){
+  v35svg=d3MakeSvg('cvs35-wrap');
+  v35nodes=[d3Node('d',COL.demand,'X* = αM/Px',62,0,0)];
+  v35sim=d3MakeSim(v35nodes);
+  const els=d3AddLabels(v35svg,v35nodes,v35sim);v35gs=els.gs;v35conns=els.conns;
+  v35sim.on('tick',()=>d3TickClamp(v35nodes,v35gs,v35conns));
+  ['v35-px','v35-m','v35-a'].forEach(id=>registerSliderSim(id,()=>v35sim));
+  V35.base={M:120,a:0.5};
+  v35Draw();
+}
+function v35Draw(){
+  const px=parseFloat(document.getElementById('v35-px').value);
+  const M=parseFloat(document.getElementById('v35-m').value);
+  const a=parseFloat(document.getElementById('v35-a').value);
+  const domX=V35.domX, domP=V35.domP;
+  const sX=d3.scaleLinear().domain([0,domX]).range([D3PAD.left,D3W-D3PAD.right]);
+  const sP=d3.scaleLinear().domain([0,domP]).range([D3H-D3PAD.bottom,D3PAD.top]);
+  v35svg.selectAll('*').remove();
+  d3AddAxes(v35svg,sX,sP,'Good X (quantity)','Price Px',d=>'$'+d);
+  const g=v35svg.append('g');
+  // baseline ghost
+  d3Curve(g,sX,sP,x=>V35.base.a*V35.base.M/x, V35.base.a*V35.base.M/domP, domX, COL.ghost,1.6,'5,4');
+  // current curve
+  d3Curve(g,sX,sP,x=>a*M/x, a*M/domP, domX, COL.demand,2.4);
+  const xs=a*M/px;
+  g.append('line').attr('x1',sX(xs)).attr('y1',sP(px)).attr('x2',sX(xs)).attr('y2',sP(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  g.append('line').attr('x1',D3PAD.left).attr('y1',sP(px)).attr('x2',sX(xs)).attr('y2',sP(px)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  g.append('circle').attr('cx',sX(xs)).attr('cy',sP(px)).attr('r',5.5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  const els=d3AddLabels(v35svg,v35nodes,v35sim);v35gs=els.gs;v35conns=els.conns;
+  v35sim.on('tick',()=>d3TickClamp(v35nodes,v35gs,v35conns));
+  d3MoveAnchor(v35nodes[0],sX(domX*0.62),sP(a*M/(domX*0.62)));
+  v35sim.alpha(0.3).restart();
+  document.getElementById('v35-px-val').textContent='$'+px.toFixed(1);
+  document.getElementById('v35-m-val').textContent='$'+M.toFixed(0);
+  document.getElementById('v35-a-val').textContent=a.toFixed(2);
+  document.getElementById('v35-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Px</div><div class="readout-val">$${px.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">X* = αM/Px</div><div class="readout-val" style="color:${COL.opt}">${xs.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Spending on X (αM)</div><div class="readout-val">$${(a*M).toFixed(0)}</div></div>
+     </div>`;
+}
+function v35SetBaseline(){V35.base={M:parseFloat(document.getElementById('v35-m').value),a:parseFloat(document.getElementById('v35-a').value)};v35Draw();}
+function v35Reset(){d3ScatterLabels(v35nodes,v35sim);}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  function boot(){
+    if(typeof d3==='undefined'||typeof d3MakeSvg==='undefined'){return setTimeout(boot,40);}
+    v31Init();v32Init();v33Init();v34Init();v35Init();
+  }
+  boot();
+});
+</script>
+</body>
+</html>
