@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>[DEV · Claude] Week 5 Visualizations · Production - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script defer src="assets/dev/d3kit.js"></script>
+  <style>
+    .demo-svg-wrap{padding:0;}
+    .demo-svg-wrap svg{display:block;width:100%;}
+    .draggable-label{cursor:move;}
+    .dev-banner{background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;font-size:0.8rem;font-weight:600;text-align:center;padding:6px 12px;letter-spacing:0.02em;}
+    .dev-banner a{color:#92400e;text-decoration:underline;}
+    .viz-hero{padding:2.6rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
+    .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:600px;margin-bottom:0.3rem;position:relative;z-index:1;}
+    .viz-instructor{font-size:0.9rem;color:var(--muted);}
+    .viz-bridge{font-size:0.92rem;color:var(--muted);line-height:1.7;max-width:680px;margin-top:0.7rem;}
+    .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
+    .toc li{font-size:0.855rem;color:var(--muted);}
+    .toc a{color:var(--accent);text-decoration:none;}
+    .toc a:hover{text-decoration:underline;}
+    .sec-divider{font-family:var(--mono);font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:3.2rem 0 0;padding-bottom:0.4rem;}
+    .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
+    .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;flex-wrap:wrap;}
+    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
+    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
+    .fig-collapse-btn{margin-left:auto;font-family:var(--mono);font-size:0.68rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);background:var(--off-white);border:1px solid var(--rule);border-radius:6px;padding:3px 10px;cursor:pointer;}
+    .fig-collapse-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .fig-body[hidden]{display:none;}
+    .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
+    .cvs-wrap.square{max-width:470px;margin-left:auto;margin-right:auto;}
+    .cvs-wrap.wide{max-width:820px;margin-left:auto;margin-right:auto;}
+    .panel-label{font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule);}
+    .panel-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;}
+    .panel-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+    @media(max-width:640px){.panel-grid-3,.panel-grid-2{grid-template-columns:1fr;}}
+    .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
+    .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
+    .viz-slider-label{font-family:var(--mono);font-size:0.75rem;color:var(--muted);white-space:nowrap;}
+    .viz-slider{width:130px;accent-color:var(--accent);}
+    .viz-slider:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:3px;}
+    .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:42px;}
+    .viz-select{font-family:var(--mono);font-size:0.82rem;border:1px solid var(--rule);border-radius:6px;padding:4px 8px;background:var(--off-white);color:var(--text);cursor:pointer;}
+    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+    .viz-btn.reset{background:#fffaf0;border-color:#e6cf94;color:#9a6a00;}
+    .viz-btn.reset:hover{background:#fdf0d5;}
+    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
+    .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
+    .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
+    .readout-col{flex:1;min-width:96px;}
+    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+    .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
+    .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
+    .insight-box.gold{background:#fdf8ec;border-color:#e6cf94;}
+    .insight-box.red{background:#fff5f5;border-color:#f5c6c6;}
+    .drill-card{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:1.4rem 1.5rem;text-align:center;}
+    .drill-q{font-size:1.05rem;font-weight:600;margin-bottom:1rem;line-height:1.5;}
+    .drill-verdict{margin-top:1rem;font-weight:600;min-height:1.4rem;}
+    /* info tooltip */
+    .info-wrap{position:relative;display:inline-flex;}
+    .info-ic{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--rule);font-size:0.64rem;font-weight:700;color:var(--muted);cursor:pointer;user-select:none;font-family:var(--mono);}
+    .info-ic:hover,.info-ic:focus-visible{border-color:var(--accent);color:var(--accent);outline:none;}
+    .info-bubble{position:absolute;z-index:30;left:50%;transform:translateX(-50%);bottom:150%;width:236px;background:#1f2937;color:#f3f4f6;font-size:0.76rem;line-height:1.5;padding:0.6rem 0.75rem;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,0.18);display:none;font-weight:400;font-family:var(--font);text-align:left;}
+    .info-bubble::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1f2937;}
+    .hub-footer{border-top:1px solid var(--rule);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
+    .hub-footer-left{font-size:0.82rem;color:var(--muted);}
+    .hub-footer-left a{color:var(--muted);text-decoration:none;}
+  </style>
+</head>
+<body>
+
+<div class="dev-banner">DEV PREVIEW · Claude rebuild of the Production week in the Fig 8.1 D3 style · not linked from the student site · <a href="dev.html">← all dev pages</a></div>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="dev.html">Dev</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <span>Claude · Week 5 · Production</span>
+    </div>
+  </div>
+</div>
+
+<main class="main" style="max-width:1400px;">
+  <div class="viz-hero">
+    <div class="viz-ghost">05</div>
+    <p class="viz-week-label">Week 5 &middot; Interactive Visualizations &middot; Claude D3 rebuild</p>
+    <h1 class="viz-title">Production: Inputs, Output &amp; Returns to Scale</h1>
+    <p class="viz-instructor">Prof. Naveen Sunder</p>
+    <p class="viz-bridge">
+      The firm's technology turns inputs into output. We start with one variable input (the total- and marginal-product
+      curves and the law of diminishing marginal product), move to two inputs (isoquants, the MRTS, and returns to scale),
+      and end at the Cobb-Douglas lab. Each figure is sized for its own job &mdash; tall stacks where panels share an axis,
+      square frames where slopes must read true.
+    </p>
+    <nav class="toc">
+      <div class="toc-title">Figures</div>
+      <ol>
+        <li><a href="#sec-p1">Fig P.1: Total &amp; Marginal Product (two-panel)</a></li>
+        <li><a href="#sec-p2">Fig P.2: Isoquant &amp; Indifference-Curve Shapes</a></li>
+        <li><a href="#sec-p3">Fig P.3: MRTS Live Calculator</a></li>
+        <li><a href="#sec-p4">Fig P.4: Diminishing MP vs. Returns to Scale</a></li>
+        <li><a href="#sec-p5">Fig P.5: Returns-to-Scale Isoquant Spacer</a></li>
+        <li><a href="#sec-p6">Fig P.6: Input Substitution vs. Technological Change</a></li>
+        <li><a href="#sec-p7">Fig P.7: Consumer &harr; Producer Analogy</a></li>
+        <li><a href="#sec-p8">Fig P.8: Cobb-Douglas Production Lab</a></li>
+        <li><a href="#sec-p9">Fig P.9: Bakery Hiring Simulator</a></li>
+        <li><a href="#sec-p10">Fig P.10: Isoquant-Shape Quiz</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="sec-divider">Section 1 &middot; One variable input</div>
+
+  <!-- FIG P.1 -->
+  <section class="fig-section" id="sec-p1">
+    <div class="fig-hdr"><span class="fig-label">Fig P.1</span><span class="fig-title">Total &amp; Marginal Product</span>
+      <button class="fig-collapse-btn" data-target="p1-body">collapse</button></div>
+    <div class="fig-body" id="p1-body">
+    <p class="fig-intro">
+      A single tall canvas stacks two panels that share the worker axis. The <strong>top</strong> plots total product
+      TP(L); its slope at the chosen L is the <strong>marginal product</strong> MP<sub>L</sub>, drawn as a tangent. The
+      <strong>bottom</strong> plots that slope directly. The dashed vertical line ties the two readings to the same L, so
+      "MP<sub>L</sub> = slope of TP" is literally one line.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <span class="viz-slider-label">Production function:</span>
+      <select class="viz-select" id="p1-form" onchange="p1Draw()">
+        <option value="cobb">Cobb-Douglas: Q = K^0.5 · L^0.5</option>
+        <option value="scurve">S-curve (cubic): Q = 1.5L² − 0.1L³</option>
+        <option value="quad">Quadratic: Q = 3L − 0.15L²</option>
+        <option value="linear">Linear: Q = 2.5L</option>
+      </select>
+      <span class="info-wrap"><span class="info-ic" tabindex="0" role="button" aria-label="About the production form" onclick="infoToggle(this,event)" onkeydown="infoKey(this,event)">i</span><span class="info-bubble">Cobb-Douglas and the S-curve both show diminishing MP<sub>L</sub>. The linear form has constant MP<sub>L</sub> (no diminishing returns), and the quadratic eventually turns MP<sub>L</sub> negative.</span></span>
+    </div>
+    <div class="cvs-wrap"><div class="demo-svg-wrap" id="p1-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Workers L:</span>
+        <input type="range" class="viz-slider" id="p1-l" min="0.2" max="9.8" step="any" value="3" oninput="p1Draw()" style="width:220px;" aria-label="Workers L">
+        <span class="viz-slider-val" id="p1-l-val">3.0</span></div>
+      <div class="viz-slider-group" id="p1-k-group"><span class="viz-slider-label">Capital K (fixed):</span>
+        <input type="range" class="viz-slider" id="p1-k" min="1" max="16" step="1" value="4" oninput="p1Draw()" aria-label="Capital K">
+        <span class="viz-slider-val" id="p1-k-val">4</span></div>
+    </div>
+    <div class="viz-readout" id="p1-readout"></div>
+    <div class="insight-box"><strong>Law of diminishing marginal product:</strong> with capital fixed, each extra worker eventually adds less than the one before &mdash; the TP curve flattens and the MP<sub>L</sub> curve slides down.</div>
+    </div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; Two inputs: isoquants &amp; the MRTS</div>
+
+  <!-- FIG P.2 -->
+  <section class="fig-section" id="sec-p2">
+    <div class="fig-hdr"><span class="fig-label">Fig P.2</span><span class="fig-title">Isoquant &amp; Indifference-Curve Shapes</span>
+      <button class="fig-collapse-btn" data-target="p2-body">collapse</button></div>
+    <div class="fig-body" id="p2-body">
+    <p class="fig-intro">
+      Three technologies, three square panels (square so slopes read true): Cobb-Douglas bows toward the origin, perfect
+      substitutes are straight, perfect complements (Leontief) are right-angled. Toggle the interpretation: the same math is
+      a firm's <strong>isoquant</strong> (axes L, K) or a consumer's <strong>indifference curve</strong> (axes X, Y).
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <button class="viz-btn active" id="p2-iq" onclick="p2SetMode('iq')">Isoquant (firm)</button>
+      <button class="viz-btn" id="p2-ic" onclick="p2SetMode('ic')">Indifference curve (consumer)</button>
+    </div>
+    <div class="panel-grid-3">
+      <div class="cvs-wrap"><div class="panel-label" id="p2a-lbl">Cobb-Douglas</div><div class="demo-svg-wrap" id="p2a-wrap"></div></div>
+      <div class="cvs-wrap"><div class="panel-label">Perfect substitutes</div><div class="demo-svg-wrap" id="p2b-wrap"></div></div>
+      <div class="cvs-wrap"><div class="panel-label">Perfect complements</div><div class="demo-svg-wrap" id="p2c-wrap"></div></div>
+    </div>
+    <div class="insight-box gold"><strong>Shape = substitutability:</strong> a convex isoquant means inputs substitute imperfectly; a straight line means they substitute one-for-one; an L means they must be used in fixed proportions.</div>
+    </div>
+  </section>
+
+  <!-- FIG P.3 -->
+  <section class="fig-section" id="sec-p3">
+    <div class="fig-hdr"><span class="fig-label">Fig P.3</span><span class="fig-title">MRTS Live Calculator</span>
+      <button class="fig-collapse-btn" data-target="p3-body">collapse</button></div>
+    <div class="fig-body" id="p3-body">
+    <p class="fig-intro">
+      Slide the point along the isoquant Q = K<sup>0.5</sup>L<sup>0.5</sup> = 4. The tangent redraws and the
+      <strong>marginal rate of technical substitution</strong> MRTS = MP<sub>L</sub>/MP<sub>K</sub> = K/L updates: how many
+      machines one extra worker frees up. A square frame keeps the slope honest.
+    </p>
+    <div class="cvs-wrap square"><div class="panel-label">Isoquant Q = 4, with tangent</div><div class="demo-svg-wrap" id="p3-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <div class="viz-slider-group"><span class="viz-slider-label">Labor L:</span>
+        <input type="range" class="viz-slider" id="p3-l" min="1.2" max="13" step="any" value="4" oninput="p3Draw()" style="width:220px;" aria-label="Labor L position">
+        <span class="viz-slider-val" id="p3-l-val">4.0</span></div>
+    </div>
+    <div class="viz-readout" id="p3-readout"></div>
+    <div class="insight-box"><strong>Diminishing MRTS:</strong> move right (more L, less K) and each worker replaces fewer and fewer machines &mdash; that is exactly what makes the isoquant convex.</div>
+    </div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; Returns to scale</div>
+
+  <!-- FIG P.4 -->
+  <section class="fig-section" id="sec-p4">
+    <div class="fig-hdr"><span class="fig-label">Fig P.4</span><span class="fig-title">Diminishing MP vs. Returns to Scale</span>
+      <button class="fig-collapse-btn" data-target="p4-body">collapse</button></div>
+    <div class="fig-body" id="p4-body">
+    <p class="fig-intro">
+      Two different ideas, side by side. <strong>Left:</strong> hold K fixed, add L &mdash; MP<sub>L</sub> falls (a
+      <em>per-input</em> story). <strong>Right:</strong> scale K <em>and</em> L together by the same factor &mdash; with
+      a + b &gt; 1 output more than doubles (a <em>whole-firm</em> story). One function, Q = K<sup>a</sup>L<sup>b</sup>,
+      can do both at once.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">a (capital):</span>
+        <input type="range" class="viz-slider" id="p4-a" min="0.1" max="0.9" step="any" value="0.6" oninput="p4Draw()" aria-label="Capital exponent a">
+        <span class="viz-slider-val" id="p4-a-val">0.60</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">b (labor):</span>
+        <input type="range" class="viz-slider" id="p4-b" min="0.1" max="0.9" step="any" value="0.6" oninput="p4Draw()" aria-label="Labor exponent b">
+        <span class="viz-slider-val" id="p4-b-val">0.60</span></div>
+      <button class="viz-btn reset" onclick="p4Reset()">Reset to defaults</button>
+    </div>
+    <div class="panel-grid-2">
+      <div class="cvs-wrap"><div class="panel-label">MP<sub>L</sub> with K fixed = 4</div><div class="demo-svg-wrap" id="p4a-wrap"></div></div>
+      <div class="cvs-wrap"><div class="panel-label">Scale both inputs by λ</div><div class="demo-svg-wrap" id="p4b-wrap"></div></div>
+    </div>
+    <div class="viz-readout" id="p4-readout"></div>
+    </div>
+  </section>
+
+  <!-- FIG P.5 -->
+  <section class="fig-section" id="sec-p5">
+    <div class="fig-hdr"><span class="fig-label">Fig P.5</span><span class="fig-title">Returns-to-Scale Isoquant Spacer</span>
+      <button class="fig-collapse-btn" data-target="p5-body">collapse</button></div>
+    <div class="fig-body" id="p5-body">
+    <p class="fig-intro">
+      A ray from the origin crosses the isoquants Q = 1, 2, 4. Under <strong>constant</strong> returns the crossings are
+      evenly spaced; under <strong>increasing</strong> returns they bunch toward the origin; under <strong>decreasing</strong>
+      returns they spread out. Set the exponents and watch the spacing move.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">a:</span>
+        <input type="range" class="viz-slider" id="p5-a" min="0.2" max="1.1" step="any" value="0.5" oninput="p5Draw()" aria-label="Exponent a">
+        <span class="viz-slider-val" id="p5-a-val">0.50</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">b:</span>
+        <input type="range" class="viz-slider" id="p5-b" min="0.2" max="1.1" step="any" value="0.5" oninput="p5Draw()" aria-label="Exponent b">
+        <span class="viz-slider-val" id="p5-b-val">0.50</span></div>
+      <span id="p5-verdict" style="font-family:var(--mono);font-size:0.82rem;font-weight:600;"></span>
+    </div>
+    <div class="cvs-wrap square"><div class="demo-svg-wrap" id="p5-wrap"></div></div>
+    <div class="viz-readout" id="p5-readout"></div>
+    </div>
+  </section>
+
+  <!-- FIG P.6 -->
+  <section class="fig-section" id="sec-p6">
+    <div class="fig-hdr"><span class="fig-label">Fig P.6</span><span class="fig-title">Input Substitution vs. Technological Change</span>
+      <button class="fig-collapse-btn" data-target="p6-body">collapse</button></div>
+    <div class="fig-body" id="p6-body">
+    <p class="fig-intro">
+      Two very different moves. <strong>Substituting inputs</strong> slides the bundle <em>along</em> the existing isoquant
+      &mdash; same technology, different mix. <strong>Improving technology</strong> shifts the whole isoquant <em>inward</em>
+      &mdash; the same output now needs fewer inputs. The faint <span style="color:#9aa3b2;">ghost</span> marks where you
+      started.
+    </p>
+    <div class="cvs-wrap square"><div class="demo-svg-wrap" id="p6-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" onclick="p6Sub()">Substitute inputs</button>
+      <button class="viz-btn" onclick="p6Tech()">Improve technology</button>
+      <button class="viz-btn reset" onclick="p6Reset()">Reset</button>
+    </div>
+    <div class="viz-readout" id="p6-readout"></div>
+    </div>
+  </section>
+
+  <div class="sec-divider">Section 4 &middot; Synthesis &amp; practice</div>
+
+  <!-- FIG P.7 -->
+  <section class="fig-section" id="sec-p7">
+    <div class="fig-hdr"><span class="fig-label">Fig P.7</span><span class="fig-title">Consumer &harr; Producer Analogy</span>
+      <button class="fig-collapse-btn" data-target="p7-body">collapse</button></div>
+    <div class="fig-body" id="p7-body">
+    <p class="fig-intro">
+      The consumer and the firm solve the same problem with different names. <strong>Left:</strong> indifference curve,
+      MRS, budget line, tangency. <strong>Right:</strong> isoquant, MRTS, isocost line, tangency. Move the slider and the
+      reference curve shifts on both panels at once.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">Utility / output level:</span>
+        <input type="range" class="viz-slider" id="p7-u" min="1.4" max="4" step="any" value="2.6" oninput="p7Draw()" style="width:200px;" aria-label="Level">
+        <span class="viz-slider-val" id="p7-u-val">2.6</span></div>
+    </div>
+    <div class="panel-grid-2">
+      <div class="cvs-wrap"><div class="panel-label">Consumer: IC + budget</div><div class="demo-svg-wrap" id="p7a-wrap"></div></div>
+      <div class="cvs-wrap"><div class="panel-label">Firm: isoquant + isocost</div><div class="demo-svg-wrap" id="p7b-wrap"></div></div>
+    </div>
+    <div class="viz-readout" id="p7-readout"></div>
+    <div class="insight-box"><strong>Same engine:</strong> "tangency of a convex curve to a straight budget/cost line" is the optimum in both worlds. MRS = price ratio for the consumer; MRTS = input-price ratio for the firm.</div>
+    </div>
+  </section>
+
+  <!-- FIG P.8 -->
+  <section class="fig-section" id="sec-p8">
+    <div class="fig-hdr"><span class="fig-label">Fig P.8</span><span class="fig-title">Cobb-Douglas Production Lab</span>
+      <button class="fig-collapse-btn" data-target="p8-body">collapse</button></div>
+    <div class="fig-body" id="p8-body">
+    <p class="fig-intro">
+      The full multi-variable explorer for Q = A·K<sup>a</sup>L<sup>b</sup>. Set the parameters and an evaluation point (K, L);
+      read off the isoquant map, the returns-to-scale verdict (a + b), MP<sub>L</sub>, MP<sub>K</sub>, and the MRTS. The
+      <span style="color:#7d3c98;">λ-scaled</span> bundle tests the returns-to-scale definition directly.
+    </p>
+    <div id="p8-eq" style="background:var(--accent-light);border:1px solid #c7d9f8;border-radius:8px;padding:0.55rem 1rem;margin-bottom:0.75rem;font-family:var(--mono);font-size:0.95rem;color:var(--accent);font-weight:600;text-align:center;"></div>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">A:</span>
+        <input type="range" class="viz-slider" id="p8-A" min="0.5" max="3" step="any" value="1" oninput="p8Draw()" aria-label="A"><span class="viz-slider-val" id="p8-A-val">1.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">a (K):</span>
+        <input type="range" class="viz-slider" id="p8-a" min="0.1" max="0.9" step="any" value="0.5" oninput="p8Draw()" aria-label="a"><span class="viz-slider-val" id="p8-a-val">0.50</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">b (L):</span>
+        <input type="range" class="viz-slider" id="p8-b" min="0.1" max="0.9" step="any" value="0.5" oninput="p8Draw()" aria-label="b"><span class="viz-slider-val" id="p8-b-val">0.50</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">K point:</span>
+        <input type="range" class="viz-slider" id="p8-K" min="1" max="8" step="any" value="4" oninput="p8Draw()" aria-label="K point"><span class="viz-slider-val" id="p8-K-val">4.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">L point:</span>
+        <input type="range" class="viz-slider" id="p8-L" min="1" max="8" step="any" value="4" oninput="p8Draw()" aria-label="L point"><span class="viz-slider-val" id="p8-L-val">4.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Scale λ:</span>
+        <input type="range" class="viz-slider" id="p8-lam" min="0.6" max="2.4" step="any" value="1" oninput="p8Draw()" aria-label="lambda"><span class="viz-slider-val" id="p8-lam-val">1.0</span></div>
+      <button class="viz-btn reset" onclick="p8Reset()">Reset to defaults</button>
+    </div>
+    <div class="cvs-wrap square"><div class="demo-svg-wrap" id="p8-wrap"></div></div>
+    <div class="viz-readout" id="p8-readout"></div>
+    </div>
+  </section>
+
+  <!-- FIG P.9 -->
+  <section class="fig-section" id="sec-p9">
+    <div class="fig-hdr"><span class="fig-label">Fig P.9</span><span class="fig-title">Bakery Hiring Simulator</span>
+      <button class="fig-collapse-btn" data-target="p9-body">collapse</button></div>
+    <div class="fig-body" id="p9-body">
+    <p class="fig-intro">
+      A bakery with fixed ovens (K). Hire workers one at a time and watch total product climb, the marginal worker's output
+      shrink, and the wage bill grow. Keep hiring and MP<sub>L</sub> eventually goes negative &mdash; the simulator refuses
+      the hire. Buy an oven to lift the whole curve.
+    </p>
+    <div class="cvs-wrap wide"><div class="demo-svg-wrap" id="p9-wrap"></div></div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn green" onclick="p9Hire()">+ Hire worker</button>
+      <button class="viz-btn" onclick="p9Fire()">− Fire worker</button>
+      <button class="viz-btn" onclick="p9Buy()">Buy oven (K+1)</button>
+      <button class="viz-btn reset" onclick="p9Reset()">Reset</button>
+      <div class="viz-slider-group"><span class="viz-slider-label">Wage w:</span>
+        <input type="range" class="viz-slider" id="p9-w" min="5" max="50" step="any" value="15" oninput="p9Draw()" aria-label="Wage"><span class="viz-slider-val" id="p9-w-val">$15</span></div>
+    </div>
+    <div class="viz-readout" id="p9-readout"></div>
+    </div>
+  </section>
+
+  <!-- FIG P.10 -->
+  <section class="fig-section" id="sec-p10">
+    <div class="fig-hdr"><span class="fig-label">Fig P.10</span><span class="fig-title">Isoquant-Shape Quiz</span>
+      <button class="fig-collapse-btn" data-target="p10-body">collapse</button></div>
+    <div class="fig-body" id="p10-body">
+    <p class="fig-intro">
+      A production function appears &mdash; predict its isoquant shape, then reveal it. Smooth-convex (Cobb-Douglas),
+      straight (perfect substitutes), or L-shaped (Leontief / fixed proportions). The deck reshuffles forever.
+    </p>
+    <div class="drill-card">
+      <div class="drill-q" id="p10-q" style="font-family:var(--mono);">&nbsp;</div>
+      <div class="cvs-wrap square" style="max-width:300px;margin:0.4rem auto 1rem;"><div class="demo-svg-wrap" id="p10-wrap"></div></div>
+      <button class="viz-btn" onclick="p10Answer('cd')">Smooth convex</button>
+      <button class="viz-btn" onclick="p10Answer('sub')">Straight line</button>
+      <button class="viz-btn" onclick="p10Answer('leon')">L-shaped</button>
+      <div class="drill-verdict" id="p10-verdict">&nbsp;</div>
+      <div style="margin-top:0.5rem;font-size:0.82rem;color:var(--muted);" id="p10-score">Score: 0 / 0</div>
+    </div>
+    </div>
+  </section>
+
+  <div class="hub-footer">
+    <div class="hub-footer-left"><a href="dev.html">&larr; Back to dev pages</a> &middot; Claude D3 rebuild &middot; uses <code>assets/dev/d3kit.js</code></div>
+  </div>
+</main>
+
+<script>
+const COL = { tp:'#1a56db', mp:'#7d3c98', iso:'#1a56db', isoGhost:'#a9c2f0', tangent:'#c0392b',
+  capital:'#2c3e50', labor:'#1a56db', opt:'#c0392b', ghost:'#9aa3b2', amber:'#d4813a',
+  sub:'#1e8449', purple:'#7d3c98', ic:'#7d3c98', budget:'#1e8449' };
+
+// ── page-local helpers for custom-sized canvases (do NOT touch d3kit signatures) ──
+function axesWH(svg, scX, scY, W, H, pad, xl, yl, fmtX, fmtY){
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter().append('line')
+    .attr('x1',pad.left).attr('x2',W-pad.right).attr('y1',d=>scY(d)).attr('y2',d=>scY(d))
+    .attr('stroke','#f0f0f0').attr('stroke-width',1);
+  svg.append('g').attr('transform',`translate(0,${H-pad.bottom})`).call(d3.axisBottom(scX).ticks(6).tickSize(4).tickFormat(fmtX||null))
+    .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${pad.left},0)`).call(d3.axisLeft(scY).ticks(5).tickSize(4).tickFormat(fmtY||null))
+    .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  if(xl) svg.append('text').attr('x',pad.left+(W-pad.left-pad.right)/2).attr('y',H-5).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xl);
+  if(yl) svg.append('text').attr('transform','rotate(-90)').attr('x',-(pad.top+(H-pad.top-pad.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yl);
+}
+function clampWH(nodes,gs,conns,W,H,pad){
+  nodes.forEach(d=>{ d.x=Math.max(pad.left-4,Math.min(W-d.lw-4,d.x)); d.y=Math.max(pad.top,Math.min(H-pad.bottom-LABEL_H,d.y)); });
+  gs.attr('transform',d=>`translate(${d.x},${d.y})`);
+  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+}
+const PAD = {top:24,right:24,bottom:40,left:50};
+
+// info tooltip (clears inline display on hide — avoids the stuck-bubble bug)
+function hideAllInfo(){ document.querySelectorAll('.info-bubble').forEach(x=>{x.classList.remove('show');x.style.display='none';}); }
+function infoToggle(el,ev){ if(ev) ev.stopPropagation(); const b=el.parentNode.querySelector('.info-bubble'); const on=b.classList.contains('show'); hideAllInfo(); if(!on){b.classList.add('show');b.style.display='block';} }
+function infoKey(el,ev){ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();infoToggle(el,ev);} }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') hideAllInfo(); });
+document.addEventListener('click',e=>{ if(!e.target.closest('.info-wrap')) hideAllInfo(); });
+
+// collapse toggles
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.fig-collapse-btn'); if(!btn) return;
+  const body=document.getElementById(btn.dataset.target);
+  const hidden=body.hasAttribute('hidden');
+  if(hidden){ body.removeAttribute('hidden'); btn.textContent='collapse'; }
+  else { body.setAttribute('hidden',''); btn.textContent='expand'; }
+});
+
+// ══ production functions ══
+function prodQ(L,K,form){
+  if(form==='scurve') return Math.max(0,1.5*L*L-0.1*L*L*L);
+  if(form==='quad')   return Math.max(0,3*L-0.15*L*L);
+  if(form==='linear') return 2.5*L;
+  return Math.sqrt(K*L); // cobb
+}
+function prodMPL(L,K,form){
+  if(form==='scurve') return 3*L-0.3*L*L;
+  if(form==='quad')   return 3-0.3*L;
+  if(form==='linear') return 2.5;
+  return 0.5*Math.sqrt(K/L); // cobb
+}
+
+// ════════════════════════════ FIG P.1 — TP & MP (tall two-panel) ════════════════════════════
+function p1Draw(){
+  const form=document.getElementById('p1-form').value;
+  const L=parseFloat(document.getElementById('p1-l').value);
+  const K=parseFloat(document.getElementById('p1-k').value);
+  document.getElementById('p1-l-val').textContent=L.toFixed(1);
+  document.getElementById('p1-k-val').textContent=K;
+  document.getElementById('p1-k-group').style.opacity=(form==='cobb')?1:0.4;
+  const W=680,H=470, Lmax=10;
+  // sample to find maxima
+  let maxQ=0,maxMP=0;
+  for(let l=0.05;l<=Lmax;l+=0.05){ maxQ=Math.max(maxQ,prodQ(l,K,form)); maxMP=Math.max(maxMP,prodMPL(l,K,form)); }
+  maxQ=maxQ*1.1||1; maxMP=Math.max(maxMP*1.15,0.5);
+  const scX=d3.scaleLinear().domain([0,Lmax]).range([PAD.left,W-PAD.right]);
+  const scTP=d3.scaleLinear().domain([0,maxQ]).range([248,28]);
+  const scMP=d3.scaleLinear().domain([Math.min(0,maxMP*-0.25),maxMP]).range([438,300]);
+  const svg=d3MakeSvgWH('p1-wrap',W,H);
+  // grids + axes (manual, two regions)
+  [scTP,scMP].forEach(sc=>{ svg.append('g').selectAll('line').data(sc.ticks(4)).enter().append('line')
+    .attr('x1',PAD.left).attr('x2',W-PAD.right).attr('y1',d=>sc(d)).attr('y2',d=>sc(d)).attr('stroke','#f0f0f0'); });
+  // TP axes
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(d3.axisLeft(scTP).ticks(4).tickSize(4))
+    .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9);});
+  svg.append('line').attr('x1',PAD.left).attr('x2',W-PAD.right).attr('y1',248).attr('y2',248).attr('stroke','#ccc');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-138).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Total product Q');
+  // MP axes
+  svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(d3.axisLeft(scMP).ticks(4).tickSize(4))
+    .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9);});
+  svg.append('g').attr('transform',`translate(0,${scMP(0)})`).call(d3.axisBottom(scX).ticks(8).tickSize(4))
+    .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9);});
+  svg.append('text').attr('x',(PAD.left+W-PAD.right)/2).attr('y',H-5).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Workers L');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-369).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('MPL');
+  // curves
+  d3Curve(svg,scX,scTP,l=>prodQ(l,K,form),0.05,Lmax,COL.tp,2.4);
+  d3Curve(svg,scX,scMP,l=>prodMPL(l,K,form),0.05,Lmax,COL.mp,2.2);
+  const Q=prodQ(L,K,form), mpl=prodMPL(L,K,form);
+  // projection line
+  svg.append('line').attr('x1',scX(L)).attr('y1',28).attr('x2',scX(L)).attr('y2',scMP(Math.min(mpl,maxMP))).attr('stroke','#bbb').attr('stroke-width',1).attr('stroke-dasharray','4,4');
+  // tangent on TP
+  const dL=2.0, x1=Math.max(0.05,L-dL), x2=Math.min(Lmax,L+dL);
+  svg.append('line').attr('x1',scX(x1)).attr('y1',scTP(Q-mpl*(L-x1))).attr('x2',scX(x2)).attr('y2',scTP(Q+mpl*(x2-L))).attr('stroke',COL.tangent).attr('stroke-width',1.8);
+  svg.append('circle').attr('cx',scX(L)).attr('cy',scTP(Q)).attr('r',5).attr('fill',COL.tp).attr('stroke','#fff').attr('stroke-width',1.5);
+  svg.append('circle').attr('cx',scX(L)).attr('cy',scMP(mpl)).attr('r',5).attr('fill',COL.mp).attr('stroke','#fff').attr('stroke-width',1.5);
+  d3HaloLabel(svg,scX(Lmax*0.7),scTP(prodQ(Lmax*0.7,K,form))-10,'TP',{color:COL.tp,size:11,weight:700});
+  d3HaloLabel(svg,scX(L),scMP(mpl)-12,'slope = MPL',{color:COL.tangent,size:9});
+  document.getElementById('p1-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Workers L</div><div class="readout-val">${L.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Total product</div><div class="readout-val" style="color:${COL.tp}">${Q.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL = slope</div><div class="readout-val" style="color:${COL.mp}">${mpl.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">APL = Q/L</div><div class="readout-val">${(Q/L).toFixed(2)}</div></div>
+     </div>`;
+}
+
+// ════════════════════════════ FIG P.2 — Isoquant shapes (3 square panels) ════════════════════════════
+let P2={mode:'iq'};
+function p2SetMode(m){ P2.mode=m; document.getElementById('p2-iq').classList.toggle('active',m==='iq'); document.getElementById('p2-ic').classList.toggle('active',m==='ic'); p2Draw(); }
+function p2Draw(){
+  const firm=P2.mode==='iq'; const xl=firm?'Labor L':'Good X', yl=firm?'Capital K':'Good Y';
+  document.getElementById('p2a-lbl').textContent=firm?'Cobb-Douglas':'Cobb-Douglas (consumer)';
+  const W=300,H=300,dom=10, pad={top:18,right:18,bottom:34,left:40};
+  const mk=(id)=>{ const svg=d3MakeSvgWH(id,W,H);
+    const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+    const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+    axesWH(svg,sx,sy,W,H,pad,xl,yl); return {svg,sx,sy}; };
+  const levels=[2,3.2,4.5];
+  // Cobb-Douglas: K = U^2/L  (U=sqrt(LK))
+  let p=mk('p2a-wrap');
+  levels.forEach((U,i)=> d3Curve(p.svg,p.sx,p.sy,x=>U*U/x, U*U/dom, dom, i===1?COL.iso:COL.isoGhost, i===1?2.2:1.4));
+  // Perfect substitutes: X+Y=U*const → straight lines
+  p=mk('p2b-wrap');
+  levels.forEach((U,i)=>{ const c=U*2.4; d3Seg(p.svg,p.sx,p.sy,0,c,c,0, i===1?COL.iso:COL.isoGhost, i===1?2.2:1.4); });
+  // Perfect complements: L-shapes at corner (U,U)
+  p=mk('p2c-wrap');
+  levels.forEach((U,i)=>{ const c=U*1.7, col=i===1?COL.iso:COL.isoGhost, sw=i===1?2.2:1.4;
+    p.svg.append('path').attr('d',`M ${p.sx(c)} ${p.sy(dom)} L ${p.sx(c)} ${p.sy(c)} L ${p.sx(dom)} ${p.sy(c)}`).attr('fill','none').attr('stroke',col).attr('stroke-width',sw);
+  });
+  document.getElementById('p2a-lbl');
+}
+
+// ════════════════════════════ FIG P.3 — MRTS live calculator (square) ════════════════════════════
+function p3Draw(){
+  const L=parseFloat(document.getElementById('p3-l').value);
+  const W=440,H=440,dom=16, pad={top:24,right:24,bottom:42,left:50};
+  const Q=4; const K=Q*Q/L; // isoquant sqrt(LK)=4 → LK=16 → K=16/L
+  const svg=d3MakeSvgWH('p3-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Labor L','Capital K');
+  d3Curve(svg,sx,sy,x=>16/x, 16/dom, dom, COL.iso,2.4);
+  // MRTS = K/L (slope magnitude)
+  const mrts=K/L;
+  const dx=3.2, x1=Math.max(0.3,L-dx), x2=Math.min(dom,L+dx);
+  svg.append('line').attr('x1',sx(x1)).attr('y1',sy(K+mrts*(L-x1))).attr('x2',sx(x2)).attr('y2',sy(K-mrts*(x2-L))).attr('stroke',COL.tangent).attr('stroke-width',1.8);
+  // guides
+  svg.append('line').attr('x1',sx(L)).attr('y1',sy(K)).attr('x2',sx(L)).attr('y2',sy(0)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
+  svg.append('line').attr('x1',sx(L)).attr('y1',sy(K)).attr('x2',sx(0)).attr('y2',sy(K)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
+  svg.append('circle').attr('cx',sx(L)).attr('cy',sy(K)).attr('r',6).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(svg,sx(L),sy(0)+13,'L='+L.toFixed(1),{color:COL.opt});
+  d3HaloLabel(svg,pad.left+2,sy(K)-5,'K='+K.toFixed(1),{color:COL.opt,anchor:'start'});
+  d3HaloLabel(svg,sx(dom*0.66),sy(16/(dom*0.66))-6,'Q = 4',{color:COL.iso,size:11,weight:700});
+  document.getElementById('p3-l-val').textContent=L.toFixed(1);
+  document.getElementById('p3-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Bundle (L, K)</div><div class="readout-val">(${L.toFixed(1)}, ${K.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:${COL.tangent}">${mrts.toFixed(2)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">At this point one extra worker replaces <strong>${mrts.toFixed(2)} machines</strong> while holding output at Q = 4.</div>`;
+}
+
+// ════════════════════════════ FIG P.4 — diminishing MP vs RTS (two panels) ════════════════════════════
+function p4Reset(){ document.getElementById('p4-a').value=0.6; document.getElementById('p4-b').value=0.6; p4Draw(); }
+function p4Draw(){
+  const a=parseFloat(document.getElementById('p4-a').value), b=parseFloat(document.getElementById('p4-b').value);
+  document.getElementById('p4-a-val').textContent=a.toFixed(2);
+  document.getElementById('p4-b-val').textContent=b.toFixed(2);
+  const W=340,H=270,pad={top:20,right:20,bottom:38,left:46};
+  const Kf=4, Lmax=8;
+  // left: MPL with K fixed; MPL = b * A * K^a * L^(b-1), A=1
+  const mpl=l=>b*Math.pow(Kf,a)*Math.pow(l,b-1);
+  let maxM=0; for(let l=0.2;l<=Lmax;l+=0.1) maxM=Math.max(maxM,mpl(l));
+  let s=d3MakeSvgWH('p4a-wrap',W,H);
+  let sx=d3.scaleLinear().domain([0,Lmax]).range([pad.left,W-pad.right]);
+  let sy=d3.scaleLinear().domain([0,maxM*1.1]).range([H-pad.bottom,pad.top]);
+  axesWH(s,sx,sy,W,H,pad,'Labor L','MPL');
+  d3Curve(s,sx,sy,mpl,0.2,Lmax,COL.mp,2.4);
+  d3HaloLabel(s,sx(Lmax*0.6),sy(mpl(Lmax*0.6))-8,'MPL falls',{color:COL.mp,size:10,weight:600});
+  // right: scale both inputs by lambda; Q(λ)=A (λ4)^a (λ4)^b = λ^(a+b) * base
+  const base=Math.pow(4,a)*Math.pow(4,b);
+  const q=lam=>Math.pow(lam,a+b)*base;
+  const lamMax=2.5; let maxQ=q(lamMax);
+  s=d3MakeSvgWH('p4b-wrap',W,H);
+  sx=d3.scaleLinear().domain([0,lamMax]).range([pad.left,W-pad.right]);
+  sy=d3.scaleLinear().domain([0,maxQ*1.1]).range([H-pad.bottom,pad.top]);
+  axesWH(s,sx,sy,W,H,pad,'Scale factor λ','Output Q');
+  // reference proportional (CRS) line through (1, base)
+  d3Seg(s,sx,sy,0,0,lamMax,base*lamMax,COL.ghost,1.6,'5,4');
+  d3Curve(s,sx,sy,q,0,lamMax,COL.purple,2.4);
+  s.append('circle').attr('cx',sx(1)).attr('cy',sy(base)).attr('r',4).attr('fill',COL.capital).attr('stroke','#fff').attr('stroke-width',1.4);
+  s.append('circle').attr('cx',sx(2)).attr('cy',sy(q(2))).attr('r',4).attr('fill',COL.purple).attr('stroke','#fff').attr('stroke-width',1.4);
+  d3HaloLabel(s,sx(lamMax*0.62),sy(q(lamMax*0.62))-8,'Q(λ)',{color:COL.purple,size:10,weight:700});
+  d3HaloLabel(s,sx(lamMax*0.82),sy(base*lamMax*0.82)+12,'CRS ref',{color:COL.ghost,size:9});
+  const rts=a+b, verdict=rts>1.02?'increasing':rts<0.98?'decreasing':'constant';
+  const dbl=Math.pow(2,a+b);
+  document.getElementById('p4-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${rts.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to scale</div><div class="readout-val" style="color:${verdict==='increasing'?COL.purple:verdict==='decreasing'?COL.opt:'#888'}">${verdict}</div></div>
+      <div class="readout-col"><div class="readout-label">Double inputs → output ×</div><div class="readout-val">${dbl.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL exponent (b−1)</div><div class="readout-val">${(b-1).toFixed(2)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">Because b &lt; 1, MP<sub>L</sub> diminishes; because a + b ${rts>1?'&gt; 1, the firm still has <strong>increasing</strong> returns to scale':rts<1?'&lt; 1, returns to scale are decreasing':'= 1, returns to scale are constant'}. The two ideas are independent.</div>`;
+}
+
+// ════════════════════════════ FIG P.5 — RTS isoquant spacer (square) ════════════════════════════
+function p5Draw(){
+  const a=parseFloat(document.getElementById('p5-a').value), b=parseFloat(document.getElementById('p5-b').value);
+  document.getElementById('p5-a-val').textContent=a.toFixed(2);
+  document.getElementById('p5-b-val').textContent=b.toFixed(2);
+  const W=440,H=440,dom=10,pad={top:24,right:24,bottom:42,left:50};
+  const svg=d3MakeSvgWH('p5-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Labor L','Capital K');
+  // Q = L^a K^b → isoquant K = (Q / L^a)^(1/b)
+  const isoK=(Q,L)=>Math.pow(Q/Math.pow(L,a),1/b);
+  const Qs=[1,2,4], cols=[COL.isoGhost,COL.iso,COL.capital];
+  Qs.forEach((Q,i)=> d3Curve(svg,sx,sy,L=>isoK(Q,L),0.05,dom,cols[i],2.0));
+  // ray K=L through origin
+  d3Seg(svg,sx,sy,0,0,dom,dom,COL.amber,1.6,'5,4');
+  // intersections on the ray L=K: Q=L^a L^b=L^(a+b)=Q → L=Q^(1/(a+b))
+  Qs.forEach((Q,i)=>{ const L=Math.pow(Q,1/(a+b)); if(L<=dom){ svg.append('circle').attr('cx',sx(L)).attr('cy',sy(L)).attr('r',5).attr('fill',cols[i]).attr('stroke','#fff').attr('stroke-width',1.5);
+    d3HaloLabel(svg,sx(L)+8,sy(L)-8,'Q='+Q,{color:cols[i],anchor:'start',size:9,weight:700}); } });
+  const rts=a+b, verdict=rts>1.02?'Increasing (bunch up)':rts<0.98?'Decreasing (spread out)':'Constant (evenly spaced)';
+  const vcol=rts>1.02?COL.purple:rts<0.98?COL.opt:'#888';
+  document.getElementById('p5-verdict').textContent=verdict; document.getElementById('p5-verdict').style.color=vcol;
+  // spacing along ray
+  const d12=Math.pow(2,1/(a+b))-Math.pow(1,1/(a+b)), d24=Math.pow(4,1/(a+b))-Math.pow(2,1/(a+b));
+  document.getElementById('p5-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${rts.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Gap Q:1→2</div><div class="readout-val">${d12.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Gap Q:2→4</div><div class="readout-val">${d24.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Verdict</div><div class="readout-val" style="color:${vcol}">${rts>1.02?'IRS':rts<0.98?'DRS':'CRS'}</div></div>
+     </div>`;
+}
+
+// ════════════════════════════ FIG P.6 — substitution vs tech change (square) ════════════════════════════
+let P6={tech:1, L:3, mode:'start'}; // tech multiplies the isoquant level downward (inward shift)
+function p6Reset(){ P6={tech:1,L:3,mode:'start'}; p6Draw(); }
+function p6Sub(){ P6.mode='sub'; P6.L=(P6.L>=5?2.2:P6.L+1.8); p6Draw(); }
+function p6Tech(){ P6.mode='tech'; P6.tech*=0.82; p6Draw(); }
+function p6Draw(){
+  const W=440,H=440,dom=12,pad={top:24,right:24,bottom:42,left:50};
+  const svg=d3MakeSvgWH('p6-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Labor L','Capital K');
+  // baseline isoquant: sqrt(LK)=Q0 → LK=Q0^2; current needs tech*output so curve LK=(P6.tech*Q0)^2
+  const Q0=4.5; const baseLK=Q0*Q0; const curLK=(P6.tech*Q0)*(P6.tech*Q0);
+  // ghost baseline (original)
+  d3Curve(svg,sx,sy,x=>baseLK/x, baseLK/dom, dom, COL.ghost,1.6,'5,4');
+  const Lb=Q0, Kb=Q0; // baseline bundle on K=L
+  svg.append('circle').attr('cx',sx(Lb)).attr('cy',sy(Kb)).attr('r',4).attr('fill','none').attr('stroke',COL.ghost).attr('stroke-width',1.6);
+  // current isoquant
+  d3Curve(svg,sx,sy,x=>curLK/x, curLK/dom, dom, COL.iso,2.4);
+  // current bundle: on current isoquant at L=P6.L
+  const Lc=Math.min(P6.L,dom-0.5), Kc=curLK/Lc;
+  svg.append('circle').attr('cx',sx(Lc)).attr('cy',sy(Kc)).attr('r',6).attr('fill',P6.mode==='tech'?COL.purple:COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(svg,sx(dom*0.7),sy(curLK/(dom*0.7))-6,'isoquant',{color:COL.iso,size:10,weight:700});
+  let msg;
+  if(P6.mode==='start') msg='Press a button. <strong>Substitute</strong> moves along the curve; <strong>improve technology</strong> shifts it inward.';
+  else if(P6.mode==='sub') msg='<span style="color:'+COL.opt+';font-weight:600;">Substitution:</span> same isoquant, more L and less K — technology unchanged.';
+  else msg='<span style="color:'+COL.purple+';font-weight:600;">Technological change:</span> the whole isoquant shifted inward — the same output now needs fewer inputs.';
+  document.getElementById('p6-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Bundle (L, K)</div><div class="readout-val">(${Lc.toFixed(1)}, ${Kc.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">Inputs used L·K</div><div class="readout-val">${(Lc*Kc).toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Tech index</div><div class="readout-val" style="color:${COL.purple}">${(1/P6.tech).toFixed(2)}×</div></div>
+     </div><div style="margin-top:.4rem;color:var(--muted);">${msg}</div>`;
+}
+
+// ════════════════════════════ FIG P.7 — consumer/producer analogy (two panels) ════════════════════════════
+function p7Draw(){
+  const U=parseFloat(document.getElementById('p7-u').value);
+  document.getElementById('p7-u-val').textContent=U.toFixed(1);
+  const W=340,H=300,dom=8,pad={top:20,right:20,bottom:38,left:44};
+  // both: sqrt(xy)=U curve, tangent budget/isocost with slope -1 (prices equal) touching at x=y=U
+  const draw=(id,xl,yl,curveCol,lineCol,lineLbl,ptLbl)=>{
+    const svg=d3MakeSvgWH(id,W,H);
+    const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+    const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+    axesWH(svg,sx,sy,W,H,pad,xl,yl);
+    d3Curve(svg,sx,sy,x=>U*U/x, U*U/dom, dom, curveCol,2.2);
+    // tangent line at (U,U): slope -1 → x+y=2U
+    const c=2*U; d3Seg(svg,sx,sy,0,c,c,0, lineCol,2.0);
+    svg.append('circle').attr('cx',sx(U)).attr('cy',sy(U)).attr('r',5.5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.5);
+    d3HaloLabel(svg,sx(U)+8,sy(U)-8,ptLbl,{color:COL.opt,anchor:'start',size:10,weight:700});
+    d3HaloLabel(svg,sx(c*0.5)+18,sy(c*0.5)+16,lineLbl,{color:lineCol,size:9,weight:600});
+  };
+  draw('p7a-wrap','Good X','Good Y',COL.ic,COL.budget,'budget','MRS = Px/Py');
+  draw('p7b-wrap','Labor L','Capital K',COL.iso,COL.amber,'isocost','MRTS = w/v');
+  document.getElementById('p7-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Consumer optimum (X,Y)</div><div class="readout-val">(${U.toFixed(1)}, ${U.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">Firm optimum (L,K)</div><div class="readout-val">(${U.toFixed(1)}, ${U.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">Tangency slope</div><div class="readout-val">−1.00</div></div>
+     </div>`;
+}
+
+// ════════════════════════════ FIG P.8 — Cobb-Douglas lab (square) ════════════════════════════
+function p8Reset(){ [['p8-A',1],['p8-a',0.5],['p8-b',0.5],['p8-K',4],['p8-L',4],['p8-lam',1]].forEach(([id,v])=>document.getElementById(id).value=v); p8Draw(); }
+function p8Draw(){
+  const A=parseFloat(document.getElementById('p8-A').value), a=parseFloat(document.getElementById('p8-a').value), b=parseFloat(document.getElementById('p8-b').value);
+  const Kp=parseFloat(document.getElementById('p8-K').value), Lp=parseFloat(document.getElementById('p8-L').value), lam=parseFloat(document.getElementById('p8-lam').value);
+  document.getElementById('p8-A-val').textContent=A.toFixed(1);
+  document.getElementById('p8-a-val').textContent=a.toFixed(2);
+  document.getElementById('p8-b-val').textContent=b.toFixed(2);
+  document.getElementById('p8-K-val').textContent=Kp.toFixed(1);
+  document.getElementById('p8-L-val').textContent=Lp.toFixed(1);
+  document.getElementById('p8-lam-val').textContent=lam.toFixed(1);
+  document.getElementById('p8-eq').innerHTML=`Q = ${A.toFixed(1)} · K<sup>${a.toFixed(2)}</sup> · L<sup>${b.toFixed(2)}</sup>`;
+  const W=440,H=440,dom=10,pad={top:24,right:24,bottom:42,left:50};
+  const svg=d3MakeSvgWH('p8-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Labor L','Capital K');
+  const Q=A*Math.pow(Kp,a)*Math.pow(Lp,b);
+  // Q = A K^a L^b → K = (Q/(A L^b))^(1/a)
+  const isoK=(Qv,L)=>Math.pow(Qv/(A*Math.pow(L,b)),1/a);
+  [0.6,1,1.5].forEach((f,i)=> d3Curve(svg,sx,sy,L=>isoK(Q*f,L),0.05,dom,i===1?COL.iso:COL.isoGhost,i===1?2.4:1.4));
+  // evaluation point + lambda-scaled point
+  svg.append('circle').attr('cx',sx(Lp)).attr('cy',sy(Kp)).attr('r',6).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(svg,sx(Lp)+8,sy(Kp)-8,'(L,K)',{color:COL.opt,anchor:'start',size:9,weight:700});
+  const Ls=lam*Lp, Ks=lam*Kp;
+  if(Math.abs(lam-1)>0.02 && Ls<=dom && Ks<=dom){
+    svg.append('line').attr('x1',sx(Lp)).attr('y1',sy(Kp)).attr('x2',sx(Ls)).attr('y2',sy(Ks)).attr('stroke',COL.purple).attr('stroke-width',1).attr('stroke-dasharray','3,3');
+    svg.append('circle').attr('cx',sx(Ls)).attr('cy',sy(Ks)).attr('r',5).attr('fill',COL.purple).attr('stroke','#fff').attr('stroke-width',1.5);
+    d3HaloLabel(svg,sx(Ls)+8,sy(Ks)-8,'λ·(L,K)',{color:COL.purple,anchor:'start',size:9,weight:700});
+  }
+  const MPL=b*A*Math.pow(Kp,a)*Math.pow(Lp,b-1), MPK=a*A*Math.pow(Kp,a-1)*Math.pow(Lp,b);
+  const MRTS=MPL/MPK, rts=a+b, Qlam=A*Math.pow(Ks,a)*Math.pow(Ls,b);
+  const verdict=rts>1.02?'IRS':rts<0.98?'DRS':'CRS';
+  document.getElementById('p8-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Q at (K,L)</div><div class="readout-val">${Q.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL</div><div class="readout-val" style="color:${COL.mp}">${MPL.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MPK</div><div class="readout-val">${MPK.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MRTS = MPL/MPK</div><div class="readout-val" style="color:${COL.tangent}">${MRTS.toFixed(2)}</div></div>
+     </div>
+     <div class="readout-row" style="margin-top:.5rem;">
+      <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${rts.toFixed(2)} <span style="font-size:.8rem;color:${verdict==='IRS'?COL.purple:verdict==='DRS'?COL.opt:'#888'}">(${verdict})</span></div></div>
+      <div class="readout-col"><div class="readout-label">Q(λ·K, λ·L)</div><div class="readout-val" style="color:${COL.purple}">${Qlam.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">λ<sup>a+b</sup>·Q check</div><div class="readout-val">${(Math.pow(lam,rts)*Q).toFixed(2)}</div></div>
+     </div>`;
+}
+
+// ════════════════════════════ FIG P.9 — bakery hiring simulator (wide) ════════════════════════════
+let P9={L:0,K:4};
+function p9Reset(){ P9={L:0,K:4}; p9Draw(); }
+function p9bakeQ(L,K){ return 8*Math.sqrt(K)*Math.sqrt(L) - 0.18*L*L; } // diminishing then negative MP
+function p9bakeMP(L,K){ return p9bakeQ(L,K)-p9bakeQ(L-1,K); }
+function p9Hire(){ const mp=p9bakeQ(P9.L+1,P9.K)-p9bakeQ(P9.L,P9.K); if(mp<=0){ P9.warn=true; } else { P9.L++; P9.warn=false; } p9Draw(); }
+function p9Fire(){ if(P9.L>0)P9.L--; P9.warn=false; p9Draw(); }
+function p9Buy(){ P9.K++; P9.warn=false; p9Draw(); }
+function p9Draw(){
+  const w=parseFloat(document.getElementById('p9-w').value);
+  document.getElementById('p9-w-val').textContent='$'+w.toFixed(0);
+  const W=800,H=320,pad={top:22,right:24,bottom:40,left:52}, Lmax=14;
+  const svg=d3MakeSvgWH('p9-wrap',W,H);
+  let maxQ=0; for(let l=0;l<=Lmax;l+=0.2) maxQ=Math.max(maxQ,p9bakeQ(l,P9.K));
+  const sx=d3.scaleLinear().domain([0,Lmax]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,maxQ*1.1]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Workers hired L','Total product (loaves)');
+  d3Curve(svg,sx,sy,l=>p9bakeQ(l,P9.K),0,Lmax,COL.tp,2.4);
+  // bars for each hired worker's MP
+  for(let i=1;i<=P9.L;i++){ const mp=p9bakeQ(i,P9.K)-p9bakeQ(i-1,P9.K); const x=sx(i);
+    svg.append('line').attr('x1',x).attr('y1',sy(0)).attr('x2',x).attr('y2',sy(p9bakeQ(i,P9.K))).attr('stroke','#e5e9f0').attr('stroke-width',1); }
+  const Q=p9bakeQ(P9.L,P9.K), mpLast=P9.L>0?p9bakeQ(P9.L,P9.K)-p9bakeQ(P9.L-1,P9.K):0;
+  svg.append('circle').attr('cx',sx(P9.L)).attr('cy',sy(Q)).attr('r',6).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(svg,sx(P9.L),sy(Q)-12,'L = '+P9.L,{color:COL.opt,size:10,weight:700});
+  d3HaloLabel(svg,sx(Lmax*0.5),sy(p9bakeQ(Lmax*0.5,P9.K))+14,'TP (K='+P9.K+')',{color:COL.tp,size:10,weight:700});
+  const cost=w*P9.L, apl=P9.L>0?Q/P9.L:0;
+  document.getElementById('p9-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Workers / Ovens</div><div class="readout-val">${P9.L} / ${P9.K}</div></div>
+      <div class="readout-col"><div class="readout-label">Total product</div><div class="readout-val" style="color:${COL.tp}">${Q.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">MP of last hire</div><div class="readout-val" style="color:${mpLast<3?COL.opt:COL.mp}">${mpLast.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Wage bill</div><div class="readout-val">$${cost.toFixed(0)}</div></div>
+     </div>`+
+    (P9.warn?`<div style="margin-top:.4rem;color:${COL.opt};font-weight:600;">The next worker's marginal product would be negative — hire refused. Buy an oven to keep growing.</div>`:
+     `<div style="margin-top:.4rem;color:var(--muted);">Average product ${apl.toFixed(1)} loaves/worker. Each hire adds less than the last (diminishing MP).</div>`);
+}
+
+// ════════════════════════════ FIG P.10 — isoquant shape quiz ════════════════════════════
+const p10Deck=[
+  {t:'Q = K^0.5 · L^0.5', a:'cd', why:'Cobb-Douglas → smooth convex isoquants.'},
+  {t:'Q = 2L + 3K', a:'sub', why:'Inputs add up → perfect substitutes → straight lines.'},
+  {t:'Q = min(L, K)', a:'leon', why:'A min() function → fixed proportions → L-shapes.'},
+  {t:'Q = min(2L, K)', a:'leon', why:'Still a min() → Leontief, L-shaped (kinked).'},
+  {t:'Q = K^0.3 · L^0.7', a:'cd', why:'Cobb-Douglas with any positive exponents → convex.'},
+  {t:'Q = L + 0.5K', a:'sub', why:'Linear/additive → perfect substitutes → straight.'},
+  {t:'Q = 4·min(L, 2K)', a:'leon', why:'Scaled min() → fixed proportions → L-shaped.'},
+  {t:'Q = 10·K^0.4·L^0.4', a:'cd', why:'Cobb-Douglas form → smooth convex.'},
+];
+let p10Order=[],p10i=0,p10r=0,p10t=0;
+function p10Shuffle(){ p10Order=d3.shuffle(p10Deck.map((_,i)=>i)); p10i=0; }
+function p10Show(){
+  if(p10i>=p10Order.length)p10Shuffle();
+  document.getElementById('p10-q').innerHTML='Production function: &nbsp;<strong>'+p10Deck[p10Order[p10i]].t+'</strong>';
+  document.getElementById('p10-verdict').innerHTML='&nbsp;';
+  d3.select('#p10-wrap').selectAll('svg').remove();
+}
+function p10Answer(ans){
+  const item=p10Deck[p10Order[p10i]]; p10t++;
+  const v=document.getElementById('p10-verdict');
+  if(ans===item.a){ p10r++; v.style.color='#16a34a'; v.innerHTML='✓ Correct — '+item.why; }
+  else { v.style.color=COL.opt; v.innerHTML='✗ Not quite — '+item.why; }
+  document.getElementById('p10-score').textContent=`Score: ${p10r} / ${p10t}`;
+  p10RenderShape(item.a);
+  p10i++; setTimeout(p10Show,1700);
+}
+function p10RenderShape(kind){
+  const W=300,H=300,dom=10,pad={top:16,right:16,bottom:30,left:34};
+  const svg=d3MakeSvgWH('p10-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'L','K');
+  if(kind==='cd'){ [3,5].forEach((U,i)=>d3Curve(svg,sx,sy,x=>U*U/x,U*U/dom,dom,i?COL.iso:COL.isoGhost,2)); }
+  else if(kind==='sub'){ [5,8].forEach((c,i)=>d3Seg(svg,sx,sy,0,c,c,0,i?COL.iso:COL.isoGhost,2)); }
+  else { [3.4,5.4].forEach((c,i)=>{ const col=i?COL.iso:COL.isoGhost; svg.append('path').attr('d',`M ${sx(c)} ${sy(dom)} L ${sx(c)} ${sy(c)} L ${sx(dom)} ${sy(c)}`).attr('fill','none').attr('stroke',col).attr('stroke-width',2); }); }
+}
+
+// ── boot ──
+window.addEventListener('DOMContentLoaded',()=>{
+  function boot(){
+    if(typeof d3==='undefined'||typeof d3MakeSvgWH==='undefined'){ return setTimeout(boot,40); }
+    p1Draw(); p2Draw(); p3Draw(); p4Draw(); p5Draw(); p6Draw(); p7Draw(); p8Draw(); p9Draw();
+    p10Shuffle(); p10Show();
+  }
+  boot();
+});
+</script>
+</body>
+</html>

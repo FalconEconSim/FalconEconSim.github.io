@@ -182,8 +182,8 @@
       content:'click to collapse ▲';
       position:absolute;
       bottom:2px; right:0.7rem;
-      font-family:var(--mono); font-size:0.56rem; letter-spacing:0.06em;
-      color:var(--faint); opacity:0.45;
+      font-family:var(--mono); font-size:0.6rem; letter-spacing:0.06em;
+      color:#36404f; font-weight:600; opacity:0.9;
       transition:opacity 0.2s; pointer-events:none;
     }
     .viz-header.fig-header-row:hover::after { opacity:1; }
@@ -205,6 +205,28 @@
       border-color:#0d7377 !important;
       background:#f0fdfd !important;
     }
+
+    /* ── Drill micro-interactions: pop on correct, shake on wrong ── */
+    @keyframes quiz-pop {
+      0% { transform:scale(1); }
+      40% { transform:scale(1.07); }
+      100% { transform:scale(1); }
+    }
+    @keyframes quiz-shake {
+      10%,90% { transform:translateX(-1px); }
+      20%,80% { transform:translateX(2px); }
+      30%,50%,70% { transform:translateX(-4px); }
+      40%,60% { transform:translateX(4px); }
+    }
+    .quiz-btn.pop   { animation:quiz-pop 0.36s ease; }
+    .quiz-btn.shake { animation:quiz-shake 0.42s cubic-bezier(.36,.07,.19,.97) both; }
+    /* Color-coded feedback panel: green when right, red when wrong */
+    .quiz-feedback.right { background:#f0fdf4; border-color:#86efac; }
+    .quiz-feedback.wrong { background:#fef2f2; border-color:#fca5a5; }
+    .quiz-feedback .qf-why  { display:block; margin-top:0.45rem; color:#991b1b; }
+    .quiz-feedback .qf-rule { display:block; margin-top:0.5rem; padding-top:0.45rem;
+      border-top:1px dashed var(--rule); font-size:0.8rem; color:var(--muted); }
+    .quiz-feedback .qf-rule b { color:var(--ink-light); }
 
     /* ── Dev banner ── */
     .dev-banner {
@@ -249,9 +271,22 @@
     }
     .tip-popover.visible { display:block; }
 
+    /* ── A2: preset scenario chips + D4 reset chip ── */
+    .scenario-chips { display:flex; flex-wrap:wrap; gap:0.45rem; align-items:center; margin-bottom:0.9rem; }
+    .scenario-chips .chips-label { font-family:var(--mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--faint); margin-right:0.2rem; }
+    .viz-btn {
+      font-family:var(--font); font-size:0.78rem; font-weight:600;
+      padding:0.32rem 0.78rem; border:1px solid var(--rule); border-radius:16px;
+      background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s; white-space:nowrap;
+    }
+    .viz-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+    .viz-btn.reset-chip { border-color:#d0a0a0; color:#b04646; }
+    .viz-btn.reset-chip:hover { background:#fdeaea; border-color:#c0392b; color:#c0392b; }
+
     /* ── Reduced-motion: disable pulse/transition animations (a11y) ── */
     @media (prefers-reduced-motion: reduce) {
       .verdict-at-optimum { animation:none; }
+      .quiz-btn.pop, .quiz-btn.shake { animation:none; }
       .fig-chevron, .viz-header.fig-header-row::after,
       .viz-header.fig-header-row, .tip-icon { transition:none; }
       html { scroll-behavior:auto; }
@@ -419,6 +454,13 @@
               Fixed original: <strong>P<sub>X</sub> = $3</strong> &nbsp;·&nbsp; <strong>I = $60</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
             </div>
           </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Scenarios:</span>
+            <button class="viz-btn" onclick="vizSetSlider('v2-px',1,true)">Big price drop ($3→$1)</button>
+            <button class="viz-btn" onclick="vizSetSlider('v2-px',2.25,true)">Small price drop ($3→$2.25)</button>
+            <button class="viz-btn" onclick="vizSetSlider('v2-px',5,true)">Price rise ($3→$5)</button>
+            <button class="viz-btn reset-chip" onclick="vizSetSlider('v2-px',1.5,true)">↺ Reset</button>
+          </div>
           <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
             <div class="viz-panel">
               <div class="viz-panel-label">Three budget lines · Two ICs</div>
@@ -489,6 +531,13 @@
             <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
               Fixed: <strong>P<sub>X</sub> = $2</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
             </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Scenarios:</span>
+            <button class="viz-btn" onclick="vizSetSlider('v3-income',40,true)">Low income ($40)</button>
+            <button class="viz-btn" onclick="vizSetSlider('v3-income',100,true)">Income +25% ($100)</button>
+            <button class="viz-btn" onclick="vizSetSlider('v3-income',120,true)">High income ($120)</button>
+            <button class="viz-btn reset-chip" onclick="vizSetSlider('v3-income',80,true)">↺ Reset</button>
           </div>
           <div class="viz-two-col">
             <div class="viz-panel">
@@ -573,6 +622,13 @@
                 <button class="toggle-opt" id="v5-comp-btn" onclick="v5SetRel('comp')">Complements</button>
               </div>
             </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Scenarios:</span>
+            <button class="viz-btn" onclick="vizPreset({'v5-py':7},true)">Substitute price ↑ (P<sub>Y</sub>→$7)</button>
+            <button class="viz-btn" onclick="vizPreset({'v5-py':1.5},true)">Related price ↓ (P<sub>Y</sub>→$1.50)</button>
+            <button class="viz-btn" onclick="vizSetSlider('v5-income',150,true)">Income +50% ($150)</button>
+            <button class="viz-btn reset-chip" onclick="vizPreset({'v5-px':4,'v5-py':4,'v5-income':100},true)">↺ Reset</button>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div aria-live="polite">
@@ -1374,8 +1430,8 @@ function drawV2() {
     boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.06],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}}}
   });
   const b = v2b;
   // Horizontal grid lines
@@ -1383,13 +1439,13 @@ function drawV2() {
   for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
     b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'#888',fixed:true});
-  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#888',fixed:true});
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:12,color:'#555',fixed:true});
 
   // Budget lines
-  const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
-  const segHicks = b.create('segment',[[0,yHicksInt],[xiHicks,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
-  const segNew   = b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+  const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2.6,fixed:true});
+  const segHicks = b.create('segment',[[0,yHicksInt],[xiHicks,0]],{strokeColor:'#6b52a8',strokeWidth:2.6,dash:2,fixed:true});
+  const segNew   = b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2.6,fixed:true});
   // Curve-name labels ("Original"/"Compensated"/"New") are rendered by the
   // D3 SVG overlay below as draggable force-labels (S6/S8 gold-standard style)
   // instead of fixed JSXGraph text — see d3v2InitOverlay().
@@ -1398,20 +1454,24 @@ function drawV2() {
   const alpha = 0.5;
   const uA = Math.pow(d.XA,alpha)*Math.pow(d.YA,1-alpha);
   b.create('functiongraph',[x=>x>0.05?Math.pow(uA*uA/x,1):NaN,0.05,xmax],
-    {strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
+    {strokeColor:'#3d5a80',strokeWidth:2.6,fixed:true});
   const uB = Math.pow(d.XB,alpha)*Math.pow(d.YB,1-alpha);
   b.create('functiongraph',[x=>x>0.05?Math.pow(uB*uB/x,1):NaN,0.05,xmax],
-    {strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+    {strokeColor:'#c0392b',strokeWidth:2.6,fixed:true});
 
   // Points A, C, B
   [{x:d.XA,y:d.YA,n:'A',c:'#3d5a80'},{x:d.XC,y:d.YC,n:'C',c:'#6b52a8'},{x:d.XB,y:d.YB,n:'B',c:'#c0392b'}]
     .forEach(p => b.create('point',[p.x,p.y],{size:5,fillColor:p.c,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:p.n,withLabel:true,label:{fontSize:9,color:p.c,offset:[7,7]}}));
+      name:p.n,withLabel:true,label:{fontSize:11,color:p.c,offset:[7,7]}}));
 
   // SE/IE brackets on X axis
   const yBr = -ymax*0.03;
-  const segSE = b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2,fixed:true});
-  const segIE = b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+  const segSE = b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:4,fixed:true,lastArrow:{type:2,size:4},firstArrow:{type:2,size:4}});
+  const segIE = b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:4,fixed:true,lastArrow:{type:2,size:4},firstArrow:{type:2,size:4}});
+  // Faint colored drop-lines tying X_A, X_C, X_B on the axis to the bracket ends (D2 clarity)
+  b.create('segment',[[d.XA,0],[d.XA,yBr]],{strokeColor:'#6b52a8',strokeWidth:1,dash:2,fixed:true,highlight:false,strokeOpacity:0.5});
+  b.create('segment',[[d.XC,0],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:1,dash:2,fixed:true,highlight:false,strokeOpacity:0.5});
+  b.create('segment',[[d.XB,0],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:1,dash:2,fixed:true,highlight:false,strokeOpacity:0.5});
   // "SE"/"IE" bracket labels are rendered by the D3 SVG overlay below
   // (see d3v2InitOverlay()) instead of fixed JSXGraph text.
 
@@ -1553,15 +1613,15 @@ function initViz3() {
     boundingbox:[-2,ymax,xmax,-2],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}}}
   });
   v3b2 = JXG.JSXGraph.initBoard('jxg-v3-right',{
     boundingbox:[-2,7,xmax,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}}}
   });
 
   const b1 = v3b1, b2 = v3b2;
@@ -1573,10 +1633,10 @@ function initViz3() {
   for (let gy = 1; gy <= 6; gy++) {
     b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'#888',fixed:true});
-  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'#888',fixed:true});
-  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
-  b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#888',fixed:true});
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:12,color:'#555',fixed:true});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:12,color:'#555',fixed:true});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:12,color:'#555',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize:12,color:'#555',fixed:true});
 
   // Draw expansion path (static dashed line). Its label is rendered by the
   // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
@@ -1612,25 +1672,25 @@ function initViz3() {
     const xi = I / V3_Px, yi = I / V3_Py;
 
     if (v3BL) { try{b1.removeObject(v3BL);}catch(e){} }
-    v3BL = b1.create('segment',[[0,yi],[xi,0]],{strokeColor:'#1a1a1a',strokeWidth:2,fixed:true});
+    v3BL = b1.create('segment',[[0,yi],[xi,0]],{strokeColor:'#1a1a1a',strokeWidth:2.6,fixed:true});
 
     if (v3IC) { try{b1.removeObject(v3IC);}catch(e){} }
     if (v3Type === 'normal') {
       const u2 = xs * ys;
       v3IC = b1.create('functiongraph',[x => x>0.05 ? u2/x : NaN, 0.05, xmax],
-        {strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+        {strokeColor:'#1a56db',strokeWidth:2.6,fixed:true});
     } else {
       // For inferior: draw a convex IC approximation through (xs, ys) with slope = -Px/Py
       const slope = -V3_Px/V3_Py;
       const k = ys - slope * xs;
       v3IC = b1.create('functiongraph',[
         x => x>0.05 ? k + slope*x + 0.5*(x-xs)*(x-xs)*0.05 : NaN, 0.05, xmax
-      ],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+      ],{strokeColor:'#1a56db',strokeWidth:2.6,fixed:true});
     }
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
     v3Pt = b1.create('point',[xs,ys],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[14,-18]}});
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:11,color:'#e05252',offset:[14,-18]}});
 
     // Right panel: draw demand curve at current I
     if (v3D1) { try{b2.removeObject(v3D1);}catch(e){} }
@@ -1640,7 +1700,7 @@ function initViz3() {
     if (v3Type === 'normal') {
       // X* = 0.5*I/Px => P = 0.5*I/X
       const half = 0.5*I;
-      v3D1 = b2.create('functiongraph',[x=>x>0.1?half/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+      v3D1 = b2.create('functiongraph',[x=>x>0.1?half/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.6,fixed:true});
       // Reference line at Px=2: X* = 0.5*I/2
       v3D2 = b2.create('segment',[[xs,0],[xs,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
       v3RefPt = b2.create('point',[xs,V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
@@ -1649,7 +1709,7 @@ function initViz3() {
       // Inferior: X* = 20 - 0.05*I at each Px => shifted demand function (conceptual linear)
       // At Px=2: X* = 20 - 0.05*I; treat other prices as X* = (20-0.05*I) * (2/Px) * adjustment
       const xRef = v3Xstar(I);
-      v3D1 = b2.create('functiongraph',[x=>x>0.1?(V3_Px*xRef)/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+      v3D1 = b2.create('functiongraph',[x=>x>0.1?(V3_Px*xRef)/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2.6,fixed:true});
       v3D2 = b2.create('segment',[[xRef,0],[xRef,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
       v3RefPt = b2.create('point',[xRef,V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,name:'●',withLabel:false});
     }
@@ -1747,16 +1807,30 @@ function drillAnswer(ans) {
   const fb   = document.getElementById('drill-feedback');
   const next = document.getElementById('drill-next');
 
-  if (ans === 'movement') {
-    btnM.classList.add(correct ? 'correct' : 'incorrect');
-    if (sc.answer === 'shift') btnS.classList.add('revealed');
-  } else {
-    btnS.classList.add(correct ? 'correct' : 'incorrect');
-    if (sc.answer === 'movement') btnM.classList.add('revealed');
-  }
+  const chosenBtn = (ans === 'movement') ? btnM : btnS;
+  const otherBtn  = (ans === 'movement') ? btnS : btnM;
+  chosenBtn.classList.add(correct ? 'correct' : 'incorrect');
+  chosenBtn.classList.add(correct ? 'pop' : 'shake');
+  if (!correct) otherBtn.classList.add('revealed');   // also light up the right answer
+
+  const RULE = '<span class="qf-rule"><b>Rule of thumb:</b> only a change in the good\'s <b>own price (P<sub>X</sub>)</b> moves you <em>along</em> the curve. Every <em>other</em> determinant — income, prices of related goods, tastes, expectations, number of buyers — <em>shifts</em> the whole curve.</span>';
 
   fb.style.display = 'block';
-  fb.innerHTML = `${correct ? '✅ <strong>Correct!</strong>' : `❌ <strong>Incorrect.</strong> The answer is <em>${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}</em>.`} ${sc.explanation}`;
+  fb.classList.remove('right', 'wrong');
+  if (correct) {
+    fb.classList.add('right');
+    fb.innerHTML = `✅ <strong>Correct!</strong> ${sc.explanation}`;
+  } else {
+    fb.classList.add('wrong');
+    // Contrastive "why your answer was wrong" — the whole distinction is whether P_X itself moved.
+    const why = (sc.answer === 'movement')
+      ? 'You chose <em>Shift of Curve</em>, but here only the <strong>own price of X</strong> changed. A change in P<sub>X</sub> never repositions the curve itself — it slides the consumer to a new point <em>along</em> the existing curve.'
+      : 'You chose <em>Movement Along</em>, but the <strong>own price of X did not change</strong> here — a non-price determinant did. That repositions the <em>entire</em> curve (a shift); you move <em>along</em> a curve only when P<sub>X</sub> itself changes.';
+    fb.innerHTML = `❌ <strong>Not quite — the answer is ${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}.</strong>`
+      + `<span class="qf-why">${why}</span>`
+      + `<span style="display:block;margin-top:0.45rem;">${sc.explanation}</span>`
+      + RULE;
+  }
   next.style.display = 'inline-block';
   next.style.cssText = 'font-family:var(--font);font-size:0.88rem;font-weight:600;padding:0.45rem 1.4rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;';
   setTimeout(() => next.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
@@ -1825,16 +1899,16 @@ function initViz5() {
     boundingbox:[-2,8.8,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}}}
   });
   const b = v5b;
   // Horizontal grid lines (price 0-8)
   for (let gy = 1; gy <= 8; gy++) {
     b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[76,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
-  b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'#888',fixed:true});
+  b.create('text',[76,-0.3,'X'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-1.5,8.3,'P'],{fontSize:12,color:'#555',fixed:true});
 
   redrawV5();
 
@@ -1870,12 +1944,12 @@ function redrawV5() {
   const safAdj = Math.max(adjI, 5);
 
   v5Curve = b.create('functiongraph',[x => x>0.1 ? safAdj/x : NaN, 0.1, 80],
-    {strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+    {strokeColor:'#1a56db',strokeWidth:2.6,fixed:true});
 
   // Current point
   const curX = safAdj / v5Px;
   v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[7,5]}});
+    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize:11,color:'#e05252',offset:[7,5]}});
 
   // "D" demand-curve name label as a draggable D3 SVG force-label overlay
   // (S6/S8 gold-standard style), anchored to a point on the curve.
@@ -1911,6 +1985,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+/* ── A2/D4: preset scenario chips — set one or more sliders, dispatch input,
+   keep the track fill + figure redraw in sync. Optional eased ramp (D4). ── */
+function vizSetSlider(id, val, ease) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!ease) {
+    el.value = val;
+    el.dispatchEvent(new Event('input', { bubbles:true }));
+    if (window._syncFill) window._syncFill(el);
+    return;
+  }
+  var from = parseFloat(el.value), to = parseFloat(val), t0 = performance.now(), dur = 400;
+  function step(now) {
+    var k = Math.min(1, (now - t0) / dur);
+    var e = 1 - Math.pow(1 - k, 3); // easeOutCubic
+    el.value = from + (to - from) * e;
+    el.dispatchEvent(new Event('input', { bubbles:true }));
+    if (window._syncFill) window._syncFill(el);
+    if (k < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function vizPreset(map, ease) {
+  Object.keys(map).forEach(function(id){ vizSetSlider(id, map[id], ease); });
+}
 </script>
 
 <script>
@@ -1977,6 +2077,7 @@ function closeLN() { document.getElementById('leftNav').classList.remove('open')
     openIcon = null;
     openedByClick = false;
     tip.classList.remove('visible');
+    tip.style.display = 'none';  /* clear the inline display:block set by placeTip, else the bubble lingers */
   }
   function placeTip(icon) {
     var rect = icon.getBoundingClientRect();
@@ -2149,6 +2250,22 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('pagehide', function(){ try{ obs.disconnect(); }catch(e){} }, { once: true });
   });
 })();
+</script>
+
+<script>
+/* ── Start every figure collapsed so students expand them one at a time. ──
+   Registered last, so it runs AFTER initViz1..5 (which size the canvases and
+   JSXGraph boards from each figure's visible width): the boards are built at
+   their real size first, then we collapse via display:none — avoiding the
+   zero-size hidden-init trap. It runs within DOMContentLoaded, before first
+   paint, so there is no expand-then-collapse flash. */
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.viz-wrapper').forEach(function(w) {
+    w.classList.add('collapsed');
+    var hdr = w.querySelector('.viz-header');
+    if (hdr) hdr.setAttribute('aria-expanded', 'false');
+  });
+});
 </script>
 </body>
 </html>

@@ -248,7 +248,9 @@ function v31Draw(){
   d3Seg(v31a,scX,scY,0,yi,xi,0,COL.budget,2.2);
   v31a.append('line').attr('x1',scX(xs)).attr('y1',scY(ys)).attr('x2',scX(xs)).attr('y2',scY(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
   v31a.append('circle').attr('cx',scX(xs)).attr('cy',scY(ys)).attr('r',5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.5);
-  d3HaloLabel(v31a,scX(xs*1.55),scY(ys*1.35),'optimum',{color:COL.opt});
+  // anchor the label just up-right of the dot, clamped inside the frame so it
+  // never drifts off-screen at low Px (large X*) — domX is fixed for this panel
+  d3HaloLabel(v31a,Math.max(D3PAD.left+26,Math.min(scX(xs)+46,D3W-D3PAD.right-26)),Math.max(D3PAD.top+10,scY(ys)-28),'optimum',{color:COL.opt});
   // ---- bottom panel: demand curve ----
   const sX=d3.scaleLinear().domain([0,domX]).range([D3PAD.left,D3W-D3PAD.right]);
   const sP=d3.scaleLinear().domain([0,domP]).range([D3H-D3PAD.bottom,D3PAD.top]);
@@ -262,7 +264,9 @@ function v31Draw(){
   v31b.append('line').attr('x1',sX(xs)).attr('y1',sP(px)).attr('x2',sX(xs)).attr('y2',sP(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
   v31b.append('line').attr('x1',D3PAD.left).attr('y1',sP(px)).attr('x2',sX(xs)).attr('y2',sP(px)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
   v31b.append('circle').attr('cx',sX(xs)).attr('cy',sP(px)).attr('r',5).attr('fill',COL.demand).attr('stroke','#fff').attr('stroke-width',1.5);
-  d3HaloLabel(v31b,sX(xs*1.4),sP(px)+13,'(X*, Px)',{color:COL.demand});
+  // place just left-and-below the dot (open space under the convex curve),
+  // clamped in-frame so it stays clear of the "Demand" label at low Px
+  d3HaloLabel(v31b,Math.max(D3PAD.left+30,sX(xs)-30),sP(px)+14,'(X*, Px)',{color:COL.demand});
   d3HaloLabel(v31b,sX(domX*0.78),sP(a*M/(domX*0.78))-6,'Demand',{color:COL.demand,size:11,weight:700});
   document.getElementById('v31-px-val').textContent='$'+px.toFixed(1);
   document.getElementById('v31-readout').innerHTML=

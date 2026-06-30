@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>[DEV · Claude] Week 6 Visualizations · Costs - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script defer src="assets/dev/d3kit.js"></script>
+  <style>
+    .demo-svg-wrap{padding:0;}
+    .demo-svg-wrap svg{display:block;width:100%;}
+    .draggable-label{cursor:move;}
+    .dev-banner{background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;font-size:0.8rem;font-weight:600;text-align:center;padding:6px 12px;letter-spacing:0.02em;}
+    .dev-banner a{color:#92400e;text-decoration:underline;}
+    .viz-hero{padding:2.6rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
+    .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:600px;margin-bottom:0.3rem;position:relative;z-index:1;}
+    .viz-instructor{font-size:0.9rem;color:var(--muted);}
+    .viz-bridge{font-size:0.92rem;color:var(--muted);line-height:1.7;max-width:680px;margin-top:0.7rem;}
+    .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
+    .toc li{font-size:0.855rem;color:var(--muted);}
+    .toc a{color:var(--accent);text-decoration:none;}
+    .toc a:hover{text-decoration:underline;}
+    .sec-divider{font-family:var(--mono);font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:3.2rem 0 0;padding-bottom:0.4rem;}
+    .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
+    .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;flex-wrap:wrap;}
+    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
+    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
+    .fig-collapse-btn{margin-left:auto;font-family:var(--mono);font-size:0.68rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);background:var(--off-white);border:1px solid var(--rule);border-radius:6px;padding:3px 10px;cursor:pointer;}
+    .fig-collapse-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .fig-body[hidden]{display:none;}
+    .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
+    .cvs-wrap.square{max-width:470px;margin-left:auto;margin-right:auto;}
+    .cvs-wrap.wide{max-width:840px;margin-left:auto;margin-right:auto;}
+    .panel-label{font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule);}
+    .panel-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+    @media(max-width:640px){.panel-grid-2{grid-template-columns:1fr;}}
+    .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
+    .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
+    .viz-slider-label{font-family:var(--mono);font-size:0.75rem;color:var(--muted);white-space:nowrap;}
+    .viz-slider{width:130px;accent-color:var(--accent);}
+    .viz-slider:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:3px;}
+    .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:42px;}
+    .viz-select{font-family:var(--mono);font-size:0.82rem;border:1px solid var(--rule);border-radius:6px;padding:4px 8px;background:var(--off-white);color:var(--text);cursor:pointer;}
+    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+    .viz-btn.reset{background:#fffaf0;border-color:#e6cf94;color:#9a6a00;}
+    .viz-btn.reset:hover{background:#fdf0d5;}
+    .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
+    .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
+    .readout-col{flex:1;min-width:96px;}
+    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+    .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
+    .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
+    .insight-box.gold{background:#fdf8ec;border-color:#e6cf94;}
+    .insight-box.red{background:#fff5f5;border-color:#f5c6c6;}
+    .steps-box{background:#f8fafb;border:1px solid var(--rule);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;font-size:0.86rem;line-height:1.85;display:none;}
+    .steps-box.show{display:block;}
+    .step-num{font-family:var(--mono);font-size:0.72rem;font-weight:600;color:var(--accent);background:var(--accent-light);padding:1px 6px;border-radius:3px;margin-right:0.4rem;}
+    /* info tooltip */
+    .info-wrap{position:relative;display:inline-flex;}
+    .info-ic{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--rule);font-size:0.64rem;font-weight:700;color:var(--muted);cursor:pointer;user-select:none;font-family:var(--mono);}
+    .info-ic:hover,.info-ic:focus-visible{border-color:var(--accent);color:var(--accent);outline:none;}
+    .info-bubble{position:absolute;z-index:30;left:50%;transform:translateX(-50%);bottom:150%;width:236px;background:#1f2937;color:#f3f4f6;font-size:0.76rem;line-height:1.5;padding:0.6rem 0.75rem;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,0.18);display:none;font-weight:400;font-family:var(--font);text-align:left;}
+    .info-bubble::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1f2937;}
+    .hub-footer{border-top:1px solid var(--rule);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
+    .hub-footer-left{font-size:0.82rem;color:var(--muted);}
+    .hub-footer-left a{color:var(--muted);text-decoration:none;}
+  </style>
+</head>
+<body>
+
+<div class="dev-banner">DEV PREVIEW · Claude rebuild of the Costs week in the Fig 8.1 D3 style · not linked from the student site · <a href="dev.html">← all dev pages</a></div>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <a href="index.html" aria-label="Course home">
+      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
+    </a>
+    <div class="top-bar-divider"></div>
+    <div class="breadcrumb">
+      <a href="dev.html">Dev</a>
+      <span class="breadcrumb-sep">&#x203A;</span>
+      <span>Claude · Week 6 · Costs</span>
+    </div>
+  </div>
+</div>
+
+<main class="main" style="max-width:1400px;">
+  <div class="viz-hero">
+    <div class="viz-ghost">06</div>
+    <p class="viz-week-label">Week 6 &middot; Interactive Visualizations &middot; Claude D3 rebuild</p>
+    <h1 class="viz-title">Costs: From the Cheapest Bundle to the Cost Curves</h1>
+    <p class="viz-instructor">Prof. Naveen Sunder</p>
+    <p class="viz-bridge">
+      Production told us what's possible; cost theory asks what's <em>cheapest</em>. We start where the isocost line is
+      tangent to the isoquant (cost minimization), trace that optimum across output levels to build the total-cost curve,
+      then unpack the short-run family (MC, AVC, ATC, AFC) and the long-run average-cost envelope. Square frames for the
+      input diagrams, wide frames for the cost curves.
+    </p>
+    <nav class="toc">
+      <div class="toc-title">Figures</div>
+      <ol>
+        <li><a href="#sec-c1">Fig C.1: Cost-Minimization Sandbox</a></li>
+        <li><a href="#sec-c2">Fig C.2: Two-Panel Cost Derivation</a></li>
+        <li><a href="#sec-c3">Fig C.3: Short-Run Cost Curves (MC, AVC, ATC, AFC)</a></li>
+        <li><a href="#sec-c4">Fig C.4: The LRAC Envelope Builder</a></li>
+        <li><a href="#sec-c5">Fig C.5: Minimum-Wage Automation</a></li>
+        <li><a href="#sec-c6">Fig C.6: Efficient-Scale Finder</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="sec-divider">Section 1 &middot; The cheapest way to produce</div>
+
+  <!-- FIG C.1 -->
+  <section class="fig-section" id="sec-c1">
+    <div class="fig-hdr"><span class="fig-label">Fig C.1</span><span class="fig-title">Cost-Minimization Sandbox</span>
+      <button class="fig-collapse-btn" data-target="c1-body">collapse</button></div>
+    <div class="fig-body" id="c1-body">
+    <p class="fig-intro">
+      For Q = K<sup>0.5</sup>L<sup>0.5</sup>, the cheapest way to make q units sits where an <strong style="color:#d4813a;">isocost</strong>
+      line is tangent to the <strong style="color:#1a56db;">isoquant</strong> &mdash; where MRTS = w/v. Set the wage w, the
+      rental rate v, and the target output q; the optimum (L*, K*) and the lowest isocost track your sliders. A square frame
+      keeps the tangency honest.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">Wage w:</span>
+        <input type="range" class="viz-slider" id="c1-w" min="1" max="10" step="any" value="4" oninput="c1Draw()" aria-label="Wage w"><span class="viz-slider-val" id="c1-w-val">4.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Rental v:</span>
+        <input type="range" class="viz-slider" id="c1-v" min="1" max="10" step="any" value="4" oninput="c1Draw()" aria-label="Rental v"><span class="viz-slider-val" id="c1-v-val">4.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Output q:</span>
+        <input type="range" class="viz-slider" id="c1-q" min="1" max="6" step="any" value="3" oninput="c1Draw()" aria-label="Output q"><span class="viz-slider-val" id="c1-q-val">3.0</span></div>
+      <button class="viz-btn" id="c1-steps-btn" onclick="c1ToggleSteps()">Show the steps</button>
+      <button class="viz-btn reset" onclick="c1Reset()">Reset to defaults</button>
+    </div>
+    <div class="cvs-wrap square"><div class="demo-svg-wrap" id="c1-wrap"></div></div>
+    <div class="viz-readout" id="c1-readout"></div>
+    <div class="steps-box" id="c1-steps"></div>
+    </div>
+  </section>
+
+  <!-- FIG C.2 -->
+  <section class="fig-section" id="sec-c2">
+    <div class="fig-hdr"><span class="fig-label">Fig C.2</span><span class="fig-title">Two-Panel Cost Derivation</span>
+      <button class="fig-collapse-btn" data-target="c2-body">collapse</button></div>
+    <div class="fig-body" id="c2-body">
+    <p class="fig-intro">
+      <strong>Left:</strong> the isoquant map with the cost-minimizing bundle marching out along the expansion path.
+      <strong>Right:</strong> each bundle's cost becomes one point on the total-cost curve TC(q), drawn directly beside it so
+      you watch the cost curve assemble itself. Step through the output levels or press play.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
+      <span class="viz-slider-label">Production function:</span>
+      <select class="viz-select" id="c2-form" onchange="c2FormChange()">
+        <option value="cd">Cobb-Douglas: Q = K^0.5 · L^0.5</option>
+        <option value="subs">Perfect substitutes: Q = L + K</option>
+        <option value="comp">Perfect complements: Q = min(L, K)</option>
+      </select>
+    </div>
+    <div class="insight-box" id="c2-note" style="margin-top:0;">Cobb-Douglas: inputs substitute imperfectly. The expansion path is a ray through the origin and (here, with constant returns) the TC curve is a straight line through the origin.</div>
+    <div class="panel-grid-2" style="margin-top:0.75rem;">
+      <div class="cvs-wrap"><div class="panel-label">Isoquant map + isocost</div><div class="demo-svg-wrap" id="c2a-wrap"></div></div>
+      <div class="cvs-wrap"><div class="panel-label">Total cost TC(q)</div><div class="demo-svg-wrap" id="c2b-wrap"></div></div>
+    </div>
+    <div class="viz-ctrl-row">
+      <button class="viz-btn" onclick="c2Play()">&#9654; Play</button>
+      <button class="viz-btn" onclick="c2Step(-1)">&larr; Prev</button>
+      <button class="viz-btn" onclick="c2Step(1)">Next &rarr;</button>
+      <button class="viz-btn reset" onclick="c2ResetSteps()">&#8635; Reset</button>
+    </div>
+    <div class="viz-readout" id="c2-readout"></div>
+    </div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; The short-run cost family</div>
+
+  <!-- FIG C.3 -->
+  <section class="fig-section" id="sec-c3">
+    <div class="fig-hdr"><span class="fig-label">Fig C.3</span><span class="fig-title">Short-Run Cost Curves</span>
+      <button class="fig-collapse-btn" data-target="c3-body">collapse</button></div>
+    <div class="fig-body" id="c3-body">
+    <p class="fig-intro">
+      Marginal cost (MC), average variable cost (AVC), average total cost (ATC), and average fixed cost (AFC) on one wide
+      canvas. MC cuts AVC and ATC at their minimums; the gap between ATC and AVC is exactly AFC. Raise the
+      <strong>fixed cost</strong> and watch ATC lift while MC and AVC stay put.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">Total fixed cost:</span>
+        <input type="range" class="viz-slider" id="c3-tfc" min="10" max="120" step="any" value="40" oninput="c3Draw()" style="width:180px;" aria-label="Total fixed cost"><span class="viz-slider-val" id="c3-tfc-val">40</span></div>
+      <button class="viz-btn" id="c3-lr-btn" onclick="c3ToggleLR()">Show LRAC</button>
+      <button class="viz-btn reset" onclick="c3ResetLabels()">Reset labels</button>
+      <span class="info-wrap"><span class="info-ic" tabindex="0" role="button" aria-label="Why MC crosses at the minimum" onclick="infoToggle(this,event)" onkeydown="infoKey(this,event)">i</span><span class="info-bubble">MC pulls the averages: when MC is below an average, that average falls; when MC is above, it rises. So MC must cross AVC and ATC exactly at their lowest points.</span></span>
+    </div>
+    <div class="cvs-wrap wide"><div class="demo-svg-wrap" id="c3-wrap"></div></div>
+    <div class="viz-readout" id="c3-readout"></div>
+    <div class="insight-box gold"><strong>Fixed costs only move ATC:</strong> AFC = TFC/q shrinks as output grows, so ATC and AVC squeeze together at high q. MC and AVC are built from variable cost alone, so the TFC slider never touches them.</div>
+    </div>
+  </section>
+
+  <!-- FIG C.4 -->
+  <section class="fig-section" id="sec-c4">
+    <div class="fig-hdr"><span class="fig-label">Fig C.4</span><span class="fig-title">The LRAC Envelope Builder</span>
+      <button class="fig-collapse-btn" data-target="c4-body">collapse</button></div>
+    <div class="fig-body" id="c4-body">
+    <p class="fig-intro">
+      Each plant size has its own short-run average-cost (SRAC) curve. The long-run average cost is their <strong>lower
+      envelope</strong> &mdash; at every output, pick the plant that makes it cheapest. Add more plant sizes and the scalloped
+      envelope smooths toward the LRAC.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">Number of plant sizes:</span>
+        <input type="range" class="viz-slider" id="c4-n" min="1" max="9" step="1" value="4" oninput="c4Draw()" style="width:180px;" aria-label="Number of SRAC curves"><span class="viz-slider-val" id="c4-n-val">4</span></div>
+      <button class="viz-btn reset" onclick="c4ResetLabels()">Reset labels</button>
+    </div>
+    <div class="cvs-wrap wide"><div class="demo-svg-wrap" id="c4-wrap"></div></div>
+    <div class="viz-readout" id="c4-readout"></div>
+    </div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; Applications</div>
+
+  <!-- FIG C.5 -->
+  <section class="fig-section" id="sec-c5">
+    <div class="fig-hdr"><span class="fig-label">Fig C.5</span><span class="fig-title">Minimum-Wage Automation</span>
+      <button class="fig-collapse-btn" data-target="c5-body">collapse</button></div>
+    <div class="fig-body" id="c5-body">
+    <p class="fig-intro">
+      You manage a firm producing a fixed output q. Raise the minimum wage and the <strong style="color:#d4813a;">isocost</strong>
+      line rotates steeper &mdash; the cost-minimizing bundle slides up the isoquant toward <strong>more capital, less labor</strong>.
+      The faint <span style="color:#9aa3b2;">ghost</span> is where you started. Substitution toward automation, drawn live.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="viz-slider-group"><span class="viz-slider-label">Min wage w:</span>
+        <input type="range" class="viz-slider" id="c5-w" min="1" max="12" step="any" value="3" oninput="c5Draw()" aria-label="Minimum wage"><span class="viz-slider-val" id="c5-w-val">3.0</span></div>
+      <div class="viz-slider-group"><span class="viz-slider-label">Capital cost v:</span>
+        <input type="range" class="viz-slider" id="c5-v" min="1" max="8" step="any" value="3" oninput="c5Draw()" aria-label="Capital cost"><span class="viz-slider-val" id="c5-v-val">3.0</span></div>
+      <button class="viz-btn" onclick="c5SetBaseline()">Set current as baseline</button>
+      <button class="viz-btn reset" onclick="c5Reset()">Reset</button>
+    </div>
+    <div class="cvs-wrap square"><div class="demo-svg-wrap" id="c5-wrap"></div></div>
+    <div class="viz-readout" id="c5-readout"></div>
+    </div>
+  </section>
+
+  <!-- FIG C.6 -->
+  <section class="fig-section" id="sec-c6">
+    <div class="fig-hdr"><span class="fig-label">Fig C.6</span><span class="fig-title">Efficient-Scale Finder</span>
+      <button class="fig-collapse-btn" data-target="c6-body">collapse</button></div>
+    <div class="fig-body" id="c6-body">
+    <p class="fig-intro">
+      Pick an average-cost shape. The tool marks q* (the <strong>efficient scale</strong> where AC is lowest), shades
+      <strong style="color:#1e8449;">economies of scale</strong> to its left and <strong style="color:#c0392b;">diseconomies</strong>
+      to its right, and (on toggle) overlays MC &mdash; which always crosses AC at its minimum.
+    </p>
+    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
+      <div style="display:flex;flex-direction:column;gap:0.3rem;">
+        <span class="viz-slider-label">AC function:</span>
+        <select class="viz-select" id="c6-preset" onchange="c6Draw()" style="max-width:320px;">
+          <option value="0">Classic U-shape: AC = q − 6 + 36/q</option>
+          <option value="1">Flatter U-shape: AC = 0.5q − 4 + 32/q</option>
+          <option value="2">Steep U-shape: AC = 2q − 8 + 16/q</option>
+          <option value="3">Fixed-cost heavy: AC = q + 100/q</option>
+          <option value="4">Economies only: AC = 20/q + 2</option>
+          <option value="5">Diseconomies only: AC = 3q + 2</option>
+        </select>
+      </div>
+      <button class="viz-btn" id="c6-mc-btn" onclick="c6ToggleMC()">Show marginal cost</button>
+    </div>
+    <div class="cvs-wrap wide"><div class="demo-svg-wrap" id="c6-wrap"></div></div>
+    <div class="viz-readout" id="c6-readout"></div>
+    </div>
+  </section>
+
+  <div class="hub-footer">
+    <div class="hub-footer-left"><a href="dev.html">&larr; Back to dev pages</a> &middot; Claude D3 rebuild &middot; uses <code>assets/dev/d3kit.js</code></div>
+  </div>
+</main>
+
+<script>
+const COL = { iso:'#1a56db', isoGhost:'#a9c2f0', isocost:'#d4813a', opt:'#c0392b', ghost:'#9aa3b2',
+  mc:'#c0392b', avc:'#1e8449', atc:'#1a56db', afc:'#7d3c98', lrac:'#2c3e50', purple:'#7d3c98',
+  tc:'#1a56db', capital:'#2c3e50', econ:'#1e8449', disecon:'#c0392b' };
+
+// ── page-local helpers for custom-sized canvases (no d3kit signature changes) ──
+function axesWH(svg, scX, scY, W, H, pad, xl, yl, fmtX, fmtY){
+  svg.append('g').selectAll('line').data(scY.ticks(4)).enter().append('line')
+    .attr('x1',pad.left).attr('x2',W-pad.right).attr('y1',d=>scY(d)).attr('y2',d=>scY(d))
+    .attr('stroke','#f0f0f0').attr('stroke-width',1);
+  svg.append('g').attr('transform',`translate(0,${H-pad.bottom})`).call(d3.axisBottom(scX).ticks(6).tickSize(4).tickFormat(fmtX||null))
+    .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  svg.append('g').attr('transform',`translate(${pad.left},0)`).call(d3.axisLeft(scY).ticks(5).tickSize(4).tickFormat(fmtY||null))
+    .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  if(xl) svg.append('text').attr('x',pad.left+(W-pad.left-pad.right)/2).attr('y',H-5).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xl);
+  if(yl) svg.append('text').attr('transform','rotate(-90)').attr('x',-(pad.top+(H-pad.top-pad.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yl);
+}
+function clampWH(nodes,gs,conns,W,H,pad){
+  nodes.forEach(d=>{ d.x=Math.max(pad.left-4,Math.min(W-d.lw-4,d.x)); d.y=Math.max(pad.top,Math.min(H-pad.bottom-LABEL_H,d.y)); });
+  gs.attr('transform',d=>`translate(${d.x},${d.y})`);
+  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+}
+
+// info tooltip (clears inline display on hide)
+function hideAllInfo(){ document.querySelectorAll('.info-bubble').forEach(x=>{x.classList.remove('show');x.style.display='none';}); }
+function infoToggle(el,ev){ if(ev) ev.stopPropagation(); const b=el.parentNode.querySelector('.info-bubble'); const on=b.classList.contains('show'); hideAllInfo(); if(!on){b.classList.add('show');b.style.display='block';} }
+function infoKey(el,ev){ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();infoToggle(el,ev);} }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') hideAllInfo(); });
+document.addEventListener('click',e=>{ if(!e.target.closest('.info-wrap')) hideAllInfo(); });
+
+// collapse toggles
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.fig-collapse-btn'); if(!btn) return;
+  const body=document.getElementById(btn.dataset.target);
+  if(body.hasAttribute('hidden')){ body.removeAttribute('hidden'); btn.textContent='collapse'; }
+  else { body.setAttribute('hidden',''); btn.textContent='expand'; }
+});
+
+// ════════════════════════════ FIG C.1 — cost-minimization sandbox (square) ════════════════════════════
+function c1Reset(){ document.getElementById('c1-w').value=4; document.getElementById('c1-v').value=4; document.getElementById('c1-q').value=3; c1Draw(); }
+function c1ToggleSteps(){ const b=document.getElementById('c1-steps'); b.classList.toggle('show'); document.getElementById('c1-steps-btn').textContent=b.classList.contains('show')?'Hide the steps':'Show the steps'; }
+function c1Draw(){
+  const w=parseFloat(document.getElementById('c1-w').value), v=parseFloat(document.getElementById('c1-v').value), q=parseFloat(document.getElementById('c1-q').value);
+  document.getElementById('c1-w-val').textContent=w.toFixed(1);
+  document.getElementById('c1-v-val').textContent=v.toFixed(1);
+  document.getElementById('c1-q-val').textContent=q.toFixed(1);
+  // Q=sqrt(KL)=q ; optimum L*=q sqrt(v/w), K*=q sqrt(w/v); cost C*=2q sqrt(wv)
+  const Ls=q*Math.sqrt(v/w), Ks=q*Math.sqrt(w/v), C=2*q*Math.sqrt(w*v);
+  const W=440,H=440,pad={top:24,right:24,bottom:42,left:50};
+  const dom=Math.max(C/w, C/v, Ls, Ks)*1.12;
+  const svg=d3MakeSvgWH('c1-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Labor L','Capital K');
+  // ghost isocosts (lower & higher) to convey the family
+  d3Seg(svg,sx,sy,0,(C*0.8)/v,(C*0.8)/w,0,COL.ghost,1.3,'4,3');
+  d3Seg(svg,sx,sy,0,(C*1.2)/v,(C*1.2)/w,0,COL.ghost,1.3,'4,3');
+  // isoquant
+  d3Curve(svg,sx,sy,L=>q*q/L, q*q/dom, dom, COL.iso,2.4);
+  // optimal isocost
+  d3Seg(svg,sx,sy,0,C/v,C/w,0,COL.isocost,2.4);
+  // guides + optimum
+  svg.append('line').attr('x1',sx(Ls)).attr('y1',sy(Ks)).attr('x2',sx(Ls)).attr('y2',sy(0)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
+  svg.append('line').attr('x1',sx(Ls)).attr('y1',sy(Ks)).attr('x2',sx(0)).attr('y2',sy(Ks)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
+  svg.append('circle').attr('cx',sx(Ls)).attr('cy',sy(Ks)).attr('r',6).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(svg,sx(Ls),sy(0)+13,'L*='+Ls.toFixed(1),{color:COL.opt});
+  d3HaloLabel(svg,pad.left+2,sy(Ks)-5,'K*='+Ks.toFixed(1),{color:COL.opt,anchor:'start'});
+  d3HaloLabel(svg,sx(dom*0.66),sy(q*q/(dom*0.66))-6,'Q = '+q.toFixed(1),{color:COL.iso,size:11,weight:700});
+  d3HaloLabel(svg,sx((C/w)*0.5)+22,sy((C/v)*0.5)+16,'isocost',{color:COL.isocost,size:9,weight:600});
+  document.getElementById('c1-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">L* = q√(v/w)</div><div class="readout-val" style="color:${COL.opt}">${Ls.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">K* = q√(w/v)</div><div class="readout-val" style="color:${COL.opt}">${Ks.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val">${(Ks/Ls).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">w/v</div><div class="readout-val">${(w/v).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Min cost C*</div><div class="readout-val" style="color:${COL.isocost}">$${C.toFixed(1)}</div></div>
+     </div>`;
+  document.getElementById('c1-steps').innerHTML=
+    `<div><span class="step-num">1</span>Tangency: MRTS = K/L must equal the price ratio w/v = ${(w/v).toFixed(2)}.</div>
+     <div><span class="step-num">2</span>So K = (w/v)·L = ${(w/v).toFixed(2)}·L.</div>
+     <div><span class="step-num">3</span>Output constraint √(KL) = ${q.toFixed(1)} ⇒ √((w/v)L²) = ${q.toFixed(1)} ⇒ L* = q√(v/w) = <strong>${Ls.toFixed(2)}</strong>.</div>
+     <div><span class="step-num">4</span>Then K* = q√(w/v) = <strong>${Ks.toFixed(2)}</strong>, and C* = wL* + vK* = 2q√(wv) = <strong>$${C.toFixed(1)}</strong>.</div>`;
+}
+
+// ════════════════════════════ FIG C.2 — two-panel cost derivation ════════════════════════════
+let C2={form:'cd', step:1, timer:null};
+const c2Notes={
+  cd:'Cobb-Douglas: inputs substitute imperfectly. The expansion path is a ray through the origin and (with constant returns) the TC curve is a straight line through the origin.',
+  subs:'Perfect substitutes: the firm uses only the cheaper input (here a corner solution). TC is still linear in q, with slope equal to the cheaper of w and v.',
+  comp:'Perfect complements: inputs must be used in fixed proportion L = K = q. TC = (w + v)·q — linear, using both inputs together.'
+};
+function c2FormChange(){ C2.form=document.getElementById('c2-form').value; document.getElementById('c2-note').textContent=c2Notes[C2.form]; C2.step=1; c2Draw(); }
+function c2ResetSteps(){ if(C2.timer){clearInterval(C2.timer);C2.timer=null;} C2.step=1; c2Draw(); }
+function c2Step(d){ if(C2.timer){clearInterval(C2.timer);C2.timer=null;} C2.step=Math.max(1,Math.min(5,C2.step+d)); c2Draw(); }
+function c2Play(){ if(C2.timer){clearInterval(C2.timer);C2.timer=null;return;} C2.step=1; c2Draw(); C2.timer=setInterval(()=>{ if(C2.step>=5){clearInterval(C2.timer);C2.timer=null;return;} C2.step++; c2Draw(); },900); }
+function c2Cost(q,w,v,form){ if(form==='subs') return q*Math.min(w,v); if(form==='comp') return (w+v)*q; return 2*q*Math.sqrt(w*v); }
+function c2Bundle(q,w,v,form){
+  if(form==='subs'){ return w<=v?{L:q,K:0}:{L:0,K:q}; }
+  if(form==='comp'){ return {L:q,K:q}; }
+  return {L:q*Math.sqrt(v/w),K:q*Math.sqrt(w/v)};
+}
+function c2Draw(){
+  const w=4,v=4,form=C2.form, levels=[1,2,3,4,5], dom=8;
+  // left panel
+  const W=330,H=330,pad={top:20,right:18,bottom:38,left:44};
+  const A=d3MakeSvgWH('c2a-wrap',W,H);
+  const ax=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const ay=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(A,ax,ay,W,H,pad,'Labor L','Capital K');
+  levels.forEach((q,i)=>{
+    const on=(i+1)<=C2.step, hl=(i+1)===C2.step;
+    const col=hl?COL.iso:(on?COL.isoGhost:'#e4e9f2');
+    if(form==='cd') d3Curve(A,ax,ay,L=>q*q/L, q*q/dom, dom, col, hl?2.4:1.4);
+    else if(form==='subs'){ d3Seg(A,ax,ay,0,q,q,0,col,hl?2.4:1.4); }
+    else { A.append('path').attr('d',`M ${ax(q)} ${ay(dom)} L ${ax(q)} ${ay(q)} L ${ax(dom)} ${ay(q)}`).attr('fill','none').attr('stroke',col).attr('stroke-width',hl?2.4:1.4); }
+  });
+  // expansion path + bundles up to current step
+  if(form==='cd') d3Seg(A,ax,ay,0,0,dom, dom*Math.sqrt(w/v)/Math.sqrt(v/w)>dom?dom:dom, COL.ghost,0,''); // placeholder (CD ray is K/L=w/v=1 → diagonal)
+  if(form==='cd') d3Seg(A,ax,ay,0,0,dom,dom*(w/v),COL.purple,1.4,'5,4');
+  else if(form==='comp') d3Seg(A,ax,ay,0,0,dom,dom,COL.purple,1.4,'5,4');
+  for(let i=0;i<C2.step;i++){ const q=levels[i]; const b=c2Bundle(q,w,v,form);
+    A.append('circle').attr('cx',ax(b.L)).attr('cy',ay(b.K)).attr('r',(i+1)===C2.step?5.5:3.5).attr('fill',(i+1)===C2.step?COL.opt:COL.ghost).attr('stroke','#fff').attr('stroke-width',1.4); }
+  // current isocost
+  const qc=levels[C2.step-1], C=c2Cost(qc,w,v,form);
+  if(C/w<=dom*1.6) d3Seg(A,ax,ay,0,C/v,C/w,0,COL.isocost,2);
+  // right panel: TC curve
+  const Wb=330,Hb=330,padb={top:20,right:18,bottom:38,left:48};
+  const B=d3MakeSvgWH('c2b-wrap',Wb,Hb);
+  const maxC=c2Cost(levels[levels.length-1],w,v,form)*1.12;
+  const bx=d3.scaleLinear().domain([0,6]).range([padb.left,Wb-padb.right]);
+  const by=d3.scaleLinear().domain([0,maxC]).range([Hb-padb.bottom,padb.top]);
+  axesWH(B,bx,by,Wb,Hb,padb,'Output q','Total cost  $');
+  // faint full TC curve
+  d3Curve(B,bx,by,q=>c2Cost(q,w,v,form),0.05,6,'#dfe6f3',1.6);
+  // built points + connecting segments
+  let prev=null;
+  for(let i=0;i<C2.step;i++){ const q=levels[i], c=c2Cost(q,w,v,form);
+    if(prev) B.append('line').attr('x1',bx(prev[0])).attr('y1',by(prev[1])).attr('x2',bx(q)).attr('y2',by(c)).attr('stroke',COL.tc).attr('stroke-width',2.4);
+    B.append('circle').attr('cx',bx(q)).attr('cy',by(c)).attr('r',(i+1)===C2.step?5.5:4).attr('fill',(i+1)===C2.step?COL.opt:COL.tc).attr('stroke','#fff').attr('stroke-width',1.5);
+    prev=[q,c];
+  }
+  d3HaloLabel(B,bx(5.2),by(c2Cost(5.2,w,v,form))-6,'TC(q)',{color:COL.tc,size:10,weight:700});
+  const b=c2Bundle(qc,w,v,form);
+  document.getElementById('c2-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Step</div><div class="readout-val">${C2.step} / 5</div></div>
+      <div class="readout-col"><div class="readout-label">Output q</div><div class="readout-val">${qc}</div></div>
+      <div class="readout-col"><div class="readout-label">Cheapest bundle (L,K)</div><div class="readout-val">(${b.L.toFixed(1)}, ${b.K.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">Total cost</div><div class="readout-val" style="color:${COL.tc}">$${C.toFixed(1)}</div></div>
+     </div>`;
+}
+
+// ════════════════════════════ FIG C.3 — short-run cost curves (wide, force labels) ════════════════════════════
+// VC = q^3 - 6q^2 + 15q ; MC = 3q^2 -12q +15 ; AVC = q^2 -6q +15
+let C3={lr:false, nodes:null, sim:null, gs:null, conns:null};
+const C3DIM={W:760,H:380,pad:{top:24,right:30,bottom:44,left:54},qLo:1,qHi:8,yMax:60};
+function c3Cost(q){ return {VC:q*q*q-6*q*q+15*q, MC:3*q*q-12*q+15, AVC:q*q-6*q+15}; }
+function c3LRAC(q){ return 14+0.5*(q-4.2)*(q-4.2); }
+function c3ToggleLR(){ C3.lr=!C3.lr; document.getElementById('c3-lr-btn').textContent=C3.lr?'Hide LRAC':'Show LRAC'; document.getElementById('c3-lr-btn').classList.toggle('active',C3.lr); c3Draw(); }
+function c3ResetLabels(){ if(C3.nodes&&C3.sim) d3ScatterLabels(C3.nodes,C3.sim); }
+function c3Init(){
+  C3.nodes=[ d3Node('mc',COL.mc,'MC',26,0,0), d3Node('avc',COL.avc,'AVC',30,0,0), d3Node('atc',COL.atc,'ATC',30,0,0), d3Node('afc',COL.afc,'AFC',30,0,0) ];
+  C3.sim=d3MakeSim(C3.nodes);
+  registerSliderSim('c3-tfc',()=>C3.sim);
+  c3Draw();
+}
+function c3Draw(){
+  const tfc=parseFloat(document.getElementById('c3-tfc').value);
+  document.getElementById('c3-tfc-val').textContent=tfc.toFixed(0);
+  const {W,H,pad,qLo,qHi,yMax}=C3DIM;
+  const svg=d3MakeSvgWH('c3-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,qHi]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,yMax]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Output q','Cost per unit  $');
+  const ATC=q=>{const c=c3Cost(q);return c.AVC+tfc/q;};
+  const AFC=q=>tfc/q;
+  d3Curve(svg,sx,sy,q=>c3Cost(q).MC,qLo,qHi,COL.mc,2.2);
+  d3Curve(svg,sx,sy,q=>c3Cost(q).AVC,qLo,qHi,COL.avc,2.2);
+  d3Curve(svg,sx,sy,ATC,qLo,qHi,COL.atc,2.4);
+  d3Curve(svg,sx,sy,AFC,qLo,qHi,COL.afc,1.8,'5,4');
+  if(C3.lr) d3Curve(svg,sx,sy,c3LRAC,qLo,qHi,COL.lrac,2.2,'2,3');
+  // min markers: AVC min q=3, ATC min where MC=ATC (numeric)
+  let atcMin=1e9,atcQ=qLo; for(let q=qLo;q<=qHi;q+=0.02){const a=ATC(q);if(a<atcMin){atcMin=a;atcQ=q;}}
+  svg.append('circle').attr('cx',sx(3)).attr('cy',sy(6)).attr('r',3.5).attr('fill',COL.avc).attr('stroke','#fff').attr('stroke-width',1.2);
+  svg.append('circle').attr('cx',sx(atcQ)).attr('cy',sy(atcMin)).attr('r',3.5).attr('fill',COL.atc).attr('stroke','#fff').attr('stroke-width',1.2);
+  // labels via force sim, anchored along each curve
+  const anchors={ mc:[6.6,c3Cost(6.6).MC], avc:[6.9,c3Cost(6.9).AVC], atc:[atcQ,atcMin], afc:[2.0,Math.min(AFC(2.0),yMax-4)] };
+  const els=d3AddLabels(svg,C3.nodes,C3.sim); C3.gs=els.gs; C3.conns=els.conns;
+  C3.sim.on('tick',()=>clampWH(C3.nodes,C3.gs,C3.conns,W,H,pad));
+  C3.nodes.forEach(n=>{ const a=anchors[n.id]; d3MoveAnchor(n, sx(a[0]), sy(Math.min(a[1],yMax-2))); });
+  if(C3.lr){ /* add lrac halo label (static) */ d3HaloLabel(svg,sx(7.4),sy(Math.min(c3LRAC(7.4),yMax-2))-6,'LRAC',{color:COL.lrac,size:10,weight:700}); }
+  C3.sim.alpha(0.4).restart();
+  clampWH(C3.nodes,C3.gs,C3.conns,W,H,pad);
+  document.getElementById('c3-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Fixed cost</div><div class="readout-val">$${tfc.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">AVC minimum</div><div class="readout-val" style="color:${COL.avc}">$6.00 at q=3</div></div>
+      <div class="readout-col"><div class="readout-label">ATC minimum (efficient scale)</div><div class="readout-val" style="color:${COL.atc}">$${atcMin.toFixed(2)} at q=${atcQ.toFixed(1)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">ATC's minimum sits to the <strong>right</strong> of AVC's, because falling AFC keeps pulling ATC down past q=3. MC passes through both minimums.</div>`;
+}
+
+// ════════════════════════════ FIG C.4 — LRAC envelope builder (wide, force labels) ════════════════════════════
+// LRAC(q)=0.4q+40/q+2 ; SRAC_k tangent parabola at q=k
+let C4={node:null,sim:null,gs:null,conns:null};
+const C4DIM={W:760,H:380,pad:{top:24,right:30,bottom:44,left:54},qLo:2,qHi:18,yMax:30};
+function c4LRAC(q){ return 0.4*q+40/q+2; }
+function c4LRACp(q){ return 0.4-40/(q*q); }
+function c4SRAC(q,k){ return c4LRAC(k)+c4LRACp(k)*(q-k)+0.5*(q-k)*(q-k); }
+function c4ResetLabels(){ if(C4.node&&C4.sim) d3ScatterLabels([C4.node],C4.sim); }
+function c4Init(){ C4.node=d3Node('lr',COL.lrac,'LRAC',34,0,0); C4.sim=d3MakeSim([C4.node]); registerSliderSim('c4-n',()=>C4.sim); c4Draw(); }
+function c4Draw(){
+  const n=parseInt(document.getElementById('c4-n').value);
+  document.getElementById('c4-n-val').textContent=n;
+  const {W,H,pad,qLo,qHi,yMax}=C4DIM;
+  const svg=d3MakeSvgWH('c4-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,qHi]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,yMax]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Output q','Average cost  $');
+  // plant sizes k spread across the range
+  const ks=[]; for(let i=0;i<n;i++){ ks.push(qLo+2 + (qHi-qLo-4)*(n===1?0.5:i/(n-1))); }
+  ks.forEach(k=> d3Curve(svg,sx,sy,q=>c4SRAC(q,k),qLo,qHi,COL.isoGhost,1.6));
+  // envelope = min over the drawn SRACs (scalloped); plus the true LRAC dashed
+  d3Curve(svg,sx,sy,q=>Math.min(...ks.map(k=>c4SRAC(q,k))),qLo,qHi,COL.lrac,2.6);
+  d3Curve(svg,sx,sy,c4LRAC,qLo,qHi,COL.opt,1.4,'3,3');
+  // mark each plant's tangency point on the LRAC
+  ks.forEach(k=> svg.append('circle').attr('cx',sx(k)).attr('cy',sy(c4LRAC(k))).attr('r',3).attr('fill',COL.lrac).attr('stroke','#fff').attr('stroke-width',1));
+  d3HaloLabel(svg,sx(10),sy(c4LRAC(10))+16,'true LRAC',{color:COL.opt,size:9,weight:600});
+  // force label for the scalloped envelope
+  const els=d3AddLabels(svg,[C4.node],C4.sim); C4.gs=els.gs; C4.conns=els.conns;
+  C4.sim.on('tick',()=>clampWH([C4.node],C4.gs,C4.conns,W,H,pad));
+  d3MoveAnchor(C4.node, sx(4.5), sy(Math.min(...ks.map(k=>c4SRAC(4.5,k)))));
+  C4.sim.alpha(0.4).restart();
+  clampWH([C4.node],C4.gs,C4.conns,W,H,pad);
+  const minLRAC=10; // analytic min at q=10
+  document.getElementById('c4-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Plant sizes shown</div><div class="readout-val">${n}</div></div>
+      <div class="readout-col"><div class="readout-label">LRAC minimum</div><div class="readout-val" style="color:${COL.lrac}">$10.0 at q=10</div></div>
+      <div class="readout-col"><div class="readout-label">Envelope vs. true LRAC</div><div class="readout-val">${n>=7?'≈ smooth':'scalloped'}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">Each plant is cost-minimizing for exactly one output. Add more plants and the lower envelope (solid) collapses onto the smooth LRAC (dashed).</div>`;
+}
+
+// ════════════════════════════ FIG C.5 — minimum-wage automation (square, ghost) ════════════════════════════
+let C5={base:null};
+function c5Reset(){ document.getElementById('c5-w').value=3; document.getElementById('c5-v').value=3; C5.base={w:3,v:3}; c5Draw(); }
+function c5SetBaseline(){ C5.base={w:parseFloat(document.getElementById('c5-w').value),v:parseFloat(document.getElementById('c5-v').value)}; c5Draw(); }
+function c5Draw(){
+  const w=parseFloat(document.getElementById('c5-w').value), v=parseFloat(document.getElementById('c5-v').value);
+  document.getElementById('c5-w-val').textContent=w.toFixed(1);
+  document.getElementById('c5-v-val').textContent=v.toFixed(1);
+  if(!C5.base) C5.base={w:3,v:3};
+  const q=4; // fixed output isoquant sqrt(KL)=4 → LK=16
+  const opt=(w,v)=>({L:q*Math.sqrt(v/w),K:q*Math.sqrt(w/v),C:2*q*Math.sqrt(w*v)});
+  const cur=opt(w,v), base=opt(C5.base.w,C5.base.v);
+  const W=440,H=440,pad={top:24,right:24,bottom:42,left:50};
+  const dom=Math.max(cur.C/w,cur.C/v,base.C/C5.base.w,base.C/C5.base.v,16)*1.1;
+  const svg=d3MakeSvgWH('c5-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,dom]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,dom]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Labor L','Capital K');
+  d3Curve(svg,sx,sy,L=>16/L, 16/dom, dom, COL.iso,2.4);
+  // ghost baseline isocost + bundle
+  d3Seg(svg,sx,sy,0,base.C/C5.base.v,base.C/C5.base.w,0,COL.ghost,1.6,'5,4');
+  svg.append('circle').attr('cx',sx(base.L)).attr('cy',sy(base.K)).attr('r',4).attr('fill','none').attr('stroke',COL.ghost).attr('stroke-width',1.6);
+  // current isocost + bundle
+  d3Seg(svg,sx,sy,0,cur.C/v,cur.C/w,0,COL.isocost,2.4);
+  if(Math.abs(w-C5.base.w)>0.05||Math.abs(v-C5.base.v)>0.05){
+    svg.append('line').attr('x1',sx(base.L)).attr('y1',sy(base.K)).attr('x2',sx(cur.L)).attr('y2',sy(cur.K)).attr('stroke',COL.purple).attr('stroke-width',1).attr('stroke-dasharray','3,3');
+  }
+  svg.append('circle').attr('cx',sx(cur.L)).attr('cy',sy(cur.K)).attr('r',6).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+  d3HaloLabel(svg,sx(cur.L)+8,sy(cur.K)-8,'new optimum',{color:COL.opt,anchor:'start',size:9,weight:700});
+  d3HaloLabel(svg,sx(dom*0.66),sy(16/(dom*0.66))-6,'Q = 4',{color:COL.iso,size:11,weight:700});
+  const dL=cur.L-base.L, dK=cur.K-base.K;
+  document.getElementById('c5-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Labor L*</div><div class="readout-val" style="color:${dL<-0.01?COL.opt:COL.opt}">${cur.L.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Capital K*</div><div class="readout-val">${cur.K.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">ΔL vs baseline</div><div class="readout-val" style="color:${dL<=0?COL.econ:COL.opt}">${dL>=0?'+':''}${dL.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">ΔK vs baseline</div><div class="readout-val" style="color:${dK>=0?COL.purple:COL.opt}">${dK>=0?'+':''}${dK.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Min cost</div><div class="readout-val" style="color:${COL.isocost}">$${cur.C.toFixed(1)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">${w>C5.base.w?'A higher wage rotates the isocost steeper — the firm substitutes <strong>toward capital</strong> (automation) and away from labor.':'Move the wage above its baseline to see the firm automate.'}</div>`;
+}
+
+// ════════════════════════════ FIG C.6 — efficient-scale finder (wide) ════════════════════════════
+let C6={mc:false};
+const c6Presets=[
+  {ac:q=>q-6+36/q, lo:1, hi:14, label:'AC = q − 6 + 36/q'},
+  {ac:q=>0.5*q-4+32/q, lo:1, hi:16, label:'AC = 0.5q − 4 + 32/q'},
+  {ac:q=>2*q-8+16/q, lo:1, hi:9, label:'AC = 2q − 8 + 16/q'},
+  {ac:q=>q+100/q, lo:1, hi:22, label:'AC = q + 100/q'},
+  {ac:q=>20/q+2, lo:1, hi:16, label:'AC = 20/q + 2'},
+  {ac:q=>3*q+2, lo:0.5, hi:8, label:'AC = 3q + 2'},
+];
+function c6ToggleMC(){ C6.mc=!C6.mc; document.getElementById('c6-mc-btn').textContent=C6.mc?'Hide marginal cost':'Show marginal cost'; document.getElementById('c6-mc-btn').classList.toggle('active',C6.mc); c6Draw(); }
+function c6Draw(){
+  const p=c6Presets[parseInt(document.getElementById('c6-preset').value)];
+  const ac=p.ac, lo=p.lo, hi=p.hi;
+  // MC = d(q*AC)/dq numeric
+  const tc=q=>q*ac(q); const mc=q=>{const h=1e-3;return (tc(q+h)-tc(q-h))/(2*h);};
+  // q* = argmin AC
+  let qStar=lo, acMin=1e9; for(let q=lo;q<=hi;q+=0.01){const a=ac(q);if(a<acMin){acMin=a;qStar=q;}}
+  const W=760,H=380,pad={top:24,right:30,bottom:44,left:54};
+  let yMax=0; for(let q=lo;q<=hi;q+=0.1){ yMax=Math.max(yMax,ac(q)); if(C6.mc)yMax=Math.max(yMax,Math.min(mc(q),200)); }
+  yMax=Math.min(yMax,Math.max(ac(lo),ac(hi))*1.05); yMax*=1.05;
+  const svg=d3MakeSvgWH('c6-wrap',W,H);
+  const sx=d3.scaleLinear().domain([0,hi]).range([pad.left,W-pad.right]);
+  const sy=d3.scaleLinear().domain([0,yMax]).range([H-pad.bottom,pad.top]);
+  axesWH(svg,sx,sy,W,H,pad,'Output q','Cost per unit  $',null,d=>'$'+d);
+  // shading: economies (q<q*) green, diseconomies red, under AC
+  const shade=(a,b,col)=>{ const pts=[]; pts.push([sx(a),sy(0)]); for(let q=a;q<=b;q+=0.1){pts.push([sx(q),sy(Math.min(ac(q),yMax))]);} pts.push([sx(b),sy(0)]);
+    svg.append('polygon').attr('points',pts.map(p=>p.join(',')).join(' ')).attr('fill',col); };
+  const hasMin=qStar>lo+0.05 && qStar<hi-0.05;
+  if(hasMin){ shade(lo,qStar,'rgba(30,132,73,0.10)'); shade(qStar,hi,'rgba(192,57,43,0.10)'); }
+  if(C6.mc) d3Curve(svg,sx,sy,mc,lo,hi,COL.mc,2.0,'5,3');
+  d3Curve(svg,sx,sy,ac,lo,hi,COL.atc,2.6);
+  if(hasMin){
+    svg.append('line').attr('x1',sx(qStar)).attr('y1',sy(acMin)).attr('x2',sx(qStar)).attr('y2',sy(0)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
+    svg.append('circle').attr('cx',sx(qStar)).attr('cy',sy(acMin)).attr('r',5.5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
+    d3HaloLabel(svg,sx(qStar),sy(0)+13,'q* = '+qStar.toFixed(1),{color:COL.opt});
+    d3HaloLabel(svg,sx(qStar*0.5),sy(yMax*0.5),'economies',{color:COL.econ,size:10,weight:600});
+    d3HaloLabel(svg,sx((qStar+hi)/2),sy(yMax*0.5),'diseconomies',{color:COL.disecon,size:10,weight:600});
+  }
+  d3HaloLabel(svg,sx(hi*0.82),sy(Math.min(ac(hi*0.82),yMax))-8,'AC',{color:COL.atc,size:11,weight:700});
+  if(C6.mc) d3HaloLabel(svg,sx(hi*0.7),sy(Math.min(mc(hi*0.7),yMax))-8,'MC',{color:COL.mc,size:10,weight:700});
+  document.getElementById('c6-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">AC function</div><div class="readout-val" style="font-size:0.82rem;">${p.label}</div></div>
+      <div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val" style="color:${COL.opt}">${hasMin?qStar.toFixed(2):'none in range'}</div></div>
+      <div class="readout-col"><div class="readout-label">Minimum AC</div><div class="readout-val">$${acMin.toFixed(2)}</div></div>
+     </div>
+     <div style="margin-top:.4rem;color:var(--muted);">${hasMin?'Left of q* AC falls (economies of scale); right of q* AC rises (diseconomies). MC crosses AC exactly at q*.':'This AC has no interior minimum over the range — it is monotonic (pure economies or pure diseconomies).'}</div>`;
+}
+
+// ── boot ──
+window.addEventListener('DOMContentLoaded',()=>{
+  function boot(){
+    if(typeof d3==='undefined'||typeof d3MakeSvgWH==='undefined'){ return setTimeout(boot,40); }
+    c1Draw(); c2Draw(); c3Init(); c4Init(); c5Reset(); c6Draw();
+  }
+  boot();
+});
+</script>
+</body>
+</html>

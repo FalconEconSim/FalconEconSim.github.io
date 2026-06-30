@@ -825,11 +825,11 @@ function mkBoard(id, bbox) {
     defaultAxes: {
       x: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[0,-8]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:10, color:'#555', offset:[0,-8]}}
       },
       y: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[-8,0]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:10, color:'#555', offset:[-8,0]}}
       }
     }
   });
@@ -1384,11 +1384,11 @@ function mkBoard(id, bbox) {
     defaultAxes: {
       x: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[0,-8]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:10, color:'#555', offset:[0,-8]}}
       },
       y: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize:9, color:'#888', offset:[-8,0]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize:10, color:'#555', offset:[-8,0]}}
       }
     }
   });
@@ -2907,10 +2907,11 @@ function buildCornerExplorer() {
   bottom: -1rem;
   right: 0.5rem;
   font-family: var(--mono);
-  font-size: 0.58rem;
+  font-size: 0.6rem;
   letter-spacing: 0.06em;
-  color: var(--faint);
-  opacity: 0.45;
+  color: #36404f;
+  font-weight: 600;
+  opacity: 0.9;
   transition: opacity 0.2s;
   pointer-events: none;
 }
@@ -3052,6 +3053,14 @@ function buildCornerExplorer() {
   100% { box-shadow: 0 0 0 0 rgba(13,115,119,0); }
 }
 .verdict-at-optimum { animation: verdict-pulse 0.75s ease; border-color: #0d7377 !important; background: #f0fdfd !important; }
+
+/* A2: preset scenario chips + D4 reset chip (mirrors week3-viz-dev.html) */
+.scenario-chips { display:flex; flex-wrap:wrap; gap:0.45rem; align-items:center; margin:0.2rem 0 0.9rem; }
+.scenario-chips .chips-label { font-family:var(--mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--faint); margin-right:0.2rem; }
+.viz-btn { font-family:var(--font); font-size:0.78rem; font-weight:600; padding:0.32rem 0.78rem; border:1px solid var(--rule); border-radius:16px; background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.viz-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+.viz-btn.reset-chip { border-color:#d0a0a0; color:#b04646; }
+.viz-btn.reset-chip:hover { background:#fdeaea; border-color:#c0392b; color:#c0392b; }
 
 /* Respect the OS "reduce motion" setting: keep the static end-states, drop the motion.
    The verdict box still goes teal (border/background), it just doesn't pulse/flash/slide. */
@@ -3352,6 +3361,13 @@ function buildCornerExplorer() {
                 <input type="range" id="bc-Py" min="1" max="20" step="any" value="4" title="Price of Y (Py): higher Py moves the Y-intercept inward. The line pivots around the X-intercept. Slope flattens." />
               </div>
             </div>
+            <div class="scenario-chips">
+              <span class="chips-label">Scenarios:</span>
+              <button class="viz-btn" onclick="vizSetSlider('bc-I',150,true)">Income +50%</button>
+              <button class="viz-btn" onclick="vizSetSlider('bc-Px',12,true)">P<sub>X</sub> ↑ ($5→$12)</button>
+              <button class="viz-btn" onclick="vizSetSlider('bc-Py',10,true)">P<sub>Y</sub> ↑ ($4→$10)</button>
+              <button class="viz-btn reset-chip" onclick="vizPreset({'bc-I':100,'bc-Px':5,'bc-Py':4},true)">↺ Reset</button>
+            </div>
             <div class="viz-note">The shaded triangle is the affordable set. Use the sliders to change income or prices and watch the intercepts move.</div>
             <div class="viz-two-col" style="grid-template-columns:460px 1fr">
               <div class="viz-panel-left">
@@ -3578,6 +3594,13 @@ function buildCornerExplorer() {
                 <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="a is the spending share on X. X* = aI/Px and Y* = (1-a)I/Py. Higher a shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
                 <input type="range" id="opt-alpha" min="0.1" max="0.9" step="any" value="0.5" title="Alpha a: spending share on X = a. Higher a ? more X at the optimum. ICs become steeper." />
               </div>
+            </div>
+            <div class="scenario-chips">
+              <span class="chips-label">Scenarios:</span>
+              <button class="viz-btn" onclick="vizSetSlider('opt-I',160,true)">Income +100%</button>
+              <button class="viz-btn" onclick="vizSetSlider('opt-Px',14,true)">P<sub>X</sub> ↑ ($5→$14)</button>
+              <button class="viz-btn" onclick="vizSetSlider('opt-alpha',0.75,true)">Prefer X (α→0.75)</button>
+              <button class="viz-btn reset-chip" onclick="vizPreset({'opt-I':80,'opt-Px':5,'opt-Py':4,'opt-alpha':0.5},true)">↺ Reset</button>
             </div>
                         <div class="viz-two-col">
               <div class="viz-panel-left">
@@ -3917,7 +3940,9 @@ function buildCornerExplorer() {
 /* ── Toggle section collapse ── */
 function toggleSection(secEl) {
   if (!secEl) return;
-  secEl.classList.toggle('sec-collapsed');
+  var collapsed = secEl.classList.toggle('sec-collapsed');
+  var hdr = secEl.querySelector('.section-header-row');
+  if (hdr) hdr.setAttribute('aria-expanded', String(!collapsed));
 }
 
 /* ── Toggle figure collapse ── */
@@ -3953,6 +3978,8 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
     /* Open if collapsed */
     if (target.classList.contains('sec-collapsed')) {
       target.classList.remove('sec-collapsed');
+      var hdr = target.querySelector('.section-header-row');
+      if (hdr) hdr.setAttribute('aria-expanded', 'true');
     }
     /* Also make sure it's visible (animation) */
     target.classList.add('visible');
@@ -3990,6 +4017,7 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
     openIcon = null;
     openedByClick = false;
     tip.classList.remove('visible');
+    tip.style.display = 'none';  /* clear the inline display:block set by placeTip, else the bubble lingers */
   }
 
   function placeTip(icon) {
@@ -4273,6 +4301,36 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
   function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
   function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+  /* A2/D4: preset scenario chips — set sliders with an eased ramp, dispatch input. */
+  function vizSetSlider(id, val, ease) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (!ease) { el.value = val; el.dispatchEvent(new Event('input', { bubbles:true })); return; }
+    var from = parseFloat(el.value), to = parseFloat(val), t0 = performance.now(), dur = 400;
+    (function step(now){
+      var k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.value = from + (to - from) * e;
+      el.dispatchEvent(new Event('input', { bubbles:true }));
+      if (k < 1) requestAnimationFrame(step);
+    })(performance.now());
+  }
+  function vizPreset(map, ease) { Object.keys(map).forEach(function(id){ vizSetSlider(id, map[id], ease); }); }
+</script>
+
+<script>
+/* ── Start every section collapsed so students expand topics one at a time. ──
+   Registered last, so it runs AFTER all the board-init DOMContentLoaded
+   handlers above: the JSXGraph/3D boards are built at their real (visible)
+   size first, then we collapse — avoiding the zero-size hidden-init trap, and
+   it runs before first paint so there is no expand-then-collapse flash. */
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.section-block').forEach(function(sec) {
+    sec.classList.add('sec-collapsed', 'visible');
+    var hdr = sec.querySelector('.section-header-row');
+    if (hdr) hdr.setAttribute('aria-expanded', 'false');
+  });
+});
 </script>
 </body>
 </html>

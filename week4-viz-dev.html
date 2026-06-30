@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>[DEV] Week 4 Visualizations – Elasticity · EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
+      svg: { fontCache:'global' },
+      startup: { ready() { MathJax.startup.defaultReady(); MathJax.typesetPromise([document.body]).catch(()=>{}); } }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+
+  <style>
+    :root {
+      --bg:#f7f7f7; --bg-card:#fff; --ink:#1a1a1a; --ink-light:#6b6b6b;
+      --faint:#596373; --accent:#1a56db; --accent-lt:#eff4ff;
+      --rule:#e4e4e4; --green:#2e8b57; --red:#c0392b; --amber:#d97706; --purple:#6b52a8;
+      --font:'DM Sans',system-ui,sans-serif; --mono:'DM Mono',ui-monospace,monospace; --muted:#9aa3b2;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased; }
+
+    .topnav { position:sticky; top:0; z-index:100; background:rgba(250,249,247,0.96); backdrop-filter:blur(8px); border-bottom:1px solid var(--rule); height:52px; display:flex; align-items:center; }
+    .topnav-inner { max-width:1520px; width:100%; margin:0 auto; padding:0 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .nav-left { display:flex; align-items:center; gap:0.75rem; }
+    .nav-week { font-family:var(--mono); font-size:0.7rem; color:var(--accent); letter-spacing:0.08em; }
+    .nav-sep { color:var(--rule); font-size:0.9rem; }
+    .nav-title { font-size:0.85rem; color:var(--ink-light); font-style:italic; }
+    .nav-home { font-size:0.82rem; color:var(--accent); text-decoration:none; }
+    .nav-home:hover { text-decoration:underline; }
+    .nav-ln-btn { font-family:var(--font); font-size:0.78rem; font-weight:500; padding:0.3rem 0.8rem; border:1px solid var(--rule); border-radius:6px; background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s; }
+    .nav-ln-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+
+    .week-hero { padding:3rem 2rem 2.5rem; max-width:1100px; margin:0 auto; border-bottom:1px solid var(--rule); }
+    .week-tag { font-family:var(--mono); font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:0.6rem; }
+    .week-hero h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:700; line-height:1.18; color:var(--ink); margin-bottom:0.6rem; }
+    .week-hero .intro { font-size:1rem; color:var(--ink-light); max-width:660px; }
+
+    .page-layout { display:grid; grid-template-columns:220px 1fr; max-width:1520px; margin:0 auto; align-items:start; }
+    .viz-toc { position:sticky; top:52px; height:calc(100vh - 52px); overflow-y:auto; border-right:1px solid var(--rule); padding:1.75rem 1.1rem; }
+    .viz-toc-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--faint); margin-bottom:0.8rem; padding-bottom:0.4rem; border-bottom:1px solid var(--rule); }
+    .viz-toc nav a { display:block; font-size:0.82rem; color:var(--ink-light); padding:0.32rem 0.55rem; border-radius:3px; border-left:2px solid transparent; transition:all 0.15s; margin-bottom:0.08rem; text-decoration:none; }
+    .viz-toc nav a:hover, .viz-toc nav a.active { background:var(--accent-lt); border-left-color:var(--accent); color:var(--accent); }
+
+    .main-content { padding:2.5rem 2.5rem 5rem; min-width:0; }
+    .section-block { margin-bottom:4.5rem; scroll-margin-top:70px; }
+    .section-block h2 { font-size:1.85rem; font-weight:700; color:var(--ink); margin-bottom:0.35rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent-lt); }
+    .section-intro { font-size:0.97rem; color:var(--ink-light); margin-bottom:1.5rem; max-width:680px; }
+    .section-number { font-family:var(--mono); font-size:0.78rem; color:var(--accent); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:0.25rem; }
+
+    .viz-wrapper { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin:1.5rem 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+    .viz-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.1rem; background:#f4f6fa; border-bottom:1px solid var(--rule); cursor:pointer; user-select:none; }
+    .viz-header:focus-visible { outline:3px solid var(--accent); outline-offset:2px; border-radius:4px; }
+    .fig-num-badge { font-family:var(--mono); font-size:0.67rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; background:var(--accent-lt); color:var(--accent); border:1px solid rgba(26,86,219,0.2); border-radius:20px; padding:2px 8px; flex-shrink:0; }
+    .viz-title { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--accent); margin-left:0.75rem; flex:1; }
+    .fig-chevron { color:var(--faint); font-size:0.85rem; transition:transform 0.2s; }
+    .viz-wrapper.collapsed .fig-chevron { transform:rotate(-90deg); }
+    .viz-wrapper.collapsed .viz-body { display:none; }
+    .viz-body { padding:1.4rem; }
+
+    .viz-controls { display:flex; flex-wrap:wrap; gap:1.2rem; align-items:flex-end; margin-bottom:1.2rem; padding:0.9rem 1.1rem; background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; }
+    .ctrl-group { display:flex; flex-direction:column; gap:0.28rem; min-width:130px; }
+    .ctrl-group label { font-family:var(--mono); font-size:0.73rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); display:flex; align-items:center; gap:4px; }
+    .ctrl-val { font-family:var(--mono); font-size:0.9rem; color:var(--accent); font-weight:600; }
+    input[type="range"] { -webkit-appearance:none; width:100%; height:4px; background:var(--accent-lt); border-radius:2px; outline:none; cursor:pointer; }
+    input[type="range"]:focus-visible { outline:3px solid var(--accent); outline-offset:4px; border-radius:3px; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,0.22); }
+    input[type="range"]::-moz-range-thumb { width:22px; height:22px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,0.22); }
+    .num-in { font-family:var(--mono); font-size:0.9rem; width:74px; border:1px solid var(--rule); border-radius:5px; padding:0.25rem 0.45rem; background:#fff; color:var(--ink); }
+
+    .viz-two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .viz-panel { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+    .viz-panel-label { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); padding:0.5rem 0.8rem; background:#f8f9fb; border-bottom:1px solid var(--rule); }
+    .jxgbox { background:#fff !important; border:none !important; border-radius:0 !important; }
+
+    .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; padding:0.8rem 0; }
+    .stat-box { background:#f8f9fb; border:1px solid var(--rule); border-radius:5px; padding:0.55rem 0.75rem; }
+    .stat-label { font-family:var(--mono); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--faint); margin-bottom:2px; }
+    .stat-val { font-family:var(--mono); font-size:0.95rem; font-weight:600; color:var(--ink); }
+    .stat-val.optimum { color:#0d7377; }
+
+    .scoreboard { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.9rem 1rem; margin-top:0.75rem; }
+    .sb-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); margin-bottom:0.55rem; }
+    .sb-row { display:flex; justify-content:space-between; align-items:center; padding:0.32rem 0; border-bottom:1px solid var(--rule); font-size:0.85rem; }
+    .sb-row:last-child { border-bottom:none; font-weight:600; }
+    .sb-row .sb-lbl { color:var(--ink-light); }
+    .sb-row .sb-num { font-family:var(--mono); font-weight:600; }
+
+    .callout { border-radius:4px; padding:0.85rem 1.05rem; margin:0.9rem 0; font-size:0.9rem; line-height:1.65; }
+    .callout.key-idea { background:#e8f4fd; border-left:4px solid #2196F3; }
+    .callout.common-mistake { background:#fff3e0; border-left:4px solid #f57c00; }
+
+    .verdict-banner { border-radius:6px; padding:0.7rem 1rem; margin-top:0.75rem; font-size:0.92rem; font-weight:600; text-align:center; transition:background 0.25s,color 0.25s; }
+    .verdict-banner.elastic { background:#fdecea; color:#c0392b; border:1px solid #f3b9b0; }
+    .verdict-banner.inelastic { background:#eef4ff; color:#1a56db; border:1px solid #bdd2f7; }
+    .verdict-banner.unit { background:#fef3e2; color:#b06a00; border:1px solid #f3d6a3; }
+
+    .quiz-scenario { background:var(--bg-card); border:1px solid var(--rule); border-radius:8px; padding:1.1rem 1.3rem; margin-bottom:1rem; font-size:0.97rem; font-weight:500; color:var(--ink); }
+    .quiz-btns { display:flex; gap:0.6rem; margin-bottom:0.9rem; flex-wrap:wrap; }
+    .quiz-btn { flex:1; min-width:150px; padding:0.6rem 0.9rem; font-family:var(--font); font-size:0.85rem; font-weight:600; border:1px solid var(--rule); border-radius:8px; cursor:pointer; transition:all 0.15s; background:var(--bg-card); color:var(--ink); }
+    .quiz-btn:hover { border-color:var(--accent); background:var(--accent-lt); color:var(--accent); }
+    .quiz-btn.correct  { background:#dcfce7; border-color:#4ade80; color:#166534; }
+    .quiz-btn.incorrect { background:#fee2e2; border-color:#fc8181; color:#991b1b; }
+    .quiz-btn.revealed { background:var(--accent-lt); border-color:var(--accent); color:var(--accent); }
+    .quiz-feedback { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.75rem 1rem; font-size:0.86rem; color:var(--ink-light); line-height:1.65; margin-bottom:0.75rem; }
+    .quiz-feedback.right { background:#f0fdf4; border-color:#86efac; }
+    .quiz-feedback.wrong { background:#fef2f2; border-color:#fca5a5; }
+    .quiz-feedback .qf-why  { display:block; margin-top:0.45rem; color:#991b1b; }
+    .quiz-feedback .qf-rule { display:block; margin-top:0.5rem; padding-top:0.45rem; border-top:1px dashed var(--rule); font-size:0.8rem; color:var(--muted); }
+    .quiz-feedback .qf-rule b { color:var(--ink-light); }
+    .quiz-score { font-family:var(--mono); font-size:0.82rem; color:var(--muted); margin-bottom:0.5rem; }
+    .quiz-next { font-family:var(--font); font-size:0.82rem; font-weight:500; padding:0.35rem 1rem; border:1px solid var(--accent); border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
+    .quiz-next:hover { opacity:0.85; }
+
+    .toggle-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.2rem; }
+    .toggle-label { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); }
+    .toggle-switch { display:flex; background:#f0f3f8; border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+    .toggle-opt { padding:0.32rem 0.9rem; font-family:var(--font); font-size:0.8rem; font-weight:500; cursor:pointer; transition:all 0.15s; color:var(--ink-light); border:none; background:transparent; }
+    .toggle-opt.active { background:var(--accent); color:#fff; }
+
+    .viz-header.fig-header-row { position:relative; border-radius:6px 6px 0 0; transition:background 0.15s; }
+    .viz-header.fig-header-row:hover { background:#edf0f7; }
+    .viz-header.fig-header-row::after { content:'click to collapse ▲'; position:absolute; bottom:2px; right:0.7rem; font-family:var(--mono); font-size:0.6rem; letter-spacing:0.06em; color:#36404f; font-weight:600; opacity:0.9; transition:opacity 0.2s; pointer-events:none; }
+    .viz-wrapper.collapsed .viz-header.fig-header-row::after { content:'click to expand ▼'; }
+
+    @keyframes quiz-pop { 0% { transform:scale(1); } 40% { transform:scale(1.07); } 100% { transform:scale(1); } }
+    @keyframes quiz-shake { 10%,90% { transform:translateX(-1px); } 20%,80% { transform:translateX(2px); } 30%,50%,70% { transform:translateX(-4px); } 40%,60% { transform:translateX(4px); } }
+    .quiz-btn.pop   { animation:quiz-pop 0.36s ease; }
+    .quiz-btn.shake { animation:quiz-shake 0.42s cubic-bezier(.36,.07,.19,.97) both; }
+
+    .dev-banner { background:#fffbeb; border-bottom:2px solid #f59e0b; padding:0.55rem 2rem; display:flex; align-items:center; gap:0.75rem; font-size:0.84rem; color:#78350f; }
+    .dev-banner-tag { font-family:var(--mono); font-size:0.65rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:#f59e0b; color:#fff; border-radius:4px; padding:2px 8px; flex-shrink:0; }
+
+    .tip-icon { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; line-height:15px; background:var(--accent-lt); color:var(--accent); border:1px solid var(--accent); border-radius:50%; font-size:0.6rem; font-family:var(--mono); font-style:normal; font-weight:700; cursor:help; position:relative; margin-left:4px; margin-right:1px; flex-shrink:0; vertical-align:middle; transition:background 0.15s, color 0.15s; text-transform:none; letter-spacing:0; padding:0; text-align:center; user-select:none; }
+    .tip-icon:hover { background:var(--accent); color:#fff; }
+    .tip-icon[aria-expanded="true"] { background:var(--accent); color:#fff; }
+    .tip-icon:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+    .tip-popover { position:fixed; z-index:9999; background:#1a1a2a; color:#dde6f0; font-family:var(--font); font-size:0.76rem; line-height:1.55; padding:0.6rem 0.85rem; border-radius:6px; max-width:260px; width:max-content; box-shadow:0 6px 22px rgba(0,0,0,0.32); pointer-events:none; display:none; }
+    .tip-popover.visible { display:block; }
+
+    .scenario-chips { display:flex; flex-wrap:wrap; gap:0.45rem; align-items:center; margin-bottom:0.9rem; }
+    .scenario-chips .chips-label { font-family:var(--mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--faint); margin-right:0.2rem; }
+    .viz-btn { font-family:var(--font); font-size:0.78rem; font-weight:600; padding:0.32rem 0.78rem; border:1px solid var(--rule); border-radius:16px; background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .viz-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+    .viz-btn.active { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+    .viz-btn.reset-chip { border-color:#d0a0a0; color:#b04646; }
+    .viz-btn.reset-chip:hover { background:#fdeaea; border-color:#c0392b; color:#c0392b; }
+
+    .footer { border-top:1px solid var(--rule); padding:2rem; text-align:center; font-size:0.8rem; color:var(--muted); font-family:var(--mono); }
+
+    @media (max-width:900px) {
+      .page-layout { grid-template-columns:1fr; }
+      .viz-toc { display:none; }
+      .main-content { padding:1.5rem 1.2rem 4rem; }
+    }
+    @media (max-width:620px) { .viz-two-col { grid-template-columns:1fr; } }
+    @media (prefers-reduced-motion: reduce) {
+      .quiz-btn.pop, .quiz-btn.shake { animation:none; }
+      .fig-chevron, .tip-icon, .viz-header.fig-header-row { transition:none; }
+      html { scroll-behavior:auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left nav -->
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published active"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+  </ul>
+</nav>
+
+<!-- Top nav -->
+<div class="topnav">
+  <div class="topnav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="nav-home">EC224</a>
+      <span class="nav-sep">›</span>
+      <a href="week4.html" class="nav-home">Week 4</a>
+      <span class="nav-sep">›</span>
+      <span class="nav-week">Visualizations · Elasticity</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <button class="nav-ln-btn" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEV BANNER -->
+<div class="dev-banner" role="status">
+  <span class="dev-banner-tag">Dev Preview</span>
+  Gemini-style rebuild — Elasticity &amp; Consumer Welfare: bold curves, preset scenario chips, before/after ghost lines, welfare-region fills, and a rich-feedback elasticity drill. Not live for students.
+  <span style="margin-left:auto;font-family:var(--mono);font-size:0.72rem;opacity:0.6;">week4-viz-dev.html</span>
+</div>
+
+<!-- Hero -->
+<div class="week-hero">
+  <p class="week-tag">EC224 · Week 4 · Interactive Visualizations</p>
+  <h1>Elasticity &amp; Consumer Welfare</h1>
+  <p class="intro">Six interactive diagrams covering price elasticity of demand and the welfare it shapes: measure point vs arc elasticity, watch elasticity vary along a living demand curve, decompose the revenue rectangle, simulate real-industry pricing, shrink the consumer-surplus triangle, and stress-test surge pricing — then drill your elasticity intuition.</p>
+</div>
+
+<div class="page-layout">
+  <aside class="viz-toc">
+    <div class="viz-toc-title">Figures</div>
+    <nav id="toc-nav">
+      <a href="#sec-meter" class="toc-link">Fig 4.1 · Elasticity Meter: Point vs Arc</a>
+      <a href="#sec-heatmap" class="toc-link">Fig 4.2 · Elasticity Heatmap</a>
+      <a href="#sec-revenue" class="toc-link">Fig 4.3 · Revenue Rectangle</a>
+      <a href="#sec-pricing" class="toc-link">Fig 4.4 · Pricing Strategy Simulator</a>
+      <a href="#sec-surplus" class="toc-link">Fig 4.5 · Consumer Surplus Triangle</a>
+      <a href="#sec-surge" class="toc-link">Fig 4.6 · Surge Pricing Simulator</a>
+      <a href="#sec-drill" class="toc-link">Fig 4.7 · Elasticity Drill</a>
+    </nav>
+  </aside>
+
+  <main class="main-content" id="main">
+
+    <!-- ===== Fig 4.1 Elasticity Meter ===== -->
+    <section class="section-block" id="sec-meter">
+      <span class="section-number">Fig 4.1 · Elasticity</span>
+      <h2>Elasticity Meter: Point vs Arc</h2>
+      <p class="section-intro">Slide the two points along a linear demand curve. <strong>Point elasticity</strong> measures responsiveness at one location, \(e = -b\,P/Q\). <strong>Arc (midpoint) elasticity</strong> measures it between two points using base values at the midpoint. Toggle the modes and watch the two methods diverge as the gap widens. The point colour itself is the meter: <span style="color:#c0392b;font-weight:600;">red = elastic</span>, <span style="color:#d97706;font-weight:600;">amber = unit</span>, <span style="color:#1a56db;font-weight:600;">blue = inelastic</span>.</p>
+      <div class="viz-wrapper" id="vw-meter">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-meter')">
+          <span class="fig-num-badge">Fig 4.1</span>
+          <span class="viz-title">▸ Point vs Arc Elasticity Meter</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="toggle-row" style="margin:0;">
+              <span class="toggle-label">Mode:</span>
+              <div class="toggle-switch">
+                <button class="toggle-opt active" id="f1-arc" onclick="f1SetMode('arc')">Arc</button>
+                <button class="toggle-opt" id="f1-point" onclick="f1SetMode('point')">Point</button>
+              </div>
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Point A's price on the demand curve Q = 100 − 2P. Point elasticity here is e = −b·P/Q, so it rises (in magnitude) as you climb the curve.">i</span> Point A price = <span class="ctrl-val" id="f1-pa-val">15</span></label>
+              <input type="range" id="f1-pa" min="2" max="48" step="0.5" value="15" aria-label="Point A price" />
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Point B's price. Arc elasticity uses the midpoint of A and B as the base for both the price and quantity percentage changes.">i</span> Point B price = <span class="ctrl-val" id="f1-pb-val">35</span></label>
+              <input type="range" id="f1-pb" min="2" max="48" step="0.5" value="35" aria-label="Point B price" />
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Jump to:</span>
+            <button class="viz-btn" onclick="vizPreset({'f1-pa':38,'f1-pb':44},true)">Elastic top (|e|&gt;1)</button>
+            <button class="viz-btn" onclick="vizPreset({'f1-pa':23,'f1-pb':27},true)">Unit-elastic middle</button>
+            <button class="viz-btn" onclick="vizPreset({'f1-pa':6,'f1-pb':11},true)">Inelastic bottom (|e|&lt;1)</button>
+            <button class="viz-btn reset-chip" onclick="vizPreset({'f1-pa':15,'f1-pb':35},true)">↺ Reset</button>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Linear demand · Q = 100 − 2P</div>
+              <div id="jxg-f1-wrap" style="position:relative;width:100%;aspect-ratio:1.1/1;">
+                <div id="jxg-f1" role="img" aria-label="Linear demand curve with two points whose elasticity is shown by colour" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard" aria-live="polite">
+                <div class="sb-title">Elasticity Scoreboard</div>
+                <div class="sb-row"><span class="sb-lbl">Point A (P, Q)</span><span class="sb-num" id="f1-a-pt">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Point B (P, Q)</span><span class="sb-num" id="f1-b-pt">–</span></div>
+                <div class="sb-row" id="f1-row-ea"><span class="sb-lbl">e at A</span><span class="sb-num" id="f1-ea">–</span></div>
+                <div class="sb-row" id="f1-row-eb"><span class="sb-lbl">e at B</span><span class="sb-num" id="f1-eb">–</span></div>
+                <div class="sb-row" id="f1-row-arc"><span class="sb-lbl">Arc elasticity</span><span class="sb-num optimum" id="f1-arc-val">–</span></div>
+              </div>
+              <div class="verdict-banner unit" id="f1-verdict">–</div>
+              <div class="callout common-mistake" style="margin-top:0.8rem;">Arc and point elasticity agree only in the limit as the two points collapse together. Far apart, the arc (midpoint) value is a single number for the whole stretch, while point elasticity differs at every location.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 4.2 Heatmap ===== -->
+    <section class="section-block" id="sec-heatmap">
+      <span class="section-number">Fig 4.2 · Elasticity</span>
+      <h2>Elasticity Heatmap: The Living Demand Curve</h2>
+      <p class="section-intro">A single straight-line demand curve has a <em>different</em> elasticity at every point. The curve is painted as a gradient — <strong style="color:#c0392b">red</strong> and elastic up top, <strong style="color:#d97706">amber</strong> and unit-elastic at the exact midpoint, <strong style="color:#1a56db">blue</strong> and inelastic down low. Slide the read-point to any height, or retype the demand equation to reshape the curve.</p>
+      <div class="viz-wrapper" id="vw-heatmap">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-heatmap')">
+          <span class="fig-num-badge">Fig 4.2</span>
+          <span class="viz-title">▸ Living Demand Curve Heatmap</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group" style="min-width:auto;">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Reshape the demand curve. Q = a − bP. The intercept a sets the maximum quantity; the slope b sets how fast quantity falls as price rises.">i</span> Demand: Q = a − b·P</label>
+              <div style="display:flex;align-items:center;gap:0.4rem;font-family:var(--mono);font-size:0.85rem;color:var(--ink-light);">
+                Q = <input type="number" class="num-in" id="f2-a" value="100" min="40" max="160" step="5" aria-label="Demand intercept a" />
+                − <input type="number" class="num-in" id="f2-b" value="2" min="0.5" max="8" step="0.5" aria-label="Demand slope b" /> P
+              </div>
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Move the read-point up and down the curve as a share of the choke price. At 50% you sit exactly at the unit-elastic midpoint.">i</span> Read-point (% up curve) = <span class="ctrl-val" id="f2-pos-val">50</span></label>
+              <input type="range" id="f2-pos" min="4" max="96" step="1" value="50" aria-label="Read point position" />
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Jump to:</span>
+            <button class="viz-btn" onclick="vizSetSlider('f2-pos',80,true)">Elastic zone</button>
+            <button class="viz-btn" onclick="vizSetSlider('f2-pos',50,true)">Unit-elastic point</button>
+            <button class="viz-btn" onclick="vizSetSlider('f2-pos',20,true)">Inelastic zone</button>
+            <button class="viz-btn reset-chip" onclick="f2Reset()">↺ Reset</button>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Demand curve shaded by |e|</div>
+              <div id="jxg-f2-wrap" style="position:relative;width:100%;aspect-ratio:1.1/1;">
+                <div id="jxg-f2" role="img" aria-label="Demand curve coloured by local elasticity, red elastic to blue inelastic" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard" aria-live="polite">
+                <div class="sb-title">Read-point</div>
+                <div class="sb-row"><span class="sb-lbl">Price P</span><span class="sb-num" id="f2-p">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Quantity Q</span><span class="sb-num" id="f2-q">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Elasticity e = −b·P/Q</span><span class="sb-num optimum" id="f2-e">–</span></div>
+              </div>
+              <div class="verdict-banner unit" id="f2-verdict">–</div>
+              <div class="callout key-idea" style="margin-top:0.8rem;"><strong>Why it varies:</strong> the slope \(b\) is constant, but the ratio \(P/Q\) is not. High up, \(P\) is large and \(Q\) small, so \(|e|\) is large (elastic). Down low it flips, so \(|e|\) is small (inelastic).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 4.3 Revenue Rectangle ===== -->
+    <section class="section-block" id="sec-revenue">
+      <span class="section-number">Fig 4.3 · Elasticity</span>
+      <h2>Revenue Rectangle: Price vs Quantity Effect</h2>
+      <p class="section-intro">Total revenue is the area \(P\times Q\). Raise the price and two forces fight: the <strong style="color:#2e8b57">price effect</strong> (green) — existing buyers pay more — and the <strong style="color:#c0392b">quantity effect</strong> (red) — some buyers leave. Whichever wins decides if revenue rises or falls, and that is exactly the elasticity test. The dashed ghost rectangle marks the old revenue.</p>
+      <div class="viz-wrapper" id="vw-revenue">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-revenue')">
+          <span class="fig-num-badge">Fig 4.3</span>
+          <span class="viz-title">▸ Revenue Rectangle Decomposition</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="The starting price. Revenue here is the full P_old × Q_old rectangle, shown as the dashed ghost outline.">i</span> Old price P<sub>old</sub> = <span class="ctrl-val" id="f3-po-val">25</span></label>
+              <input type="range" id="f3-po" min="5" max="45" step="1" value="25" aria-label="Old price" />
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="The new price. Green = revenue gained from buyers who stay and pay more; red = revenue lost from buyers who exit.">i</span> New price P<sub>new</sub> = <span class="ctrl-val" id="f3-pn-val">35</span></label>
+              <input type="range" id="f3-pn" min="5" max="55" step="1" value="35" aria-label="New price" />
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Demand slope b in Q = 120 − bP. Flatter demand (large b) means more buyers leave when price rises — the quantity effect strengthens.">i</span> Demand slope b = <span class="ctrl-val" id="f3-b-val">2.0</span></label>
+              <input type="range" id="f3-b" min="0.5" max="4" step="0.1" value="2" aria-label="Demand slope b" />
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Scenarios:</span>
+            <button class="viz-btn" onclick="vizPreset({'f3-po':10,'f3-pn':16,'f3-b':1},true)">Inelastic hike (TR↑)</button>
+            <button class="viz-btn" onclick="vizPreset({'f3-po':40,'f3-pn':48,'f3-b':2.5},true)">Elastic hike (TR↓)</button>
+            <button class="viz-btn" onclick="vizPreset({'f3-po':28,'f3-pn':32,'f3-b':2},true)">Near unit-elastic</button>
+            <button class="viz-btn reset-chip" onclick="vizPreset({'f3-po':25,'f3-pn':35,'f3-b':2},true)">↺ Reset</button>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Demand &amp; revenue rectangles</div>
+              <div id="jxg-f3-wrap" style="position:relative;width:100%;aspect-ratio:1.15/1;">
+                <div id="jxg-f3" role="img" aria-label="Demand curve with green gain strip and red loss strip after a price increase" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard" aria-live="polite">
+                <div class="sb-title">Revenue Decomposition</div>
+                <div class="sb-row"><span class="sb-lbl">Old revenue P<sub>old</sub>·Q<sub>old</sub></span><span class="sb-num" id="f3-tro">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--green);">+ Price effect (gain)</span><span class="sb-num" style="color:var(--green);" id="f3-gain">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--red);">− Quantity effect (loss)</span><span class="sb-num" style="color:var(--red);" id="f3-loss">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">New revenue P<sub>new</sub>·Q<sub>new</sub></span><span class="sb-num optimum" id="f3-trn">–</span></div>
+              </div>
+              <div class="verdict-banner unit" id="f3-verdict">–</div>
+              <div class="callout key-idea" style="margin-top:0.8rem;"><strong>The link:</strong> price effect wins when demand is inelastic (raise price → revenue up); quantity effect wins when demand is elastic (raise price → revenue down). They tie at unit elasticity, where revenue is maximised.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 4.4 Pricing Strategy Simulator ===== -->
+    <section class="section-block" id="sec-pricing">
+      <span class="section-number">Fig 4.4 · Elasticity</span>
+      <h2>Pricing Strategy Simulator</h2>
+      <p class="section-intro">Pick an industry with its real-world empirical elasticity, choose a price change, and read the predicted revenue response. The approximation is \(\%\Delta TR \approx \%\Delta P\times(1+e_d)\). Inelastic industries (insulin, gasoline) reward price hikes; elastic ones (airlines, fashion) punish them.</p>
+      <div class="viz-wrapper" id="vw-pricing">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-pricing')">
+          <span class="fig-num-badge">Fig 4.4</span>
+          <span class="viz-title">▸ Real-Industry Pricing Simulator</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group" style="min-width:230px;">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Each industry's price elasticity of demand is an empirical estimate from the literature. |e| < 1 is inelastic; |e| > 1 is elastic.">i</span> Industry</label>
+              <select class="num-in" id="f4-ind" style="width:auto;" onchange="f4Update()">
+                <option value="pharma">Pharmaceuticals (e = −0.3)</option>
+                <option value="petrol">Gasoline (e = −0.2)</option>
+                <option value="electric">Electricity (e = −0.1)</option>
+                <option value="airline">Airline tickets (e = −1.4)</option>
+                <option value="coffee">Coffee shop (e = −2.3)</option>
+                <option value="fashion">Fashion clothing (e = −2.8)</option>
+                <option value="hotel">Hotel rooms (e = −1.8)</option>
+              </select>
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="The percentage change in price you set. The bars show the resulting %ΔQ = e·%ΔP and the net %ΔTR ≈ %ΔP·(1 + e).">i</span> %ΔP = <span class="ctrl-val" id="f4-dp-val">+10%</span></label>
+              <input type="range" id="f4-dp" min="-30" max="30" step="1" value="10" aria-label="Percent price change" />
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Scenarios:</span>
+            <button class="viz-btn" onclick="vizSetSlider('f4-dp',20,true)">Price +20%</button>
+            <button class="viz-btn" onclick="vizSetSlider('f4-dp',-20,true)">Price −20%</button>
+            <button class="viz-btn reset-chip" onclick="vizSetSlider('f4-dp',10,true)">↺ Reset</button>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">%Δ Price · %Δ Quantity · %Δ Revenue</div>
+              <div id="jxg-f4-wrap" style="position:relative;width:100%;aspect-ratio:1.2/1;">
+                <div id="jxg-f4" role="img" aria-label="Bar chart of percent change in price, quantity and total revenue" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard" aria-live="polite">
+                <div class="sb-title">Prediction</div>
+                <div class="sb-row"><span class="sb-lbl">Industry elasticity e</span><span class="sb-num" id="f4-e">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--accent);">%Δ Price</span><span class="sb-num" style="color:var(--accent);" id="f4-dp2">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--red);">%Δ Quantity</span><span class="sb-num" style="color:var(--red);" id="f4-dq">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">%Δ Revenue</span><span class="sb-num optimum" id="f4-dtr">–</span></div>
+              </div>
+              <div class="verdict-banner unit" id="f4-verdict">–</div>
+              <div class="callout common-mistake" style="margin-top:0.8rem;">The formula \(\%\Delta TR\approx\%\Delta P(1+e_d)\) is a first-order approximation. It is exact only for small changes; for big jumps, compute revenue directly at each price.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 4.5 Consumer Surplus ===== -->
+    <section class="section-block" id="sec-surplus">
+      <span class="section-number">Fig 4.5 · Welfare</span>
+      <h2>Consumer Surplus Triangle</h2>
+      <p class="section-intro">Consumer surplus (CS) is the <strong style="color:#1a56db">blue triangle</strong> between the demand curve and the price line — the value buyers get above what they pay. Set a base price, then raise it: the lost surplus splits into a <strong style="color:#2e8b57">transfer rectangle</strong> (buyers who stay, now paying more) and an <strong style="color:#d97706">exit triangle</strong> (buyers priced out entirely). Reveal the step-by-step calculation below.</p>
+      <div class="viz-wrapper" id="vw-surplus">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-surplus')">
+          <span class="fig-num-badge">Fig 4.5</span>
+          <span class="viz-title">▸ Consumer Surplus &amp; Its Loss</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Base price P*. CS is ½ · Q* · (P_max − P*), the blue triangle above the price line. Demand is Q = 120 − 2P, so the choke price P_max = 60.">i</span> Base price P* = <span class="ctrl-val" id="f5-p-val">15</span></label>
+              <input type="range" id="f5-p" min="5" max="40" step="1" value="15" aria-label="Base price" />
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="New, higher price P′. Raising it shrinks CS by a transfer rectangle (to the seller) plus an exit-triangle deadweight piece (pure loss).">i</span> New price P′ = <span class="ctrl-val" id="f5-pn-val">25</span></label>
+              <input type="range" id="f5-pn" min="5" max="55" step="1" value="25" aria-label="New price" />
+            </div>
+            <div style="align-self:center;">
+              <button class="viz-btn" id="f5-calc-btn" onclick="f5ToggleCalc()">Show calculation</button>
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Scenarios:</span>
+            <button class="viz-btn" onclick="vizPreset({'f5-p':10,'f5-pn':20},true)">Modest hike</button>
+            <button class="viz-btn" onclick="vizPreset({'f5-p':15,'f5-pn':45},true)">Steep hike</button>
+            <button class="viz-btn" onclick="vizPreset({'f5-p':20,'f5-pn':20},true)">No change</button>
+            <button class="viz-btn reset-chip" onclick="vizPreset({'f5-p':15,'f5-pn':25},true)">↺ Reset</button>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Demand · Q = 120 − 2P</div>
+              <div id="jxg-f5-wrap" style="position:relative;width:100%;aspect-ratio:1.15/1;">
+                <div id="jxg-f5" role="img" aria-label="Consumer surplus triangle shrinking into a transfer rectangle and exit triangle" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard" aria-live="polite">
+                <div class="sb-title">Welfare Accounting</div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--accent);">CS at P*</span><span class="sb-num" style="color:var(--accent);" id="f5-cs">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--accent);">CS at P′</span><span class="sb-num" style="color:var(--accent);" id="f5-csn">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--green);">Transfer rectangle</span><span class="sb-num" style="color:var(--green);" id="f5-rect">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--amber);">Exit triangle (DWL)</span><span class="sb-num" style="color:var(--amber);" id="f5-tri">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Total CS lost</span><span class="sb-num optimum" id="f5-lost">–</span></div>
+              </div>
+              <div id="f5-calc-box" style="display:none;background:#f8f9fb;border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1rem;margin-top:0.75rem;font-size:0.84rem;line-height:1.85;color:var(--ink);"></div>
+              <div class="callout key-idea" style="margin-top:0.8rem;"><strong>Transfer vs deadweight:</strong> the rectangle is not destroyed — it moves from buyers to the seller. The exit triangle is true deadweight loss: surplus that simply vanishes because trades that were worthwhile no longer happen.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 4.6 Surge Pricing ===== -->
+    <section class="section-block" id="sec-surge">
+      <span class="section-number">Fig 4.6 · Welfare</span>
+      <h2>Surge Pricing Simulator</h2>
+      <p class="section-intro">Ride-share surge pricing as a live welfare trade-off. As the surge multiplier climbs above the normal $5 fare, riders drop out, <strong style="color:#1a56db">consumer surplus</strong> (blue) shrinks, and the platform's <strong style="color:#2e8b57">revenue</strong> (green rectangle) grows — until the elasticity of demand turns the hike against it. The dashed line marks the normal fare.</p>
+      <div class="viz-wrapper" id="vw-surge">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-surge')">
+          <span class="fig-num-badge">Fig 4.6</span>
+          <span class="viz-title">▸ Surge Pricing Welfare Trade-off</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="The surge fare per ride. Demand is Q = 40 − 2P, normal fare $5 (8 riders). As the fare rises, riders are priced out and the CS triangle shrinks.">i</span> Surge fare = <span class="ctrl-val" id="f6-p-val">$5.00</span></label>
+              <input type="range" id="f6-p" min="5" max="18" step="0.5" value="5" aria-label="Surge fare" />
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Surge level:</span>
+            <button class="viz-btn" onclick="vizSetSlider('f6-p',5,true)">Normal (1.0×)</button>
+            <button class="viz-btn" onclick="vizSetSlider('f6-p',10,true)">2× surge</button>
+            <button class="viz-btn" onclick="vizSetSlider('f6-p',15,true)">3× surge</button>
+            <button class="viz-btn reset-chip" onclick="vizSetSlider('f6-p',5,true)">↺ Reset</button>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Rider demand · Q = 40 − 2P</div>
+              <div id="jxg-f6-wrap" style="position:relative;width:100%;aspect-ratio:1.15/1;">
+                <div id="jxg-f6" role="img" aria-label="Surge pricing demand curve with consumer surplus triangle and revenue rectangle" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard" aria-live="polite">
+                <div class="sb-title">Surge Readout</div>
+                <div class="sb-row"><span class="sb-lbl">Surge fare (× normal)</span><span class="sb-num" id="f6-mult">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Riders (was 30)</span><span class="sb-num" id="f6-q">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--green);">Platform revenue</span><span class="sb-num" style="color:var(--green);" id="f6-tr">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--accent);">Consumer surplus</span><span class="sb-num" style="color:var(--accent);" id="f6-cs">–</span></div>
+              </div>
+              <div class="verdict-banner unit" id="f6-verdict">–</div>
+              <div class="callout common-mistake" style="margin-top:0.8rem;">Surge raises revenue only while demand is inelastic. Push the fare past the unit-elastic point (here near $10) and the riders lost outweigh the higher fare — revenue starts to fall even as surplus keeps shrinking.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 4.7 Elasticity Drill ===== -->
+    <section class="section-block" id="sec-drill">
+      <span class="section-number">Fig 4.7 · Elasticity</span>
+      <h2>Elasticity Drill</h2>
+      <p class="section-intro">Read each market situation and classify demand as <strong style="color:#c0392b">elastic</strong> (|e|&gt;1, buyers very responsive), <strong style="color:#d97706">unit-elastic</strong> (|e|=1, revenue unchanged by a price tweak), or <strong style="color:#1a56db">inelastic</strong> (|e|&lt;1, buyers stuck). Necessities with no substitutes are inelastic; luxuries and goods with close rivals are elastic. Every miss gets a contrastive explanation.</p>
+      <div class="viz-wrapper" id="vw-drill">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-drill')">
+          <span class="fig-num-badge">Fig 4.7</span>
+          <span class="viz-title">▸ Elastic / Unit / Inelastic Drill</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div style="display:grid;grid-template-columns:1fr 320px;gap:1.2rem;align-items:start;">
+            <div id="drill-root"></div>
+            <div class="viz-panel">
+              <div class="viz-panel-label">Where the point sits on demand</div>
+              <div id="jxg-drill-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-drill" role="img" aria-label="Demand curve with a coloured point in the elastic, unit, or inelastic region" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="footer">EC224 · Week 4 Elasticity &amp; Consumer Welfare · Dev preview (noindex) · week4-viz-dev.html</div>
+
+<div id="tip-global" class="tip-popover" role="tooltip"></div>
+
+<script>
+/* ============================================================ Shared utils ============================================================ */
+function nn(n,d){ if(d!==undefined) return n.toFixed(d); if(Math.abs(n-Math.round(n))<1e-9) return String(Math.round(n)); return (Math.round(n*100)/100).toFixed(2); }
+function toggleViz(id){ var w=document.getElementById(id); w.classList.toggle('collapsed'); var h=w.querySelector('.viz-header'); if(h) h.setAttribute('aria-expanded', String(!w.classList.contains('collapsed'))); }
+function freeB(b){ if(b){ try{ JXG.JSXGraph.freeBoard(b); }catch(e){} } return null; }
+function axisCfg(){ return { x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}}, y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}} }; }
+
+/* elasticity colour ramp: blue (inelastic) -> amber (unit) -> red (elastic) */
+function hx(s){ return parseInt(s,16); }
+function lerpHex(c1,c2,t){ t=Math.max(0,Math.min(1,t));
+  var r=Math.round(hx(c1.slice(1,3))+(hx(c2.slice(1,3))-hx(c1.slice(1,3)))*t);
+  var g=Math.round(hx(c1.slice(3,5))+(hx(c2.slice(3,5))-hx(c1.slice(3,5)))*t);
+  var b=Math.round(hx(c1.slice(5,7))+(hx(c2.slice(5,7))-hx(c1.slice(5,7)))*t);
+  function h2(n){ return ('0'+n.toString(16)).slice(-2); }
+  return '#'+h2(r)+h2(g)+h2(b); }
+function eColor(ed){ var e=Math.abs(ed); if(!isFinite(e)||e>10) return '#c0392b';
+  if(e>=1) return lerpHex('#d97706','#c0392b',Math.min((e-1)/2,1));
+  return lerpHex('#1a56db','#d97706',e); }
+function eClass(ed){ var e=Math.abs(ed); return e>1.001?'elastic':(e<0.999?'inelastic':'unit'); }
+function setVerdict(id, ed, txtE, txtI, txtU){
+  var el=document.getElementById(id); if(!el) return; var c=eClass(ed);
+  el.classList.remove('elastic','inelastic','unit'); el.classList.add(c);
+  el.textContent = c==='elastic'?txtE : (c==='inelastic'?txtI:txtU);
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.viz-header.fig-header-row').forEach(function(hdr){
+    hdr.setAttribute('tabindex','0'); hdr.setAttribute('role','button'); hdr.setAttribute('aria-expanded','true');
+    hdr.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); hdr.click(); } });
+  });
+  const sections=document.querySelectorAll('.section-block'), links=document.querySelectorAll('.toc-link');
+  const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.remove('active')); const a=document.querySelector('.toc-link[href="#'+e.target.id+'"]'); if(a) a.classList.add('active'); } }); },{rootMargin:'-30% 0px -60% 0px'});
+  sections.forEach(s=>io.observe(s));
+});
+
+function openLN(){ document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN(){ document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+function vizSetSlider(id,val,ease){
+  var el=document.getElementById(id); if(!el) return;
+  if(!ease){ el.value=val; el.dispatchEvent(new Event('input',{bubbles:true})); if(window._syncFill) window._syncFill(el); return; }
+  var from=parseFloat(el.value), to=parseFloat(val), t0=performance.now(), dur=400;
+  (function step(now){ var k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3); el.value=from+(to-from)*e; el.dispatchEvent(new Event('input',{bubbles:true})); if(window._syncFill) window._syncFill(el); if(k<1) requestAnimationFrame(step); })(performance.now());
+}
+function vizPreset(map,ease){ Object.keys(map).forEach(function(id){ vizSetSlider(id,map[id],ease); }); }
+
+/* gridline + axis-name helper */
+function gridY(b,x0,x1,from,to,stp){ for(var gy=from;gy<=to;gy+=stp){ b.create('segment',[[x0,gy],[x1,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1}); } }
+
+/* ============================================================ Fig 4.1 — Elasticity Meter ============================================================
+   Demand Q = 100 - 2P. Point elasticity e = -b*P/Q. Arc = midpoint formula. */
+var f1b=null, f1Objs=[], f1PA=15, f1PB=35, f1Mode='arc';
+var F1_A=100, F1_B=2;
+function f1Q(P){ return F1_A - F1_B*P; }
+function f1SetMode(m){ f1Mode=m;
+  document.getElementById('f1-arc').classList.toggle('active', m==='arc');
+  document.getElementById('f1-point').classList.toggle('active', m==='point');
+  document.getElementById('f1-row-ea').style.display = m==='point'?'flex':'none';
+  document.getElementById('f1-row-eb').style.display = m==='point'?'flex':'none';
+  document.getElementById('f1-row-arc').style.display = m==='arc'?'flex':'none';
+  f1Redraw();
+}
+function initF1(){
+  f1b=freeB(f1b);
+  f1b=JXG.JSXGraph.initBoard('jxg-f1',{boundingbox:[-10,58,120,-8],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var b=f1b;
+  gridY(b,-10,120,10,50,10);
+  b.create('text',[113,-4,'Q'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-7,55,'P'],{fontSize:12,color:'#555',fixed:true});
+  b.create('segment',[[0,F1_A/F1_B],[F1_A,0]],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false});
+  b.create('text',[44,35,'D'],{fontSize:13,color:'#1a56db',fixed:true,cssStyle:'font-weight:600'});
+  f1SetMode('arc');
+  document.getElementById('f1-pa').addEventListener('input',function(){ f1PA=parseFloat(this.value); document.getElementById('f1-pa-val').textContent=nn(f1PA,1); f1Redraw(); });
+  document.getElementById('f1-pb').addEventListener('input',function(){ f1PB=parseFloat(this.value); document.getElementById('f1-pb-val').textContent=nn(f1PB,1); f1Redraw(); });
+}
+function f1Redraw(){
+  var b=f1b; if(!b) return;
+  f1Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); f1Objs=[];
+  var PA=f1PA, PB=f1PB, QA=f1Q(PA), QB=f1Q(PB);
+  var eA=-F1_B*PA/QA, eB=-F1_B*PB/QB;
+  var colA=eColor(eA), colB=eColor(eB);
+  if(f1Mode==='arc'){
+    var Qm=(QA+QB)/2, Pm=(PA+PB)/2;
+    var eArc=((QB-QA)/Qm)/((PB-PA)/Pm);
+    var col=eColor(eArc);
+    // shaded box between A and B
+    f1Objs.push(b.create('polygon',[[QA,PA],[QB,PA],[QB,PB],[QA,PB]],{fillColor:col,fillOpacity:0.13,borders:{strokeColor:col,strokeWidth:1,dash:2},vertices:{visible:false},fixed:true,highlight:false}));
+    colA=col; colB=col;
+    document.getElementById('f1-arc-val').textContent=nn(eArc,3);
+    setVerdict('f1-verdict',eArc,
+      'Elastic over this stretch — |e| > 1, buyers respond strongly.',
+      'Inelastic over this stretch — |e| < 1, buyers respond weakly.',
+      'Unit-elastic over this stretch — |e| ≈ 1.');
+  } else {
+    document.getElementById('f1-ea').textContent=nn(eA,3);
+    document.getElementById('f1-eb').textContent=nn(eB,3);
+    document.getElementById('f1-ea').style.color=colA;
+    document.getElementById('f1-eb').style.color=colB;
+    setVerdict('f1-verdict',(Math.abs(eA)+Math.abs(eB))/2*Math.sign(eA||-1),
+      'At least one point is in the elastic region (|e| > 1).',
+      'Both points sit in the inelastic region (|e| < 1).',
+      'Around unit-elastic (|e| ≈ 1).');
+  }
+  f1Objs.push(b.create('point',[QA,PA],{size:6,fillColor:colA,strokeColor:'#fff',strokeWidth:1.6,fixed:true,withLabel:false}));
+  f1Objs.push(b.create('point',[QB,PB],{size:6,fillColor:colB,strokeColor:'#fff',strokeWidth:1.6,fixed:true,withLabel:false}));
+  f1Objs.push(b.create('text',[QA+3,PA+1.5,'A'],{fontSize:13,color:colA,fixed:true,cssStyle:'font-weight:600'}));
+  f1Objs.push(b.create('text',[QB+3,PB+1.5,'B'],{fontSize:13,color:colB,fixed:true,cssStyle:'font-weight:600'}));
+  b.update();
+  document.getElementById('f1-a-pt').textContent='($'+nn(PA,1)+', '+nn(QA,1)+')';
+  document.getElementById('f1-b-pt').textContent='($'+nn(PB,1)+', '+nn(QB,1)+')';
+}
+
+/* ============================================================ Fig 4.2 — Elasticity Heatmap ============================================================ */
+var f2b=null, f2Objs=[], f2Pt=null, f2A=100, f2B=2, f2Pos=50;
+function initF2(){ f2Build();
+  document.getElementById('f2-a').addEventListener('input',f2Parse);
+  document.getElementById('f2-b').addEventListener('input',f2Parse);
+  document.getElementById('f2-pos').addEventListener('input',function(){ f2Pos=parseFloat(this.value); document.getElementById('f2-pos-val').textContent=nn(f2Pos); f2Redraw(); });
+}
+function f2Parse(){
+  var a=parseFloat(document.getElementById('f2-a').value), b=parseFloat(document.getElementById('f2-b').value);
+  if(!isFinite(a)||a<10) a=100; if(!isFinite(b)||b<0.2) b=2;
+  f2A=a; f2B=b; f2Build();
+}
+function f2Reset(){ document.getElementById('f2-a').value=100; document.getElementById('f2-b').value=2; f2A=100; f2B=2; vizSetSlider('f2-pos',50,true); f2Build(); }
+function f2Build(){
+  f2b=freeB(f2b);
+  var choke=f2A/f2B, qmax=f2A;
+  f2b=JXG.JSXGraph.initBoard('jxg-f2',{boundingbox:[-qmax*0.10, choke*1.16, qmax*1.16, -choke*0.13],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var b=f2b;
+  b.create('text',[qmax*1.07,-choke*0.06,'Q'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-qmax*0.06,choke*1.10,'P'],{fontSize:12,color:'#555',fixed:true});
+  // gradient: many coloured segments along the demand line
+  var N=42;
+  for(var i=0;i<N;i++){
+    var p0=choke*i/N, p1=choke*(i+1)/N, pm=(p0+p1)/2;
+    var qm=f2A-f2B*pm, em=-f2B*pm/qm;
+    b.create('segment',[[f2A-f2B*p0,p0],[f2A-f2B*p1,p1]],{strokeColor:eColor(em),strokeWidth:5,fixed:true,highlight:false});
+  }
+  // unit-elastic marker (midpoint)
+  var pu=choke/2, qu=f2A-f2B*pu;
+  b.create('point',[qu,pu],{size:2.5,fillColor:'#d97706',strokeColor:'#d97706',fixed:true,withLabel:false,highlight:false});
+  b.create('text',[qu+qmax*0.03,pu+choke*0.03,'unit |e|=1'],{fontSize:10,color:'#b06a00',fixed:true,cssStyle:'font-weight:600'});
+  f2Redraw();
+}
+function f2Redraw(){
+  var b=f2b; if(!b) return;
+  f2Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); f2Objs=[];
+  var choke=f2A/f2B, P=choke*f2Pos/100, Q=f2A-f2B*P, e=-f2B*P/Q;
+  var col=eColor(e);
+  f2Objs.push(b.create('segment',[[0,P],[Q,P]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true,highlight:false}));
+  f2Objs.push(b.create('segment',[[Q,0],[Q,P]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true,highlight:false}));
+  f2Objs.push(b.create('point',[Q,P],{size:7,fillColor:col,strokeColor:'#fff',strokeWidth:2,fixed:true,withLabel:false}));
+  b.update();
+  document.getElementById('f2-p').textContent='$'+nn(P,1);
+  document.getElementById('f2-q').textContent=nn(Q,1);
+  document.getElementById('f2-e').textContent=nn(e,3);
+  document.getElementById('f2-e').style.color=col;
+  setVerdict('f2-verdict',e,
+    'Elastic here: a 1% price rise cuts quantity more than 1%.',
+    'Inelastic here: a 1% price rise cuts quantity less than 1%.',
+    'Unit-elastic: a 1% price rise cuts quantity by exactly 1%.');
+}
+
+/* ============================================================ Fig 4.3 — Revenue Rectangle ============================================================
+   Demand Q = 120 - bP. Raise price P_old -> P_new.
+   Price effect (gain) = (P_new - P_old) * Q_new  (green)
+   Quantity effect (loss) = P_old * (Q_old - Q_new) (red) */
+var f3b=null, f3Objs=[], f3PO=25, f3PN=35, f3B=2;
+var F3_A=120;
+function f3Q(P,b){ return Math.max(0,F3_A-b*P); }
+function initF3(){
+  f3b=freeB(f3b);
+  f3b=JXG.JSXGraph.initBoard('jxg-f3',{boundingbox:[-12,64,142,-9],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var b=f3b;
+  gridY(b,-12,142,10,60,10);
+  b.create('text',[134,-4.5,'Q'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-8,61,'P'],{fontSize:12,color:'#555',fixed:true});
+  f3Redraw();
+  ['f3-po','f3-pn'].forEach(function(id){ document.getElementById(id).addEventListener('input',function(){ f3PO=parseFloat(document.getElementById('f3-po').value); f3PN=parseFloat(document.getElementById('f3-pn').value); document.getElementById('f3-po-val').textContent=nn(f3PO); document.getElementById('f3-pn-val').textContent=nn(f3PN); f3Redraw(); }); });
+  document.getElementById('f3-b').addEventListener('input',function(){ f3B=parseFloat(this.value); document.getElementById('f3-b-val').textContent=nn(f3B,1); f3Redraw(); });
+}
+function f3Redraw(){
+  var b=f3b; if(!b) return;
+  f3Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); f3Objs=[];
+  var PO=f3PO, PN=f3PN, bb=f3B;
+  var QO=f3Q(PO,bb), QN=f3Q(PN,bb);
+  var lo=Math.min(PO,PN), hi=Math.max(PO,PN);
+  var Qlo=f3Q(lo,bb), Qhi=f3Q(hi,bb); // Qlo>=Qhi
+  // demand line
+  f3Objs.push(b.create('segment',[[0,F3_A/bb],[F3_A,0]],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false}));
+  // ghost: old revenue rectangle outline
+  f3Objs.push(b.create('polygon',[[0,0],[QO,0],[QO,PO],[0,PO]],{fillColor:'#888',fillOpacity:0.06,borders:{strokeColor:'#888',strokeWidth:1.2,dash:2},vertices:{visible:false},fixed:true,highlight:false}));
+  // price effect (green) gain: rectangle over Q_hi (buyers who stay) between lo and hi price
+  f3Objs.push(b.create('polygon',[[0,lo],[Qhi,lo],[Qhi,hi],[0,hi]],{fillColor:'#2e8b57',fillOpacity:0.32,borders:{strokeColor:'#2e8b57',strokeWidth:1},vertices:{visible:false},fixed:true,highlight:false}));
+  // quantity effect (red) loss: rectangle at low price between Q_hi and Q_lo
+  f3Objs.push(b.create('polygon',[[Qhi,0],[Qlo,0],[Qlo,lo],[Qhi,lo]],{fillColor:'#c0392b',fillOpacity:0.30,borders:{strokeColor:'#c0392b',strokeWidth:1},vertices:{visible:false},fixed:true,highlight:false}));
+  // points
+  f3Objs.push(b.create('point',[QO,PO],{size:5,fillColor:'#3d5a80',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  f3Objs.push(b.create('point',[QN,PN],{size:5,fillColor:'#1a56db',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  b.update();
+  var TRO=PO*QO, TRN=PN*QN;
+  // decomposition (signed for a price rise; if PN<PO labels still hold as gains/losses reverse)
+  var gain=(hi-lo)*Qhi;       // price effect magnitude
+  var loss=lo*(Qlo-Qhi);      // quantity effect magnitude
+  document.getElementById('f3-tro').textContent='$'+nn(TRO,0);
+  document.getElementById('f3-gain').textContent='$'+nn(gain,0);
+  document.getElementById('f3-loss').textContent='$'+nn(loss,0);
+  document.getElementById('f3-trn').textContent='$'+nn(TRN,0);
+  // elasticity at midpoint determines verdict
+  var Pm=(PO+PN)/2||PO, Qm=f3Q(Pm,bb), em=-bb*Pm/Qm;
+  setVerdict('f3-verdict',em,
+    (PN>PO?'Elastic: price up → revenue DOWN ($'+nn(TRN-TRO,0)+'). Quantity effect wins.':'Elastic: price down → revenue UP. Quantity effect wins.'),
+    (PN>PO?'Inelastic: price up → revenue UP (+$'+nn(TRN-TRO,0)+'). Price effect wins.':'Inelastic: price down → revenue down. Price effect wins.'),
+    'Unit-elastic: revenue barely moves — the two effects cancel.');
+}
+
+/* ============================================================ Fig 4.4 — Pricing Strategy Simulator ============================================================ */
+var f4b=null, f4Objs=[], f4DP=10;
+var F4_E={ pharma:-0.3, petrol:-0.2, electric:-0.1, airline:-1.4, coffee:-2.3, fashion:-2.8, hotel:-1.8 };
+function initF4(){
+  f4b=freeB(f4b);
+  f4b=JXG.JSXGraph.initBoard('jxg-f4',{boundingbox:[-0.4,70,3.9,-70],axis:false,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false}});
+  var b=f4b;
+  for(var gy=-60;gy<=60;gy+=20){ b.create('segment',[[-0.2,gy],[3.7,gy]],{strokeColor:gy===0?'#bbb':'#f0f0f0',strokeWidth:gy===0?1.4:1,fixed:true,highlight:false,layer:1}); b.create('text',[-0.34,gy,(gy>0?'+':'')+gy+'%'],{fontSize:9,color:'#777',fixed:true,anchorY:'middle'}); }
+  b.create('text',[0.7,-66,'%ΔP'],{fontSize:11,color:'#555',fixed:true,anchorX:'middle'});
+  b.create('text',[1.85,-66,'%ΔQ'],{fontSize:11,color:'#555',fixed:true,anchorX:'middle'});
+  b.create('text',[3.0,-66,'%ΔTR'],{fontSize:11,color:'#555',fixed:true,anchorX:'middle'});
+  f4Update();
+  document.getElementById('f4-dp').addEventListener('input',function(){ f4DP=parseFloat(this.value); document.getElementById('f4-dp-val').textContent=(f4DP>0?'+':'')+f4DP+'%'; f4Redraw(); });
+}
+function f4bar(b,xc,val,col){
+  return b.create('polygon',[[xc-0.28,0],[xc+0.28,0],[xc+0.28,val],[xc-0.28,val]],{fillColor:col,fillOpacity:0.55,borders:{strokeColor:col,strokeWidth:1.2},vertices:{visible:false},fixed:true,highlight:false});
+}
+function f4Update(){ f4Redraw(); }
+function f4Redraw(){
+  var b=f4b; if(!b) return;
+  f4Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); f4Objs=[];
+  var e=F4_E[document.getElementById('f4-ind').value], dP=f4DP;
+  var dQ=e*dP, dTR=dP*(1+e);
+  function clamp(v){ return Math.max(-64,Math.min(64,v)); }
+  f4Objs.push(f4bar(b,0.7,clamp(dP),'#1a56db'));
+  f4Objs.push(f4bar(b,1.85,clamp(dQ),'#c0392b'));
+  f4Objs.push(f4bar(b,3.0,clamp(dTR),'#0d7377'));
+  f4Objs.push(b.create('text',[0.7,clamp(dP)+(dP>=0?5:-5),(dP>0?'+':'')+nn(dP,0)+'%'],{fontSize:11,color:'#1a56db',fixed:true,anchorX:'middle',cssStyle:'font-weight:600'}));
+  f4Objs.push(b.create('text',[1.85,clamp(dQ)+(dQ>=0?5:-5),(dQ>0?'+':'')+nn(dQ,1)+'%'],{fontSize:11,color:'#c0392b',fixed:true,anchorX:'middle',cssStyle:'font-weight:600'}));
+  f4Objs.push(b.create('text',[3.0,clamp(dTR)+(dTR>=0?5:-5),(dTR>0?'+':'')+nn(dTR,1)+'%'],{fontSize:11,color:'#0d7377',fixed:true,anchorX:'middle',cssStyle:'font-weight:600'}));
+  b.update();
+  document.getElementById('f4-e').textContent=nn(e,2);
+  document.getElementById('f4-dp2').textContent=(dP>0?'+':'')+nn(dP,0)+'%';
+  document.getElementById('f4-dq').textContent=(dQ>0?'+':'')+nn(dQ,1)+'%';
+  document.getElementById('f4-dtr').textContent=(dTR>0?'+':'')+nn(dTR,1)+'%';
+  setVerdict('f4-verdict',e,
+    (dP>0?'Elastic good: raising price LOWERS revenue. Cut price instead.':'Elastic good: cutting price RAISES revenue.'),
+    (dP>0?'Inelastic good: raising price RAISES revenue.':'Inelastic good: cutting price lowers revenue.'),
+    'Unit-elastic: revenue is unchanged by the price move.');
+}
+
+/* ============================================================ Fig 4.5 — Consumer Surplus ============================================================
+   Q = 120 - 2P, choke = 60. CS = 1/2 * Q * (choke - P). */
+var f5b=null, f5Objs=[], f5P=15, f5PN=25, f5Calc=false;
+var F5_A=120, F5_B=2, F5_CH=60;
+function f5Q(P){ return Math.max(0,F5_A-F5_B*P); }
+function initF5(){
+  f5b=freeB(f5b);
+  f5b=JXG.JSXGraph.initBoard('jxg-f5',{boundingbox:[-12,66,142,-9],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var b=f5b;
+  gridY(b,-12,142,10,60,10);
+  b.create('text',[134,-4.5,'Q'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-8,63,'P'],{fontSize:12,color:'#555',fixed:true});
+  b.create('segment',[[0,F5_CH],[F5_A,0]],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false});
+  b.create('text',[92,16,'D'],{fontSize:13,color:'#1a56db',fixed:true,cssStyle:'font-weight:600'});
+  f5Redraw();
+  ['f5-p','f5-pn'].forEach(function(id){ document.getElementById(id).addEventListener('input',function(){ f5P=parseFloat(document.getElementById('f5-p').value); f5PN=parseFloat(document.getElementById('f5-pn').value); document.getElementById('f5-p-val').textContent=nn(f5P); document.getElementById('f5-pn-val').textContent=nn(f5PN); f5Redraw(); }); });
+}
+function f5ToggleCalc(){ f5Calc=!f5Calc; document.getElementById('f5-calc-box').style.display=f5Calc?'block':'none'; document.getElementById('f5-calc-btn').textContent=f5Calc?'Hide calculation':'Show calculation'; if(f5Calc) f5Redraw(); }
+function f5Redraw(){
+  var b=f5b; if(!b) return;
+  f5Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); f5Objs=[];
+  var P=f5P, PN=Math.max(f5PN,P), Q=f5Q(P), QN=f5Q(PN);
+  var CS=0.5*Q*(F5_CH-P), CSN=0.5*QN*(F5_CH-PN);
+  var rect=(PN-P)*QN, tri=0.5*(PN-P)*(Q-QN), lost=CS-CSN;
+  // new CS triangle (blue) above PN
+  f5Objs.push(b.create('polygon',[[0,PN],[QN,PN],[0,F5_CH]],{fillColor:'#1a56db',fillOpacity:0.20,borders:{strokeColor:'#1a56db',strokeWidth:1},vertices:{visible:false},fixed:true,highlight:false}));
+  // transfer rectangle (green): existing buyers QN pay extra (PN-P)
+  if(PN>P) f5Objs.push(b.create('polygon',[[0,P],[QN,P],[QN,PN],[0,PN]],{fillColor:'#2e8b57',fillOpacity:0.30,borders:{strokeColor:'#2e8b57',strokeWidth:1},vertices:{visible:false},fixed:true,highlight:false}));
+  // exit triangle (amber, DWL)
+  if(PN>P) f5Objs.push(b.create('polygon',[[QN,P],[Q,P],[QN,PN]],{fillColor:'#d97706',fillOpacity:0.34,borders:{strokeColor:'#d97706',strokeWidth:1},vertices:{visible:false},fixed:true,highlight:false}));
+  // price lines
+  f5Objs.push(b.create('segment',[[0,P],[Q,P]],{strokeColor:'#3d5a80',strokeWidth:1.4,dash:2,fixed:true,highlight:false}));
+  if(PN>P) f5Objs.push(b.create('segment',[[0,PN],[QN,PN]],{strokeColor:'#1a56db',strokeWidth:1.6,fixed:true,highlight:false}));
+  f5Objs.push(b.create('point',[Q,P],{size:5,fillColor:'#3d5a80',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  if(PN>P) f5Objs.push(b.create('point',[QN,PN],{size:5,fillColor:'#1a56db',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  b.update();
+  document.getElementById('f5-cs').textContent='$'+nn(CS,0);
+  document.getElementById('f5-csn').textContent='$'+nn(CSN,0);
+  document.getElementById('f5-rect').textContent='$'+nn(rect,0);
+  document.getElementById('f5-tri').textContent='$'+nn(tri,0);
+  document.getElementById('f5-lost').textContent='$'+nn(lost,0);
+  if(f5Calc){
+    document.getElementById('f5-calc-box').innerHTML=
+      '<strong>Choke price</strong> P<sub>max</sub> = 120/2 = <strong>$60</strong><br>'+
+      'CS at P*=$'+nn(P)+': ½·Q*·(60−P*) = ½·'+nn(Q,1)+'·'+nn(F5_CH-P,1)+' = <strong style="color:#1a56db">$'+nn(CS,0)+'</strong><br>'+
+      (PN>P? 'CS at P′=$'+nn(PN)+': ½·'+nn(QN,1)+'·'+nn(F5_CH-PN,1)+' = <strong style="color:#1a56db">$'+nn(CSN,0)+'</strong><br>'+
+      '<strong>Lost CS = $'+nn(lost,0)+'</strong> = transfer <span style="color:#2e8b57">$'+nn(rect,0)+'</span> + exit DWL <span style="color:#d97706">$'+nn(tri,0)+'</span>' : '<em>Raise P′ above P* to split the loss.</em>');
+  }
+}
+
+/* ============================================================ Fig 4.6 — Surge Pricing ============================================================
+   Q = 40 - 2P, normal fare $5 (Q=30), choke = 20. */
+var f6b=null, f6Objs=[], f6P=5;
+var F6_A=40, F6_B=2, F6_CH=20, F6_NORM=5;
+function f6Q(P){ return Math.max(0,F6_A-F6_B*P); }
+function initF6(){
+  f6b=freeB(f6b);
+  f6b=JXG.JSXGraph.initBoard('jxg-f6',{boundingbox:[-4.5,23,46,-3.5],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var b=f6b;
+  gridY(b,-4.5,46,5,20,5);
+  b.create('text',[43,-1.8,'Rides'],{fontSize:11,color:'#555',fixed:true});
+  b.create('text',[-3,21.5,'$/ride'],{fontSize:11,color:'#555',fixed:true});
+  b.create('segment',[[0,F6_CH],[F6_A,0]],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false});
+  b.create('text',[30,6,'D'],{fontSize:13,color:'#1a56db',fixed:true,cssStyle:'font-weight:600'});
+  f6Redraw();
+  document.getElementById('f6-p').addEventListener('input',function(){ f6P=parseFloat(this.value); document.getElementById('f6-p-val').textContent='$'+nn(f6P,2); f6Redraw(); });
+}
+function f6Redraw(){
+  var b=f6b; if(!b) return;
+  f6Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); f6Objs=[];
+  var P=f6P, Q=f6Q(P), CS=0.5*Q*(F6_CH-P), TR=P*Q;
+  var Qn=f6Q(F6_NORM), TRn=F6_NORM*Qn;
+  // revenue rectangle (green)
+  f6Objs.push(b.create('polygon',[[0,0],[Q,0],[Q,P],[0,P]],{fillColor:'#2e8b57',fillOpacity:0.26,borders:{strokeColor:'#2e8b57',strokeWidth:1},vertices:{visible:false},fixed:true,highlight:false}));
+  // CS triangle (blue)
+  f6Objs.push(b.create('polygon',[[0,P],[Q,P],[0,F6_CH]],{fillColor:'#1a56db',fillOpacity:0.20,borders:{strokeColor:'#1a56db',strokeWidth:1},vertices:{visible:false},fixed:true,highlight:false}));
+  // normal fare reference
+  f6Objs.push(b.create('segment',[[0,F6_NORM],[F6_A,F6_NORM]],{strokeColor:'#9aa3b2',strokeWidth:1.2,dash:3,fixed:true,highlight:false}));
+  f6Objs.push(b.create('text',[33,F6_NORM+1,'normal $5'],{fontSize:10,color:'#7a8392',fixed:true}));
+  // price/qty drop lines
+  f6Objs.push(b.create('segment',[[Q,0],[Q,P]],{strokeColor:'#aaa',strokeWidth:1,dash:2,fixed:true,highlight:false}));
+  f6Objs.push(b.create('point',[Q,P],{size:6,fillColor:'#f39c12',strokeColor:'#fff',strokeWidth:1.8,fixed:true,withLabel:false}));
+  b.update();
+  document.getElementById('f6-mult').textContent='$'+nn(P,2)+' ('+nn(P/F6_NORM,1)+'×)';
+  document.getElementById('f6-q').textContent=nn(Q,0);
+  document.getElementById('f6-tr').textContent='$'+nn(TR,0);
+  document.getElementById('f6-cs').textContent='$'+nn(CS,0);
+  // elasticity at this fare
+  var e=-F6_B*P/Q;
+  setVerdict('f6-verdict',e,
+    'Elastic zone — riders lost outweigh the higher fare; revenue is now falling.',
+    'Inelastic zone — surge still raising revenue ($'+nn(TR,0)+' vs $'+nn(TRn,0)+' normal).',
+    'Unit-elastic — revenue is at its peak; further surge only shrinks surplus.');
+}
+
+/* ============================================================ Fig 4.7 — Elasticity Drill ============================================================ */
+var drillB=null, dShapeObjs=[];
+var DCAT={ elastic:'Elastic (|e| > 1)', unit:'Unit-elastic (|e| = 1)', inelastic:'Inelastic (|e| < 1)' };
+var DSCEN=[
+  { text:'Insulin for a type-1 diabetic. There is no substitute and skipping it is not an option, so a 20% price rise barely dents the quantity bought.', answer:'inelastic',
+    why:'You picked elastic/unit, but a life-sustaining good with <strong>no substitutes</strong> leaves buyers almost unresponsive — quantity hardly moves.',
+    rule:'Necessities with no substitutes ⇒ inelastic (|e| < 1).' },
+  { text:'One particular brand of bottled water on a shelf full of near-identical brands. Raise its price 10% and shoppers simply grab a rival.', answer:'elastic',
+    why:'You picked inelastic/unit, but with <strong>many close substitutes</strong> buyers flee on the smallest price gap — quantity falls sharply.',
+    rule:'Goods with many close substitutes ⇒ elastic (|e| > 1).' },
+  { text:'A linear demand curve evaluated exactly at its midpoint, where price is half the choke price. A 1% price rise cuts quantity by precisely 1%.', answer:'unit',
+    why:'You picked elastic/inelastic, but the midpoint of a straight-line demand is the <strong>exact balance point</strong> where %ΔQ equals %ΔP.',
+    rule:'Midpoint of linear demand ⇒ unit-elastic (|e| = 1).' },
+  { text:'Table salt. It is cheap, used in tiny amounts, and has no real alternative, so households buy about the same quantity whatever the price.', answer:'inelastic',
+    why:'You picked elastic/unit, but a <strong>small-budget-share necessity</strong> with no substitute keeps quantity nearly fixed.',
+    rule:'Tiny budget share + no substitutes ⇒ inelastic.' },
+  { text:'A weekend luxury cruise. It is a postponable, big-ticket indulgence, so a price jump sends would-be passengers to cheaper holidays or none at all.', answer:'elastic',
+    why:'You picked inelastic/unit, but <strong>postponable luxuries</strong> with easy alternatives make buyers very price-sensitive.',
+    rule:'Luxuries / postponable big-ticket goods ⇒ elastic.' },
+  { text:'A monopolist finds that when it nudges price up, total revenue does not change at all — the lost sales exactly offset the higher price.', answer:'unit',
+    why:'You picked elastic/inelastic, but revenue holding <strong>constant</strong> as price changes is the defining signature of unit elasticity.',
+    rule:'Revenue unchanged by a price tweak ⇒ unit-elastic.' },
+  { text:'Gasoline in the short run. Drivers still need to commute this week, so even a sharp price rise only trims consumption a little.', answer:'inelastic',
+    why:'You picked elastic/unit, but in the <strong>short run</strong> commuting habits are locked in, so quantity responds weakly.',
+    rule:'Necessity in the short run (few adjustments) ⇒ inelastic.' }
+];
+var dOrder=[], dIdx=0, dScore=0, dTotal=0, dAnswered=false;
+function initDrill(){
+  drillB=freeB(drillB);
+  drillB=JXG.JSXGraph.initBoard('jxg-drill',{boundingbox:[-9,57,68,-9],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var b=drillB;
+  gridY(b,-9,68,10,50,10);
+  b.create('text',[63,-4,'Q'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-6,54,'P'],{fontSize:12,color:'#555',fixed:true});
+  b.create('segment',[[0,50],[60,0]],{strokeColor:'#bcc6d6',strokeWidth:2.4,fixed:true,highlight:false});
+  drillNewRound();
+}
+function drillDrawPoint(cat){
+  var b=drillB; if(!b) return;
+  dShapeObjs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); dShapeObjs=[];
+  // Q=60-1.2P approx (choke 50); elastic high, unit mid, inelastic low
+  var P = cat==='elastic'?40 : (cat==='unit'?25 : 10);
+  var Q = 60-1.2*P;
+  var col = cat==='elastic'?'#c0392b' : (cat==='unit'?'#d97706':'#1a56db');
+  dShapeObjs.push(b.create('point',[Q,P],{size:7,fillColor:col,strokeColor:'#fff',strokeWidth:2,fixed:true,withLabel:false}));
+  dShapeObjs.push(b.create('text',[Q+3,P+3,DCAT[cat]],{fontSize:11,color:col,fixed:true,cssStyle:'font-weight:600'}));
+  b.update();
+}
+function drillNewRound(){
+  if(dOrder.length===0){ dOrder=DSCEN.map(function(_,i){return i;}).sort(function(){return Math.random()-0.5;}); }
+  dIdx=dOrder.shift(); dAnswered=false;
+  var sc=DSCEN[dIdx];
+  drillDrawPoint(sc.answer);
+  var root=document.getElementById('drill-root');
+  root.innerHTML='<div><div class="quiz-score" id="d-score">Score: '+dScore+' / '+dTotal+'</div>'+
+    '<div class="quiz-scenario">'+sc.text+'</div>'+
+    '<div class="quiz-btns">'+
+    '<button class="quiz-btn" id="d-elastic" onclick="drillAnswer(\'elastic\')">Elastic (|e| &gt; 1)</button>'+
+    '<button class="quiz-btn" id="d-unit" onclick="drillAnswer(\'unit\')">Unit-elastic (|e| = 1)</button>'+
+    '<button class="quiz-btn" id="d-inelastic" onclick="drillAnswer(\'inelastic\')">Inelastic (|e| &lt; 1)</button>'+
+    '</div>'+
+    '<div id="d-feedback" class="quiz-feedback" style="display:none;"></div>'+
+    '<button class="quiz-next" id="d-next" onclick="drillNewRound()" style="display:none;">Next scenario →</button></div>';
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([root]);
+}
+function drillAnswer(ans){
+  if(dAnswered) return; dAnswered=true; dTotal++;
+  var sc=DSCEN[dIdx], correct=ans===sc.answer; if(correct) dScore++;
+  document.getElementById('d-score').textContent='Score: '+dScore+' / '+dTotal;
+  var chosen=document.getElementById('d-'+ans), right=document.getElementById('d-'+sc.answer);
+  chosen.classList.add(correct?'correct':'incorrect'); chosen.classList.add(correct?'pop':'shake');
+  if(!correct) right.classList.add('revealed');
+  var fb=document.getElementById('d-feedback'); fb.style.display='block'; fb.classList.remove('right','wrong');
+  if(correct){ fb.classList.add('right'); fb.innerHTML='✅ <strong>Correct!</strong> '+DCAT[sc.answer]+'. <span class="qf-rule"><b>Rule:</b> '+sc.rule+'</span>'; }
+  else {
+    fb.classList.add('wrong');
+    fb.innerHTML='❌ <strong>Not quite — the answer is '+DCAT[sc.answer]+'.</strong>'+
+      '<span class="qf-why">'+sc.why+'</span>'+
+      '<span class="qf-rule"><b>Rule of thumb:</b> '+sc.rule+'</span>';
+  }
+  document.getElementById('d-next').style.display='inline-block';
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([fb]);
+}
+
+/* ============================================================ Boot ============================================================ */
+document.addEventListener('DOMContentLoaded',function(){
+  initF1(); initF2(); initF3(); initF4(); initF5(); initF6(); initDrill();
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([document.body]);
+});
+</script>
+
+<script>
+/* ── slider fill ── */
+(function(){
+  function syncFill(el){ var mn=parseFloat(el.min)||0, mx=parseFloat(el.max)||100, v=parseFloat(el.value)||0, p=((v-mn)/(mx-mn)*100).toFixed(1);
+    el.style.background='linear-gradient(to right,var(--accent) 0%,var(--accent) '+p+'%,var(--accent-lt) '+p+'%,var(--accent-lt) 100%)'; }
+  window._syncFill=syncFill;
+  document.addEventListener('input',function(e){ if(e.target.type==='range') syncFill(e.target); });
+  function init(){ document.querySelectorAll('input[type="range"]').forEach(syncFill); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+
+/* ── tooltip click-toggle popover (corrected dismiss pattern) ── */
+(function(){
+  var tip=document.getElementById('tip-global'); if(!tip) return;
+  var openIcon=null, openedByClick=false;
+  function showTip(icon){ var t=icon.getAttribute('data-tip'); if(!t) return; if(openIcon&&openIcon!==icon) closeTip();
+    openIcon=icon; icon.setAttribute('aria-expanded','true'); icon.setAttribute('aria-describedby','tip-global'); tip.textContent=t; tip.classList.add('visible'); placeTip(icon); }
+  function closeTip(){ if(!openIcon) return; openIcon.setAttribute('aria-expanded','false'); openIcon.removeAttribute('aria-describedby'); openIcon=null; openedByClick=false; tip.classList.remove('visible'); tip.style.display='none'; }
+  function placeTip(icon){ var r=icon.getBoundingClientRect(); tip.style.display='block'; var tw=tip.offsetWidth, th=tip.offsetHeight; var top=r.top-th-10, left=r.left+r.width/2-tw/2; if(top<8) top=r.bottom+8; left=Math.max(8,Math.min(left,window.innerWidth-tw-8)); tip.style.top=top+'px'; tip.style.left=left+'px'; }
+  document.addEventListener('click',function(e){ var icon=e.target.closest('.tip-icon'); if(icon){ e.stopPropagation(); if(openIcon===icon){closeTip();}else{showTip(icon);openedByClick=true;} } else { closeTip(); } });
+  document.addEventListener('mouseover',function(e){ var icon=e.target.closest('.tip-icon'); if(icon&&openIcon!==icon){ showTip(icon); openedByClick=false; } });
+  document.addEventListener('mouseout',function(e){ var icon=e.target.closest('.tip-icon'); if(icon&&!icon.contains(e.relatedTarget)){ if(openIcon===icon&&!openedByClick) closeTip(); } });
+  document.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')&&document.activeElement){ var icon=document.activeElement.closest('.tip-icon'); if(icon){ e.preventDefault(); if(openIcon===icon){closeTip();}else{showTip(icon);openedByClick=true;} } } if(e.key==='Escape') closeTip(); });
+  window.addEventListener('scroll',function(){ if(openIcon) placeTip(openIcon); },true);
+  window.addEventListener('resize',function(){ if(openIcon) placeTip(openIcon); });
+})();
+
+/* ── A3/E2 ghost: snapshot pre-drag demand on Fig 4.3 slope slider ── */
+(function(){
+  var ghost=null, timer=null;
+  function make(){ clearTimeout(timer); if(ghost&&f3b){ try{f3b.removeObject(ghost,false);}catch(e){} ghost=null; } if(!f3b) return;
+    var bb=f3B; try{ ghost=f3b.create('segment',[[0,F3_A/bb],[F3_A,0]],{strokeColor:'#888',strokeWidth:1.5,strokeOpacity:0.28,dash:2,highlight:false,fixed:true}); f3b.update(); }catch(e){} }
+  function clear(){ timer=setTimeout(function(){ if(ghost&&f3b){ try{f3b.removeObject(ghost,false);f3b.update();}catch(e){} ghost=null; } },1500); }
+  document.addEventListener('DOMContentLoaded',function(){
+    var el=document.getElementById('f3-b'); if(!el) return;
+    el.addEventListener('mousedown',make); el.addEventListener('touchstart',make,{passive:true});
+    el.addEventListener('mouseup',clear); el.addEventListener('touchend',clear);
+    window.addEventListener('mouseup',clear);
+  });
+})();
+</script>
+
+<script>
+/* Start every figure collapsed (after inits sized the boards). */
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.viz-wrapper').forEach(function(w){ w.classList.add('collapsed'); var h=w.querySelector('.viz-header'); if(h) h.setAttribute('aria-expanded','false'); });
+});
+</script>
+</body>
+</html>

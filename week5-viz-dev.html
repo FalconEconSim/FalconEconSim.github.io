@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>[DEV] Week 5 Visualizations – Production · EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
+      svg: { fontCache:'global' },
+      startup: { ready() { MathJax.startup.defaultReady(); MathJax.typesetPromise([document.body]).catch(()=>{}); } }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+
+  <style>
+    :root {
+      --bg:#f7f7f7; --bg-card:#fff; --ink:#1a1a1a; --ink-light:#6b6b6b;
+      --faint:#596373; --accent:#1a56db; --accent-lt:#eff4ff;
+      --rule:#e4e4e4; --green:#2e8b57; --red:#c0392b; --amber:#d97706; --purple:#6b52a8;
+      --font:'DM Sans',system-ui,sans-serif; --mono:'DM Mono',ui-monospace,monospace; --muted:#9aa3b2;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased; }
+
+    .topnav { position:sticky; top:0; z-index:100; background:rgba(250,249,247,0.96); backdrop-filter:blur(8px); border-bottom:1px solid var(--rule); height:52px; display:flex; align-items:center; }
+    .topnav-inner { max-width:1520px; width:100%; margin:0 auto; padding:0 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .nav-left { display:flex; align-items:center; gap:0.75rem; }
+    .nav-week { font-family:var(--mono); font-size:0.7rem; color:var(--accent); letter-spacing:0.08em; }
+    .nav-sep { color:var(--rule); font-size:0.9rem; }
+    .nav-title { font-size:0.85rem; color:var(--ink-light); font-style:italic; }
+    .nav-home { font-size:0.82rem; color:var(--accent); text-decoration:none; }
+    .nav-home:hover { text-decoration:underline; }
+    .nav-ln-btn { font-family:var(--font); font-size:0.78rem; font-weight:500; padding:0.3rem 0.8rem; border:1px solid var(--rule); border-radius:6px; background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s; }
+    .nav-ln-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+
+    .week-hero { padding:3rem 2rem 2.5rem; max-width:1100px; margin:0 auto; border-bottom:1px solid var(--rule); }
+    .week-tag { font-family:var(--mono); font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:0.6rem; }
+    .week-hero h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:700; line-height:1.18; color:var(--ink); margin-bottom:0.6rem; }
+    .week-hero .intro { font-size:1rem; color:var(--ink-light); max-width:660px; }
+
+    .page-layout { display:grid; grid-template-columns:220px 1fr; max-width:1520px; margin:0 auto; align-items:start; }
+    .viz-toc { position:sticky; top:52px; height:calc(100vh - 52px); overflow-y:auto; border-right:1px solid var(--rule); padding:1.75rem 1.1rem; }
+    .viz-toc-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--faint); margin-bottom:0.8rem; padding-bottom:0.4rem; border-bottom:1px solid var(--rule); }
+    .viz-toc nav a { display:block; font-size:0.82rem; color:var(--ink-light); padding:0.32rem 0.55rem; border-radius:3px; border-left:2px solid transparent; transition:all 0.15s; margin-bottom:0.08rem; text-decoration:none; }
+    .viz-toc nav a:hover, .viz-toc nav a.active { background:var(--accent-lt); border-left-color:var(--accent); color:var(--accent); }
+
+    .main-content { padding:2.5rem 2.5rem 5rem; min-width:0; }
+    .section-block { margin-bottom:4.5rem; scroll-margin-top:70px; }
+    .section-block h2 { font-size:1.85rem; font-weight:700; color:var(--ink); margin-bottom:0.35rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent-lt); }
+    .section-intro { font-size:0.97rem; color:var(--ink-light); margin-bottom:1.5rem; max-width:680px; }
+    .section-number { font-family:var(--mono); font-size:0.78rem; color:var(--accent); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:0.25rem; }
+
+    .viz-wrapper { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin:1.5rem 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+    .viz-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.1rem; background:#f4f6fa; border-bottom:1px solid var(--rule); cursor:pointer; user-select:none; }
+    .viz-header:focus-visible { outline:3px solid var(--accent); outline-offset:2px; border-radius:4px; }
+    .fig-num-badge { font-family:var(--mono); font-size:0.67rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; background:var(--accent-lt); color:var(--accent); border:1px solid rgba(26,86,219,0.2); border-radius:20px; padding:2px 8px; flex-shrink:0; }
+    .viz-title { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--accent); margin-left:0.75rem; flex:1; }
+    .fig-chevron { color:var(--faint); font-size:0.85rem; transition:transform 0.2s; }
+    .viz-wrapper.collapsed .fig-chevron { transform:rotate(-90deg); }
+    .viz-wrapper.collapsed .viz-body { display:none; }
+    .viz-body { padding:1.4rem; }
+
+    .viz-controls { display:flex; flex-wrap:wrap; gap:1.2rem; align-items:flex-end; margin-bottom:1.2rem; padding:0.9rem 1.1rem; background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; }
+    .ctrl-group { display:flex; flex-direction:column; gap:0.28rem; min-width:130px; }
+    .ctrl-group label { font-family:var(--mono); font-size:0.73rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); display:flex; align-items:center; gap:4px; }
+    .ctrl-val { font-family:var(--mono); font-size:0.9rem; color:var(--accent); font-weight:600; }
+    input[type="range"] { -webkit-appearance:none; width:100%; height:4px; background:var(--accent-lt); border-radius:2px; outline:none; cursor:pointer; }
+    input[type="range"]:focus-visible { outline:3px solid var(--accent); outline-offset:4px; border-radius:3px; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,0.22); }
+    input[type="range"]::-moz-range-thumb { width:22px; height:22px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,0.22); }
+
+    .viz-two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .viz-panel { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+    .viz-panel-label { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); padding:0.5rem 0.8rem; background:#f8f9fb; border-bottom:1px solid var(--rule); }
+    .jxgbox { background:#fff !important; border:none !important; border-radius:0 !important; }
+
+    .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; padding:0.8rem 0; }
+    .stat-box { background:#f8f9fb; border:1px solid var(--rule); border-radius:5px; padding:0.55rem 0.75rem; }
+    .stat-label { font-family:var(--mono); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--faint); margin-bottom:2px; }
+    .stat-val { font-family:var(--mono); font-size:0.95rem; font-weight:600; color:var(--ink); }
+    .stat-val.optimum { color:#0d7377; }
+
+    .scoreboard { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.9rem 1rem; margin-top:0.75rem; }
+    .sb-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); margin-bottom:0.55rem; }
+    .sb-row { display:flex; justify-content:space-between; align-items:center; padding:0.32rem 0; border-bottom:1px solid var(--rule); font-size:0.85rem; }
+    .sb-row:last-child { border-bottom:none; font-weight:600; }
+    .sb-row .sb-lbl { color:var(--ink-light); }
+    .sb-row .sb-num { font-family:var(--mono); font-weight:600; }
+
+    .callout { border-radius:4px; padding:0.85rem 1.05rem; margin:0.9rem 0; font-size:0.9rem; line-height:1.65; }
+    .callout.key-idea { background:#e8f4fd; border-left:4px solid #2196F3; }
+    .callout.common-mistake { background:#fff3e0; border-left:4px solid #f57c00; }
+
+    .quiz-scenario { background:var(--bg-card); border:1px solid var(--rule); border-radius:8px; padding:1.1rem 1.3rem; margin-bottom:1rem; font-size:0.97rem; font-weight:500; color:var(--ink); }
+    .quiz-btns { display:flex; gap:0.6rem; margin-bottom:0.9rem; flex-wrap:wrap; }
+    .quiz-btn { flex:1; min-width:150px; padding:0.6rem 0.9rem; font-family:var(--font); font-size:0.85rem; font-weight:600; border:1px solid var(--rule); border-radius:8px; cursor:pointer; transition:all 0.15s; background:var(--bg-card); color:var(--ink); }
+    .quiz-btn:hover { border-color:var(--accent); background:var(--accent-lt); color:var(--accent); }
+    .quiz-btn.correct  { background:#dcfce7; border-color:#4ade80; color:#166534; }
+    .quiz-btn.incorrect { background:#fee2e2; border-color:#fc8181; color:#991b1b; }
+    .quiz-btn.revealed { background:var(--accent-lt); border-color:var(--accent); color:var(--accent); }
+    .quiz-feedback { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.75rem 1rem; font-size:0.86rem; color:var(--ink-light); line-height:1.65; margin-bottom:0.75rem; }
+    .quiz-feedback.right { background:#f0fdf4; border-color:#86efac; }
+    .quiz-feedback.wrong { background:#fef2f2; border-color:#fca5a5; }
+    .quiz-feedback .qf-why  { display:block; margin-top:0.45rem; color:#991b1b; }
+    .quiz-feedback .qf-rule { display:block; margin-top:0.5rem; padding-top:0.45rem; border-top:1px dashed var(--rule); font-size:0.8rem; color:var(--muted); }
+    .quiz-feedback .qf-rule b { color:var(--ink-light); }
+    .quiz-score { font-family:var(--mono); font-size:0.82rem; color:var(--muted); margin-bottom:0.5rem; }
+    .quiz-next { font-family:var(--font); font-size:0.82rem; font-weight:500; padding:0.35rem 1rem; border:1px solid var(--accent); border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
+    .quiz-next:hover { opacity:0.85; }
+
+    .toggle-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.2rem; }
+    .toggle-label { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); }
+    .toggle-switch { display:flex; background:#f0f3f8; border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+    .toggle-opt { padding:0.32rem 0.9rem; font-family:var(--font); font-size:0.8rem; font-weight:500; cursor:pointer; transition:all 0.15s; color:var(--ink-light); border:none; background:transparent; }
+    .toggle-opt.active { background:var(--accent); color:#fff; }
+
+    .viz-header.fig-header-row { position:relative; border-radius:6px 6px 0 0; transition:background 0.15s; }
+    .viz-header.fig-header-row:hover { background:#edf0f7; }
+    .viz-header.fig-header-row::after { content:'click to collapse ▲'; position:absolute; bottom:2px; right:0.7rem; font-family:var(--mono); font-size:0.6rem; letter-spacing:0.06em; color:#36404f; font-weight:600; opacity:0.9; transition:opacity 0.2s; pointer-events:none; }
+    .viz-wrapper.collapsed .viz-header.fig-header-row::after { content:'click to expand ▼'; }
+
+    @keyframes quiz-pop { 0% { transform:scale(1); } 40% { transform:scale(1.07); } 100% { transform:scale(1); } }
+    @keyframes quiz-shake { 10%,90% { transform:translateX(-1px); } 20%,80% { transform:translateX(2px); } 30%,50%,70% { transform:translateX(-4px); } 40%,60% { transform:translateX(4px); } }
+    .quiz-btn.pop   { animation:quiz-pop 0.36s ease; }
+    .quiz-btn.shake { animation:quiz-shake 0.42s cubic-bezier(.36,.07,.19,.97) both; }
+
+    .dev-banner { background:#fffbeb; border-bottom:2px solid #f59e0b; padding:0.55rem 2rem; display:flex; align-items:center; gap:0.75rem; font-size:0.84rem; color:#78350f; }
+    .dev-banner-tag { font-family:var(--mono); font-size:0.65rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:#f59e0b; color:#fff; border-radius:4px; padding:2px 8px; flex-shrink:0; }
+
+    .tip-icon { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; line-height:15px; background:var(--accent-lt); color:var(--accent); border:1px solid var(--accent); border-radius:50%; font-size:0.6rem; font-family:var(--mono); font-style:normal; font-weight:700; cursor:help; position:relative; margin-left:4px; margin-right:1px; flex-shrink:0; vertical-align:middle; transition:background 0.15s, color 0.15s; text-transform:none; letter-spacing:0; padding:0; text-align:center; user-select:none; }
+    .tip-icon:hover { background:var(--accent); color:#fff; }
+    .tip-icon[aria-expanded="true"] { background:var(--accent); color:#fff; }
+    .tip-icon:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+    .tip-popover { position:fixed; z-index:9999; background:#1a1a2a; color:#dde6f0; font-family:var(--font); font-size:0.76rem; line-height:1.55; padding:0.6rem 0.85rem; border-radius:6px; max-width:260px; width:max-content; box-shadow:0 6px 22px rgba(0,0,0,0.32); pointer-events:none; display:none; }
+    .tip-popover.visible { display:block; }
+
+    .scenario-chips { display:flex; flex-wrap:wrap; gap:0.45rem; align-items:center; margin-bottom:0.9rem; }
+    .scenario-chips .chips-label { font-family:var(--mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--faint); margin-right:0.2rem; }
+    .viz-btn { font-family:var(--font); font-size:0.78rem; font-weight:600; padding:0.32rem 0.78rem; border:1px solid var(--rule); border-radius:16px; background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .viz-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+    .viz-btn.active { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+    .viz-btn.reset-chip { border-color:#d0a0a0; color:#b04646; }
+    .viz-btn.reset-chip:hover { background:#fdeaea; border-color:#c0392b; color:#c0392b; }
+
+    .footer { border-top:1px solid var(--rule); padding:2rem; text-align:center; font-size:0.8rem; color:var(--muted); font-family:var(--mono); }
+
+    @media (max-width:900px) {
+      .page-layout { grid-template-columns:1fr; }
+      .viz-toc { display:none; }
+      .main-content { padding:1.5rem 1.2rem 4rem; }
+    }
+    @media (max-width:620px) { .viz-two-col { grid-template-columns:1fr; } }
+    @media (prefers-reduced-motion: reduce) {
+      .quiz-btn.pop, .quiz-btn.shake { animation:none; }
+      .fig-chevron, .tip-icon, .viz-header.fig-header-row { transition:none; }
+      html { scroll-behavior:auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left nav -->
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published active"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+  </ul>
+</nav>
+
+<!-- Top nav -->
+<div class="topnav">
+  <div class="topnav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="nav-home">EC224</a>
+      <span class="nav-sep">›</span>
+      <a href="week5.html" class="nav-home">Week 5</a>
+      <span class="nav-sep">›</span>
+      <span class="nav-week">Visualizations · Production</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <button class="nav-ln-btn" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEV BANNER -->
+<div class="dev-banner" role="status">
+  <span class="dev-banner-tag">Dev Preview</span>
+  Gemini-style rebuild — Production Theory: bold curves, preset scenario chips, before/after ghost lines, vertical-stack projection lines, and a rich-feedback isoquant drill. Not live for students.
+  <span style="margin-left:auto;font-family:var(--mono);font-size:0.72rem;opacity:0.6;">week5-viz-dev.html</span>
+</div>
+
+<!-- Hero -->
+<div class="week-hero">
+  <p class="week-tag">EC224 · Week 5 · Interactive Visualizations</p>
+  <h1>Production: Product Curves, Isoquants &amp; Returns to Scale</h1>
+  <p class="intro">Four interactive diagrams covering the production-side syllabus: build total / marginal / average product with a shared-axis projection line, explore isoquants and the MRTS, compare returns to scale, and drill the three isoquant shapes.</p>
+</div>
+
+<div class="page-layout">
+  <aside class="viz-toc">
+    <div class="viz-toc-title">Figures</div>
+    <nav id="toc-nav">
+      <a href="#sec-product" class="toc-link">Fig 5.1 · Product Curves (TP / MP / AP)</a>
+      <a href="#sec-isoquant" class="toc-link">Fig 5.2 · Isoquant &amp; MRTS Explorer</a>
+      <a href="#sec-rts" class="toc-link">Fig 5.3 · Returns to Scale</a>
+      <a href="#sec-drill" class="toc-link">Fig 5.4 · Isoquant Shape Drill</a>
+    </nav>
+  </aside>
+
+  <main class="main-content" id="main">
+
+    <!-- ===== Fig 5.1 Product curves ===== -->
+    <section class="section-block" id="sec-product">
+      <span class="section-number">Fig 5.1 · Production</span>
+      <h2>Total, Marginal &amp; Average Product</h2>
+      <p class="section-intro">Hold capital fixed and add labour one worker at a time. The <strong>total product</strong> (TP) curve rises, bends over, and eventually peaks. Directly below — on the <em>same labour axis</em> — sit the <strong>marginal</strong> (MP) and <strong>average product</strong> (AP) curves. Drag the labour slider: the dashed projection line ties the point on TP to the matching MP and AP values beneath it, so the three-stage relationship is physical, not mental.</p>
+      <div class="viz-wrapper" id="vw-product">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-product')">
+          <span class="fig-num-badge">Fig 5.1</span>
+          <span class="viz-title">▸ Total / Marginal / Average Product</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Labour is the only variable input here; capital is fixed. As L rises, MP first increases (specialisation), then falls (diminishing returns). MP cuts AP exactly at AP's maximum, and TP peaks where MP = 0.">i</span> Labour L = <span class="ctrl-val" id="p1-l-val">8</span></label>
+              <input type="range" id="p1-l" min="1" max="20" step="0.5" value="8" aria-label="Labour input L" />
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Jump to:</span>
+            <button class="viz-btn" onclick="vizSetSlider('p1-l',5,true)">Stage I (rising MP)</button>
+            <button class="viz-btn" onclick="vizSetSlider('p1-l',15,true)">Max AP (MP=AP)</button>
+            <button class="viz-btn" onclick="vizSetSlider('p1-l',20,true)">TP peak (MP=0)</button>
+            <button class="viz-btn reset-chip" onclick="vizSetSlider('p1-l',8,true)">↺ Reset</button>
+          </div>
+          <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;margin-bottom:0.4rem;">
+            <div class="viz-panel-label">Total Product · TP(L)</div>
+            <div id="jxg-p1-top" style="width:100%;height:300px;"></div>
+          </div>
+          <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;">
+            <div class="viz-panel-label">Marginal &amp; Average Product · MP(L), AP(L)</div>
+            <div id="jxg-p1-bot" style="width:100%;height:260px;"></div>
+          </div>
+          <div class="stat-grid" aria-live="polite">
+            <div class="stat-box"><div class="stat-label">TP at L</div><div class="stat-val optimum" id="p1-tp">–</div></div>
+            <div class="stat-box"><div class="stat-label">MP at L</div><div class="stat-val" id="p1-mp">–</div></div>
+            <div class="stat-box"><div class="stat-label">AP at L</div><div class="stat-val" id="p1-ap">–</div></div>
+            <div class="stat-box"><div class="stat-label">Stage</div><div class="stat-val" id="p1-stage">–</div></div>
+          </div>
+          <div class="callout key-idea"><strong>Key relationship:</strong> when MP &gt; AP, AP is rising; when MP &lt; AP, AP is falling; so MP intersects AP exactly at AP's maximum. TP reaches its peak where MP = 0.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 5.2 Isoquant & MRTS ===== -->
+    <section class="section-block" id="sec-isoquant">
+      <span class="section-number">Fig 5.2 · Production</span>
+      <h2>Isoquant &amp; the MRTS</h2>
+      <p class="section-intro">An <strong>isoquant</strong> shows every (L, K) combination that produces the same output Q. Its slope is the <strong>marginal rate of technical substitution</strong> — the rate at which capital can be traded for labour while holding output fixed: MRTS = MP<sub>L</sub>/MP<sub>K</sub>. Raise output to push the isoquant outward (the dashed ghost marks where it was); slide the labour position to read the MRTS as it flattens along the curve.</p>
+      <div class="viz-wrapper" id="vw-isoquant">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-isoquant')">
+          <span class="fig-num-badge">Fig 5.2</span>
+          <span class="viz-title">▸ Isoquant &amp; MRTS Explorer</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Output Q sets which isoquant you are on. Higher Q lies farther from the origin (more of both inputs needed). The curve's shape is unchanged; it just shifts outward.">i</span> Output Q = <span class="ctrl-val" id="p2-q-val">40</span></label>
+              <input type="range" id="p2-q" min="20" max="80" step="1" value="40" aria-label="Output level Q" />
+            </div>
+            <div class="ctrl-group">
+              <label><span class="tip-icon" role="button" tabindex="0" aria-expanded="false" data-tip="Pick a point on the isoquant by its labour coordinate. As you move right (more L, less K) the isoquant flattens, so the MRTS falls — diminishing marginal rate of technical substitution.">i</span> Labour position L = <span class="ctrl-val" id="p2-l-val">4</span></label>
+              <input type="range" id="p2-l" min="1.5" max="10" step="0.1" value="4" aria-label="Labour position on isoquant" />
+            </div>
+          </div>
+          <div class="scenario-chips">
+            <span class="chips-label">Scenarios:</span>
+            <button class="viz-btn" onclick="vizSetSlider('p2-q',70,true)">More output (Q→70)</button>
+            <button class="viz-btn" onclick="vizSetSlider('p2-l',9,true)">Substitute toward L</button>
+            <button class="viz-btn" onclick="vizSetSlider('p2-l',2,true)">Capital-intensive</button>
+            <button class="viz-btn reset-chip" onclick="vizPreset({'p2-q':40,'p2-l':4},true)">↺ Reset</button>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Isoquant map (Cobb-Douglas)</div>
+              <div id="jxg-p2-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-p2" role="img" aria-label="Isoquant with tangent line showing the MRTS at a chosen point" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard" aria-live="polite">
+                <div class="sb-title">MRTS Scoreboard</div>
+                <div class="sb-row"><span class="sb-lbl">Point (L, K)</span><span class="sb-num" id="p2-pt">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--green);">MP<sub>L</sub></span><span class="sb-num" style="color:var(--green);" id="p2-mpl">–</span></div>
+                <div class="sb-row"><span class="sb-lbl" style="color:var(--purple);">MP<sub>K</sub></span><span class="sb-num" style="color:var(--purple);" id="p2-mpk">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">MRTS = MP<sub>L</sub>/MP<sub>K</sub></span><span class="sb-num optimum" id="p2-mrts">–</span></div>
+                <div class="sb-row" style="background:var(--accent-lt);border-radius:4px;padding:0.4rem 0.5rem;margin-top:0.4rem;"><span class="sb-lbl" style="color:var(--accent);">Reading</span><span class="sb-num" style="color:var(--accent);" id="p2-read">–</span></div>
+              </div>
+              <div class="callout common-mistake" style="margin-top:0.8rem;">The isoquant <em>convexity</em> is diminishing MRTS — as you use more labour, each extra worker replaces less and less capital. It is <strong>not</strong> the same as returns to scale (Fig 5.3).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 5.3 Returns to scale ===== -->
+    <section class="section-block" id="sec-rts">
+      <span class="section-number">Fig 5.3 · Production</span>
+      <h2>Returns to Scale</h2>
+      <p class="section-intro">Returns to scale ask what happens to output when you scale <em>all</em> inputs by the same factor. With Cobb-Douglas Q = L<sup>a</sup>K<sup>b</sup>, the sum a + b decides it: a + b &gt; 1 is increasing, = 1 is constant, &lt; 1 is decreasing returns. Toggle the regime and watch the Q = 100 / 200 / 300 isoquants morph — the <em>spacing</em> between equal-output steps is the tell. Transitions ease over ~400 ms rather than snapping.</p>
+      <div class="viz-wrapper" id="vw-rts">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-rts')">
+          <span class="fig-num-badge">Fig 5.3</span>
+          <span class="viz-title">▸ Returns to Scale Explorer</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div class="viz-controls">
+            <div class="toggle-row" style="margin:0;">
+              <span class="toggle-label">Regime:</span>
+              <div class="toggle-switch">
+                <button class="toggle-opt" id="p3-irs" onclick="p3SetMode('irs')">Increasing</button>
+                <button class="toggle-opt active" id="p3-crs" onclick="p3SetMode('crs')">Constant</button>
+                <button class="toggle-opt" id="p3-drs" onclick="p3SetMode('drs')">Decreasing</button>
+              </div>
+            </div>
+            <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
+              Doubling both inputs gives <strong id="p3-double">2.0× output</strong>
+            </div>
+          </div>
+          <div class="viz-two-col">
+            <div class="viz-panel">
+              <div class="viz-panel-label">Equal-output isoquants (Q = 100, 200, 300)</div>
+              <div id="jxg-p3-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-p3" role="img" aria-label="Three isoquants whose spacing reveals returns to scale" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="scoreboard">
+                <div class="sb-title">Scale Readout</div>
+                <div class="sb-row"><span class="sb-lbl">Production function</span><span class="sb-num" id="p3-fn">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">a + b</span><span class="sb-num" id="p3-sum">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Regime</span><span class="sb-num optimum" id="p3-regime">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Isoquant spacing</span><span class="sb-num" id="p3-space">–</span></div>
+              </div>
+              <div class="callout key-idea" style="margin-top:0.8rem;"><strong>Read the spacing:</strong> equally-spaced isoquants ⇒ constant returns; isoquants getting <em>closer</em> as output rises ⇒ increasing returns; isoquants spreading <em>apart</em> ⇒ decreasing returns.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Fig 5.4 Drill ===== -->
+    <section class="section-block" id="sec-drill">
+      <span class="section-number">Fig 5.4 · Production</span>
+      <h2>Isoquant Shape Drill</h2>
+      <p class="section-intro">The shape of an isoquant encodes the substitutability of inputs. <strong>Smooth and convex</strong> ⇒ Cobb-Douglas (imperfect substitutes). A <strong>straight line</strong> ⇒ perfect substitutes (constant MRTS). An <strong>L-shape</strong> ⇒ perfect complements / fixed proportions (Leontief). Read each scenario and pick the technology; you'll get contrastive feedback on every miss.</p>
+      <div class="viz-wrapper" id="vw-drill">
+        <div class="viz-header fig-header-row" onclick="toggleViz('vw-drill')">
+          <span class="fig-num-badge">Fig 5.4</span>
+          <span class="viz-title">▸ Production Technology Drill</span>
+          <span class="fig-chevron">▾</span>
+        </div>
+        <div class="viz-body">
+          <div style="display:grid;grid-template-columns:1fr 320px;gap:1.2rem;align-items:start;">
+            <div id="drill-root"></div>
+            <div class="viz-panel">
+              <div class="viz-panel-label">Isoquant shape</div>
+              <div id="jxg-drill-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
+                <div id="jxg-drill" role="img" aria-label="Isoquant whose shape matches the current scenario" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="footer">EC224 · Week 5 Production · Dev preview (noindex) · week5-viz-dev.html</div>
+
+<div id="tip-global" class="tip-popover" role="tooltip"></div>
+
+<script>
+/* ============================================================ Shared utils ============================================================ */
+function nn(n,d){ if(d!==undefined) return n.toFixed(d); if(Math.abs(n-Math.round(n))<1e-9) return String(Math.round(n)); return (Math.round(n*100)/100).toFixed(2); }
+function toggleViz(id){ var w=document.getElementById(id); w.classList.toggle('collapsed'); var h=w.querySelector('.viz-header'); if(h) h.setAttribute('aria-expanded', String(!w.classList.contains('collapsed'))); }
+function freeB(b){ if(b){ try{ JXG.JSXGraph.freeBoard(b); }catch(e){} } return null; }
+function axisCfg(){ return { x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}}, y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:10,color:'#555'}}} }; }
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.viz-header.fig-header-row').forEach(function(hdr){
+    hdr.setAttribute('tabindex','0'); hdr.setAttribute('role','button'); hdr.setAttribute('aria-expanded','true');
+    hdr.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); hdr.click(); } });
+  });
+  const sections=document.querySelectorAll('.section-block'), links=document.querySelectorAll('.toc-link');
+  const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.remove('active')); const a=document.querySelector('.toc-link[href="#'+e.target.id+'"]'); if(a) a.classList.add('active'); } }); },{rootMargin:'-30% 0px -60% 0px'});
+  sections.forEach(s=>io.observe(s));
+});
+
+function openLN(){ document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN(){ document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+function vizSetSlider(id,val,ease){
+  var el=document.getElementById(id); if(!el) return;
+  if(!ease){ el.value=val; el.dispatchEvent(new Event('input',{bubbles:true})); if(window._syncFill) window._syncFill(el); return; }
+  var from=parseFloat(el.value), to=parseFloat(val), t0=performance.now(), dur=400;
+  (function step(now){ var k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3); el.value=from+(to-from)*e; el.dispatchEvent(new Event('input',{bubbles:true})); if(window._syncFill) window._syncFill(el); if(k<1) requestAnimationFrame(step); })(performance.now());
+}
+function vizPreset(map,ease){ Object.keys(map).forEach(function(id){ vizSetSlider(id,map[id],ease); }); }
+
+/* ============================================================ Fig 5.1 — TP / MP / AP ============================================================
+   TP(L) = -(1/30)L^3 + L^2  on L in [0,20]
+   MP(L) = -(1/10)L^2 + 2L     AP(L) = -(1/30)L^2 + L
+   Max MP at L=10; MP=AP (max AP) at L=15; TP peak (MP=0) at L=20. */
+var p1Top=null, p1Bot=null, p1L=8, p1Proj=[];
+function p1TP(L){ return -(1/30)*L*L*L + L*L; }
+function p1MP(L){ return -(1/10)*L*L + 2*L; }
+function p1AP(L){ return -(1/30)*L*L + L; }
+function initP1(){
+  p1Top=freeB(p1Top); p1Bot=freeB(p1Bot);
+  p1Top=JXG.JSXGraph.initBoard('jxg-p1-top',{boundingbox:[-1.5,140,21,-10],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  p1Bot=JXG.JSXGraph.initBoard('jxg-p1-bot',{boundingbox:[-1.5,12,21,-1.4],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var bt=p1Top, bb=p1Bot;
+  for(var gy=20;gy<140;gy+=20){ bt.create('segment',[[-1.5,gy],[21,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1}); }
+  for(var gy2=2;gy2<12;gy2+=2){ bb.create('segment',[[-1.5,gy2],[21,gy2]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1}); }
+  bt.create('text',[19.5,-6,'L'],{fontSize:12,color:'#555',fixed:true});
+  bt.create('text',[-1.1,134,'TP'],{fontSize:12,color:'#555',fixed:true});
+  bb.create('text',[19.5,-0.9,'L'],{fontSize:12,color:'#555',fixed:true});
+  bb.create('text',[-1.1,11.3,'MP, AP'],{fontSize:12,color:'#555',fixed:true});
+  // curves
+  bt.create('functiongraph',[p1TP,0,20],{strokeColor:'#1a56db',strokeWidth:3,fixed:true});
+  bt.create('text',[14.3,118,'TP'],{fontSize:13,color:'#1a56db',fixed:true,cssStyle:'font-weight:600'});
+  bb.create('functiongraph',[p1MP,0,20],{strokeColor:'#c0392b',strokeWidth:2.6,fixed:true});
+  bb.create('functiongraph',[p1AP,0,20],{strokeColor:'#2e8b57',strokeWidth:2.6,fixed:true});
+  bb.create('text',[6.4,11,'MP'],{fontSize:13,color:'#c0392b',fixed:true,cssStyle:'font-weight:600'});
+  bb.create('text',[16.5,4.6,'AP'],{fontSize:13,color:'#2e8b57',fixed:true,cssStyle:'font-weight:600'});
+  p1Redraw();
+  document.getElementById('p1-l').addEventListener('input',function(){ p1L=parseFloat(this.value); document.getElementById('p1-l-val').textContent=nn(p1L,1); p1Redraw(); });
+}
+function p1Redraw(){
+  var bt=p1Top, bb=p1Bot; if(!bt||!bb) return;
+  p1Proj.forEach(function(o){ try{ o.board.removeObject(o);}catch(e){} }); p1Proj=[];
+  var L=p1L, tp=p1TP(L), mp=p1MP(L), ap=p1AP(L);
+  // projection lines (dashed vertical), shared L
+  p1Proj.push(bt.create('segment',[[L,-10],[L,tp]],{strokeColor:'#0d7377',strokeWidth:1.5,dash:2,fixed:true,highlight:false}));
+  p1Proj.push(bb.create('segment',[[L,-1.4],[L,12]],{strokeColor:'#0d7377',strokeWidth:1.5,dash:2,fixed:true,highlight:false}));
+  p1Proj.push(bt.create('point',[L,tp],{size:5,fillColor:'#0d7377',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  p1Proj.push(bb.create('point',[L,mp],{size:4.5,fillColor:'#c0392b',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  p1Proj.push(bb.create('point',[L,ap],{size:4.5,fillColor:'#2e8b57',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  bt.update(); bb.update();
+  document.getElementById('p1-tp').textContent=nn(tp,1);
+  document.getElementById('p1-mp').textContent=nn(mp,2);
+  document.getElementById('p1-ap').textContent=nn(ap,2);
+  var stage = L<10 ? 'I — MP rising' : (L<15 ? 'II — MP falling, MP>AP' : (L<20 ? 'II — MP<AP, AP falling' : 'III — MP≤0, TP falling'));
+  document.getElementById('p1-stage').textContent=stage;
+}
+
+/* ============================================================ Fig 5.2 — Isoquant & MRTS ============================================================
+   Q = A * L^a * K^b, A=10, a=b=0.5  =>  K = (Q/(A*L^a))^(1/b) = (Q/(10*sqrt(L)))^2
+   MRTS = (a/b)*(K/L) = K/L  (since a=b) */
+var p2b=null, p2Q=40, p2L=4, p2Objs=[];
+var P2_A=10, P2_a=0.5, P2_b=0.5;
+function p2K(L,Q){ return Math.pow(Q/(P2_A*Math.pow(L,P2_a)), 1/P2_b); }
+function initP2(){
+  p2b=freeB(p2b);
+  p2b=JXG.JSXGraph.initBoard('jxg-p2',{boundingbox:[-2,16,16,-2],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},keepaspectratio:false,defaultAxes:axisCfg()});
+  var b=p2b;
+  for(var g=2;g<16;g+=2){ b.create('segment',[[-2,g],[16,g]],{strokeColor:'#f5f5f5',strokeWidth:1,fixed:true,highlight:false,layer:1}); }
+  b.create('text',[15,-1.3,'L'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-1.5,15.3,'K'],{fontSize:12,color:'#555',fixed:true});
+  p2Redraw();
+  document.getElementById('p2-q').addEventListener('input',function(){ p2Q=parseFloat(this.value); document.getElementById('p2-q-val').textContent=nn(p2Q); p2Redraw(); });
+  document.getElementById('p2-l').addEventListener('input',function(){ p2L=parseFloat(this.value); document.getElementById('p2-l-val').textContent=nn(p2L,1); p2Redraw(); });
+}
+function p2Redraw(){
+  var b=p2b; if(!b) return;
+  p2Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); p2Objs=[];
+  var Q=p2Q;
+  // isoquant
+  p2Objs.push(b.create('functiongraph',[function(L){ return L>0.3? p2K(L,Q):NaN; },0.6,15],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false}));
+  p2Objs.push(b.create('text',[11.2, p2K(11.2,Q)+0.5, 'Q='+nn(Q)],{fontSize:12,color:'#1a56db',fixed:true,cssStyle:'font-weight:600'}));
+  // point + tangent (MRTS)
+  var L=Math.min(p2L,14), K=p2K(L,Q);
+  var mrts=K/L; // = (a/b)(K/L)
+  p2Objs.push(b.create('point',[L,K],{size:5,fillColor:'#c0392b',strokeColor:'#fff',strokeWidth:1.5,fixed:true,withLabel:false}));
+  // tangent segment with slope -mrts
+  var dx=2.6; var x1=L-dx, x2=L+dx; var y1=K+mrts*dx, y2=K-mrts*dx;
+  p2Objs.push(b.create('segment',[[x1,y1],[x2,y2]],{strokeColor:'#d97706',strokeWidth:2,fixed:true,highlight:false}));
+  // drop lines
+  p2Objs.push(b.create('segment',[[L,0],[L,K]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true,highlight:false}));
+  p2Objs.push(b.create('segment',[[0,K],[L,K]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true,highlight:false}));
+  b.update();
+  // MPL = a*A*L^(a-1)*K^b ; MPK = b*A*L^a*K^(b-1)
+  var MPL=P2_a*P2_A*Math.pow(L,P2_a-1)*Math.pow(K,P2_b);
+  var MPK=P2_b*P2_A*Math.pow(L,P2_a)*Math.pow(K,P2_b-1);
+  document.getElementById('p2-pt').textContent='('+nn(L,1)+', '+nn(K,1)+')';
+  document.getElementById('p2-mpl').textContent=nn(MPL,2);
+  document.getElementById('p2-mpk').textContent=nn(MPK,2);
+  document.getElementById('p2-mrts').textContent=nn(mrts,2);
+  document.getElementById('p2-read').textContent = mrts>1 ? 'Steep — K-intensive' : (mrts<0.6? 'Flat — L-intensive':'Moderate');
+}
+
+/* ============================================================ Fig 5.3 — Returns to scale ============================================================
+   Q = L^e * K^e = (LK)^e, homogeneous of degree n = 2e.
+   The Q1:Q2:Q3 = 1:2:3 isoquants cross the diagonal at d_i = BASE * i^(1/n).
+   CRS (n=1) -> equal spacing; IRS (n>1) -> closing; DRS (n<1) -> spreading.
+   Each isoquant is the hyperbola K = d_i^2 / L. Eased morph interpolates e. */
+var p3b=null, p3Objs=[], p3e=0.5, p3eTarget=0.5, p3raf=null, p3Mode='crs';
+var P3_MODES={ irs:0.7, crs:0.5, drs:0.35 }, P3_BASE=5;
+function initP3(){
+  p3b=freeB(p3b);
+  p3b=JXG.JSXGraph.initBoard('jxg-p3',{boundingbox:[-3,26,26,-3],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  var b=p3b;
+  b.create('segment',[[0,0],[26,26]],{strokeColor:'#cdd5e0',strokeWidth:1,dash:2,fixed:true,highlight:false});
+  b.create('text',[24.5,-2,'L'],{fontSize:12,color:'#555',fixed:true});
+  b.create('text',[-2.4,24.8,'K'],{fontSize:12,color:'#555',fixed:true});
+  p3Render();
+}
+function p3SetMode(m){
+  p3Mode=m;
+  ['irs','crs','drs'].forEach(function(k){ document.getElementById('p3-'+k).classList.toggle('active', k===m); });
+  p3eTarget=P3_MODES[m];
+  if(p3raf) cancelAnimationFrame(p3raf);
+  var t0=performance.now(), from=p3e, dur=400;
+  (function step(now){ var k=Math.min(1,(now-t0)/dur), ease=1-Math.pow(1-k,3); p3e=from+(p3eTarget-from)*ease; p3Render(); if(k<1) p3raf=requestAnimationFrame(step); })(performance.now());
+}
+function p3Render(){
+  var b=p3b; if(!b) return;
+  p3Objs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); p3Objs=[];
+  var e=p3e, n=2*e, cols=['#93b4f0','#1a56db','#0d3a9e'], Qs=[100,200,300];
+  for(var i=1;i<=3;i++){
+    var d=P3_BASE*Math.pow(i,1/n), c=d*d, col=cols[i-1];
+    p3Objs.push(b.create('functiongraph',[(function(cc){ return function(L){ return L>0.3? cc/L:NaN; }; })(c), c/25+0.2, 25],{strokeColor:col,strokeWidth:i===1?3:2.4,fixed:true,highlight:false}));
+    p3Objs.push(b.create('text',[Math.min(d+0.5,22), Math.min(d+0.6,23.5), 'Q='+Qs[i-1]],{fontSize:11,color:col,fixed:true,cssStyle:'font-weight:600'}));
+  }
+  b.update();
+  var factor=Math.pow(2,n); // doubling inputs -> output * 2^n
+  document.getElementById('p3-double').textContent=nn(factor,2)+'× output';
+  document.getElementById('p3-fn').textContent='Q = L^'+nn(e,2)+' K^'+nn(e,2);
+  document.getElementById('p3-sum').textContent=nn(n,2);
+  var reg = n>1.02?'Increasing returns':(n<0.98?'Decreasing returns':'Constant returns');
+  document.getElementById('p3-regime').textContent=reg;
+  document.getElementById('p3-space').textContent = n>1.02?'Getting closer':(n<0.98?'Spreading apart':'Equally spaced');
+}
+
+/* ============================================================ Fig 5.4 — Isoquant shape drill ============================================================ */
+var drillB=null;
+var DSHAPES={
+  cobb:   { name:'Smooth Convex (Cobb-Douglas)', },
+  linear: { name:'Straight Line (Perfect Substitutes)', },
+  leontief:{ name:'L-Shaped (Leontief / Fixed Proportions)', }
+};
+var DSCEN=[
+  { text:'A bakery can produce a fixed daily output using more ovens and fewer bakers, or vice-versa, smoothly trading one for the other with a diminishing rate of substitution.', answer:'cobb', why:'You picked perfect substitutes/complements, but the inputs trade off <em>smoothly</em> with a <strong>diminishing</strong> MRTS — that bowed-in curve is Cobb-Douglas.', rule:'Smooth, convex-to-origin isoquant ⇒ Cobb-Douglas (imperfect substitutes).' },
+  { text:'A power plant can generate the same electricity from natural gas OR coal at a constant 1-for-1 energy trade-off; the firm is happy to use any mix.', answer:'linear', why:'You picked a curved technology, but a <strong>constant</strong> trade-off (fixed MRTS) makes the isoquant a <em>straight line</em> — perfect substitutes.', rule:'Constant MRTS (straight line) ⇒ perfect substitutes.' },
+  { text:'Each taxi ride needs exactly one driver and one car — an extra car with no extra driver, or vice-versa, adds zero output.', answer:'leontief', why:'You picked a substitutable technology, but the inputs must be used in <strong>fixed proportions</strong>; extra of one alone does nothing — that is the L-shaped Leontief isoquant.', rule:'Right-angle / L-shape ⇒ perfect complements (Leontief).' },
+  { text:'A software firm produces features using senior and junior engineers; you can swap some seniors for more juniors, but each swap needs progressively more juniors.', answer:'cobb', why:'You chose a linear or fixed-proportion form, but "progressively more" juniors per senior is exactly <strong>diminishing MRTS</strong> — a smooth convex isoquant.', rule:'Diminishing rate of substitution ⇒ Cobb-Douglas.' },
+  { text:'A recipe requires exactly 2 cups of flour per egg; extra flour without more eggs is wasted, and extra eggs without flour are wasted.', answer:'leontief', why:'You chose a substitutable form, but the strict 2:1 requirement with waste off-ratio is a <strong>fixed-proportions</strong> (Leontief) technology.', rule:'Fixed input ratio with waste off-ratio ⇒ Leontief L-shape.' },
+  { text:'A data center can run jobs on identical CPUs from vendor A or vendor B, interchangeable one-for-one with no loss.', answer:'linear', why:'You chose a curved form, but identical one-for-one interchangeability is a <strong>constant</strong> MRTS — a straight-line isoquant (perfect substitutes).', rule:'Interchangeable 1-for-1 inputs ⇒ perfect substitutes (linear).' }
+];
+var dOrder=[], dIdx=0, dScore=0, dTotal=0, dAnswered=false;
+function initDrill(){
+  drillB=freeB(drillB);
+  drillB=JXG.JSXGraph.initBoard('jxg-drill',{boundingbox:[-2,12,12,-2],axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false},defaultAxes:axisCfg()});
+  drillB.create('text',[11,-1.3,'L'],{fontSize:12,color:'#555',fixed:true});
+  drillB.create('text',[-1.5,11.3,'K'],{fontSize:12,color:'#555',fixed:true});
+  drillNewRound();
+}
+var dShapeObjs=[];
+function drillDrawShape(shape){
+  var b=drillB; if(!b) return;
+  dShapeObjs.forEach(function(o){ try{b.removeObject(o);}catch(e){} }); dShapeObjs=[];
+  if(shape==='cobb'){
+    dShapeObjs.push(b.create('functiongraph',[function(L){ return L>0.4? 16/L:NaN; },1.4,11],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false}));
+  } else if(shape==='linear'){
+    dShapeObjs.push(b.create('segment',[[0,10],[10,0]],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false}));
+  } else {
+    dShapeObjs.push(b.create('segment',[[3,11],[3,3]],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false}));
+    dShapeObjs.push(b.create('segment',[[3,3],[11,3]],{strokeColor:'#1a56db',strokeWidth:3,fixed:true,highlight:false}));
+  }
+  b.update();
+}
+function drillNewRound(){
+  if(dOrder.length===0){ dOrder=DSCEN.map((_,i)=>i).sort(()=>Math.random()-0.5); }
+  dIdx=dOrder.shift(); dAnswered=false;
+  var sc=DSCEN[dIdx];
+  drillDrawShape(sc.answer);
+  var root=document.getElementById('drill-root');
+  root.innerHTML='<div><div class="quiz-score" id="d-score">Score: '+dScore+' / '+dTotal+'</div>'+
+    '<div class="quiz-scenario">'+sc.text+'</div>'+
+    '<div class="quiz-btns">'+
+    '<button class="quiz-btn" id="d-cobb" onclick="drillAnswer(\'cobb\')">Smooth Convex (Cobb-Douglas)</button>'+
+    '<button class="quiz-btn" id="d-linear" onclick="drillAnswer(\'linear\')">Straight Line (Substitutes)</button>'+
+    '<button class="quiz-btn" id="d-leontief" onclick="drillAnswer(\'leontief\')">L-Shaped (Leontief)</button>'+
+    '</div>'+
+    '<div id="d-feedback" class="quiz-feedback" style="display:none;"></div>'+
+    '<button class="quiz-next" id="d-next" onclick="drillNewRound()" style="display:none;">Next scenario →</button></div>';
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([root]);
+}
+function drillAnswer(ans){
+  if(dAnswered) return; dAnswered=true; dTotal++;
+  var sc=DSCEN[dIdx]; var correct=ans===sc.answer; if(correct) dScore++;
+  document.getElementById('d-score').textContent='Score: '+dScore+' / '+dTotal;
+  var chosen=document.getElementById('d-'+ans), right=document.getElementById('d-'+sc.answer);
+  chosen.classList.add(correct?'correct':'incorrect'); chosen.classList.add(correct?'pop':'shake');
+  if(!correct) right.classList.add('revealed');
+  var fb=document.getElementById('d-feedback'); fb.style.display='block'; fb.classList.remove('right','wrong');
+  if(correct){ fb.classList.add('right'); fb.innerHTML='✅ <strong>Correct!</strong> '+DSHAPES[sc.answer].name+'. <span class="qf-rule"><b>Rule:</b> '+sc.rule+'</span>'; }
+  else {
+    fb.classList.add('wrong');
+    fb.innerHTML='❌ <strong>Not quite — the answer is '+DSHAPES[sc.answer].name+'.</strong>'+
+      '<span class="qf-why">'+sc.why+'</span>'+
+      '<span class="qf-rule"><b>Rule of thumb:</b> '+sc.rule+'</span>';
+  }
+  document.getElementById('d-next').style.display='inline-block';
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([fb]);
+}
+
+/* ============================================================ Boot ============================================================ */
+document.addEventListener('DOMContentLoaded',function(){
+  initP1(); initP2(); initP3(); initDrill();
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([document.body]);
+});
+</script>
+
+<script>
+/* ── slider fill ── */
+(function(){
+  function syncFill(el){ var mn=parseFloat(el.min)||0, mx=parseFloat(el.max)||100, v=parseFloat(el.value)||0, p=((v-mn)/(mx-mn)*100).toFixed(1);
+    el.style.background='linear-gradient(to right,var(--accent) 0%,var(--accent) '+p+'%,var(--accent-lt) '+p+'%,var(--accent-lt) 100%)'; }
+  window._syncFill=syncFill;
+  document.addEventListener('input',function(e){ if(e.target.type==='range') syncFill(e.target); });
+  function init(){ document.querySelectorAll('input[type="range"]').forEach(syncFill); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+
+/* ── tooltip click-toggle popover (corrected dismiss pattern) ── */
+(function(){
+  var tip=document.getElementById('tip-global'); if(!tip) return;
+  var openIcon=null, openedByClick=false;
+  function showTip(icon){ var t=icon.getAttribute('data-tip'); if(!t) return; if(openIcon&&openIcon!==icon) closeTip();
+    openIcon=icon; icon.setAttribute('aria-expanded','true'); icon.setAttribute('aria-describedby','tip-global'); tip.textContent=t; tip.classList.add('visible'); placeTip(icon); }
+  function closeTip(){ if(!openIcon) return; openIcon.setAttribute('aria-expanded','false'); openIcon.removeAttribute('aria-describedby'); openIcon=null; openedByClick=false; tip.classList.remove('visible'); tip.style.display='none'; }
+  function placeTip(icon){ var r=icon.getBoundingClientRect(); tip.style.display='block'; var tw=tip.offsetWidth, th=tip.offsetHeight; var top=r.top-th-10, left=r.left+r.width/2-tw/2; if(top<8) top=r.bottom+8; left=Math.max(8,Math.min(left,window.innerWidth-tw-8)); tip.style.top=top+'px'; tip.style.left=left+'px'; }
+  document.addEventListener('click',function(e){ var icon=e.target.closest('.tip-icon'); if(icon){ e.stopPropagation(); if(openIcon===icon){closeTip();}else{showTip(icon);openedByClick=true;} } else { closeTip(); } });
+  document.addEventListener('mouseover',function(e){ var icon=e.target.closest('.tip-icon'); if(icon&&openIcon!==icon){ showTip(icon); openedByClick=false; } });
+  document.addEventListener('mouseout',function(e){ var icon=e.target.closest('.tip-icon'); if(icon&&!icon.contains(e.relatedTarget)){ if(openIcon===icon&&!openedByClick) closeTip(); } });
+  document.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')&&document.activeElement){ var icon=document.activeElement.closest('.tip-icon'); if(icon){ e.preventDefault(); if(openIcon===icon){closeTip();}else{showTip(icon);openedByClick=true;} } } if(e.key==='Escape') closeTip(); });
+  window.addEventListener('scroll',function(){ if(openIcon) placeTip(openIcon); },true);
+  window.addEventListener('resize',function(){ if(openIcon) placeTip(openIcon); });
+})();
+
+/* ── A3/E2 ghost: snapshot pre-drag isoquant on Fig 5.2 output slider ── */
+(function(){
+  var ghost=null, timer=null;
+  function make(){ clearTimeout(timer); if(ghost&&p2b){ try{p2b.removeObject(ghost,false);}catch(e){} ghost=null; } if(!p2b) return;
+    var Q=p2Q; try{ ghost=p2b.create('functiongraph',[function(L){ return L>0.6? p2K(L,Q):NaN; },0.6,15],{strokeColor:'#888',strokeWidth:1.5,strokeOpacity:0.28,dash:2,highlight:false,fixed:true}); p2b.update(); }catch(e){} }
+  function clear(){ timer=setTimeout(function(){ if(ghost&&p2b){ try{p2b.removeObject(ghost,false);p2b.update();}catch(e){} ghost=null; } },1500); }
+  document.addEventListener('DOMContentLoaded',function(){
+    var el=document.getElementById('p2-q'); if(!el) return;
+    el.addEventListener('mousedown',make); el.addEventListener('touchstart',make,{passive:true});
+    el.addEventListener('mouseup',clear); el.addEventListener('touchend',clear);
+    window.addEventListener('mouseup',clear);
+  });
+})();
+</script>
+
+<script>
+/* Start every figure collapsed (after inits sized the boards). */
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.viz-wrapper').forEach(function(w){ w.classList.add('collapsed'); var h=w.querySelector('.viz-header'); if(h) h.setAttribute('aria-expanded','false'); });
+});
+</script>
+</body>
+</html>
