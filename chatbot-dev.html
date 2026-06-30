@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>[DEV] Course AI — experiments · EC224</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family:'DM Sans',system-ui,sans-serif; color:#1a1a1a; background:#f4f5f7; margin:0; padding:1.5rem 1rem 3rem; }
+    .wrap { max-width:1080px; margin:0 auto; }
+    .dev-banner { background:#fef3c7; border:1px solid #fcd34d; color:#92400e; font-size:.8rem;
+      font-weight:600; text-align:center; padding:6px 12px; border-radius:8px; margin-bottom:1rem; }
+    h1 { font-size:1.5rem; margin:0; }
+    .sub { color:#6b6b6b; font-size:.92rem; margin:.3rem 0 1.2rem; max-width:680px; }
+    .sub code { background:#eef0f3; padding:1px 5px; border-radius:5px; font-size:.85em; }
+    .tabs { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .tab { border:1px solid #d9dce1; background:#fff; color:#374151; font-weight:600; font-size:.85rem;
+      padding:.5rem .95rem; border-radius:999px; cursor:pointer; }
+    .tab.active { background:#1a56db; color:#fff; border-color:#1a56db; }
+    .panel[hidden] { display:none; }
+    .panel-note { font-size:.84rem; color:#6b7280; margin:0 0 1rem; max-width:720px; line-height:1.5; }
+    .panel-note b { color:#374151; }
+
+    /* ---- split view (V2) ---- */
+    .sv { display:grid; grid-template-columns: 420px 1fr; gap:1rem; align-items:start; }
+    @media (max-width:880px){ .sv { grid-template-columns:1fr; } }
+    .sv-chat { border:1px solid #e4e4e4; border-radius:14px; background:#fff; overflow:hidden;
+      box-shadow:0 4px 24px rgba(0,0,0,.06); display:flex; flex-direction:column; }
+    .sv-head { padding:.8rem 1.05rem; border-bottom:1px solid #eee; font-weight:600; font-size:.95rem;
+      display:flex; align-items:center; gap:.5rem; }
+    .sv-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; }
+    .sv-log { height:420px; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.65rem; background:#fafafa; }
+    .sv-msg { padding:.6rem .85rem; border-radius:12px; font-size:.9rem; line-height:1.5; max-width:92%; white-space:pre-wrap; word-wrap:break-word; }
+    .sv-msg.user { align-self:flex-end; background:#1a56db; color:#fff; border-bottom-right-radius:4px; }
+    .sv-msg.bot { align-self:flex-start; background:#fff; border:1px solid #e8e8e8; border-bottom-left-radius:4px; }
+    .sv-msg.note { align-self:flex-start; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; }
+    .sv-msg.error { align-self:flex-start; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+    .sv-cites { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.55rem; }
+    .sv-cite { font-size:.74rem; font-weight:600; color:#1a56db; background:#eef2ff; border:1px solid #dbe3ff;
+      border-radius:999px; padding:3px 10px; cursor:pointer; }
+    .sv-cite:hover, .sv-cite.active { background:#1a56db; color:#fff; }
+    .sv-form { display:flex; gap:.5rem; padding:.7rem; border-top:1px solid #eee; }
+    .sv-input { flex:1; border:1px solid #ddd; border-radius:8px; padding:.55rem .8rem; font:inherit; font-size:.9rem; outline:none; }
+    .sv-input:focus { border-color:#1a56db; }
+    .sv-send { border:none; background:#1a56db; color:#fff; font-weight:600; font-size:.9rem; padding:0 1.1rem; border-radius:8px; cursor:pointer; }
+    .sv-send:disabled { opacity:.55; }
+    .sv-typing{display:inline-flex;gap:3px}.sv-typing span{width:6px;height:6px;border-radius:50%;background:#bbb;animation:svb 1.2s infinite both}
+    .sv-typing span:nth-child(2){animation-delay:.2s}.sv-typing span:nth-child(3){animation-delay:.4s}@keyframes svb{0%,80%,100%{opacity:.25}40%{opacity:1}}
+    .sv-preview { border:1px solid #e4e4e4; border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.06);
+      display:flex; flex-direction:column; height:485px; }
+    .sv-pv-bar { display:flex; align-items:center; gap:.6rem; padding:.55rem .85rem; border-bottom:1px solid #eee; font-size:.82rem; flex-wrap:wrap; }
+    .sv-pv-bar b { font-weight:600; }
+    .sv-pv-status { color:#6b7280; font-size:.76rem; }
+    .sv-pv-bar a { margin-left:auto; color:#1a56db; text-decoration:none; font-size:.78rem; }
+    .sv-pv-frame { flex:1; border:0; width:100%; background:#fff; }
+    .sv-pv-empty { flex:1; display:flex; align-items:center; justify-content:center; text-align:center; color:#9ca3af; font-size:.9rem; padding:2rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dev-banner">DEV PREVIEW · Course-AI experiments · not linked from the student site</div>
+  <h1>Course AI — experiments</h1>
+  <p class="sub">Three takes on the same RAG backend (Pinecone&nbsp;+&nbsp;Gemini via a Cloudflare Worker).
+    The goal: when the bot <b>can</b> answer, point students to the exact spot on the course site;
+    when it <b>can&rsquo;t</b>, say so plainly and show <em>no</em> sources. The live-preview panes only
+    auto-highlight when this page is opened from <code>falconeconsim.github.io</code> (same-origin).</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="split">Split-view · live preview</button>
+    <button class="tab" data-tab="compact">Compact · embeddable</button>
+    <button class="tab" data-tab="classic">Classic · baseline</button>
+  </div>
+
+  <!-- ============ V2 SPLIT VIEW ============ -->
+  <section class="panel" data-panel="split">
+    <p class="panel-note"><b>Split-view.</b> Ask on the left; the right pane loads the cited course page
+      and <b>scrolls to &amp; highlights</b> the passage the answer came from. Click the source chips to
+      jump between citations. If the bot can&rsquo;t answer, the pane stays empty — no misleading links.</p>
+    <div class="sv">
+      <div class="sv-chat">
+        <div class="sv-head"><span class="sv-dot"></span>Ask the Course AI</div>
+        <div class="sv-log" id="sv-log" aria-live="polite"></div>
+        <form class="sv-form" id="sv-form" autocomplete="off">
+          <input class="sv-input" id="sv-input" type="text" placeholder="e.g. What is the Slutsky decomposition?" aria-label="Your question" />
+          <button class="sv-send" id="sv-send" type="submit">Send</button>
+        </form>
+      </div>
+      <div class="sv-preview">
+        <div class="sv-pv-bar">
+          <b id="sv-pv-title">Live page preview</b>
+          <span class="sv-pv-status" id="sv-pv-status"></span>
+          <a id="sv-pv-open" target="_blank" rel="noopener" style="display:none">open ↗</a>
+        </div>
+        <div class="sv-pv-empty" id="sv-pv-empty">Ask a question — the answer&rsquo;s source page appears here, jumped to the relevant lines.</div>
+        <iframe class="sv-pv-frame" id="sv-pv-frame" title="Course page preview" hidden></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ V3 COMPACT ============ -->
+  <section class="panel" data-panel="compact" hidden>
+    <p class="panel-note"><b>Compact &amp; embeddable.</b> A single-column widget that drops into any page
+      (this is the one embedded on a week&rsquo;s viz dev page). Citations are pills; clicking <em>&ldquo;Week&nbsp;3 · …&rdquo;</em>
+      opens a lightbox preview jumped to the passage. Quick chips (<em>Explain more simply / Give an example / Show the formula</em>)
+      re-ask follow-ups. Loaded from <code>assets/dev/chatbot.js</code>.</p>
+    <div id="compact-mount"></div>
+  </section>
+
+  <!-- ============ V1 CLASSIC ============ -->
+  <section class="panel" data-panel="classic" hidden>
+    <p class="panel-note"><b>Classic baseline.</b> What&rsquo;s on the live <code>ask-dev.html</code> today —
+      plain answer + text source links. Kept here for side-by-side comparison.</p>
+    <div class="sv-chat" style="max-width:560px;">
+      <div class="sv-head"><span class="sv-dot"></span>Ask the Course AI</div>
+      <div class="sv-log" id="cl-log" aria-live="polite"></div>
+      <form class="sv-form" id="cl-form" autocomplete="off">
+        <input class="sv-input" id="cl-input" type="text" placeholder="Type your question…" aria-label="Your question" />
+        <button class="sv-send" id="cl-send" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <p style="font-size:.82rem;color:#6b7280;margin-top:1.6rem;">&larr; <a href="dev.html" style="color:#1a56db;">Back to dev pages</a></p>
+</div>
+
+<script src="assets/dev/chatbot.js"></script>
+<script>
+(function () {
+  var WORKER = "https://ec224-chatbot.zachtwinship.workers.dev/";
+
+  // ---- tabs ----
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () {
+      tabs.forEach(function (x) { x.classList.remove("active"); });
+      t.classList.add("active");
+      var name = t.dataset.tab;
+      panels.forEach(function (p) { p.hidden = p.dataset.panel !== name; });
+    });
+  });
+
+  // ============ V2 split view ============
+  var svLog = document.getElementById("sv-log");
+  var svForm = document.getElementById("sv-form");
+  var svInput = document.getElementById("sv-input");
+  var svSend = document.getElementById("sv-send");
+  var pvFrame = document.getElementById("sv-pv-frame");
+  var pvEmpty = document.getElementById("sv-pv-empty");
+  var pvTitle = document.getElementById("sv-pv-title");
+  var pvStatus = document.getElementById("sv-pv-status");
+  var pvOpen = document.getElementById("sv-pv-open");
+
+  svMsg("Hi! Ask me anything about EC224 and I'll answer from the course pages — then show you exactly where on the right.", "bot");
+
+  function svMsg(text, cls) {
+    var el = document.createElement("div");
+    el.className = "sv-msg " + cls;
+    el.textContent = text;
+    svLog.appendChild(el); svLog.scrollTop = svLog.scrollHeight;
+    return el;
+  }
+  function svTyping() {
+    var el = document.createElement("div");
+    el.className = "sv-msg bot";
+    el.innerHTML = '<span class="sv-typing"><span></span><span></span><span></span></span>';
+    svLog.appendChild(el); svLog.scrollTop = svLog.scrollHeight;
+    return el;
+  }
+  function showSource(match, chips, chip) {
+    chips.forEach(function (c) { c.classList.remove("active"); });
+    if (chip) chip.classList.add("active");
+    pvEmpty.style.display = "none";
+    pvFrame.hidden = false;
+    pvTitle.textContent = EC224Bot.prettyLabel(match.url);
+    pvOpen.href = match.url; pvOpen.style.display = "inline";
+    pvStatus.textContent = "loading…";
+    pvFrame.onload = function () {
+      try {
+        var found = EC224Bot.locateInFrame(pvFrame, match.text || "");
+        pvStatus.textContent = found ? "✓ highlighted the relevant passage" : "loaded (couldn't pinpoint the exact line)";
+      } catch (e) {
+        pvStatus.textContent = "open from the live site to auto-highlight";
+      }
+    };
+    pvFrame.src = match.url;
+  }
+  function svCites(bubble, matches) {
+    if (!matches || !matches.length) return;
+    var wrap = document.createElement("div");
+    wrap.className = "sv-cites";
+    var chips = [];
+    matches.forEach(function (m, i) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "sv-cite";
+      b.textContent = EC224Bot.prettyLabel(m.url);
+      b.addEventListener("click", function () { showSource(m, chips, b); });
+      wrap.appendChild(b); chips.push(b);
+      if (i === 0) setTimeout(function () { showSource(m, chips, b); }, 50); // auto-open best match
+    });
+    bubble.appendChild(wrap);
+    svLog.scrollTop = svLog.scrollHeight;
+  }
+  svForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var q = svInput.value.trim(); if (!q) return;
+    svMsg(q, "user"); svInput.value = "";
+    svInput.disabled = svSend.disabled = true;
+    var typing = svTyping();
+    try {
+      var data = await EC224Bot.ask(WORKER, q);
+      typing.remove();
+      var bubble = svMsg(data.answer, data.answered ? "bot" : "note");
+      if (data.answered) svCites(bubble, data.matches);
+      else { // no answer -> clear the preview, no sources
+        pvFrame.hidden = true; pvFrame.src = "about:blank";
+        pvEmpty.style.display = "flex";
+        pvEmpty.textContent = "No source — that isn't in the course materials.";
+        pvTitle.textContent = "Live page preview"; pvStatus.textContent = ""; pvOpen.style.display = "none";
+      }
+    } catch (err) {
+      typing.remove();
+      svMsg("Network error — couldn't reach the assistant. Please try again.", "error");
+    } finally {
+      svInput.disabled = svSend.disabled = false; svInput.focus();
+    }
+  });
+
+  // ============ V3 compact (shared module) ============
+  EC224Bot.mountCompact(document.getElementById("compact-mount"), { workerUrl: WORKER });
+
+  // ============ V1 classic ============
+  var clLog = document.getElementById("cl-log");
+  var clForm = document.getElementById("cl-form");
+  var clInput = document.getElementById("cl-input");
+  var clSend = document.getElementById("cl-send");
+  clMsg("Hi! Ask me anything about the EC224 course material.", "bot");
+  function clMsg(text, cls, sourcesHtml) {
+    var el = document.createElement("div");
+    el.className = "sv-msg " + cls; el.textContent = text;
+    if (sourcesHtml) {
+      var s = document.createElement("div");
+      s.style.cssText = "margin-top:.45rem;font-size:.74rem;color:#6b6b6b;";
+      s.innerHTML = sourcesHtml; el.appendChild(s);
+    }
+    clLog.appendChild(el); clLog.scrollTop = clLog.scrollHeight; return el;
+  }
+  clForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var q = clInput.value.trim(); if (!q) return;
+    clMsg(q, "user"); clInput.value = "";
+    clInput.disabled = clSend.disabled = true;
+    var typing = clMsg("…", "bot");
+    try {
+      var data = await EC224Bot.ask(WORKER, q);
+      typing.remove();
+      var srcHtml = "";
+      if (data.answered && data.sources && data.sources.length) {
+        srcHtml = "Sources: " + data.sources.map(function (u) {
+          return '<a href="' + u + '" target="_blank" rel="noopener" style="color:#1a56db;">' + EC224Bot.prettyLabel(u) + "</a>";
+        }).join(" · ");
+      }
+      clMsg(data.answer, data.answered ? "bot" : "note", srcHtml);
+    } catch (err) {
+      typing.remove();
+      clMsg("Network error — please try again.", "error");
+    } finally {
+      clInput.disabled = clSend.disabled = false; clInput.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>
