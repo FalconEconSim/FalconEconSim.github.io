@@ -17,6 +17,12 @@
 
   var DEFAULT_WORKER = "https://ec224-chatbot.zachtwinship.workers.dev/";
 
+  var LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">' +
+    '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/>' +
+    '<path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
+  var BOOK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">' +
+    '<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19h14"/></svg>';
+
   // ---- API call ------------------------------------------------------------
   async function ask(workerUrl, question) {
     var res = await fetch(workerUrl || DEFAULT_WORKER, {
@@ -132,6 +138,8 @@
 ".ecbot-cite{font-size:.74rem;font-weight:600;color:var(--ec);background:#eef2ff;border:1px solid #dbe3ff;" +
 "border-radius:999px;padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}" +
 ".ecbot-cite:hover{background:#dbe3ff;}.ecbot-cite svg{width:11px;height:11px;}" +
+".ecbot-cite-book{color:#6b7280;background:#f3f4f6;border-color:#e5e7eb;cursor:default;}" +
+".ecbot-cite-book:hover{background:#f3f4f6;}" +
 ".ecbot-follow{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;}" +
 ".ecbot-chip{font-size:.74rem;color:#444;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:3px 10px;cursor:pointer;}" +
 ".ecbot-chip:hover{background:#e5e7eb;}" +
@@ -249,11 +257,18 @@
       var wrap = document.createElement("div");
       wrap.className = "ecbot-cites";
       matches.forEach(function (m) {
+        if (m.kind === "textbook" || !m.url) {
+          // instructor textbook: non-clickable placeholder (no link yet)
+          var s = document.createElement("span");
+          s.className = "ecbot-cite ecbot-cite-book";
+          s.innerHTML = BOOK_ICON + (m.label || "Course textbook");
+          s.title = "From the course textbook — not published online yet";
+          wrap.appendChild(s);
+          return;
+        }
         var b = document.createElement("button");
         b.type = "button"; b.className = "ecbot-cite";
-        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">' +
-          '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/>' +
-          '<path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>' + prettyLabel(m.url);
+        b.innerHTML = LINK_ICON + prettyLabel(m.url);
         b.title = "Show me where on " + prettyLabel(m.url);
         b.addEventListener("click", function () { openPreview(m); });
         wrap.appendChild(b);

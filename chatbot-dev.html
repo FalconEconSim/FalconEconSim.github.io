@@ -41,6 +41,8 @@
     .sv-cite { font-size:.74rem; font-weight:600; color:#1a56db; background:#eef2ff; border:1px solid #dbe3ff;
       border-radius:999px; padding:3px 10px; cursor:pointer; }
     .sv-cite:hover, .sv-cite.active { background:#1a56db; color:#fff; }
+    .sv-cite-book { color:#6b7280; background:#f3f4f6; border-color:#e5e7eb; cursor:default; }
+    .sv-cite-book:hover { background:#f3f4f6; color:#6b7280; }
     .sv-form { display:flex; gap:.5rem; padding:.7rem; border-top:1px solid #eee; }
     .sv-input { flex:1; border:1px solid #ddd; border-radius:8px; padding:.55rem .8rem; font:inherit; font-size:.9rem; outline:none; }
     .sv-input:focus { border-color:#1a56db; }
@@ -192,14 +194,30 @@
     var wrap = document.createElement("div");
     wrap.className = "sv-cites";
     var chips = [];
-    matches.forEach(function (m, i) {
+    var autoOpened = false;
+    matches.forEach(function (m) {
+      if (m.kind === "textbook" || !m.url) {
+        // instructor textbook — non-clickable placeholder, no preview
+        var s = document.createElement("span");
+        s.className = "sv-cite sv-cite-book";
+        s.textContent = m.label || "Course textbook";
+        s.title = "From the course textbook — not published online yet";
+        wrap.appendChild(s);
+        return;
+      }
       var b = document.createElement("button");
       b.type = "button"; b.className = "sv-cite";
       b.textContent = EC224Bot.prettyLabel(m.url);
       b.addEventListener("click", function () { showSource(m, chips, b); });
       wrap.appendChild(b); chips.push(b);
-      if (i === 0) setTimeout(function () { showSource(m, chips, b); }, 50); // auto-open best match
+      if (!autoOpened) { autoOpened = true; setTimeout(function () { showSource(m, chips, b); }, 50); }
     });
+    if (!autoOpened) { // only textbook sources -> nothing to preview
+      pvFrame.hidden = true; pvFrame.src = "about:blank";
+      pvEmpty.style.display = "flex";
+      pvEmpty.textContent = "Answered from the course textbook (no public page to preview yet).";
+      pvTitle.textContent = "Live page preview"; pvStatus.textContent = ""; pvOpen.style.display = "none";
+    }
     bubble.appendChild(wrap);
     svLog.scrollTop = svLog.scrollHeight;
   }

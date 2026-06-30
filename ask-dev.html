@@ -116,13 +116,18 @@
       return el;
     }
 
-    function sourcesToHtml(sources) {
-      if (!sources || !sources.length) return "";
-      var links = sources.map(function (u) {
-        var label = u.replace(/^https?:\/\/[^/]+\//, "").replace(/\.html$/, "") || "home";
-        return '<a href="' + u + '" target="_blank" rel="noopener">' + label + "</a>";
+    function sourcesToHtml(matches) {
+      if (!matches || !matches.length) return "";
+      var parts = matches.map(function (m) {
+        if (m.kind === "textbook" || !m.url) {
+          // instructor textbook — placeholder label, no link yet
+          return '<span title="From the course textbook — not published online yet" ' +
+                 'style="color:#6b7280;">' + (m.label || "Course textbook") + "</span>";
+        }
+        var label = m.url.replace(/^https?:\/\/[^/]+\//, "").replace(/\.html$/, "") || "home";
+        return '<a href="' + m.url + '" target="_blank" rel="noopener">' + label + "</a>";
       });
-      return "Sources: " + links.join(" · ");
+      return "Sources: " + parts.join(" · ");
     }
 
     form.addEventListener("submit", async function (e) {
@@ -146,7 +151,7 @@
         if (!res.ok || data.error) {
           addMsg("Sorry — something went wrong. Please try again.", "error");
         } else {
-          addMsg(data.answer, "bot", sourcesToHtml(data.sources));
+          addMsg(data.answer, "bot", sourcesToHtml(data.matches || []));
         }
       } catch (err) {
         typing.remove();
