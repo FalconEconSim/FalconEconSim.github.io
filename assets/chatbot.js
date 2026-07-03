@@ -151,6 +151,9 @@
 ".ecbot-input:focus{border-color:var(--ec);}" +
 ".ecbot-send{border:none;background:var(--ec);color:#fff;font-weight:600;font-size:.9rem;padding:0 1.1rem;border-radius:8px;cursor:pointer;}" +
 ".ecbot-send:disabled{opacity:.55;cursor:default;}" +
+/* bare mode: drop outer chrome so the widget can fill a popover/panel */
+".ecbot.ecbot-bare{border:0;box-shadow:none;border-radius:0;max-width:none;height:100%;display:flex;flex-direction:column;min-height:0;}" +
+".ecbot-bare .ecbot-log{flex:1;height:auto;min-height:0;}" +
 /* lightbox */
 ".ecbot-lb{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2.5vh 2vw;}" +
 ".ecbot-lb[hidden]{display:none;}" +
@@ -223,18 +226,21 @@
       "and I can show you the exact spot on the page.";
 
     root.classList.add("ecbot");
-    root.innerHTML =
+    if (opts.bare) root.classList.add("ecbot-bare");   // fill a popover, no own header
+    var head = opts.bare ? "" :
       '<div class="ecbot-head"><span class="ecbot-dot"></span>' + (opts.title || "Ask the Course AI") +
-      '<span class="ecbot-sub">' + (opts.subtitle || "answers from the course site") + "</span></div>" +
+      '<span class="ecbot-sub">' + (opts.subtitle || "answers from the course site") + "</span></div>";
+    root.innerHTML = head +
       '<div class="ecbot-log" aria-live="polite"></div>' +
       '<form class="ecbot-form" autocomplete="off">' +
-      '<input class="ecbot-input" type="text" placeholder="Type your question…" aria-label="Your question">' +
+      '<input class="ecbot-input" type="text" placeholder="' + (opts.placeholder || "Type your question…") + '" aria-label="Your question">' +
       '<button class="ecbot-send" type="submit">Send</button></form>';
 
     var log = root.querySelector(".ecbot-log");
     var form = root.querySelector(".ecbot-form");
     var input = root.querySelector(".ecbot-input");
     var send = root.querySelector(".ecbot-send");
+    if (opts.logHeight) log.style.height = opts.logHeight;
 
     addMsg(intro, "bot");
 
@@ -323,7 +329,12 @@
       if (q) submit(q);
     });
 
-    return { ask: function (q) { return submit(q); } };
+    return {
+      ask: function (q) { return submit(q); },
+      input: input,
+      focus: function () { input.focus(); },
+      prefill: function (q) { input.value = q || ""; },
+    };
   }
 
   window.EC224Bot = {
