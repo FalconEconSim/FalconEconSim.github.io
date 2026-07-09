@@ -1,0 +1,43 @@
+name: Embed site for chatbot
+
+# Keeps the EC224 chatbot's Pinecone search index in sync with the site.
+# Runs whenever page content changes (or on demand). It re-embeds only the
+# SITE pages; the private instructor-textbook vectors are never touched.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.html"
+      - "rag-chatbot/ingest.py"
+      - "rag-chatbot/requirements.txt"
+      - ".github/workflows/embed-site.yml"
+  workflow_dispatch: {}   # allow manual "Run workflow" from the Actions tab
+
+# Never let two embeds run at once (they'd race on the same index).
+concurrency:
+  group: embed-site
+  cancel-in-progress: false
+
+jobs:
+  embed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the pushed site
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r rag-chatbot/requirements.txt
+
+      # --local . embeds the HTML in THIS checkout (what was just pushed),
+      # so we never race the GitHub Pages redeploy or embed stale content.
+      - name: Embed site pages into Pinecone
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        run: python rag-chatbot/ingest.py --local .
