@@ -1507,6 +1507,9 @@ function initViz3() {
 
   let v3IC = null, v3BL = null, v3Pt = null;
   let v3D1 = null, v3D2 = null, v3RefPt = null;
+  // Baseline (income I0) demand overlay: dashed "where it started" reference.
+  const V3_I0 = 80;
+  let v3D0 = null, v3D0drop = null, v3D0pt = null, v3D0lbl = null, v3D1lbl = null;
 
   function redrawV3() {
     const I = v3Income;
@@ -1535,26 +1538,45 @@ function initViz3() {
       name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[14,-18]}});
 
     // Right panel: draw demand curve at current I
-    if (v3D1) { try{b2.removeObject(v3D1);}catch(e){} }
-    if (v3D2) { try{b2.removeObject(v3D2);}catch(e){} }
-    if (v3RefPt) { try{b2.removeObject(v3RefPt);}catch(e){} }
+    [v3D0, v3D0drop, v3D0pt, v3D0lbl, v3D1, v3D2, v3RefPt, v3D1lbl].forEach(o => {
+      if (o) { try { b2.removeObject(o); } catch(e){} }
+    });
+    v3D0 = v3D0drop = v3D0pt = v3D0lbl = null;
 
-    if (v3Type === 'normal') {
-      // X* = 0.5*I/Px => P = 0.5*I/X
-      const half = 0.5*I;
-      v3D1 = b2.create('functiongraph',[x=>x>0.1?half/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
-      // Reference line at Px=2: X* = 0.5*I/2
-      v3D2 = b2.create('segment',[[xs,0],[xs,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
-      v3RefPt = b2.create('point',[xs,V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-        name:'●',withLabel:false});
-    } else {
-      // Inferior: X* = 20 - 0.05*I at each Px => shifted demand function (conceptual linear)
-      // At Px=2: X* = 20 - 0.05*I; treat other prices as X* = (20-0.05*I) * (2/Px) * adjustment
-      const xRef = v3Xstar(I);
-      v3D1 = b2.create('functiongraph',[x=>x>0.1?(V3_Px*xRef)/x:NaN,0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
-      v3D2 = b2.create('segment',[[xRef,0],[xRef,V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
-      v3RefPt = b2.create('point',[xRef,V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,name:'●',withLabel:false});
+    // Convention (matches the reference S&D explorer): when the curve has
+    // shifted, keep the ORIGINAL curve as a faded dashed line + faded baseline
+    // quantity marker, draw the CURRENT curve solid, and prime its label (D′).
+    const shifted = Math.abs(I - V3_I0) > 0.5;
+    // Demand function P(X) at income Iv, and the quantity demanded at Px=2.
+    const dFn  = (Iv) => (v3Type === 'normal')
+      ? (x => x>0.1 ? (0.5*Iv)/x : NaN)
+      : (x => x>0.1 ? (V3_Px * v3Xstar(Iv))/x : NaN);
+    const qAt2 = (Iv) => (v3Type === 'normal') ? v3Xstar(Iv) : v3Xstar(Iv);
+    // Each hyperbola is P = coef/X; place a label on it at a chosen price. The
+    // original (D) and shifted (D′) labels sit at DIFFERENT prices so they never
+    // collide even when the two curves are close together.
+    const coef = (Iv) => v3Type==='normal' ? 0.5*Iv : V3_Px*v3Xstar(Iv);
+    const mkLbl = (Iv, txt, faded, py) => b2.create('text',
+      [coef(Iv)/py + 0.4, py + 0.3, txt],
+      {fontSize: faded?12:13, color:'#1a56db', fixed:true, highlight:false,
+       cssStyle:'font-weight:'+(faded?600:700)+';'+(faded?'opacity:0.5;':'')});
+
+    if (shifted) {
+      const xs0 = qAt2(V3_I0);
+      v3D0 = b2.create('functiongraph',[dFn(V3_I0),0.1,xmax],
+        {strokeColor:'#1a56db',strokeWidth:1.6,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
+      v3D0drop = b2.create('segment',[[xs0,0],[xs0,V3_Px]],
+        {strokeColor:'#9aa3b2',strokeWidth:1,dash:2,strokeOpacity:0.5,fixed:true,highlight:false});
+      v3D0pt = b2.create('point',[xs0,V3_Px],
+        {size:3,fillColor:'#9aa3b2',strokeColor:'#fff',strokeWidth:1,fixed:true,withLabel:false,highlight:false});
+      v3D0lbl = mkLbl(V3_I0, 'D', true, 3.1);
     }
+
+    v3D1 = b2.create('functiongraph',[dFn(I),0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+    v3D2 = b2.create('segment',[[qAt2(I),0],[qAt2(I),V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
+    v3RefPt = b2.create('point',[qAt2(I),V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
+      name:'●',withLabel:false});
+    v3D1lbl = mkLbl(I, shifted ? 'D′' : 'D', false, 4.7);
 
     document.getElementById('v3-xstar').textContent  = nn(xs);
     document.getElementById('v3-ystar').textContent  = nn(ys);
