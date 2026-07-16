@@ -3,10 +3,10 @@
 This folder holds **only** what the GitHub Action needs to keep the course
 chatbot's search index in sync with the site:
 
-- `ingest.py` — crawls/embeds the site's page text into the Pinecone `ec224`
+- `ingest.py`: crawls/embeds the site's page text into the Pinecone `ec224`
   index. In CI it runs with `--local .` so it embeds the HTML that was just
   pushed (no waiting on the Pages redeploy).
-- `requirements.txt` — the two Python deps it needs.
+- `requirements.txt`: the two Python deps it needs.
 
 **What the Action does:** on every push to `main` that touches an `.html`
 file, `.github/workflows/embed-site.yml` re-embeds the site pages so the live

@@ -225,7 +225,7 @@
     </p>
     <!-- Manim animation -->
     <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:1rem;line-height:0;">
-      <video controls preload="metadata" style="width:100%;display:block;border-radius:10px;max-height:520px;object-fit:contain;">
+      <video data-autoplay controls playsinline preload="metadata" style="width:100%;display:block;border-radius:10px;max-height:520px;object-fit:contain;">
         <source src="media/videos/fig66_lrac_manim/1080p60/LRACEnvelope.mp4" type="video/mp4">
         Your browser does not support HTML5 video.
       </video>
@@ -274,6 +274,8 @@
     </div>
     <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs68-wrap"></div></div>
     <div class="viz-readout" id="v68-readout"></div>
+    <!-- old / new / change readout, baseline is w = v = $3 -->
+    <div id="v68-delta" class="delta-bar"></div>
   </section>
 
   <!-- Fig 6.10 - EFFICIENT SCALE FINDER -->
@@ -327,7 +329,16 @@ const ML=50, MR=20, MT=20, MB=40;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
 // items: [{x,y,ax,ay,w,h,text,color,fontSize,bold}] -- x/y are mutable label centers
-function resolveLabels(items, linePts=[], iter=150, pad=6) {
+/* bounds: optional {x0,y0,x1,y1} in canvas pixels. When given, every label is
+   kept fully inside that box on each pass. Without it the sim only pushes
+   labels apart and away from curves, with nothing stopping them leaving the
+   canvas: on a wide desktop canvas there is slack so it never showed, but at
+   390px the box is ~358px wide and labels got shoved off the edge and clipped
+   ("Isoquant Q" off the right, "MRTS=... vs w/v=..." off the left).
+   Clamping runs INSIDE the iteration loop, not once at the end, so a clamped
+   label still participates in later collision passes instead of being frozen
+   on top of a neighbour. */
+function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
   for (let it=0; it<iter; it++) {
     for (let i=0; i<items.length; i++) {
       for (let j=i+1; j<items.length; j++) {
@@ -350,6 +361,14 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
           lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
           lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
         }
+      }
+    }
+    if (bounds) {
+      // drawForceLabel treats (x,y) as the box's TOP-LEFT, so the far edge is
+      // x+w / y+h. Clamp against that, not against a centre.
+      for (const lm of items) {
+        lm.x = Math.max(bounds.x0, Math.min(lm.x, bounds.x1 - lm.w));
+        lm.y = Math.max(bounds.y0, Math.min(lm.y, bounds.y1 - lm.h));
       }
     }
   }
@@ -519,7 +538,7 @@ function v61Draw(Lcur,Kcur){
   ];
 
   // Resolve and draw static curve labels (isoquant + isocost)
-  resolveLabels(lbls61,linePts61,60,5);
+  resolveLabels(lbls61,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
   lbls61.forEach(l=>drawForceLabel(ctx,l));
 
   // If optimal is shown, draw the green dot at the optimal location
@@ -535,14 +554,14 @@ function v61Draw(Lcur,Kcur){
       {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2e8b57',fontSize:9,bold:false},
       {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2e8b57',fontSize:9,bold:false},
     ];
-    resolveLabels(optLbls,linePts61,60,5);
+    resolveLabels(optLbls,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
     optLbls.forEach(l=>drawForceLabel(ctx,l));
     document.getElementById('v61-readout').innerHTML=
       '<div class="readout-row">' +
       '<div class="readout-col"><div class="readout-label">L*</div><div class="readout-val">'+opt.Ls.toFixed(2)+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">K*</div><div class="readout-val">'+opt.Ks.toFixed(2)+'</div></div>' +
-      '<div class="readout-col"><div class="readout-label">MRTS = K/L at optimum</div><div class="readout-val" style="color:#2e8b57">'+(opt.Ks/opt.Ls).toFixed(3)+'</div></div>' +
-      '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(w/v).toFixed(3)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">MRTS = K/L at optimum</div><div class="readout-val" style="color:#2e8b57">'+(opt.Ks/opt.Ls).toFixed(2)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(w/v).toFixed(2)+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">Min TC = wL* + vK*</div><div class="readout-val" style="color:#2e8b57">'+opt.TC.toFixed(2)+'</div></div>' +
       '</div>';
     return;
@@ -564,7 +583,7 @@ function v61Draw(Lcur,Kcur){
   if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2e8b57',fontSize:9,bold:false});
   else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'#888',fontSize:9,bold:false});
   else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#888',fontSize:9,bold:false});
-  resolveLabels(dragLbls,linePts61,60,5);
+  resolveLabels(dragLbls,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
   dragLbls.forEach(l=>drawForceLabel(ctx,l));
 
   const TC=w*Lcur+v*Kcur;
@@ -572,8 +591,8 @@ function v61Draw(Lcur,Kcur){
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">L (drag)</div><div class="readout-val">'+Lcur.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">K (drag)</div><div class="readout-val">'+Kcur.toFixed(2)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:#e74c3c">'+MRTS.toFixed(3)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(wv).toFixed(3)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:#e74c3c">'+MRTS.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(wv).toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">TC = wL + vK</div><div class="readout-val">'+TC.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2e8b57">'+opt.TC.toFixed(2)+'</div></div>' +
     '</div>' +
@@ -587,9 +606,9 @@ function v61Update() {
   const w=parseFloat(document.getElementById('v61-w').value);
   const v=parseFloat(document.getElementById('v61-v').value);
   const q=parseFloat(document.getElementById('v61-q').value);
-  document.getElementById('v61-w-val').textContent=w;
-  document.getElementById('v61-v-val').textContent=v;
-  document.getElementById('v61-q-val').textContent=q;
+  document.getElementById('v61-w-val').textContent=w.toFixed(2);
+  document.getElementById('v61-v-val').textContent=v.toFixed(2);
+  document.getElementById('v61-q-val').textContent=q.toFixed(2);
   // When sliders change, reset the optimal reveal and start the dot at a non-optimal position
   v61OptimalShown=false;
   document.getElementById('v61-steps').classList.remove('visible');
@@ -608,12 +627,12 @@ function v61ShowOptimal() {
   v61Draw(opt.Ls, opt.Ks);
 
   // Show step-by-step solution
-  const wvRatio=(w/v).toFixed(3);
-  const Lstar=opt.Ls.toFixed(3), Kstar=opt.Ks.toFixed(3), TCstar=opt.TC.toFixed(2);
+  const wvRatio=(w/v).toFixed(2);
+  const Lstar=opt.Ls.toFixed(2), Kstar=opt.Ks.toFixed(2), TCstar=opt.TC.toFixed(2);
   document.getElementById('v61-steps-content').innerHTML=
     '<strong style="font-size:0.9rem;color:var(--text);">Step-by-step solution (Q = K^0.5 * L^0.5, w='+w+', v='+v+', q='+q+')</strong>' +
     '<div class="v61-step" style="margin-top:0.5rem;"><span class="v61-step-num">Step 1</span> Set MRTS = w/v. For Q = K^0.5 * L^0.5, MRTS = K/L, so: K/L = w/v = '+w+'/'+v+' = '+wvRatio+'. This gives K = (w/v)*L.</div>' +
-    '<div class="v61-step"><span class="v61-step-num">Step 2</span> Substitute into Q = K^0.5 * L^0.5. Replacing K = (w/v)*L: Q = ((w/v)*L)^0.5 * L^0.5 = (w/v)^0.5 * L. Solving: L* = Q / (w/v)^0.5 = '+q+' / '+(w/v).toFixed(4)+'^0.5 = '+Lstar+'.</div>' +
+    '<div class="v61-step"><span class="v61-step-num">Step 2</span> Substitute into Q = K^0.5 * L^0.5. Replacing K = (w/v)*L: Q = ((w/v)*L)^0.5 * L^0.5 = (w/v)^0.5 * L. Solving: L* = Q / (w/v)^0.5 = '+q+' / '+(w/v).toFixed(2)+'^0.5 = '+Lstar+'.</div>' +
     '<div class="v61-step"><span class="v61-step-num">Step 3</span> Find K*: K* = (w/v) * L* = '+wvRatio+' * '+Lstar+' = '+Kstar+'.</div>' +
     '<div class="v61-step"><span class="v61-step-num">Step 4</span> Minimum cost: TC* = w*L* + v*K* = '+w+'*'+Lstar+' + '+v+'*'+Kstar+' = $'+TCstar+'.</div>';
   document.getElementById('v61-steps').classList.add('visible');
@@ -981,7 +1000,7 @@ window._initFig65=function initFig65(){
   };
   window.v65Update=function(){
     const tfc=parseFloat(document.getElementById('v65-tfc').value);
-    document.getElementById('v65-tfc-val').textContent=tfc;
+    document.getElementById('v65-tfc-val').textContent=tfc.toFixed(2);
     v65DrawD3(tfc);
   };
   window.v65ToggleLR=function(){
@@ -1299,7 +1318,7 @@ window._initFig68=function initFig68(){
   }
 
   // Move an existing node's anchor to (nx,ny), translating its current position by the delta
-  // (matches S6/S8 _setP/updateChart pattern — never restarts the sim per input)
+  // (matches S6/S8 _setP/updateChart pattern, never restarts the sim per input)
   function moveAnchor(node,nx,ny){
     if(!node) return;
     const dx=nx-node.fx_anchor, dy=ny-node.fy_anchor;
@@ -1334,7 +1353,7 @@ window._initFig68=function initFig68(){
       // First build: create nodes + simulation
       buildSim(w,v,optBase,optNew);
     } else {
-      // Subsequent draws (slider input): translate existing nodes by anchor delta only —
+      // Subsequent draws (slider input): translate existing nodes by anchor delta only,
       // never rebuild or restart the sim here (that's what causes step="any" slider jank)
       const byId=id=>f68Nodes.find(n=>n.id===id);
       moveAnchor(byId('IQ'), scX(Math.min(iqL,AXIS_MAX)), scY(Math.min(iqK,AXIS_MAX)));
@@ -1349,14 +1368,23 @@ window._initFig68=function initFig68(){
     }
 
     const kl_old=optBase.Ks/optBase.Ls, kl_new=optNew.Ks/optNew.Ls;
+
+    /* Old / new / change readout. Baseline is optBase (w = v = $3), the same
+       baseline the faded "old" isoquant and old optimum are drawn from, so the
+       numbers and the picture always describe the same move. */
+    if (window.ecDelta) {
+      ecDelta('v68-delta', [
+        { label: 'Wage w',        old: wBase,        now: w,          prefix: '$' },
+        { label: 'Rental rate v', old: vBase,        now: v,          prefix: '$' },
+        { label: 'K/L ratio',     old: kl_old,       now: kl_new                  },
+        { label: 'Total cost',    old: optBase.TC,   now: optNew.TC,  prefix: '$' },
+      ]);
+    }
+
+    /* The old/new K/L and TC columns that used to live here are now the delta
+       bar above, which shows the same values plus how far they moved. */
     document.getElementById('v68-readout').innerHTML=
-      '<div class="readout-row">' +
-      '<div class="readout-col"><div class="readout-label">Old K/L ratio</div><div class="readout-val">'+kl_old.toFixed(3)+'</div></div>' +
-      '<div class="readout-col"><div class="readout-label">New K/L ratio</div><div class="readout-val" style="color:'+(kl_new>kl_old?'#e74c3c':'#2e8b57')+'">'+kl_new.toFixed(3)+'</div></div>' +
-      '<div class="readout-col"><div class="readout-label">Old TC</div><div class="readout-val">$'+optBase.TC.toFixed(2)+'</div></div>' +
-      '<div class="readout-col"><div class="readout-label">New TC</div><div class="readout-val" style="color:#e74c3c">$'+optNew.TC.toFixed(2)+'</div></div>' +
-      '</div>' +
-      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">' +
+      '<div style="font-size:0.84rem;color:var(--muted)">' +
       (w>wBase&&v===vBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
         w<wBase&&v===vBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
         w>wBase&&v>vBase?'Both costs rose. K/L changes from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
@@ -1381,8 +1409,8 @@ window._initFig68=function initFig68(){
 
   window.v68Draw=v68DrawD3;
   window.v68Update=function(){
-    document.getElementById('v68-w-val').textContent=parseFloat(document.getElementById('v68-w').value);
-    document.getElementById('v68-v-val').textContent=parseFloat(document.getElementById('v68-v').value);
+    document.getElementById('v68-w-val').textContent=parseFloat(document.getElementById('v68-w').value).toFixed(2);
+    document.getElementById('v68-v-val').textContent=parseFloat(document.getElementById('v68-v').value).toFixed(2);
     v68DrawD3();
   };
   window.resetFig68=function(){
@@ -1588,7 +1616,7 @@ window._initFig610=function initFig610(){
       mcCurve.attr('opacity',0);
     }
 
-    // Shading — Section 5B approach: green region extends from chart left edge to q*
+    // Shading, Section 5B approach: green region extends from chart left edge to q*
     if(qstar){
       const yBot=scY(0);
       const yTop=PAD.top;
@@ -1701,10 +1729,10 @@ function openLN()  { document.getElementById('leftNav').classList.add('open'); d
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
 function redrawAll6() {
-  // v61Draw() (no args) re-renders at the CURRENT dot position — calling
+  // v61Draw() (no args) re-renders at the CURRENT dot position; calling
   // v61Update() here would reset the user's drag/revealed solution on resize
   v61Draw(); v62Draw();
-  // D3 SVG figures are responsive via viewBox — no redraw needed on resize
+  // D3 SVG figures are responsive via viewBox, no redraw needed on resize
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1729,8 +1757,10 @@ window.addEventListener('resize', () => {
   v62Draw();
 });
 </script>
-  <!-- Ask the Course AI — floating 24/7 assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
+  <script src="assets/deltabar.js"></script>
+  <script src="assets/autoplay-video.js"></script>
 </body>
 </html>

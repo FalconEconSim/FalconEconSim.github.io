@@ -1,9 +1,9 @@
 /* ============================================================================
- * EC224 — floating "Ask the Course AI" button (24/7).
+ * EC224: floating "Ask the Course AI" button (24/7).
  *
  * Drops a quirky, econ-themed floating button (a supply & demand cross inside a
  * chat bubble) into the bottom-right of any page it's loaded on. Click it for a
- * small popover chat — perfect for a quick question. A ↗ button expands to the
+ * small popover chat, perfect for a quick question. A ↗ button expands to the
  * full assistant page (ask.html), carrying whatever you've typed along with it,
  * for longer questions where you want the side-by-side page preview.
  *
@@ -17,7 +17,7 @@
 
   var FULL_PAGE = "ask.html";
 
-  // supply & demand cross in a chat bubble — white, for the round button
+  // supply & demand cross in a chat bubble: white, for the round button
   var FAB_ICON =
     '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.6" ' +
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -84,15 +84,25 @@
 ".ecfab-foot{padding:.5rem .8rem;border-top:1px solid #f0f0f0;font-size:.72rem;color:#6b7280;text-align:center;background:#fafafa;}" +
 ".ecfab-foot a{color:#2563eb;text-decoration:none;font-weight:600;}" +
 ".ecfab-foot a:hover{text-decoration:underline;}" +
+/* On phones the figures fill the width, so the floating button sat on top of
+   figure content (a slider value at the bottom-right of week6 Fig 6.1, for
+   one). Keep the button, it is a headline feature, but shrink it from 60 to
+   48px (still above the 44px tap-target minimum), tuck it lower into the
+   corner, and drop the pulse ring, whose expanding shadow is visually noisy
+   right next to a figure. The peek label was already hidden here. */
 "@media (max-width:480px){.ecfab-pop{right:12px;left:12px;width:auto;bottom:82px;height:auto;top:66px;max-height:none;}" +
-".ecfab-label{display:none;}.ecfab-btn{right:16px;bottom:16px;}}";
+".ecfab-label{display:none;}" +
+".ecfab-btn{right:12px;bottom:12px;width:48px;height:48px;}" +
+".ecfab-btn svg{width:26px;height:26px;}" +
+".ecfab-btn::after{display:none;}" +
+".ecfab-badge{font-size:.5rem;padding:1px 4px;}}";
     var s = document.createElement("style");
     s.textContent = css;
     document.head.appendChild(s);
   }
 
   function build() {
-    if (!window.EC224Bot) { // module missing — fail quietly, no broken UI
+    if (!window.EC224Bot) { // module missing: fail quietly, no broken UI
       console.warn("[ec224] ask-widget: EC224Bot not found (load assets/chatbot.js first)");
       return;
     }
@@ -101,7 +111,7 @@
     var wrap = document.createElement("div");
     wrap.className = "ecfab-wrap";
     wrap.innerHTML =
-      '<div class="ecfab-label">Stuck? Ask the Econ&nbsp;AI &mdash; 24/7</div>' +
+      '<div class="ecfab-label">Stuck? Ask the Econ&nbsp;AI (24/7)</div>' +
       '<button class="ecfab-btn" type="button" aria-label="Ask the Course AI" aria-expanded="false">' +
       '<span class="ecfab-badge">24/7</span><span class="ecfab-ico">' + FAB_ICON + '</span></button>' +
       '<div class="ecfab-pop" role="dialog" aria-label="Ask the Course AI">' +
@@ -127,10 +137,10 @@
     var mount = wrap.querySelector(".ecfab-mount");
     var expandLinks = wrap.querySelectorAll(".ecfab-expand,.ecfab-full");
 
-    // mount the compact chat (bare — the popover supplies the header)
+    // mount the compact chat (bare: the popover supplies the header)
     var handle = window.EC224Bot.mountCompact(mount, {
       bare: true,
-      intro: "Hi! Quick econ question? Ask away — I answer from the EC224 course pages and can show you the exact spot. For a longer dig, hit the ↗ up top.",
+      intro: "Hi! Quick econ question? Ask away: I answer from the EC224 course pages and can show you the exact spot. For a longer dig, hit the ↗ up top.",
       placeholder: "Ask a quick question…",
     });
 

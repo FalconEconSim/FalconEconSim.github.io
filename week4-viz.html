@@ -141,7 +141,7 @@
     </div>
     <p class="fig-intro">
       Drag either point along the demand curve. <strong>Point elasticity</strong> measures responsiveness at a single location
-      using the formula e&nbsp;=&nbsp;&minus;b&middot;P/Q. <strong>Arc (midpoint) elasticity</strong> measures responsiveness
+      using the formula e<sub>d</sub>&nbsp;=&nbsp;&minus;b&middot;P/Q. <strong>Arc (midpoint) elasticity</strong> measures responsiveness
       between two points using the midpoint formula. Toggle between modes to compare how the two methods diverge as the
       gap between points widens.
     </p>
@@ -164,8 +164,8 @@
     </div>
     <p class="fig-intro">
       The demand curve is shaded as a continuous gradient: <strong style="color:#c0392b">red</strong> at the top (elastic,
-      |e|&gt;1), <strong style="color:#e6a817">amber</strong> at the midpoint (unit elastic, |e|=1), and <strong style="color:#1a56db">blue</strong>
-      at the bottom (inelastic, |e|&lt;1). Drag the yellow dot to any point and read off its exact elasticity.
+      |e<sub>d</sub>|&gt;1), <strong style="color:#e6a817">amber</strong> at the midpoint (unit elastic, |e<sub>d</sub>|=1), and <strong style="color:#1a56db">blue</strong>
+      at the bottom (inelastic, |e<sub>d</sub>|&lt;1). Drag the yellow dot to any point and read off its exact elasticity.
       Type your own linear demand equation below to reshape the curve.
     </p>
     <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs2" height="320"></canvas><div class="cvs-overlay" id="cvs2-ov"></div></div></div>
@@ -262,10 +262,10 @@
       <span class="fig-title">Consumer Surplus Triangle</span>
     </div>
     <p class="fig-intro">
-      Consumer surplus (CS) is the area of the triangle between the demand curve and the market price. Use the first slider
+      Consumer surplus (CS) is the area of the triangle above the market price and below the demand curve. Use the first slider
       to set the initial price, then raise it with the second slider to see how CS shrinks, decomposed into the
       <strong style="color:#27ae60">rectangle</strong> (existing buyers now paying more) and the <strong style="color:#e6ac17">exit triangle</strong>
-      (buyers priced out of the market). Click <strong>Show Calculation</strong> to see the step-by-step formula.
+      (buyers who exit the market). Click <strong>Show Calculation</strong> to see the step-by-step formula.
     </p>
     <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs6" height="320"></canvas><div class="cvs-overlay" id="cvs6-ov"></div></div></div>
     <div class="viz-ctrl-row">
@@ -306,6 +306,8 @@
       </div>
     </div>
     <div class="viz-readout" id="v7-readout"></div>
+    <!-- old / new / change readout, baseline is the normal (non-surge) price Pnorm -->
+    <div id="v7-delta" class="delta-bar"></div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.8 -->
@@ -322,7 +324,7 @@
 
     <!-- Manim animation video -->
     <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.75rem;line-height:0;">
-      <video id="v48-video" controls playsinline preload="metadata"
+      <video id="v48-video" data-autoplay controls playsinline preload="metadata"
         style="width:100%;display:block;border-radius:10px;">
         <source src="assets/market-demand.mp4" type="video/mp4">
         Your browser does not support HTML5 video.
@@ -460,7 +462,7 @@ function d3LblNode(id, color, label, lw, ax, ay, extra={}) {
            x: ax + r*Math.cos(ang), y: ay + r*Math.sin(ang), ...extra };
 }
 
-// forceSimulation with collide + weak pull toward each node's anchor —
+// forceSimulation with collide + weak pull toward each node's anchor:
 // exactly the S6/S8 spec.
 function d3LabelSim(nodes) {
   return d3.forceSimulation(nodes)
@@ -470,7 +472,7 @@ function d3LabelSim(nodes) {
 }
 
 // Append connector lines + draggable white rounded-rect label groups
-// (NO anchor dot — matches S6/S8). Returns {conns, gs} selections.
+// (NO anchor dot: matches S6/S8). Returns {conns, gs} selections.
 // `simRef` is a function returning the current simulation (so drag handlers
 // stay valid even if the sim is rebuilt on resize).
 function d3LabelLayer(svg, nodes, simRef) {
@@ -508,7 +510,7 @@ function d3LabelTick(nodes, gs, conns, W, H, left, right, top, bottom) {
 }
 
 // Move a node's anchor to a new (ax,ay), translating x/y by the delta so
-// the label glides smoothly with its curve instead of snapping/drifting —
+// the label glides smoothly with its curve instead of snapping/drifting:
 // the established S6 pattern for slider/drag-driven anchor updates.
 function d3MoveAnchor(node, ax, ay) {
   const dx = ax - node.fx_anchor, dy = ay - node.fy_anchor;
@@ -740,8 +742,8 @@ function v1Draw() {
         <div class="readout-col"><div class="readout-label">Point 2 (e)</div><div class="readout-val" style="color:${eColor(e2)}">${e2.toFixed(3)}</div></div>
       </div>
       <p style="margin-top:0.5rem; font-size:0.83rem; color:var(--muted)">
-        Point 1 is <strong>${ae1>1?'elastic':ae1<1?'inelastic':'unit elastic'}</strong> (|e|=${ae1.toFixed(2)});
-        Point 2 is <strong>${ae2>1?'elastic':ae2<1?'inelastic':'unit elastic'}</strong> (|e|=${ae2.toFixed(2)}).
+        Point 1 is <strong>${ae1>1?'elastic':ae1<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae1.toFixed(2)});
+        Point 2 is <strong>${ae2>1?'elastic':ae2<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae2.toFixed(2)}).
       </p>`;
     dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
     dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
@@ -1071,7 +1073,7 @@ function v3Draw() {
       <div class="readout-col"><div class="readout-label">TR at P<sub>old</sub>=$${Pb}</div><div class="readout-val">$${TRbase.toFixed(0)}</div></div>
       <div class="readout-col"><div class="readout-label">TR at P<sub>new</sub>=$${P}</div><div class="readout-val">$${TRnew.toFixed(0)}</div></div>
       <div class="readout-col"><div class="readout-label">Change in TR</div><div class="readout-val" style="color:${deltaT>=0?'#27ae60':'#e74c3c'}">${deltaT>=0?'+':'-'}$${Math.abs(deltaT).toFixed(0)}</div></div>
-      <div class="readout-col"><div class="readout-label">|e| at P<sub>old</sub></div><div class="readout-val" style="color:${eColor(ed)}">${ae.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">|e<sub>d</sub>| at P<sub>old</sub></div><div class="readout-val" style="color:${eColor(ed)}">${ae.toFixed(2)}</div></div>
     </div>
     <div class="verdict ${Math.abs(P-Pb)<=0.1?'unit':((P>Pb&&deltaT<0)||(P<Pb&&deltaT>0))?'elastic':deltaT===0?'unit':'inelastic'}" style="margin-top:0.4rem">
       ${P>Pb?(deltaT<0?'Price rise hurt TR: demand is elastic over this range (green loss > red gain)':deltaT>0?'Price rise helped TR: demand is inelastic over this range (red gain > green loss)':'Price rise left TR unchanged: red gain exactly offsets green loss'):''}
@@ -1479,6 +1481,19 @@ function v7Draw() {
       ${Q<Qnorm?`<strong>${Qnorm-Q} riders priced out</strong> of the market.`:''}
       ${TR>TRnorm?`Revenue up $${(TR-TRnorm).toFixed(0)} vs normal.`:`Revenue down $${(TRnorm-TR).toFixed(0)} vs normal.`}
     </div>`;
+
+  /* Old / new / change readout. Baseline is the normal (non-surge) price
+     Pnorm, exactly the reference line the dashed "normal $X" label marks,
+     so these numbers agree with the picture. */
+  if (window.ecDelta) {
+    const CSnorm = 0.5*Qnorm*(Pchoke-Pnorm);
+    ecDelta('v7-delta', [
+      { label: 'Surge price',     old: Pnorm,  now: P,  prefix: '$' },
+      { label: 'Riders',          old: Qnorm,  now: Q,  dp: 0 },
+      { label: 'Uber Revenue',    old: TRnorm, now: TR, prefix: '$' },
+      { label: 'Consumer Surplus', old: CSnorm, now: CS, prefix: '$' },
+    ]);
+  }
 }
 
 function v7Update() {
@@ -1963,8 +1978,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('resize', redrawAll4);
 </script>
-  <!-- Ask the Course AI — floating 24/7 assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
+  <script src="assets/deltabar.js"></script>
+  <script src="assets/autoplay-video.js"></script>
 </body>
 </html>

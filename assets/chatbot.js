@@ -1,5 +1,5 @@
 /* ============================================================================
- * EC224 course chatbot — shared dev module.
+ * EC224 course chatbot: shared dev module.
  *
  * window.EC224Bot:
  *   .ask(workerUrl, question)        -> Promise<{answer, answered, sources, matches}>
@@ -8,7 +8,7 @@
  *   .mountCompact(rootEl, opts)      -> builds the compact widget (chat + "show on page" lightbox)
  *
  * The live-preview trick: this script is served from falconeconsim.github.io and so are
- * the course pages, so an <iframe> of a course page is SAME-ORIGIN — which lets us reach
+ * the course pages, so an <iframe> of a course page is SAME-ORIGIN, which lets us reach
  * into it with JS to scroll to, and highlight, the exact sentence the answer came from.
  * (Off the live origin, e.g. file://, that's blocked; we fall back to a plain link.)
  * ==========================================================================*/
@@ -209,7 +209,7 @@
         L.status.textContent = found ? "✓ jumped to the relevant passage"
                                       : "loaded (couldn't auto-locate the exact line)";
       } catch (err) {
-        // cross-origin (off the live site) — can't reach into the frame
+        // cross-origin (off the live site): can't reach into the frame
         L.status.textContent = "preview limited (open from the live site to auto-highlight)";
       }
     };
@@ -222,7 +222,7 @@
     injectWidgetCss();
     var workerUrl = opts.workerUrl || DEFAULT_WORKER;
     var intro = opts.intro ||
-      "Ask me anything about the EC224 course material — I answer only from the course pages, " +
+      "Ask me anything about the EC224 course material: I answer only from the course pages, " +
       "and I can show you the exact spot on the page.";
 
     root.classList.add("ecbot");
@@ -268,7 +268,7 @@
           var s = document.createElement("span");
           s.className = "ecbot-cite ecbot-cite-book";
           s.innerHTML = BOOK_ICON + (m.label || "Course textbook");
-          s.title = "From the course textbook — not published online yet";
+          s.title = "From the course textbook, not published online yet";
           wrap.appendChild(s);
           return;
         }
@@ -316,7 +316,7 @@
         }
       } catch (err) {
         typing.remove();
-        addMsg("Network error — couldn't reach the assistant. Please try again.", "error");
+        addMsg("Network error: couldn't reach the assistant. Please try again.", "error");
       } finally {
         input.disabled = send.disabled = false;
         input.focus();

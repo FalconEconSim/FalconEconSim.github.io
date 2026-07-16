@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-EC224 RAG ingest — run once locally.
+EC224 RAG ingest: run once locally.
 
 Crawls https://falconeconsim.github.io, extracts meaningful page text (skipping
 nav/footer/script/etc.), chunks it (~500 words, 50-word overlap), embeds each
 chunk with Google text-embedding-004, and upserts the vectors + {text,url,title}
 metadata into the Pinecone index `ec224`.
 
-Secrets are read from the environment (or a local .env file) — never hardcode them:
+Secrets are read from the environment (or a local .env file), never hardcode them:
     GEMINI_API_KEY, PINECONE_API_KEY
 
 Usage:
@@ -163,7 +163,7 @@ def crawl():
             if is_crawlable(link) and link not in seen:
                 queue.append(link)
 
-    print(f"\n[crawl] done — {len(pages)} content pages\n")
+    print(f"\n[crawl] done: {len(pages)} content pages\n")
     return pages
 
 
@@ -177,7 +177,7 @@ def path_to_url(rel_path):
 def crawl_local(root):
     """Read the repo's own *.html from disk instead of crawling over HTTP.
 
-    Used by CI so we embed exactly what was just pushed — no waiting for the
+    Used by CI so we embed exactly what was just pushed, no waiting for the
     GitHub Pages redeploy, no stale-content race. Applies the SAME exclude
     filters as the live crawl so the embedded set matches production."""
     pages = []
@@ -202,7 +202,7 @@ def crawl_local(root):
                 print(f"[local] + {len(text.split()):5d} words  {rel}  ->  {url}")
             else:
                 print(f"[local] - skipped (only {len(text.split())} words)  {rel}")
-    print(f"\n[local] done — {len(pages)} content pages from {root}\n")
+    print(f"\n[local] done: {len(pages)} content pages from {root}\n")
     return pages
 
 
@@ -307,7 +307,7 @@ def main():
               f"({sum(len(p['text'].split()) for p in pages)} words total). Exiting (no API calls).")
         return
     if not pages:
-        sys.exit("No pages crawled — check the base URL / network.")
+        sys.exit("No pages crawled: check the base URL / network.")
     chunks = build_chunks(pages)
 
     print("[embed+upsert] starting…")

@@ -1,4 +1,4 @@
-/* theme.js — light/dark toggle for the EC224 hub pages (chrome only).
+/* theme.js: light/dark toggle for the EC224 hub pages (chrome only).
    Runs in <head> (no defer) so the theme is set before first paint. */
 (function () {
   var KEY = 'ec224-theme';

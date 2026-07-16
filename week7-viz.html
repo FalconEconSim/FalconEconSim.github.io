@@ -231,24 +231,24 @@
       <span class="fig-title">Supply Curve Emergence</span>
     </div>
     <p class="fig-intro">
-      Watch the price sweep upward from zero. Below the shutdown price (min SAVC = $4), the firm supplies nothing.
+      Watch the price sweep upward from zero. Below the shutdown price (min(SAVC) = $4), the firm supplies nothing.
       Once price crosses $4, the SMC curve becomes the supply curve and each (q, P) point traces out in the right
-      panel&mdash;building the supply curve dot by dot.
+      panel, building the supply curve dot by dot.
     </p>
     <div class="insight-box" style="margin-top:0;margin-bottom:0.9rem;">
       <strong>The core idea: how we get a supply curve out of a cost curve.</strong>
       <ol style="margin:0.4rem 0 0.2rem 1.1rem;padding:0;line-height:1.7;">
         <li>Pick a price <em>P</em>.</li>
-        <li>The firm maximizes profit by producing where <strong>MC = P</strong> (the profit-maximizing rule).</li>
+        <li>The firm maximizes profit by producing where <strong>P = SMC</strong> (the profit-maximizing rule).</li>
         <li>That intersection pins down a specific quantity <em>q</em>.</li>
         <li>Plot the point <strong>(q, P)</strong>: that's one point on the firm's supply curve.</li>
         <li>Repeat for every price &hellip; and the dots you trace out land <em>exactly on the SMC curve</em>.</li>
       </ol>
-      <strong>That's why the marginal cost curve (above the shutdown point) <em>is</em> the firm's supply curve</strong>:
-      profit-maximization (MC = P) directly maps each price to the quantity the firm will supply at that price.
+      <strong>That's why the SMC curve (above the shutdown point) <em>is</em> the firm's supply curve</strong>:
+      profit-maximization (P = SMC) directly maps each price to the quantity the firm will supply at that price.
     </div>
     <div class="cvs-wrap" style="background:#000;border-radius:10px;overflow:hidden;">
-      <video id="v75-video" controls style="width:100%;display:block;"
+      <video id="v75-video" data-autoplay controls playsinline preload="metadata" style="width:100%;display:block;"
         src="media/videos/fig75_supply_emergence_manim/1080p60/SupplyEmergence.mp4">
         Your browser does not support HTML5 video.
       </video>
@@ -335,6 +335,9 @@
       <button class="viz-btn" onclick="resetV79Labels()">Reset labels</button>
     </div>
     <div class="viz-readout" id="v79-readout"></div>
+    <!-- old / new / change readout, baseline is the n at which the current run started
+         (150 for entry, 450 for exit, matching the button that was clicked) -->
+    <div id="v79-delta" class="delta-bar"></div>
     <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly, just not earning excess returns.</div>
   </section>
 
@@ -354,7 +357,12 @@
 const ML=42,MR=18,MT=18,MB=32;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
-function resolveLabels(items, linePts=[], iter=150, pad=6) {
+/* bounds: optional {x0,y0,x1,y1} in canvas pixels. Without it the sim pushes
+   labels apart and away from curves but nothing keeps them on the canvas, so
+   at narrow widths they get shoved off the edge and clipped. Clamping runs
+   inside the iteration loop so a clamped label still takes part in later
+   collision passes rather than freezing on top of a neighbour. */
+function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
   for (let it=0; it<iter; it++) {
     for (let i=0; i<items.length; i++) {
       for (let j=i+1; j<items.length; j++) {
@@ -377,6 +385,13 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
           lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
           lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
         }
+      }
+    }
+    if (bounds) {
+      // (x,y) is the label box's top-left, so the far edge is x+w / y+h.
+      for (const lm of items) {
+        lm.x = Math.max(bounds.x0, Math.min(lm.x, bounds.x1 - lm.w));
+        lm.y = Math.max(bounds.y0, Math.min(lm.y, bounds.y1 - lm.h));
       }
     }
   }
@@ -553,7 +568,7 @@ function v71Draw(){
     {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:'#e74c3c',fontSize:10,bold:true},
     {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText('TR').width+8,h:13,text:'TR',color:'#1a56db',fontSize:10,bold:true},
   ];
-  resolveLabels(lbls71,linePts71,80);
+  resolveLabels(lbls71,linePts71,80,6,{x0:2,y0:2,x1:W-2,y1:HA-2});
   lbls71.forEach(l=>drawForceLabel(ctxA,l));
 
   for(let q=0;q<=9;q+=0.1){
@@ -995,7 +1010,7 @@ function v73Draw_OLD_UNUSED(P){
 } // end v73Draw_OLD_UNUSED
 
 // NOTE: per Prof. Sunder's feedback, the algebraic proof of the shutdown rule
-// (steps above) is now always visible — it never changes, so there's no need
+// (steps above) is now always visible, it never changes, so there's no need
 // to gate it behind a "Next Step" click. Only the price (and the resulting
 // produce/shut-down zone) is dynamic, via the slider below.
 
@@ -1056,7 +1071,7 @@ function v75InitSvg(){
   d3AddAxes2(v75svgB,v75scXb,v75scYb,'q (supply)','P');
   // Faint reference overlay of the MC curve (above shutdown point), revealed once the
   // sweep completes -- so students can see the accumulated dots land exactly on it.
-  // (rising branch only — see the chord note above; q<2.95 excludes the
+  // (rising branch only, see the chord note above; q<2.95 excludes the
   // descending branch that also satisfies v >= PSD)
   {const pts=[];for(let q=0.4;q<=7;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax||q<2.95)continue;pts.push([v75scXb(q),v75scYb(v)]);}
   v75mcOverlay=v75svgB.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2.5)
@@ -1094,10 +1109,10 @@ function v75DrawPanels(){
   const ro=document.getElementById('v75-readout');
   if(ro){
     if(v75P<=0) ro.innerHTML=`Press "Animate" to watch the supply curve emerge.`;
-    else if(v75P<PSD75)ro.innerHTML=`Step 1&ndash;3: P=$${v75P.toFixed(2)} &lt; P<sub>SD</sub>=$${PSD75} (min SAVC) &rarr; producing would lose more than shutting down. The firm supplies <strong>q = 0</strong>.`;
+    else if(v75P<PSD75)ro.innerHTML=`Step 1 to 3: P=$${v75P.toFixed(2)} &lt; P<sub>SD</sub>=$${PSD75} (min SAVC) &rarr; producing would lose more than shutting down. The firm supplies <strong>q = 0</strong>.`;
     else if(v75P<13.4){
       const q=qStar7(v75P);
-      ro.innerHTML=`Step 1&ndash;4: at P=$${v75P.toFixed(2)}, the profit-maximizing rule <strong>MC = P</strong> is satisfied at <strong>q = ${q.toFixed(2)}</strong> (purple dot, left). That pins down the point <strong>(q, P) = (${q.toFixed(2)}, $${v75P.toFixed(2)})</strong>, plotted on the right.`;
+      ro.innerHTML=`Step 1 to 4: at P=$${v75P.toFixed(2)}, the profit-maximizing rule <strong>MC = P</strong> is satisfied at <strong>q = ${q.toFixed(2)}</strong> (purple dot, left). That pins down the point <strong>(q, P) = (${q.toFixed(2)}, $${v75P.toFixed(2)})</strong>, plotted on the right.`;
     } else {
       ro.innerHTML=`Step 5: sweep complete. The accumulated (q, P) points trace out a curve identical to SMC (dashed overlay, right). <strong>The MC curve above the shutdown point IS the firm's supply curve.</strong>`;
     }
@@ -1321,20 +1336,31 @@ function v78DrawMath(n){
       <tbody style="font-family:'DM Mono',monospace;">${rows}</tbody>
     </table>`;
   document.getElementById('v78-readout').innerHTML=
-    `<strong>Horizontal summation:</strong> At P = $8, each of ${n} firms supplies q* = 2 units, so market supply Q = ${n} &times; 2 = <strong>${n*2} units</strong>. Add quantities at each price&mdash;never add prices.`;
+    `<strong>Horizontal summation:</strong> At P = $8, each of ${n} firms supplies q* = 2 units, so market supply Q = ${n} &times; 2 = <strong>${n*2} units</strong>. Add quantities at each price, never add prices.`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
 // FIG 7.9: LONG-RUN ENTRY/EXIT
 // ─────────────────────────────────────────────────────────────────────────
 // Long-run (zero-economic-profit) equilibrium for this market is where P = min(SAC) ≈ $5.51,
-// which occurs at n ≈ 297-298. We use n=297 (P≈$5.51, profit≈ +$0.01 ≈ 0) as the LR target —
+// which occurs at n ≈ 297-298. We use n=297 (P≈$5.51, profit≈ +$0.01 ≈ 0) as the LR target,
 // firms start with a clear profit (entry, n=150) or a clear loss (exit, n=450) and the
 // simulation runs them toward this same zero-profit point from opposite directions.
 const V79_LR_N=297;
 let v79n=150, v79animId=null;
 // Qd=500-50P, Qs=n*(P-4)/2 => P=(500+2n)/(50+n/2)=(1000+4n)/(100+n)
 function v79PofN(n){return(1000+4*n)/(100+n);}
+// n, P*, and firm profit at a given n; used both to draw the current frame and
+// to snapshot the baseline ("old") state whenever a run starts.
+function v79Stats(n){
+  const P=v79PofN(n);
+  const q=qStar7(P);
+  const profit=q*(P-SAC7(q));
+  return {n,P,profit};
+}
+// Baseline for the delta readout: the n a run started from. Defaults to the
+// page's initial n=150 so the bar reads "no change yet" before any button click.
+let v79Start=v79Stats(150);
 // ── FIG 7.9 D3 SVG ───────────────────────────────────────────────────────
 let v79svgA=null,v79svgB=null;
 let v79nodesA=null,v79simA=null,v79gsA=null,v79connsA=null;
@@ -1455,11 +1481,24 @@ function v79Draw(){
       <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar7(P).toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'#27ae60':'#e74c3c'}">${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'+':''}$${(qStar7(P)*(P-SAC7(qStar7(P)))).toFixed(2)}</div></div>
     </div>`;
+
+  /* Old / new / change readout. Baseline is v79Start, the n the current run
+     began from (150 for entry, 450 for exit, or the page's initial n=150),
+     so the numbers track exactly the convergence-to-zero-profit story the
+     figure and its caption describe. */
+  if (window.ecDelta) {
+    const cur=v79Stats(n);
+    ecDelta('v79-delta', [
+      { label: 'Firms (n)',            old: v79Start.n,      now: cur.n,      dp: 0 },
+      { label: 'Equilibrium price P*', old: v79Start.P,      now: cur.P,      prefix: '$' },
+      { label: 'Firm profit',          old: v79Start.profit, now: cur.profit, prefix: '$' },
+    ]);
+  }
 }
 function v79RunEntry(){
-  // Entry: start where firms are PROFITABLE (P > SAC) — positive profit attracts new
+  // Entry: start where firms are PROFITABLE (P > SAC), positive profit attracts new
   // entrants. Supply grows, price falls, until profit is competed down to zero.
-  v79n=150;v79Draw();
+  v79n=150;v79Start=v79Stats(v79n);v79Draw();
   if(v79animId)clearInterval(v79animId);
   v79animId=setInterval(()=>{
     if(v79n>=V79_LR_N){clearInterval(v79animId);v79animId=null;return;}
@@ -1467,9 +1506,9 @@ function v79RunEntry(){
   },40);
 }
 function v79RunExit(){
-  // Exit: start where firms are LOSING money (P < SAC) — losses push firms out of the
+  // Exit: start where firms are LOSING money (P < SAC), losses push firms out of the
   // industry. Supply shrinks, price rises, until losses are eliminated at zero profit.
-  v79n=450;v79Draw();
+  v79n=450;v79Start=v79Stats(v79n);v79Draw();
   if(v79animId)clearInterval(v79animId);
   v79animId=setInterval(()=>{
     if(v79n<=V79_LR_N){clearInterval(v79animId);v79animId=null;return;}
@@ -1478,7 +1517,7 @@ function v79RunExit(){
 }
 function v79Reset(){
   if(v79animId){clearInterval(v79animId);v79animId=null;}
-  v79n=150;v79Draw();
+  v79n=150;v79Start=v79Stats(v79n);v79Draw();
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1526,8 +1565,10 @@ window.addEventListener('DOMContentLoaded',()=>{
 function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
 function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
 </script>
-  <!-- Ask the Course AI — floating 24/7 assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
+  <script src="assets/deltabar.js"></script>
+  <script src="assets/autoplay-video.js"></script>
 </body>
 </html>

@@ -886,8 +886,8 @@ var IC_INFO = {
     label:'Perfect Substitutes',
     fn:'\\(U(X,Y)=X+Y\\)',
     shape:'Straight parallel lines with slope \\(-1\\)',
-    mrs:'Constant: \\(MRS=1\\) everywhere',
-    desc:'The consumer substitutes X and Y at a constant one-for-one rate everywhere on the IC. Because the MRS is constant and equal to 1, the ICs are straight lines with slope -1. The optimal bundle is always a corner solution: spend everything on whichever good has a lower price per unit of utility.'
+    mrs:'Constant: \\(MRS=a/b\\) everywhere. Shown here for \\(a=b=1\\), so \\(MRS=1\\)',
+    desc:'The consumer substitutes X and Y at a constant rate everywhere on the IC, so the ICs are straight lines. In general perfect substitutes are \\(U = aX + bY\\), giving a constant \\(MRS = a/b\\) and a slope of \\(-a/b\\). This panel shows the equal-value case \\(a = b = 1\\), where MRS is 1 and the slope is -1. The optimal bundle is always a corner solution: spend everything on whichever good gives more utility per dollar, comparing \\(a/P_X\\) against \\(b/P_Y\\). Careful, that is not always just the cheaper good; it only reduces to "buy the cheaper one" when a = b. Fig 2.10 lets you vary a and b and watch the corner flip.'
   },
   complements: {
     label:'Perfect Complements',
@@ -1440,8 +1440,8 @@ var IC_INFO = {
     label:'Perfect Substitutes',
     fn:'\\(U(X,Y)=X+Y\\)',
     shape:'Straight parallel lines with slope \\(-1\\)',
-    mrs:'Constant: \\(MRS=1\\) everywhere',
-    desc:'The consumer substitutes X and Y at a constant one-for-one rate everywhere on the IC. Because the MRS is constant and equal to 1, the ICs are straight lines with slope -1. The optimal bundle is always a corner solution: spend everything on whichever good has a lower price per unit of utility.'
+    mrs:'Constant: \\(MRS=a/b\\) everywhere. Shown here for \\(a=b=1\\), so \\(MRS=1\\)',
+    desc:'The consumer substitutes X and Y at a constant rate everywhere on the IC, so the ICs are straight lines. In general perfect substitutes are \\(U = aX + bY\\), giving a constant \\(MRS = a/b\\) and a slope of \\(-a/b\\). This panel shows the equal-value case \\(a = b = 1\\), where MRS is 1 and the slope is -1. The optimal bundle is always a corner solution: spend everything on whichever good gives more utility per dollar, comparing \\(a/P_X\\) against \\(b/P_Y\\). Careful, that is not always just the cheaper good; it only reduces to "buy the cheaper one" when a = b. Fig 2.10 lets you vary a and b and watch the corner flip.'
   },
   complements: {
     label:'Perfect Complements',
@@ -1550,7 +1550,8 @@ function updateFamilyLegend(type, alpha, levels, cols) {
   var rows = levels.map(function(k, idx) {
     var uLabel;
     if (type === 'cobb')        uLabel = 'U = ' + k.toFixed(1);
-    else if (type === 'substitutes') uLabel = 'U = X+Y = ' + k.toFixed(1);
+    // a = b = 1 case, so aX + bY reduces to X + Y here.
+    else if (type === 'substitutes') uLabel = 'U = aX+bY = X+Y = ' + k.toFixed(1);
     else if (type === 'complements') uLabel = 'U = min(X,Y) = ' + k.toFixed(1);
     else if (type === 'neutral')     uLabel = 'U = X = ' + k.toFixed(1);
     else if (type === 'bad')         uLabel = 'U = X−Y = ' + k.toFixed(1);
@@ -1742,7 +1743,7 @@ function initShiftBoard() {
     if (shiftOverlay) shiftOverlay.kick();
   });
   document.getElementById('shift-mag').addEventListener('input',function(){
-    document.getElementById('shift-mag-val').textContent=this.value+'%';
+    document.getElementById('shift-mag-val').textContent=parseFloat(this.value).toFixed(0)+'%';
     buildShiftBoard();
   });
 }
@@ -1826,6 +1827,18 @@ function buildShiftBoard() {
   document.getElementById('shift-change-label').textContent=lbl+' '+Math.round(mag*100)+'%';
   document.getElementById('shift-slope1').textContent=(-Px0/Py0).toFixed(3);
   document.getElementById('shift-slope2').textContent=(-Px2/Py2).toFixed(3);
+
+  /* Old / new / change readout. Baseline is the I0/Px0/Py0 budget line that
+     stays drawn on the board, so these numbers describe exactly the move from
+     the original line to the shifted one. Intercepts are what a student
+     actually reads off the axes, so they lead. */
+  if (window.ecDelta) {
+    ecDelta('shift-delta', [
+      { label: 'X-intercept (I/Px)', old: xi1, now: xi2 },
+      { label: 'Y-intercept (I/Py)', old: yi1, now: yi2 },
+      { label: 'Slope (-Px/Py)',     old: -Px0/Py0, now: -Px2/Py2 },
+    ]);
+  }
   document.getElementById('shift-fixed').textContent=
     type.startsWith('px')?'Y-intercept I/P\u1D67':
     type.startsWith('py')?'X-intercept I/P\u2093':'Neither (parallel shift)';
@@ -1986,7 +1999,7 @@ function renderOptDerivPanel() {
 
   if (!showAll || steps.length === 0) {
     dp.innerHTML = '';
-    if (btn) { btn.textContent = 'Show Steps 1–3'; btn.style.background = 'var(--accent-lt)'; btn.style.color = 'var(--accent)'; btn.style.borderColor = 'var(--accent)'; }
+    if (btn) { btn.textContent = 'Show Steps 1 to 3'; btn.style.background = 'var(--accent-lt)'; btn.style.color = 'var(--accent)'; btn.style.borderColor = 'var(--accent)'; }
   } else {
     var html = '';
     steps.forEach(function(s, i) {
@@ -3156,7 +3169,7 @@ function buildCornerExplorer() {
 
         <div class="lo-callout">
           <span class="lo-label">Economic Intuition - Preference Types &amp; the Shape of ICs</span>
-          The <strong>shape</strong> of the IC encodes everything about preferences. For <em>Cobb-Douglas</em>, a controls the spending share on X: a = 0.7 means 70% of income always goes to X regardless of prices - try it. <em>Perfect substitutes</em> have constant MRS = 1 everywhere, so the consumer is always willing to swap one X for one Y. <em>Perfect complements</em> have ICs that are L-shaped: consuming more of one good without the other adds zero utility (like left and right shoes). Moving to a higher IC always means higher utility - so ICs further from the origin are always preferred.
+          The <strong>shape</strong> of the IC encodes everything about preferences. For <em>Cobb-Douglas</em>, a controls the spending share on X: a = 0.7 means 70% of income always goes to X regardless of prices - try it. <em>Perfect substitutes</em> have a constant MRS everywhere: for \(U = aX + bY\) the MRS is a/b. The panel below shows the equal-value case a = b = 1, where the consumer swaps one X for one Y; Fig 2.10 lets you change a and b. <em>Perfect complements</em> have ICs that are L-shaped: consuming more of one good without the other adds zero utility (like left and right shoes). Moving to a higher IC always means higher utility - so ICs further from the origin are always preferred.
         </div>
 
         <!-- IC TYPES EXPLORER -->
@@ -3187,10 +3200,10 @@ function buildCornerExplorer() {
                   <input type="range" id="ic-alpha" min="0.1" max="0.9" step="any" value="0.5" aria-label="Alpha: Cobb-Douglas spending share on X" />
                 </div>
               </div>
-              <div class="ctrl-group" id="subst-ctrl" style="display:none">
-                <label>MRS = a/b, where a = <span class="ctrl-val" id="subst-val">1</span></label>
-                <input type="range" id="subst-slider" min="0.5" max="3" step="any" value="1" aria-label="MRS ratio parameter a for perfect substitutes" />
-              </div>
+              <!-- A hidden, never-wired "MRS = a/b" slider used to sit here. Removed:
+                   Fig 2.10 (Corner Solution Explorer) already varies a AND b with a live
+                   bang-for-the-buck readout, so this would have been a worse duplicate
+                   exposing only a. This figure shows the a = b = 1 case; the text says so. -->
             </div>
 
             <div style="border-top:1px solid var(--rule);">
@@ -3439,6 +3452,8 @@ function buildCornerExplorer() {
                 <div style="font-size:0.8rem;color:var(--ink-light);line-height:1.5" id="shift-description">
                   A parallel shift means <strong>only income changed</strong>. Both intercepts move proportionally; the slope is set by prices alone.
                 </div>
+                <!-- old / new / change readout, baseline is I=100, Px=5, Py=4 -->
+                <div id="shift-delta" class="delta-bar"></div>
               </div>
               <!-- RIGHT SUB-COL: economic context -->
               <div style="display:flex;flex-direction:column;gap:0.75rem;">
@@ -3536,7 +3551,7 @@ function buildCornerExplorer() {
                 <div id="opt-deriv-panel" style="font-size:0.84rem;line-height:1.65;color:var(--ink-light);">
                   <!-- updated by buildOptimumBoard() -->
                 </div>
-                <button id="opt-steps-toggle" onclick="toggleOptSteps()" style="display:block;width:100%;margin-top:0.6rem;font-family:var(--mono);font-size:0.82rem;font-weight:600;border:1.5px solid var(--accent);background:var(--accent-lt);color:var(--accent);border-radius:8px;padding:0.55rem 1rem;cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;" title="Show the full algebraic derivation step by step">Show Steps 1–3</button>
+                <button id="opt-steps-toggle" onclick="toggleOptSteps()" style="display:block;width:100%;margin-top:0.6rem;font-family:var(--mono);font-size:0.82rem;font-weight:600;border:1.5px solid var(--accent);background:var(--accent-lt);color:var(--accent);border-radius:8px;padding:0.55rem 1rem;cursor:pointer;transition:all 0.18s;letter-spacing:0.04em;" title="Show the full algebraic derivation step by step">Show Steps 1 to 3</button>
                 <hr class="divider-sm"/>
                 <div class="stat-row">
                   <span class="stat-label">X* (optimal X)</span>
@@ -3770,7 +3785,7 @@ function buildCornerExplorer() {
           <div class="viz-controls">
             <div class="ctrl-group" style="flex:1">
               <label>Drag the inner IC upward to try to make them cross</label>
-              <input type="range" id="iccross-u2" min="2" max="9" step="any" value="3" aria-label="Inner indifference curve utility level — drag up to try to make curves cross" />
+              <input type="range" id="iccross-u2" min="2" max="9" step="any" value="3" aria-label="Inner indifference curve utility level, drag up to try to make curves cross" />
               <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-top:2px;"><span>Inner IC low</span><span>Move up to cross</span></div>
             </div>
           </div>
@@ -4025,8 +4040,9 @@ document.querySelectorAll('.viz-toc nav a').forEach(function(link) {
   function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
   function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 </script>
-  <!-- Ask the Course AI — floating 24/7 assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
+  <script src="assets/deltabar.js"></script>
 </body>
 </html>

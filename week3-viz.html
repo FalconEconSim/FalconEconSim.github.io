@@ -247,7 +247,7 @@
         <div class="viz-body">
           <!-- Video + speed controls -->
           <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.75rem;line-height:0;">
-            <video id="v1-video" controls playsinline preload="metadata"
+            <video id="v1-video" data-autoplay controls playsinline preload="metadata"
               style="width:100%;display:block;border-radius:10px;">
               <source src="assets/demand-derivation.mp4" type="video/mp4">
               Your browser does not support HTML5 video.
@@ -332,30 +332,30 @@
             <div>
               <div class="scoreboard">
                 <div class="sb-title">Slutsky Scoreboard</div>
-                <div class="sb-row"><span class="sb-lbl">Bundle A (original)</span><span class="sb-num" id="v2-a">–</span></div>
-                <div class="sb-row"><span class="sb-lbl">Bundle C (compensated)</span><span class="sb-num" id="v2-c">–</span></div>
-                <div class="sb-row"><span class="sb-lbl">Bundle B (new)</span><span class="sb-num" id="v2-b">–</span></div>
+                <div class="sb-row"><span class="sb-lbl">Bundle A (original)</span><span class="sb-num" id="v2-a">-</span></div>
+                <div class="sb-row"><span class="sb-lbl">Bundle C (compensated)</span><span class="sb-num" id="v2-c">-</span></div>
+                <div class="sb-row"><span class="sb-lbl">Bundle B (new)</span><span class="sb-num" id="v2-b">-</span></div>
                 <div class="sb-row" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--rule);">
-                  <span class="sb-lbl" style="color:var(--purple);">SE = X<sub>C</sub> – X<sub>A</sub></span>
-                  <span class="sb-num" style="color:var(--purple);" id="v2-se">–</span>
+                  <span class="sb-lbl" style="color:var(--purple);">SE = X<sub>C</sub> - X<sub>A</sub></span>
+                  <span class="sb-num" style="color:var(--purple);" id="v2-se">-</span>
                 </div>
                 <div class="sb-row">
-                  <span class="sb-lbl" style="color:var(--red);">IE = X<sub>B</sub> – X<sub>C</sub></span>
-                  <span class="sb-num" style="color:var(--red);" id="v2-ie">–</span>
+                  <span class="sb-lbl" style="color:var(--red);">IE = X<sub>B</sub> - X<sub>C</sub></span>
+                  <span class="sb-num" style="color:var(--red);" id="v2-ie">-</span>
                 </div>
                 <div class="sb-row">
                   <span class="sb-lbl">Total Effect</span>
-                  <span class="sb-num" id="v2-te">–</span>
+                  <span class="sb-num" id="v2-te">-</span>
                 </div>
                 <div class="sb-row" style="background:var(--accent-lt);border-radius:4px;padding:0.4rem 0.5rem;margin-top:0.4rem;">
                   <span class="sb-lbl" style="color:var(--accent);">Good type</span>
-                  <span class="sb-num" style="color:var(--accent);" id="v2-type">–</span>
+                  <span class="sb-num" style="color:var(--accent);" id="v2-type">-</span>
                 </div>
               </div>
             </div>
           </div>
           <div class="callout common-mistake" style="margin-top:1rem;">
-            <strong>Remember:</strong> The compensated budget line has the <em>new</em> slope (–P<sub>X,new</sub>/P<sub>Y</sub>) but provides just enough income to maintain the original utility U<sub>A</sub>. Point C is its tangency with the original IC. SE is always negative for own-price increases.
+            <strong>Remember:</strong> The compensated budget line has the <em>new</em> slope (-P<sub>X,new</sub>/P<sub>Y</sub>) but provides just enough income to maintain the original utility U<sub>A</sub>. Point C is its tangency with the original IC. SE is always negative for own-price increases.
           </div>
         </div>
       </div>
@@ -409,11 +409,13 @@
             </div>
           </div>
           <div class="stat-grid" style="margin-top:0.8rem;">
-            <div class="stat-box"><div class="stat-label">X* (optimal)</div><div class="stat-val" id="v3-xstar">–</div></div>
-            <div class="stat-box"><div class="stat-label">Y* (optimal)</div><div class="stat-val" id="v3-ystar">–</div></div>
-            <div class="stat-box"><div class="stat-label">∂X*/∂I (sign)</div><div class="stat-val" id="v3-dxi">–</div></div>
-            <div class="stat-box"><div class="stat-label">Demand shift direction</div><div class="stat-val" id="v3-shift">–</div></div>
+            <div class="stat-box"><div class="stat-label">X* (optimal)</div><div class="stat-val" id="v3-xstar">-</div></div>
+            <div class="stat-box"><div class="stat-label">Y* (optimal)</div><div class="stat-val" id="v3-ystar">-</div></div>
+            <div class="stat-box"><div class="stat-label">∂X*/∂I (sign)</div><div class="stat-val" id="v3-dxi">-</div></div>
+            <div class="stat-box"><div class="stat-label">Demand shift direction</div><div class="stat-val" id="v3-shift">-</div></div>
           </div>
+          <!-- old / new / change readout, baseline is income I0 = $80 -->
+          <div id="v3-delta" class="delta-bar"></div>
         </div>
       </div>
     </section>
@@ -483,10 +485,10 @@
                 <div id="v5-formula" style="font-size:0.9rem;line-height:2;"></div>
               </div>
               <div class="stat-grid" style="margin-top:0.6rem;">
-                <div class="stat-box"><div class="stat-label">X* =</div><div class="stat-val" id="v5-xstar">–</div></div>
-                <div class="stat-box"><div class="stat-label">Y* =</div><div class="stat-val" id="v5-ystar">–</div></div>
-                <div class="stat-box"><div class="stat-label">P<sub>X</sub>·X* (expenditure)</div><div class="stat-val" id="v5-expx">–</div></div>
-                <div class="stat-box"><div class="stat-label">Curve effect of P<sub>Y</sub></div><div class="stat-val" id="v5-pyeff">–</div></div>
+                <div class="stat-box"><div class="stat-label">X* =</div><div class="stat-val" id="v5-xstar">-</div></div>
+                <div class="stat-box"><div class="stat-label">Y* =</div><div class="stat-val" id="v5-ystar">-</div></div>
+                <div class="stat-box"><div class="stat-label">P<sub>X</sub>·X* (expenditure)</div><div class="stat-val" id="v5-expx">-</div></div>
+                <div class="stat-box"><div class="stat-label">Curve effect of P<sub>Y</sub></div><div class="stat-val" id="v5-pyeff">-</div></div>
               </div>
             </div>
             <div class="viz-panel">
@@ -736,7 +738,7 @@ function v1RebuildOverlay() {
   const toCss = (cx, cy) => [cx / dpr, cy / dpr];
 
   // ---- Left panel: "X*=" and "P=$" labels for the current bundle ----
-  // (only present once at least one step has been taken — matches the
+  // (only present once at least one step has been taken: matches the
   //  canvas's own `isCurrent` gating, which requires v1CurrStep > 0)
   {
     const ov = d3OverlaySvg('cv1-left-ov');
@@ -794,7 +796,7 @@ function v1UpdateOverlayAnchors() {
 
   const hadL = !!v1OvL, wantL = (v1CurrStep > 0);
   if (hadL !== wantL) {
-    // Transition into/out of "at least one step taken" — rebuild cleanly.
+    // Transition into/out of "at least one step taken": rebuild cleanly.
     v1RebuildOverlay();
     return;
   }
@@ -1294,7 +1296,7 @@ function drawV2() {
   const segNew   = b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
   // Curve-name labels ("Original"/"Compensated"/"New") are rendered by the
   // D3 SVG overlay below as draggable force-labels (S6/S8 gold-standard style)
-  // instead of fixed JSXGraph text — see d3v2InitOverlay().
+  // instead of fixed JSXGraph text: see d3v2InitOverlay().
 
   // ICs
   const alpha = 0.5;
@@ -1328,7 +1330,7 @@ function drawV2() {
   document.getElementById('v2-type').textContent = isNorm ? 'Normal Good' : 'Inferior Good';
 
   // Curve-name + bracket labels as a draggable D3 SVG force-label overlay
-  // (white rounded-rect boxes, 9px/600 'DM Sans', dashed connectors — S6/S8 style)
+  // (white rounded-rect boxes, 9px/600 'DM Sans', dashed connectors, S6/S8 style)
   d3v2InitOverlay(b, {
     segOrig, segHicks, segNew, segSE, segIE,
     xiA, yi, xiHicks, yHicksInt, xiB,
@@ -1482,7 +1484,7 @@ function initViz3() {
 
   // Draw expansion path (static dashed line). Its label is rendered by the
   // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
-  // fixed JSXGraph text — see d3v3InitOverlay().
+  // fixed JSXGraph text: see d3v3InitOverlay().
   let v3IepAnchorX, v3IepAnchorY, v3IepLabel;
   if (v3Type === 'normal') {
     // Ray from origin slope = (V3_Px/V3_Py) = 2/3
@@ -1584,6 +1586,18 @@ function initViz3() {
     document.getElementById('v3-dxi').textContent    = dxdi;
     const dir = v3Type === 'normal' ? 'Rightward (demand up)' : 'Leftward (demand down)';
     document.getElementById('v3-shift').textContent  = dir;
+
+    /* Old / new / change readout. Baseline is the I0 = $80 dashed D curve, so
+       these numbers describe exactly the move the dashed-to-solid shift shows.
+       X* IS the quantity demanded at Px = $2 (qAt2 returns v3Xstar), so it is
+       listed once, not twice. */
+    if (window.ecDelta) {
+      ecDelta('v3-delta', [
+        { label: 'Income I',                    old: V3_I0,          now: I, prefix: '$' },
+        { label: 'X* (quantity demanded at $2)', old: v3Xstar(V3_I0), now: xs },
+        { label: 'Y* (optimal)',                old: v3Ystar(V3_I0), now: ys },
+      ]);
+    }
   }
 
   redrawV3();
@@ -1594,7 +1608,7 @@ function initViz3() {
      freed JSXGraph boards. Property assignment replaces the old handler. */
   document.getElementById('v3-income').oninput = function() {
     v3Income = parseFloat(this.value);
-    document.getElementById('v3-i-val').textContent = `$${v3Income}`;
+    document.getElementById('v3-i-val').textContent = `$${v3Income.toFixed(2)}`;
     redrawV3();
   };
 }
@@ -1744,7 +1758,7 @@ function d3v5UpdateOverlay(b, safAdj) {
 function initViz5() {
   v5b = freeB(v5b);
   v5Curve = null; v5Pt = null;
-  v5Ov = null; // board is being recreated — overlay must rebuild against the new board
+  v5Ov = null; // board is being recreated: overlay must rebuild against the new board
   v5b = JXG.JSXGraph.initBoard('jxg-v5',{
     boundingbox:[-2,8.8,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
@@ -1769,7 +1783,7 @@ function initViz5() {
       v5I  = parseFloat(document.getElementById('v5-income').value);
       document.getElementById('v5-px-val').textContent = `$${v5Px.toFixed(2)}`;
       document.getElementById('v5-py-val').textContent = `$${v5Py.toFixed(2)}`;
-      document.getElementById('v5-i-val').textContent  = `$${v5I}`;
+      document.getElementById('v5-i-val').textContent  = `$${v5I.toFixed(2)}`;
       redrawV5();
     });
   });
@@ -1836,8 +1850,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 </script>
-  <!-- Ask the Course AI — floating 24/7 assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/deltabar.js"></script>
 </body>
 </html>

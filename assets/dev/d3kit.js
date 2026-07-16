@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   d3kit.js — shared D3 SVG figure toolkit for EC224 (DEV)
+   d3kit.js: shared D3 SVG figure toolkit for EC224 (DEV)
    Extracted verbatim from week8-viz.html (the Fig 8.1 "blueprint"), which in
    turn was adapted from the S6/S8 gold-standard figures in testing.html.
    Force-laid-out draggable labels, NO anchor dots (connector line only).
@@ -69,7 +69,7 @@ function d3Curve(svg, scX, scY, fn, x0, x1, color, sw, dash, n) {
     .attr('fill', 'none').attr('stroke', color).attr('stroke-width', sw || 2).attr('stroke-dasharray', dash || '');
 }
 
-// Draggable, force-laid-out labels — NO anchor dots, connector line only.
+// Draggable, force-laid-out labels: NO anchor dots, connector line only.
 function d3AddLabels(svg, nodes, sim) {
   const conns = svg.selectAll(null).data(nodes).enter()
     .append('line').attr('stroke', d => d.color).attr('stroke-width', 0.9).attr('stroke-dasharray', '4,3').attr('opacity', 0.55);

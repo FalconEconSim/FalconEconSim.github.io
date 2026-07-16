@@ -137,8 +137,8 @@
     <div class="fig-hdr"><span class="fig-label">Fig 3.2</span><span class="fig-title">Slutsky Decomposition</span></div>
     <p class="fig-intro">
       When P<sub>X</sub> rises, total demand falls from A to C. Slutsky splits that into two steps. <strong style="color:#1e8449;">Substitution effect</strong>
-      (A&rarr;B): rotate the new, steeper budget line until it can <em>just afford the original bundle A</em> &mdash; the move along the curve
-      from relative-price change alone. <strong style="color:#d4813a;">Income effect</strong> (B&rarr;C): remove that compensation and the
+      (A&rarr;B): rotate the new, steeper budget line until it can <em>just afford the original bundle A</em> (the move along the curve
+      from relative-price change alone). <strong style="color:#d4813a;">Income effect</strong> (B&rarr;C): remove that compensation and the
       consumer slides down to their actual new budget. Note: this is the <em>Slutsky</em> compensation (afford old bundle), not the Hicks
       compensation (hold utility constant).
     </p>
@@ -221,7 +221,7 @@
     <p class="fig-intro">
       Type a question about demand, the Slutsky/Hicks split, or anything from Week&nbsp;3. The assistant answers
       <em>only</em> from the EC224 course pages, then gives you a <strong>&ldquo;show me on the page&rdquo;</strong> pill that
-      opens the source jumped straight to the relevant lines. If it&rsquo;s not in the course materials, it says so &mdash; and
+      opens the source jumped straight to the relevant lines. If it&rsquo;s not in the course materials, it says so, and
       shows no links. <span style="color:#9aa3b2;">(Embedded demo of <code>assets/chatbot.js</code>.)</span>
     </p>
     <div id="week3-bot" style="margin:0 auto;"></div>
@@ -236,7 +236,7 @@
 const COL = { ic:'#7d3c98', icGhost:'#cbb8dd', budget:'#1e8449', opt:'#c0392b', demand:'#1a56db', ghost:'#9aa3b2', sub:'#1e8449', inc:'#d4813a' };
 const A_PREF=0.5, PY=6;   // shared Cobb-Douglas params for derivation figures
 
-// ── FIG 3.1 — Two-panel demand derivation (stacked SVGs, aligned X axes) ──
+// ── FIG 3.1: Two-panel demand derivation (stacked SVGs, aligned X axes) ──
 let v31a=null,v31b=null,v31traced=[];
 const V31={domX:24,domP:14,M:120};
 function v31Init(){
@@ -260,7 +260,7 @@ function v31Draw(){
   v31a.append('line').attr('x1',scX(xs)).attr('y1',scY(ys)).attr('x2',scX(xs)).attr('y2',scY(0)).attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
   v31a.append('circle').attr('cx',scX(xs)).attr('cy',scY(ys)).attr('r',5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.5);
   // anchor the label just up-right of the dot, clamped inside the frame so it
-  // never drifts off-screen at low Px (large X*) — domX is fixed for this panel
+  // never drifts off-screen at low Px (large X*): domX is fixed for this panel
   d3HaloLabel(v31a,Math.max(D3PAD.left+26,Math.min(scX(xs)+46,D3W-D3PAD.right-26)),Math.max(D3PAD.top+10,scY(ys)-28),'optimum',{color:COL.opt});
   // ---- bottom panel: demand curve ----
   const sX=d3.scaleLinear().domain([0,domX]).range([D3PAD.left,D3W-D3PAD.right]);
@@ -294,7 +294,7 @@ function v31Trace(){
 }
 function v31Reset(){v31traced=[];V31.traceOn=false;v31Draw();}
 
-// ── FIG 3.2 — Slutsky decomposition (compensation = afford original bundle A) ──
+// ── FIG 3.2: Slutsky decomposition (compensation = afford original bundle A) ──
 let v32svg=null;
 const V32={px0:6,M:120};
 function v32Init(){v32Draw();}
@@ -350,7 +350,7 @@ function v32Draw(){
 }
 function v32Reset(){v32Draw();}
 
-// ── FIG 3.3 — Income effect & demand shift (two stacked panels) ──
+// ── FIG 3.3: Income effect & demand shift (two stacked panels) ──
 let v33a=null,v33b=null;
 const V33={px:6,domX:34,domP:14};
 function v33Init(){v33Draw();}
@@ -399,7 +399,7 @@ function v33Draw(){
 }
 function v33Reset(){v33Draw();}
 
-// ── FIG 3.4 — Shift vs movement drill ──
+// ── FIG 3.4: Shift vs movement drill ──
 const v34Deck=[
   {t:"The price of coffee falls from $4 to $3.", a:'move'},
   {t:"A study reports coffee boosts productivity (tastes shift toward coffee).", a:'shift'},
@@ -423,14 +423,14 @@ function v34Answer(ans){
   const correct=v34Deck[v34Order[v34i]].a;
   v34total++;
   const v=document.getElementById('v34-verdict');
-  if(ans===correct){v34right++;v.style.color='#16a34a';v.textContent='✓ Correct — '+(correct==='move'?'own-price change ⇒ movement along the curve.':'a non-price factor ⇒ the curve shifts.');}
-  else{v.style.color='#c0392b';v.textContent='✗ Not quite — '+(correct==='move'?'this is the good\'s OWN price ⇒ movement along the curve.':'this is a demand shifter ⇒ the curve shifts.');}
+  if(ans===correct){v34right++;v.style.color='#16a34a';v.textContent='✓ Correct: '+(correct==='move'?'own-price change ⇒ movement along the curve.':'a non-price factor ⇒ the curve shifts.');}
+  else{v.style.color='#c0392b';v.textContent='✗ Not quite: '+(correct==='move'?'this is the good\'s OWN price ⇒ movement along the curve.':'this is a demand shifter ⇒ the curve shifts.');}
   document.getElementById('v34-score').textContent=`Score: ${v34right} / ${v34total}`;
   v34i++;
   setTimeout(v34Show,1300);
 }
 
-// ── FIG 3.5 — Demand function explorer ──
+// ── FIG 3.5: Demand function explorer ──
 let v35svg=null,v35sim=null,v35nodes=null,v35gs=null,v35conns=null;
 const V35={domX:34,domP:16,base:null};
 function v35Init(){
@@ -493,7 +493,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('DOMContentLoaded', function () {
     if (window.EC224Bot) EC224Bot.mountCompact(document.getElementById('week3-bot'), {
       subtitle: 'Week 3 · answers from the course site',
-      intro: "Ask about Week 3 — demand curves, the Slutsky vs Hicks decomposition, income/cross-price effects. I answer from the course pages and can show you the exact spot."
+      intro: "Ask about Week 3: demand curves, the Slutsky vs Hicks decomposition, income/cross-price effects. I answer from the course pages and can show you the exact spot."
     });
   });
 </script>

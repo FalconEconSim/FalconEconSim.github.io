@@ -13,6 +13,21 @@
       --warn-border:  #d97706;
       --green-bg:     #f0fdf4;
       --green-border: #16a34a;
+      /* Canonical semantic pair for "good/gain" and "bad/loss".
+         These values are NOT new: week2-viz.html and week3-viz.html already
+         declared exactly this pair in their own :root, and #2e8b57 is also the
+         most-used green on the site (53 uses). Hoisting them here so every page
+         inherits the same pair instead of only those two, and so the value is
+         defined in one place. The page-level copies are now redundant but
+         harmless (identical), so they are left for a separate cleanup.
+         The figures still hardcode 19 different reds and 8 greens, often
+         several in one file (#c0392b x109 AND #e74c3c x72 both mean "bad").
+         New code should use these tokens. Existing figures have NOT been
+         mass-converted: some of those colours are deliberately distinct (e.g.
+         week8's gold transfer rectangle) and a blind sweep would flatten real
+         distinctions. Convert per figure, with a visual check. */
+      --green:        #2e8b57;
+      --red:          #c0392b;
       --font:         'DM Sans', system-ui, sans-serif;
       --mono:         'DM Mono', monospace;
       --max-w:        920px;
@@ -301,7 +316,7 @@
 
       /* Readout rows: tighten column min-width & gap so 3 columns
          fit in ~358 px of content (390 − 2×16 padding).
-         110 px × 2 + 1rem gap = 252 px — safe. */
+         110 px × 2 + 1rem gap = 252 px, safe. */
       .readout-row { gap: 0.75rem !important; }
       .readout-col  { min-width: 90px !important; }
 
@@ -312,17 +327,51 @@
       /* viz-ctrl-row: tighten gap so slider groups wrap cleanly */
       .viz-ctrl-row { gap: 0.6rem !important; }
 
-      /* viz-slider-group: allow wrapping so long labels don't
-         push the slider off-screen on narrow viewports.
-         Also allow the label text to wrap within a group. */
+      /* viz-slider-group on narrow viewports: label on its own row, then the
+         slider and its value share the next row.
+         This used to be flex-wrap:wrap with the slider forced to width:100%,
+         which made the wrap point depend on how wide each LABEL happened to
+         be: "Wage w:" is short so its value wrapped BELOW the slider, while
+         "Rental rate v:" and "Output q:" kept their value beside it. Three
+         controls in one figure, laid out three different ways.
+         Giving the label a 100% flex-basis forces the break in the same place
+         every time, whatever the label says. */
+      /* Each group claims the full row. Without this the group is a flex item
+         sized by its content, so the longest label ("Rental rate v:") produced
+         the widest group and therefore the widest slider: three sliders of
+         three different lengths stacked under each other. */
       .viz-slider-group {
         flex-wrap: wrap !important;
         gap: 0.35rem 0.5rem !important;
+        flex: 1 0 100% !important;
       }
-      .viz-slider-label { white-space: normal !important; }
+      .viz-slider-label {
+        white-space: normal !important;
+        flex: 1 0 100% !important;   /* always claims its own row */
+      }
+      /* Slider takes the remaining width on row 2; min-width:0 lets a flex
+         item shrink below its intrinsic size instead of overflowing. */
+      .viz-slider {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+      }
+      .viz-slider-val { flex: 0 0 auto !important; text-align: right; }
 
-      /* Sliders that have an inline width wider than the viewport */
-      .viz-slider { width: 100% !important; max-width: 200px !important; }
+      /* Wide reference tables scroll inside themselves instead of pushing the
+         whole page sideways. week1's .rules-table has width:100% but its
+         min-content is larger than the viewport, because the "Course Example"
+         column holds inline math that cannot wrap. The table rendered 413px
+         inside a 358px column and was the ONLY horizontal overflow on any of
+         the 23 published pages. display:block lets the box scroll while the
+         rows still lay out as a table inside it. */
+      .rules-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+      }
 
       /* Accordion / section headers: ensure ≥44 px tap target */
       .accordion-header { min-height: 44px; }
@@ -518,8 +567,102 @@
 html[data-theme="dark"]{
   --white:#15171c; --off-white:#1d2027; --rule:#2c313a; --text:#e7e9ee; --muted:#9aa3b2;
   --accent:#6ea0ff; --accent-light:#1b2740; --accent-mid:#33425f; --warn-bg:#2a2410; --green-bg:#10241a;
+  /* Lifted for contrast on a dark background: the light-mode pair is too dark
+     to read against #15171c. */
+  --green:#4ade80; --red:#f87171;
 }
 html[data-theme="dark"] body{ background:var(--white); }
 html[data-theme="dark"] .top-bar{ background:rgba(21,23,28,0.97); }
 .theme-toggle{ background:none; border:1px solid var(--rule); border-radius:6px; width:30px; height:30px; margin-left:0.6rem; cursor:pointer; color:var(--muted); font-size:0.95rem; line-height:1; display:inline-flex; align-items:center; justify-content:center; transition:border-color .15s,color .15s; }
 .theme-toggle:hover{ border-color:var(--accent); color:var(--accent); }
+
+    /* ============================================================
+       POLISH: texture, depth, and pointer reactivity
+       Added 2026-07-16. Hub chrome only. Nothing here targets a
+       *-viz figure, so canvas/JSXGraph drag behaviour is untouched.
+       ============================================================ */
+
+    /* Film grain. A single inline SVG turbulence, no image request, no JS.
+       Sits above the page but ignores input. Very low opacity: it should read
+       as paper texture, not as an effect you can point at. */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9990;
+      opacity: 0.5;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+    }
+    /* Grain over a dark background reads much heavier, so ease it off. */
+    html[data-theme="dark"] body::after { opacity: 0.32; }
+
+    /* Cursor-following spotlight. polish.js publishes --mx/--my as the pointer's
+       position inside the card; this paints a soft accent glow there. The card
+       reacts to the cursor without the cursor itself being replaced. */
+    .week-card, .hub-btn {
+      position: relative;
+      isolation: isolate;
+      --mx: 50%;
+      --my: 50%;
+    }
+    .week-card::before, .hub-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      background: radial-gradient(
+        circle 180px at var(--mx) var(--my),
+        color-mix(in srgb, var(--accent) 13%, transparent),
+        transparent 70%
+      );
+    }
+    .week-card:hover::before, .hub-btn:hover::before { opacity: 1; }
+    /* Upcoming cards are pointer-events:none and intentionally inert. */
+    .week-card.upcoming::before { display: none; }
+
+    /* Depth on hover. Small lift, quick spring. */
+    .week-card, .hub-btn {
+      transition: border-color 0.15s, box-shadow 0.2s,
+                  background 0.15s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      will-change: transform;
+    }
+    .week-card:hover, .hub-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(26, 86, 219, 0.10),
+                  0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+    .week-card:active, .hub-btn:active { transform: translateY(-1px); }
+    html[data-theme="dark"] .week-card:hover,
+    html[data-theme="dark"] .hub-btn:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+    .week-card.upcoming:hover { transform: none; box-shadow: none; }
+
+    /* ============================================================
+       REDUCED MOTION
+       The site had NO prefers-reduced-motion rule at all, so the
+       existing .fade-up reveal animated regardless. .fade-up starts
+       at opacity:0, so it is not enough to drop the transition: the
+       cards must be made visible outright or they never appear.
+       ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      .fade-up, .fade-up.visible {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        transition-delay: 0s !important;
+      }
+      .week-card:hover, .hub-btn:hover,
+      .week-card:active, .hub-btn:active { transform: none; }
+      .week-card::before, .hub-btn::before { transition: none; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }

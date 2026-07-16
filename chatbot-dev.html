@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
-  <title>[DEV] Course AI — experiments · EC224</title>
+  <title>[DEV] Course AI: experiments · EC224</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -63,7 +63,7 @@
 <body>
 <div class="wrap">
   <div class="dev-banner">DEV PREVIEW · Course-AI experiments · not linked from the student site</div>
-  <h1>Course AI — experiments</h1>
+  <h1>Course AI: experiments</h1>
   <p class="sub">Three takes on the same RAG backend (Pinecone&nbsp;+&nbsp;Gemini via a Cloudflare Worker).
     The goal: when the bot <b>can</b> answer, point students to the exact spot on the course site;
     when it <b>can&rsquo;t</b>, say so plainly and show <em>no</em> sources. The live-preview panes only
@@ -79,7 +79,7 @@
   <section class="panel" data-panel="split">
     <p class="panel-note"><b>Split-view.</b> Ask on the left; the right pane loads the cited course page
       and <b>scrolls to &amp; highlights</b> the passage the answer came from. Click the source chips to
-      jump between citations. If the bot can&rsquo;t answer, the pane stays empty — no misleading links.</p>
+      jump between citations. If the bot can&rsquo;t answer, the pane stays empty, with no misleading links.</p>
     <div class="sv">
       <div class="sv-chat">
         <div class="sv-head"><span class="sv-dot"></span>Ask the Course AI</div>
@@ -95,7 +95,7 @@
           <span class="sv-pv-status" id="sv-pv-status"></span>
           <a id="sv-pv-open" target="_blank" rel="noopener" style="display:none">open ↗</a>
         </div>
-        <div class="sv-pv-empty" id="sv-pv-empty">Ask a question — the answer&rsquo;s source page appears here, jumped to the relevant lines.</div>
+        <div class="sv-pv-empty" id="sv-pv-empty">Ask a question, and the answer&rsquo;s source page appears here, jumped to the relevant lines.</div>
         <iframe class="sv-pv-frame" id="sv-pv-frame" title="Course page preview" hidden></iframe>
       </div>
     </div>
@@ -112,7 +112,7 @@
 
   <!-- ============ V1 CLASSIC ============ -->
   <section class="panel" data-panel="classic" hidden>
-    <p class="panel-note"><b>Classic baseline.</b> What&rsquo;s on the live <code>ask-dev.html</code> today —
+    <p class="panel-note"><b>Classic baseline.</b> What&rsquo;s on the live <code>ask-dev.html</code> today:
       plain answer + text source links. Kept here for side-by-side comparison.</p>
     <div class="sv-chat" style="max-width:560px;">
       <div class="sv-head"><span class="sv-dot"></span>Ask the Course AI</div>
@@ -155,7 +155,7 @@
   var pvStatus = document.getElementById("sv-pv-status");
   var pvOpen = document.getElementById("sv-pv-open");
 
-  svMsg("Hi! Ask me anything about EC224 and I'll answer from the course pages — then show you exactly where on the right.", "bot");
+  svMsg("Hi! Ask me anything about EC224 and I'll answer from the course pages, then show you exactly where on the right.", "bot");
 
   function svMsg(text, cls) {
     var el = document.createElement("div");
@@ -197,11 +197,11 @@
     var autoOpened = false;
     matches.forEach(function (m) {
       if (m.kind === "textbook" || !m.url) {
-        // instructor textbook — non-clickable placeholder, no preview
+        // instructor textbook: non-clickable placeholder, no preview
         var s = document.createElement("span");
         s.className = "sv-cite sv-cite-book";
         s.textContent = m.label || "Course textbook";
-        s.title = "From the course textbook — not published online yet";
+        s.title = "From the course textbook, not published online yet";
         wrap.appendChild(s);
         return;
       }
@@ -235,12 +235,12 @@
       else { // no answer -> clear the preview, no sources
         pvFrame.hidden = true; pvFrame.src = "about:blank";
         pvEmpty.style.display = "flex";
-        pvEmpty.textContent = "No source — that isn't in the course materials.";
+        pvEmpty.textContent = "No source: that isn't in the course materials.";
         pvTitle.textContent = "Live page preview"; pvStatus.textContent = ""; pvOpen.style.display = "none";
       }
     } catch (err) {
       typing.remove();
-      svMsg("Network error — couldn't reach the assistant. Please try again.", "error");
+      svMsg("Network error: couldn't reach the assistant. Please try again.", "error");
     } finally {
       svInput.disabled = svSend.disabled = false; svInput.focus();
     }
@@ -283,7 +283,7 @@
       clMsg(data.answer, data.answered ? "bot" : "note", srcHtml);
     } catch (err) {
       typing.remove();
-      clMsg("Network error — please try again.", "error");
+      clMsg("Network error: please try again.", "error");
     } finally {
       clInput.disabled = clSend.disabled = false; clInput.focus();
     }

@@ -120,8 +120,8 @@
       if (!matches || !matches.length) return "";
       var parts = matches.map(function (m) {
         if (m.kind === "textbook" || !m.url) {
-          // instructor textbook — placeholder label, no link yet
-          return '<span title="From the course textbook — not published online yet" ' +
+          // instructor textbook: placeholder label, no link yet
+          return '<span title="From the course textbook, not published online yet" ' +
                  'style="color:#6b7280;">' + (m.label || "Course textbook") + "</span>";
         }
         var label = m.url.replace(/^https?:\/\/[^/]+\//, "").replace(/\.html$/, "") || "home";
@@ -149,13 +149,13 @@
         var data = await res.json();
         typing.remove();
         if (!res.ok || data.error) {
-          addMsg("Sorry — something went wrong. Please try again.", "error");
+          addMsg("Sorry, something went wrong. Please try again.", "error");
         } else {
           addMsg(data.answer, "bot", sourcesToHtml(data.matches || []));
         }
       } catch (err) {
         typing.remove();
-        addMsg("Network error — couldn't reach the assistant. Please try again.", "error");
+        addMsg("Network error: couldn't reach the assistant. Please try again.", "error");
       } finally {
         input.disabled = send.disabled = false;
         input.focus();

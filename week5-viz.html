@@ -308,6 +308,8 @@
       <button class="viz-btn" onclick="v56Reset()">Reset</button>
     </div>
     <div class="viz-readout" id="v56-readout"></div>
+    <!-- old / new / change readout, baseline is v56Reset(): A=1, L=4, K=4 -->
+    <div id="v56-delta" class="delta-bar"></div>
   </section>
 
   <!-- ═══ FIG 5.7 - CONSUMER-PRODUCTION ANALOGY ═══ -->
@@ -570,18 +572,18 @@ function dot5(ctx, x, y, r, fill, stroke) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// D3 SVG LABEL-OVERLAY SYSTEM (canvas + SVG hybrid — gold-standard S6/S8 pattern)
+// D3 SVG LABEL-OVERLAY SYSTEM (canvas + SVG hybrid, gold-standard S6/S8 pattern)
 // Each canvas figure gets a sibling <svg> sized to the canvas's CSS-pixel W/H
 // (the same coordinate space used by toC()). Descriptive curve/region/point
-// labels are rendered there as real, draggable D3 force-sim DOM elements —
-// exactly like testing.html S6/S8 — instead of being painted onto the canvas.
+// labels are rendered there as real, draggable D3 force-sim DOM elements,
+// exactly like testing.html S6/S8, instead of being painted onto the canvas.
 // Axis-tick labels stay on canvas (drawn by drawAxesSt) and are untouched.
 // ══════════════════════════════════════════════════════════════════════
 const D5_LABEL_H = 15;
 
 // Returns (creating once) the d3 selection for the overlay <svg id="...-svg">,
 // sized via viewBox to the canvas's current CSS-pixel W×H. Safe to call every
-// draw — only updates the viewBox if W/H changed, and never tears down nodes
+// draw: only updates the viewBox if W/H changed, and never tears down nodes
 // (so drag state / simulation survive redraws driven by sliders & resize).
 function d5Svg(svgId, W, H) {
   const sel = d3.select('#'+svgId);
@@ -600,7 +602,7 @@ function d5Node(id, color, label, lw, ax, ay) {
 }
 
 // Append connector-lines + draggable label groups (white rounded-rect boxes,
-// font-size 9 / weight 600 / 'DM Sans', dashed connectors, NO anchor dot) —
+// font-size 9 / weight 600 / 'DM Sans', dashed connectors, NO anchor dot):
 // returns {gs, conns} so the caller can wire a tick handler.
 function d5AddLabels(svg, nodes, sim) {
   const conns = svg.append('g').selectAll('line').data(nodes).enter()
@@ -642,7 +644,7 @@ function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
 }
 
 // Reposition a node's anchor (e.g. after a slider/drag changes curve position)
-// while translating its current x/y by the same delta — avoids drift, the S6 pattern.
+// while translating its current x/y by the same delta, avoids drift, the S6 pattern.
 function d5MoveAnchor(node, newAx, newAy) {
   const dx = newAx - node.fx_anchor, dy = newAy - node.fy_anchor;
   node.x += dx; node.y += dy;
@@ -932,7 +934,7 @@ function v52SetMode(m) {
 let v52DragL = 4, v52DragK = 4, v52Dragging = false;
 
 // D3 SVG label-overlay state, one per panel (cvs52a/b/c). Each overlay holds
-// up to 3 curve labels (Q=2/4/6) plus — on the Cobb-Douglas panel only — the
+// up to 3 curve labels (Q=2/4/6) plus, on the Cobb-Douglas panel only, the
 // draggable-point label "P L=…,K=…" and the MRTS/MRS label. The canvas drag
 // math (closestLOnIsoquant) is untouched; this overlay only TRACKS the
 // resulting curve/point positions each redraw via d5MoveAnchor (S6 pattern),
@@ -1047,7 +1049,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     curveAnchors.forEach((a,i)=>{
       if(i<3) v52SetCurveLabel(ovl,i,a.text,a.color,a.ax,a.ay);
     });
-    // Hide any unused curve-label slots off to the side (shouldn't normally happen — always 3 levels)
+    // Hide any unused curve-label slots off to the side (shouldn't normally happen, always 3 levels)
     for(let i=curveAnchors.length;i<3;i++){ ovl.nodes[i].label=''; ovl.nodes[i].lw=0; }
   }
 
@@ -1064,7 +1066,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     const [tx1,ty1]=toC(Math.min(9.8,L+dxT),K-mrts*dxT,W,H,xR,yR);
     ctx.setLineDash([4,3]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
-    // Dot P (canvas — kept; SVG overlay carries only the draggable text labels)
+    // Dot P (canvas, kept; SVG overlay carries only the draggable text labels)
     dot5(ctx,px,py,8,'#e74c3c','#fff');
     // D3 SVG overlay: track the P / MRTS labels to the live drag position
     if(ovl){
@@ -1137,7 +1139,7 @@ function v53K(L) { return v53Q0()*v53Q0()/L; }
 function v53MRTS(L) { return v53K(L)/L; } // MRTS = K/L for Cobb-Douglas alpha=beta=0.5
 
 // D3 SVG label-overlay state for fig 5.3 (Q label + draggable point's
-// L,K / MRTS / interpretation labels — these track the live drag position).
+// L,K / MRTS / interpretation labels, these track the live drag position).
 let v53Ovl=null;
 function v53EnsureOverlay(W,H) {
   const svg=d5Svg('cvs53-svg',W,H); if(!svg) return null;
@@ -1209,7 +1211,7 @@ function v53Draw() {
   ctx.restore();
   dot5(ctx,cx,cy,9,'#2e8b57','#fff');
 
-  // D3 SVG overlay labels — Q label (fixed anchor on the curve) + the
+  // D3 SVG overlay labels: Q label (fixed anchor on the curve) + the
   // draggable point's L,K / MRTS / interpretation labels (track live drag pos)
   const ovl=v53EnsureOverlay(W,H);
   if(ovl){
@@ -1285,7 +1287,7 @@ function v53Init() {
 function v54CD(K,L,a,b){return Math.pow(Math.max(0.001,K),a)*Math.pow(Math.max(0.001,L),b);}
 
 // D3 SVG label-overlay state for fig 5.4 (left: "MPL falls..." caption;
-// right: Q(λ=1)/Q(λ=2) point labels — both retarget on slider input).
+// right: Q(λ=1)/Q(λ=2) point labels, both retarget on slider input).
 let v54OvlA=null, v54OvlB=null;
 function v54EnsureOverlayA(W,H) {
   const svg=d5Svg('cvs54a-svg',W,H); if(!svg) return null;
@@ -1423,7 +1425,7 @@ function v54Update() {
 // FIG 5.5 - RTS ISOQUANT SPACER
 // ══════════════════════════════════════════════════════════════════════
 // D3 SVG label-overlay state for fig 5.5: up to 3 "Q=…" labels at the
-// ray/isoquant intersection points (count varies — unused slots are hidden).
+// ray/isoquant intersection points (count varies, unused slots are hidden).
 let v55Ovl=null;
 function v55EnsureOverlay(W,H) {
   const svg=d5Svg('cvs55-svg',W,H); if(!svg) return null;
@@ -1533,9 +1535,12 @@ function v55Update() { v55Draw(); }
 const V56_Q_TARGET = 4;  // always producing Q=4 units
 let v56TechLevel=1.0;    // A in Q = A * K^0.5 * L^0.5 (starts at 1, increases with improvements)
 let v56L=4, v56K=4;
+/* Baseline for the old/new/change readout: the state v56Reset() restores.
+   Keep these in step with v56Reset(). */
+const V56_A0 = 1.0, V56_L0 = 4, V56_K0 = 4;
 
 // D3 SVG label-overlay state for fig 5.6: isoquant label, bundle label, and an
-// optional "Technology improved" label (shown only when A>1 — hidden otherwise).
+// optional "Technology improved" label (shown only when A>1, hidden otherwise).
 let v56Ovl=null;
 function v56EnsureOverlay(W,H) {
   const svg=d5Svg('cvs56-svg',W,H); if(!svg) return null;
@@ -1609,6 +1614,20 @@ function v56Draw() {
       techN.label=''; techN.lw=0;
     }
     v52RefreshOverlayDom(ovl56);
+  }
+
+  /* Old / new / change readout. Baseline is the state v56Reset() restores
+     (A=1, L=4, K=4), which is the isoquant still drawn as the original.
+     Output is deliberately included: it must stay pinned at Q=4 no matter
+     what, which is the whole point of the figure. Seeing it read "no change
+     yet" while K and L fall is the lesson. */
+  if (window.ecDelta) {
+    ecDelta('v56-delta', [
+      { label: 'Technology A', old: V56_A0, now: v56TechLevel },
+      { label: 'Capital K',    old: V56_K0, now: v56K },
+      { label: 'Labour L',     old: V56_L0, now: v56L },
+      { label: 'Output Q',     old: V56_Q_TARGET, now: V56_Q_TARGET },
+    ]);
   }
 }
 
@@ -2018,7 +2037,7 @@ function quiz510NewRound() {
 
 // D3 SVG label-overlay state for the fig 5.10 quiz result canvas. The host
 // <div>/<svg> is rebuilt via innerHTML each round (quiz510NewRound), so the
-// overlay cannot persist across rounds — it must be torn down and rebuilt
+// overlay cannot persist across rounds, it must be torn down and rebuilt
 // fresh every time quiz510DrawResult runs (no W/H-based caching).
 let v510Ovl=null;
 function v510BuildOverlay(W,H) {
@@ -2154,8 +2173,9 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
 
 window.addEventListener('resize', redrawAll5);
 </script>
-  <!-- Ask the Course AI — floating 24/7 assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
+  <script src="assets/deltabar.js"></script>
 </body>
 </html>
