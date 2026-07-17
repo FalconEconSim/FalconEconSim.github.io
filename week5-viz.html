@@ -919,10 +919,15 @@ function v51Draw() {
     }
     ctxB.stroke();
     ctxB.restore();
+    /* Nudge the ghost label DOWN: at L=9.3 the two MPL curves have converged to
+       within ~0.16, so the ghost and current labels landed on top of each
+       other. The ghost is always the lower curve here (less capital, lower
+       MPL), so pushing it down and the current one up separates them without
+       moving either off its own curve. */
     const gLb=9.3, [glbx,glby]=toC(gLb,mplBase(gLb),W,HB,xR,yRB);
     ctxB.save(); ctxB.globalAlpha=0.55; ctxB.fillStyle='#e74c3c';
     ctxB.font='9px DM Sans,sans-serif'; ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
-    ctxB.fillText('MPL', glbx+3, glby);
+    ctxB.fillText('MPL', glbx+3, glby+11);
     ctxB.restore();
   }
 
@@ -939,7 +944,8 @@ function v51Draw() {
     const idLb=9.3, [ilbx,ilby]=toC(idLb,mpl(idLb),W,HB,xR,yRB);
     ctxB.save(); ctxB.fillStyle='#e74c3c'; ctxB.font='bold 10px DM Sans,sans-serif';
     ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
-    ctxB.fillText(kShifted?'MPL′':'MPL', ilbx+3, ilby);
+    // Lifted only when a ghost is on screen to share the space with it.
+    ctxB.fillText(kShifted?'MPL′':'MPL', ilbx+3, ilby-(kShifted?4:0));
     ctxB.restore();
   }
 

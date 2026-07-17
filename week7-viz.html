@@ -1459,8 +1459,13 @@ function v79Draw(){
       gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',1.4)
         .attr('stroke-dasharray','5,4').attr('opacity',0.45).attr('d',d3.line()(supPtsBase));
     }
-    const gP79=9, gQ79=QsBase(gP79);
-    if(gQ79>=0&&gQ79<=300){
+    /* Anchor the ghost label to a QUANTITY that is actually on screen, then
+       solve for the price, rather than picking a fixed price. The baseline n
+       differs between the entry run (150) and the exit run (450), and a fixed
+       price put the label at Q=375 for n=150, outside the 0..300 clamp, so the
+       label silently never drew. */
+    const gQ79=200, gP79=4+2*gQ79/v79Start.n;
+    if(gP79>=4&&gP79<=14){
       gM.append('text').attr('x',scXM(gQ79)+4).attr('y',scYM(gP79)-4)
         .attr('font-size',9).attr('font-weight',600).attr('fill','#e74c3c').attr('opacity',0.55).text('S');
     }
