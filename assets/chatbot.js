@@ -265,10 +265,76 @@
 
     addMsg(intro, "bot");
 
+    /* Math rendering uses KaTeX (synchronous, reliable, no font-cache state to
+       race), loaded once on demand since the chat widget appears on pages that
+       do not include a math renderer themselves.
+
+       The model returns math in mixed delimiters ($...$, $$...$$, \(...\)).
+       We normalise the dollar forms to \(...\)/\[...\] and then render ONLY
+       those, so plain currency like "$5.99" can never be mistaken for math.
+       Inline $...$ is treated as math only when it actually looks like math
+       (contains a backslash or ^ _ { }). */
+    var KATEX_VER = "0.16.11";
+    function normalizeMath(t) {
+      t = t.replace(/\$\$([\s\S]+?)\$\$/g, function (_, m) { return "\\[" + m + "\\]"; });
+      t = t.replace(/\$([^$\n]+?)\$/g, function (all, m) {
+        return /[\\^_{}]/.test(m) ? "\\(" + m + "\\)" : all;
+      });
+      return t;
+    }
+
+    function ensureKatex() {
+      if (window.__ecKatexReady) return window.__ecKatexReady;
+      window.__ecKatexReady = new Promise(function (resolve) {
+        if (window.katex && window.renderMathInElement) { resolve(); return; }
+        var base = "https://cdn.jsdelivr.net/npm/katex@" + KATEX_VER + "/dist/";
+        if (!document.querySelector('link[data-ec-katex]')) {
+          var css = document.createElement("link");
+          css.rel = "stylesheet"; css.href = base + "katex.min.css";
+          css.setAttribute("data-ec-katex", "1");
+          document.head.appendChild(css);
+        }
+        var core = document.createElement("script");
+        core.src = base + "katex.min.js";
+        core.onload = function () {
+          var auto = document.createElement("script");
+          auto.src = base + "contrib/auto-render.min.js";
+          auto.onload = function () { resolve(); };
+          auto.onerror = function () { resolve(); };
+          document.head.appendChild(auto);
+        };
+        core.onerror = function () { resolve(); };
+        document.head.appendChild(core);
+      });
+      return window.__ecKatexReady;
+    }
+
+    function typesetMath(el) {
+      if (!/\\\(|\\\[/.test(el.textContent)) return;   // no math delimiters, skip
+      ensureKatex().then(function () {
+        if (!window.renderMathInElement) return;
+        try {
+          window.renderMathInElement(el, {
+            delimiters: [
+              { left: "\\[", right: "\\]", display: true },
+              { left: "\\(", right: "\\)", display: false }
+            ],
+            throwOnError: false,
+            errorColor: "#c0392b"
+          });
+        } catch (e) {}
+      });
+    }
+
     function addMsg(text, cls) {
       var el = document.createElement("div");
       el.className = "ecbot-msg " + cls;
-      el.textContent = text;
+      if (cls === "bot") {
+        el.textContent = normalizeMath(text);
+        typesetMath(el);
+      } else {
+        el.textContent = text;
+      }
       log.appendChild(el); log.scrollTop = log.scrollHeight;
       return el;
     }
