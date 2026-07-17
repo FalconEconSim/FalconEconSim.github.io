@@ -292,6 +292,10 @@
       .questions-grid { grid-template-columns: 1fr; }
       .video-grid { grid-template-columns: repeat(2, 1fr); }
       .top-bar { padding: 0 1rem; }
+      /* Keep the course title on one line and ellipsize it instead of letting
+         it wrap down into the logo at 390px. min-width:0 lets the flex item
+         shrink below its text width so the ellipsis can engage. */
+      .top-bar-course { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
       .breadcrumb { white-space: nowrap; }
       .breadcrumb > a:first-child, .breadcrumb > span:first-of-type { display: none; }
       .left-nav-toggle, .nav-toggle { flex-shrink: 0; white-space: nowrap; }
@@ -494,6 +498,12 @@
     .fade-up {
       opacity: 0;
       transform: translateY(16px);
+      /* Base transition. The per-card stagger delay is applied inline by the
+         reveal JS (index.html), which sets the full transition shorthand with
+         the delay baked in. It is done in JS, not via .fade-up:nth-child rules,
+         which miscounted because .grid-section-label siblings are interleaved
+         in the grid so weeks 5 to 8 never got a delay. reduced-motion's
+         "transition: none !important" still overrides the inline value. */
       transition: opacity 0.45s ease, transform 0.45s ease;
     }
     .fade-up.visible {
@@ -501,17 +511,16 @@
       transform: translateY(0);
     }
 
-    /* Stagger children inside a fade-up container */
-    .fade-up:nth-child(1) { transition-delay: 0.00s; }
-    .fade-up:nth-child(2) { transition-delay: 0.06s; }
-    .fade-up:nth-child(3) { transition-delay: 0.12s; }
-    .fade-up:nth-child(4) { transition-delay: 0.18s; }
-    .fade-up:nth-child(5) { transition-delay: 0.24s; }
-    .fade-up:nth-child(6) { transition-delay: 0.30s; }
-
-    /* Enhanced week card hover (index page) */
+    /* Enhanced week card hover (index page).
+       This !important transition (pre-existing) was silently overriding the
+       fade-up reveal: it omitted opacity, so index cards snapped in with no
+       fade at all, and no inline delay could take effect. Opacity and the
+       per-card stagger (--fade-delay, set by the reveal JS) are now folded in
+       here so the reveal actually animates. reduced-motion's later
+       "transition: none !important" still wins. */
     .week-card {
-      transition: border-color 0.18s, box-shadow 0.2s, transform 0.2s, background 0.18s !important;
+      transition: border-color 0.18s, box-shadow 0.2s, transform 0.2s, background 0.18s,
+                  opacity 0.45s ease var(--fade-delay, 0s) !important;
     }
     .week-card:not(.upcoming):hover {
       transform: translateY(-3px);

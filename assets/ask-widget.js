@@ -84,6 +84,17 @@
 ".ecfab-foot{padding:.5rem .8rem;border-top:1px solid #f0f0f0;font-size:.72rem;color:#6b7280;text-align:center;background:#fafafa;}" +
 ".ecfab-foot a{color:#2563eb;text-decoration:none;font-weight:600;}" +
 ".ecfab-foot a:hover{text-decoration:underline;}" +
+/* Dark mode for the popup chrome (the inner .ecbot themes itself in
+   chatbot.js). Without this the popup was a white card on a near-black page.
+   Colours match shared.css dark tokens. */
+'html[data-theme="dark"] .ecfab-pop{background:#15171c;border-color:#2c313a;box-shadow:0 18px 50px rgba(0,0,0,.6);}' +
+'html[data-theme="dark"] .ecfab-head{background:linear-gradient(180deg,#1d2027,#15171c);border-bottom-color:#2c313a;}' +
+'html[data-theme="dark"] .ecfab-title{color:#e7e9ee;}' +
+'html[data-theme="dark"] .ecfab-sub{color:#9aa3b2;}' +
+'html[data-theme="dark"] .ecfab-iconbtn{background:#1d2027;border-color:#2c313a;color:#c3c8d2;}' +
+'html[data-theme="dark"] .ecfab-iconbtn:hover{border-color:#6ea0ff;color:#6ea0ff;background:#22304a;}' +
+'html[data-theme="dark"] .ecfab-foot{background:#1d2027;border-top-color:#2c313a;color:#9aa3b2;}' +
+'html[data-theme="dark"] .ecfab-foot a{color:#6ea0ff;}' +
 /* On phones the figures fill the width, so the floating button sat on top of
    figure content (a slider value at the bottom-right of week6 Fig 6.1, for
    one). Keep the button, it is a headline feature, but shrink it from 60 to

@@ -273,7 +273,17 @@
   // Fade-up on scroll for week cards
   document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.week-card:not(.upcoming)');
-    cards.forEach(el => el.classList.add('fade-up'));
+    // Stagger via inline delay, not the .fade-up:nth-child CSS rules: the grid
+    // interleaves .grid-section-label siblings, so nth-child counting skips and
+    // the CSS delays (defined only 1..6) never reached weeks 5 to 8, which then
+    // popped in with no stagger. Keying off the cards array order is robust to
+    // the sibling structure and covers all published cards.
+    cards.forEach((el, i) => {
+      el.classList.add('fade-up');
+      // Stagger via --fade-delay, consumed by the .week-card opacity transition
+      // in shared.css (which is !important, so an inline transition cannot win).
+      el.style.setProperty('--fade-delay', Math.min(i * 0.05, 0.4).toFixed(2) + 's');
+    });
     // rootMargin extends the observation area well past the bottom of the
     // viewport so every card (even deep below the fold) is triggered as soon
     // as the page paints rather than only when the user scrolls to it.

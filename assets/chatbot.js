@@ -163,7 +163,28 @@
 ".ecbot-lb-bar a{margin-left:auto;color:var(--ec);font-size:.8rem;text-decoration:none;}" +
 ".ecbot-lb-x{border:none;background:#f3f4f6;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:1.1rem;line-height:1;}" +
 ".ecbot-lb-frame{flex:1;border:0;width:100%;background:#fff;}" +
-".ecbot-fallback{padding:2rem;text-align:center;color:#6b7280;font-size:.9rem;}";
+".ecbot-fallback{padding:2rem;text-align:center;color:#6b7280;font-size:.9rem;}" +
+/* Dark mode. The widget hardcoded light surfaces, so on a dark-themed page it
+   dropped a white card into a near-black layout. These override only colours,
+   matched to shared.css's dark tokens (white #15171c, panel #1d2027, rule
+   #2c313a, text #e7e9ee, muted #9aa3b2, accent #6ea0ff). */
+'html[data-theme="dark"] .ecbot{--ec:#6ea0ff;background:#15171c;border-color:#2c313a;color:#e7e9ee;box-shadow:0 4px 24px rgba(0,0,0,.5);}' +
+'html[data-theme="dark"] .ecbot-head{border-bottom-color:#2c313a;}' +
+'html[data-theme="dark"] .ecbot-sub{color:#9aa3b2;}' +
+'html[data-theme="dark"] .ecbot-log{background:#1a1d24;}' +
+'html[data-theme="dark"] .ecbot-msg.bot{background:#1d2027;border-color:#2c313a;color:#e7e9ee;}' +
+'html[data-theme="dark"] .ecbot-msg.note{background:#2a2410;border-color:#5c4a1a;color:#e5c07b;}' +
+'html[data-theme="dark"] .ecbot-msg.error{background:#2a1416;border-color:#7a2f2f;color:#f2a2a2;}' +
+'html[data-theme="dark"] .ecbot-cite{background:#1b2740;border-color:#33425f;}' +
+'html[data-theme="dark"] .ecbot-cite-book{background:#22262e;border-color:#2c313a;color:#9aa3b2;}' +
+'html[data-theme="dark"] .ecbot-chip{background:#22262e;border-color:#2c313a;color:#c3c8d2;}' +
+'html[data-theme="dark"] .ecbot-chip:hover{background:#2c313a;}' +
+'html[data-theme="dark"] .ecbot-form{border-top-color:#2c313a;}' +
+'html[data-theme="dark"] .ecbot-input{background:#1d2027;border-color:#2c313a;color:#e7e9ee;}' +
+'html[data-theme="dark"] .ecbot-lb-card{background:#15171c;}' +
+'html[data-theme="dark"] .ecbot-lb-bar{border-bottom-color:#2c313a;}' +
+'html[data-theme="dark"] .ecbot-lb-x{background:#22262e;color:#e7e9ee;}' +
+'html[data-theme="dark"] .ecbot-lb-frame{background:#15171c;}';
     var s = document.createElement("style");
     s.textContent = css;
     document.head.appendChild(s);
