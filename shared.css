@@ -577,9 +577,33 @@
       transition: color 0.15s;
     }
 
-    /* Accordion open/close: smooth max-height transition */
-    .accordion-body {
-      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+    /* Accordion open/close animation.
+       The old rule here tried to transition max-height on a display:none/block
+       element, which can never fire, so accordions snapped open with no
+       feedback. Real animation now: polish.js wraps each accordion body's
+       children in a .acc-inner and adds .acc-animated, then this animates the
+       grid row from 0fr to 1fr (the modern no-measurement collapse) plus the
+       padding and separator. .acc-animated is added only after a successful
+       wrap, so with JS off the plain display:none/block toggle still works. */
+    .accordion-body.acc-animated {
+      display: grid;
+      grid-template-rows: 0fr;
+      padding: 0;
+      border-top: 0;
+      transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .accordion-body.acc-animated.open { grid-template-rows: 1fr; }
+    .accordion-body.acc-animated > .acc-inner {
+      overflow: hidden;
+      min-height: 0;
+      padding: 0 0.85rem;
+      border-top: 1px solid transparent;
+      transition: padding 0.28s ease, border-top-color 0.28s ease;
+    }
+    .accordion-body.acc-animated.open > .acc-inner {
+      padding-top: 0.7rem;
+      padding-bottom: 0.7rem;
+      border-top-color: var(--rule);
     }
 
     /* Video item: subtle lift on hover */
@@ -728,6 +752,9 @@ html[data-theme="dark"] .top-bar{ background:rgba(21,23,28,0.85); }
       .week-card:hover, .hub-btn:hover,
       .week-card:active, .hub-btn:active { transform: none; }
       .week-card::before, .hub-btn::before { transition: none; }
+      /* Accordions still open/close, just without the slide. */
+      .accordion-body.acc-animated,
+      .accordion-body.acc-animated > .acc-inner { transition: none !important; }
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;

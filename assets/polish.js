@@ -26,7 +26,28 @@
 
   var SEL = '.week-card:not(.upcoming), .hub-btn';
 
+  /* Make accordions actually animate. The bodies have multiple children, so the
+     grid-template-rows collapse needs them wrapped in a single element. Wrap
+     once, then add .acc-animated so the CSS animation applies. Done even under
+     reduced motion: the CSS transition is dropped there, but the wrap is
+     harmless and keeps open/close working. Idempotent. */
+  function initAccordions() {
+    var bodies = document.querySelectorAll('.accordion-body');
+    for (var i = 0; i < bodies.length; i++) {
+      var body = bodies[i];
+      if (body.querySelector(':scope > .acc-inner')) continue;
+      if (!body.firstChild) continue;
+      var inner = document.createElement('div');
+      inner.className = 'acc-inner';
+      while (body.firstChild) inner.appendChild(body.firstChild);
+      body.appendChild(inner);
+      body.classList.add('acc-animated');
+    }
+  }
+
   function init() {
+    initAccordions();
+
     var reduce = window.matchMedia &&
                  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var coarse = window.matchMedia &&
