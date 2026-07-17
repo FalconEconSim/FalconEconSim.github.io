@@ -873,6 +873,13 @@ var C = {
 var icBoard3D, icBoard2D, icView3D;
 var icCurves2D=[], icGlider2D=null, icTangent2D=null;
 var icDropH=null, icDropV=null, icMRSText=null, icHighlightFn=null;
+/* Fig 2.1's dashed "original IC" ghost: the IC at the baseline U0, kept on
+   screen once the U0 slider moves, so the page's own point that higher ICs lie
+   strictly outside lower ones is visible rather than asserted. Baseline must
+   stay in step with the ic-u0 markup default. Cobb-Douglas panel only: the
+   other preference types are family swaps, not shifts, and rebuild wholesale.
+   (Declared in both copies of this block, which are duplicated verbatim.) */
+var IC_U0_BASE = 2.0, icGhostFn = null;
 
 var IC_INFO = {
   cobb: {
@@ -1125,6 +1132,7 @@ function drawIC2D(type, alpha) {
   if (icDropH)      {try{icBoard2D.removeObject(icDropH,     false);}catch(e){} icDropH=null;}
   if (icDropV)      {try{icBoard2D.removeObject(icDropV,     false);}catch(e){} icDropV=null;}
   if (icHighlightFn){try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){} icHighlightFn=null;}
+  if (icGhostFn){try{icBoard2D.removeObject(icGhostFn,false);}catch(e){} icGhostFn=null;}
 
   /* Fixed bounding box for all types - curves move, axes stay fixed */
   var u0=slVal('ic-u0');
@@ -1154,7 +1162,16 @@ function redrawIC2DAtU0(type, alpha, u0) {
     /* For Cobb: the curve/glider/tangent are persistent and read icU0State live.
        Just call board.update() - no object creation or destruction. */
     if (!icHighlightFn) {
-      /* First time only: create the persistent objects */
+      /* First time only: create the persistent objects.
+         The ghost is created first so it paints UNDER the live curve. It reads
+         the BASELINE u0 but the LIVE alpha, so it stays a member of the same
+         preference family the student is currently looking at. */
+      icGhostFn = icBoard2D.create('functiongraph', [function(x) {
+        var a = icU0State.alpha, b = 1 - a, u = IC_U0_BASE;
+        return x > 0.05 ? Math.pow(u / Math.pow(x, a), 1 / b) : NaN;
+      }, 0.05, 13.2], {strokeColor: C.red, strokeWidth: 1.6, dash: 2,
+                       strokeOpacity: 0.45, highlight: false, visible: false});
+
       icHighlightFn = icBoard2D.create('functiongraph', [function(x) {
         var a = icU0State.alpha, b = 1 - a, u = icU0State.u0;
         return x > 0.05 ? Math.pow(u / Math.pow(x, a), 1 / b) : NaN;
@@ -1228,12 +1245,17 @@ function redrawIC2DAtU0(type, alpha, u0) {
       var resetX = safePos(icU0State.u0, 0.3, 11.0);
       try { icGlider2D.setPosition(JXG.COORDS_BY_USER, [resetX, resetX]); } catch(ex){}
     }
+    /* Show the baseline-U0 ghost only once U0 has actually moved. */
+    if (icGhostFn) {
+      try { icGhostFn.setAttribute({visible: Math.abs(icU0State.u0 - IC_U0_BASE) > 0.02}); } catch(ex){}
+    }
     icBoard2D.update();
     return;
   }
 
   /* Non-cobb: clear and recreate fixed lines with MRS glider */
   if (icHighlightFn) { try{icBoard2D.removeObject(icHighlightFn,false);}catch(e){} icHighlightFn=null; }
+  if (icGhostFn) { try{icBoard2D.removeObject(icGhostFn,false);}catch(e){} icGhostFn=null; }
   if (!window.icExtraObjs) window.icExtraObjs = [];
   window.icExtraObjs.forEach(function(o){try{icBoard2D.removeObject(o,false);}catch(e){}});
   window.icExtraObjs = [];
@@ -1427,6 +1449,13 @@ var C = {
 var icBoard3D, icBoard2D, icView3D;
 var icCurves2D=[], icGlider2D=null, icTangent2D=null;
 var icDropH=null, icDropV=null, icMRSText=null, icHighlightFn=null;
+/* Fig 2.1's dashed "original IC" ghost: the IC at the baseline U0, kept on
+   screen once the U0 slider moves, so the page's own point that higher ICs lie
+   strictly outside lower ones is visible rather than asserted. Baseline must
+   stay in step with the ic-u0 markup default. Cobb-Douglas panel only: the
+   other preference types are family swaps, not shifts, and rebuild wholesale.
+   (Declared in both copies of this block, which are duplicated verbatim.) */
+var IC_U0_BASE = 2.0, icGhostFn = null;
 
 var IC_INFO = {
   cobb: {
@@ -1894,14 +1923,29 @@ function initOptimumBoard() {
   });
 }
 
+/* Baseline slider defaults for Fig 2.5's dashed "original budget line" ghost.
+   Keep in step with the opt-I / opt-Px / opt-Py markup defaults. */
+var OPT_I0 = 80, OPT_PX0 = 5, OPT_PY0 = 4;
+
 function buildOptimumBoard() {
   optObjects.forEach(function(o){try{optBoard.removeObject(o,false);}catch(e){}});
   optObjects=[];
 
   var I=slVal('opt-I'),Px=slVal('opt-Px'),Py=slVal('opt-Py'),a=slVal('opt-alpha');
   var type=document.getElementById('opt-type').value;
-  var xI=I/Px,yI=I/Py,m=Math.max(xI,yI)*1.5;
+  var xI=I/Px,yI=I/Py;
+  /* Ghost of the ORIGINAL budget line at the baseline I/Px/Py, so the whole
+     tangency (line, IC, optimum) can be read as a move from a known start.
+     Only the LINE is ghosted: adding a ghost IC and ghost point as well would
+     clutter a figure that already draws three ICs. */
+  var xI0=OPT_I0/OPT_PX0, yI0=OPT_I0/OPT_PY0;
+  var optShifted = Math.abs(I-OPT_I0)>0.5 || Math.abs(Px-OPT_PX0)>0.05 || Math.abs(Py-OPT_PY0)>0.05;
+  var m=Math.max(xI,yI,optShifted?xI0:0,optShifted?yI0:0)*1.5;
   optBoard.setBoundingBox([-m*0.06,m*1.1,m*1.1,-m*0.06],false);
+  if (optShifted) {
+    optObjects.push(optBoard.create('functiongraph',[function(x){return(OPT_I0-OPT_PX0*x)/OPT_PY0;},0,xI0],
+      {strokeColor:'#00897b',strokeWidth:1.6,dash:2,strokeOpacity:0.45,highlight:false}));
+  }
 
   function uFn(x,y){
     if(type==='cobb')        return x>0&&y>0?Math.pow(x,a)*Math.pow(y,1-a):0;
@@ -2636,6 +2680,10 @@ function initCornerExplorer() {
   });
 }
 
+/* Baseline Px for Fig 2.10's dashed "pre-pivot line" ghost. Keep in step with
+   the corner-px markup default. */
+var CORNER_PX0 = 4;
+
 function buildCornerExplorer() {
   if (!cornerBoard) return;
   cornerObjects.forEach(function(o){try{cornerBoard.removeObject(o,false);}catch(e){}});
@@ -2648,8 +2696,21 @@ function buildCornerExplorer() {
   var b  = parseFloat(document.getElementById('corner-b').value);
 
   var xi = I / Px, yi = I / Py;
-  var m = Math.max(xi, yi) * 1.35;
+  /* Ghost of the pre-pivot line at the baseline Px. Px pivots the line around
+     the fixed Y-intercept, and the optimal bundle can jump corner to corner as
+     a result, so keeping the original on screen makes the jump legible as a
+     consequence of the pivot. */
+  var xi0 = I / CORNER_PX0;
+  var cornerShifted = Math.abs(Px - CORNER_PX0) > 0.05;
+  var m = Math.max(xi, yi, cornerShifted ? xi0 : 0) * 1.35;
   cornerBoard.setBoundingBox([-m*0.06, m*1.1, m*1.1, -m*0.06], false);
+
+  if (cornerShifted) {
+    cornerObjects.push(cornerBoard.create('segment', [[0, yi],[xi0, 0]], {
+      strokeColor: '#1a1a1a', strokeWidth: 1.6, dash: 2, strokeOpacity: 0.45,
+      fixed: true, highlight: false
+    }));
+  }
 
   /* Budget line */
   var bl = cornerBoard.create('segment', [[0, yi],[xi, 0]], {
