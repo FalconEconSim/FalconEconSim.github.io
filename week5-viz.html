@@ -442,6 +442,11 @@
 </main>
 
 <script>
+/* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
+   resolve CSS var(), so their colours come from here; CSS and inline styles use
+   var() directly. Fallbacks equal the token values. */
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+
 // ══════════════════════════════════════════════════════════════════════
 // SHARED CANVAS UTILITIES
 // ══════════════════════════════════════════════════════════════════════
@@ -696,7 +701,7 @@ function v51EnsureOverlayA(W,H) {
   svg.selectAll('*').remove();
   const nodes=[
     d5Node('tp','#1a56db','TP',46,W/2,H/2),
-    d5Node('slope','#e74c3c','slope',70,W/2,H/2),
+    d5Node('slope',EC.red,'slope',70,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
@@ -709,7 +714,7 @@ function v51EnsureOverlayB(W,H) {
   const svg=d5Svg('cvs51b-svg',W,H); if(!svg) return null;
   if(v51OvlB && v51OvlB.W===W && v51OvlB.H===H) return v51OvlB;
   svg.selectAll('*').remove();
-  const nodes=[ d5Node('mpl','#e74c3c','MPL',60,W/2,H/2) ];
+  const nodes=[ d5Node('mpl',EC.red,'MPL',60,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
   sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
@@ -874,7 +879,7 @@ function v51Draw() {
   const y0=tpL+mplL*(x0-L), y1=tpL+mplL*(x1-L);
   const [tx0,ty0]=toC(Math.max(0.05,x0),y0,W,HA,xR,yRA);
   const [tx1,ty1]=toC(Math.min(10,x1),y1,W,HA,xR,yRA);
-  ctxA.beginPath(); ctxA.setLineDash([5,4]); ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=1.5;
+  ctxA.beginPath(); ctxA.setLineDash([5,4]); ctxA.strokeStyle=EC.red; ctxA.lineWidth=1.5;
   ctxA.moveTo(tx0,ty0); ctxA.lineTo(tx1,ty1); ctxA.stroke(); ctxA.setLineDash([]);
   dot5(ctxA,cx,cy,7,'#1a56db','#fff');
 
@@ -894,7 +899,7 @@ function v51Draw() {
 
   // Phase label (corner -- fixed, no collision)
   const phaseLabel=form.phase(mplL,L);
-  ctxA.fillStyle='#6b52a8'; ctxA.font='bold 10px DM Sans,sans-serif'; ctxA.textAlign='right'; ctxA.textBaseline='alphabetic';
+  ctxA.fillStyle=EC.purple; ctxA.font='bold 10px DM Sans,sans-serif'; ctxA.textAlign='right'; ctxA.textBaseline='alphabetic';
   ctxA.fillText(phaseLabel,W-MR-4,HA-MB-6);
 
   // Drop line
@@ -910,7 +915,7 @@ function v51Draw() {
   // Ghost MPL (faded, dashed, thinner): MPL at baseline K=4.
   if(kShifted){
     ctxB.save();
-    ctxB.setLineDash([5,4]); ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=1.4; ctxB.globalAlpha=0.45;
+    ctxB.setLineDash([5,4]); ctxB.strokeStyle=EC.red; ctxB.lineWidth=1.4; ctxB.globalAlpha=0.45;
     ctxB.beginPath(); let gfirstB=true;
     for(let l=0.1;l<=10;l+=0.05){
       const [gx,gy]=toC(l,mplBase(l),W,HB,xR,yRB);
@@ -925,7 +930,7 @@ function v51Draw() {
        MPL), so pushing it down and the current one up separates them without
        moving either off its own curve. */
     const gLb=9.3, [glbx,glby]=toC(gLb,mplBase(gLb),W,HB,xR,yRB);
-    ctxB.save(); ctxB.globalAlpha=0.55; ctxB.fillStyle='#e74c3c';
+    ctxB.save(); ctxB.globalAlpha=0.55; ctxB.fillStyle=EC.red;
     ctxB.font='9px DM Sans,sans-serif'; ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
     ctxB.fillText('MPL', glbx+3, glby+11);
     ctxB.restore();
@@ -939,10 +944,10 @@ function v51Draw() {
     if(cy2<MT-5||cy2>HB-MB+5){first=true;continue;}
     first?(ctxB.moveTo(cx2,cy2),first=false):ctxB.lineTo(cx2,cy2);
   }
-  ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=2; ctxB.stroke();
+  ctxB.strokeStyle=EC.red; ctxB.lineWidth=2; ctxB.stroke();
   {
     const idLb=9.3, [ilbx,ilby]=toC(idLb,mpl(idLb),W,HB,xR,yRB);
-    ctxB.save(); ctxB.fillStyle='#e74c3c'; ctxB.font='bold 10px DM Sans,sans-serif';
+    ctxB.save(); ctxB.fillStyle=EC.red; ctxB.font='bold 10px DM Sans,sans-serif';
     ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
     // Lifted only when a ghost is on screen to share the space with it.
     ctxB.fillText(kShifted?'MPL′':'MPL', ilbx+3, ilby-(kShifted?4:0));
@@ -951,7 +956,7 @@ function v51Draw() {
 
   // Current MPL point + D3 SVG overlay label
   const [mx,my]=toC(L,mplL,W,HB,xR,yRB);
-  dot5(ctxB,mx,my,7,'#e74c3c','#fff');
+  dot5(ctxB,mx,my,7,EC.red,'#fff');
   const ovlB=v51EnsureOverlayB(W,HB);
   if(ovlB){
     const mplTxt=`MPL=${mplL.toFixed(3)}`;
@@ -985,8 +990,8 @@ function v51Update() {
       <div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val">${L.toFixed(1)}</div></div>
       ${showK?`<div class="readout-col"><div class="readout-label">K (fixed)</div><div class="readout-val">${K}</div></div>`:''}
       <div class="readout-col"><div class="readout-label">TP (output)</div><div class="readout-val">${tp.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">MPL = slope of TP</div><div class="readout-val" style="color:#e74c3c">${mpl.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Phase</div><div class="readout-val" style="color:#6b52a8;font-size:0.82rem;">${phase}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL = slope of TP</div><div class="readout-val" style="color:var(--red)">${mpl.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Phase</div><div class="readout-val" style="color:var(--purple);font-size:0.82rem;">${phase}</div></div>
     </div>`;
   v51Draw();
 }
@@ -1024,11 +1029,11 @@ function v52EnsureOverlay(canvasId, W, H, withDragLabels) {
   const nodes=[
     d5Node('q0','#1a56db','Q',34,W/2,H/2),
     d5Node('q1','#2e8b57','Q',34,W/2,H/2),
-    d5Node('q2','#c0392b','Q',34,W/2,H/2),
+    d5Node('q2',EC.red,'Q',34,W/2,H/2),
   ];
   if(withDragLabels){
-    nodes.push(d5Node('P','#e74c3c','P',70,W/2,H/2));
-    nodes.push(d5Node('mrts','#e74c3c','MRTS',70,W/2,H/2));
+    nodes.push(d5Node('P',EC.red,'P',70,W/2,H/2));
+    nodes.push(d5Node('mrts',EC.red,'MRTS',70,W/2,H/2));
   }
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
@@ -1070,7 +1075,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
 
   const label=mode==='iq'?'Q':'U';
   const tangLabel=mode==='iq'?'MRTS':'MRS';
-  const colors=['#1a56db','#2e8b57','#c0392b'];
+  const colors=['#1a56db','#2e8b57',EC.red];
   // D3 SVG overlay: curve labels (+ drag-point labels on the CD panel)
   const isDragPanel = (canvasId==='cvs52a' && type==='cd');
   const ovl = v52EnsureOverlay(canvasId, W, H, isDragPanel);
@@ -1137,10 +1142,10 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     const dxT=1.5;
     const [tx0,ty0]=toC(Math.max(0.1,L-dxT),K+mrts*dxT,W,H,xR,yR);
     const [tx1,ty1]=toC(Math.min(9.8,L+dxT),K-mrts*dxT,W,H,xR,yR);
-    ctx.setLineDash([4,3]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.5;
+    ctx.setLineDash([4,3]); ctx.strokeStyle=EC.red; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
     // Dot P (canvas, kept; SVG overlay carries only the draggable text labels)
-    dot5(ctx,px,py,8,'#e74c3c','#fff');
+    dot5(ctx,px,py,8,EC.red,'#fff');
     // D3 SVG overlay: track the P / MRTS labels to the live drag position
     if(ovl){
       const pNode=ovl.nodes.find(n=>n.id==='P'), mrtsNode=ovl.nodes.find(n=>n.id==='mrts');
@@ -1221,8 +1226,8 @@ function v53EnsureOverlay(W,H) {
   const nodes=[
     d5Node('q','#1a56db','Q',40,W/2,H/2),
     d5Node('lk','#2e8b57','L,K',70,W/2,H/2),
-    d5Node('mrts','#e74c3c','MRTS',80,W/2,H/2),
-    d5Node('repl','#e74c3c','replaces',110,W/2,H/2),
+    d5Node('mrts',EC.red,'MRTS',80,W/2,H/2),
+    d5Node('repl',EC.red,'replaces',110,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
@@ -1279,7 +1284,7 @@ function v53Draw() {
   const [tx1,ty1]=toC(tanX1, tanK(tanX1), W,H,xR,yR);
   ctx.save();
   ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
-  ctx.setLineDash([6,4]); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
+  ctx.setLineDash([6,4]); ctx.strokeStyle=EC.red; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
   dot5(ctx,cx,cy,9,'#2e8b57','#fff');
@@ -1310,7 +1315,7 @@ function v53Draw() {
   document.getElementById('v53-readout').innerHTML=
     `<div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val" style="color:#2e8b57">${L.toFixed(2)}</div></div>
     <div class="readout-col"><div class="readout-label">K (machines)</div><div class="readout-val" style="color:#2e8b57">${K.toFixed(2)}</div></div>
-    <div class="readout-col" style="margin-top:0.75rem;"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:#e74c3c">${mrts.toFixed(3)}</div></div>
+    <div class="readout-col" style="margin-top:0.75rem;"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:var(--red)">${mrts.toFixed(3)}</div></div>
     <div style="margin-top:0.75rem;font-size:0.88rem;line-height:1.7;color:var(--muted);">
       At this point, <strong>1 additional worker</strong> can replace <strong>${mrts.toFixed(2)} machines</strong>.<br>
       The MRTS diminishes as L rises because each additional worker adds less marginal product as K/L falls.
@@ -1366,7 +1371,7 @@ function v54EnsureOverlayA(W,H) {
   const svg=d5Svg('cvs54a-svg',W,H); if(!svg) return null;
   if(v54OvlA && v54OvlA.W===W && v54OvlA.H===H) return v54OvlA;
   svg.selectAll('*').remove();
-  const nodes=[ d5Node('cap','#e74c3c','MPL falls as L rises',120,W/2,H/2) ];
+  const nodes=[ d5Node('cap',EC.red,'MPL falls as L rises',120,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
   sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
@@ -1412,7 +1417,7 @@ function v54Draw() {
   const yMaxMPL=Math.ceil(mplAt1*1.2*2)/2;
   const xRa=[0,12],yRa=[0,yMaxMPL];
   drawAxesSt(ctxA,W,H54,xRa,yRa,'L (workers)','MPL');
-  ctxA.beginPath(); let first=true; ctxA.strokeStyle='#e74c3c'; ctxA.lineWidth=2;
+  ctxA.beginPath(); let first=true; ctxA.strokeStyle=EC.red; ctxA.lineWidth=2;
   for(let l=0.2;l<=12;l+=0.1){
     const mpl=b*v54CD(Kfix,l,a,b)/l;
     const [cx,cy]=toC(l,mpl,W,H54,xRa,yRa);
@@ -1476,7 +1481,7 @@ function v54Draw() {
   document.getElementById('v54-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(a+b).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rtsLabel}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?EC.red:'#888'}">${rtsLabel}</div></div>
       <div class="readout-col"><div class="readout-label">MPL (diminishing?)</div><div class="readout-val">Yes: b&lt;1</div></div>
       <div class="readout-col"><div class="readout-label">Q doubles when scale=2</div><div class="readout-val">${(q2_d/q1_d).toFixed(2)}x</div></div>
     </div>
@@ -1507,7 +1512,7 @@ function v55EnsureOverlay(W,H) {
   const nodes=[
     d5Node('q0','#2e8b57','Q',32,W/2,H/2),
     d5Node('q1','#1a56db','Q',32,W/2,H/2),
-    d5Node('q2','#c0392b','Q',32,W/2,H/2),
+    d5Node('q2',EC.red,'Q',32,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
@@ -1531,7 +1536,7 @@ function v55Draw() {
 
   // Q = A*K^a*L^b with A=1
   const qLevels=[1,2,4];
-  const cols=['#2e8b57','#1a56db','#c0392b'];
+  const cols=['#2e8b57','#1a56db',EC.red];
   const rayPts=[];
   const curveAnchors=[]; // {text,color,ax,ay} for ray-intersection "Q=…" labels (0-3 entries)
 
@@ -1587,7 +1592,7 @@ function v55Draw() {
   document.getElementById('v55-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(a+b).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rts>1?'IRS':rts<1?'DRS':'CRS'}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?EC.red:'#888'}">${rts>1?'IRS':rts<1?'DRS':'CRS'}</div></div>
     </div>
     <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">${verdict}. Q = K<sup>${a}</sup>L<sup>${b}</sup>. Spacing along ray L=K: Q=1 at L=${rayPts[0]?rayPts[0].l.toFixed(2):'?'}, Q=2 at L=${rayPts[1]?rayPts[1].l.toFixed(2):'?'}, Q=4 at L=${rayPts[2]?rayPts[2].l.toFixed(2):'?'}.</div>`;
 
@@ -1622,7 +1627,7 @@ function v56EnsureOverlay(W,H) {
   const nodes=[
     d5Node('iq','#1a56db','Q = 4',60,W/2,H/2),
     d5Node('bundle','#2e8b57','L=4, K=4',60,W/2,H/2),
-    d5Node('tech','#c0392b','Technology improved',110,ML+4,MT+28),
+    d5Node('tech',EC.red,'Technology improved',110,ML+4,MT+28),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
@@ -1746,7 +1751,7 @@ function v57EnsureOverlay(canvasId, key, W, H) {
   svg.selectAll('*').remove();
   const nodes=[
     d5Node('opt','#2e8b57','Optimum',54,W/2,H/2),
-    d5Node('line','#e74c3c','Budget',46,W/2,H/2),
+    d5Node('line',EC.red,'Budget',46,W/2,H/2),
     d5Node('curve','#1a56db','IC',28,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
@@ -1793,7 +1798,7 @@ function v57Draw() {
     const intercept=2*level;
     const [lx0,ly0]=toC(0,intercept,W,H,xR,yR);
     const [lx1,ly1]=toC(intercept,0,W,H,xR,yR);
-    ctx.beginPath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.strokeStyle=EC.red; ctx.lineWidth=2;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
     // Optimal point
@@ -1844,7 +1849,7 @@ function v58EnsureOverlay(W,H) {
   const svg=d5Svg('cvs58-svg',W,H); if(!svg) return null;
   if(v58Ovl && v58Ovl.W===W && v58Ovl.H===H) return v58Ovl;
   svg.selectAll('*').remove();
-  const nodes=[ d5Node('lam','#e74c3c','λ = 1.0 (scaled inputs)',110,W/2,H/2) ];
+  const nodes=[ d5Node('lam',EC.red,'λ = 1.0 (scaled inputs)',110,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
   sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
@@ -1889,7 +1894,7 @@ function v58Draw() {
   const ovl58=v58EnsureOverlay(W,H);
   if(Math.abs(lam-1)>0.05){
     const [spx,spy]=toC(Lpt*lam,Kpt*lam,W,H,xR,yR);
-    dot5(ctx,spx,spy,7,'#e74c3c','#fff');
+    dot5(ctx,spx,spy,7,EC.red,'#fff');
     ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(spx,spy); ctx.stroke(); ctx.setLineDash([]);
     if(ovl58){
@@ -1914,13 +1919,13 @@ function v58Draw() {
   document.getElementById('v58-readout').innerHTML=
     `<div class="readout-row" style="flex-wrap:wrap;">
       <div class="readout-col"><div class="readout-label">Q(K,L)</div><div class="readout-val">${q0.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Q(λK, λL)</div><div class="readout-val" style="color:#e74c3c">${qLam.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Q(λK, λL)</div><div class="readout-val" style="color:var(--red)">${qLam.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">Ratio = λ^(a+b)</div><div class="readout-val">${(qLam/q0).toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">MPL at point</div><div class="readout-val">${MPL.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">MPK at point</div><div class="readout-val">${MPK.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">MRTS = MPL/MPK</div><div class="readout-val" style="color:#e74c3c">${MRTS.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">MRTS = MPL/MPK</div><div class="readout-val" style="color:var(--red)">${MRTS.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(rts).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?'#e74c3c':'#888'}">${rts>1.01?'IRS':rts<0.99?'DRS':'CRS'}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?EC.red:'#888'}">${rts>1.01?'IRS':rts<0.99?'DRS':'CRS'}</div></div>
     </div>
     <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
       Q = ${A.toFixed(1)} &times; K<sup>${a.toFixed(2)}</sup> &times; L<sup>${b.toFixed(2)}</sup>. Scaling inputs by λ=${lam.toFixed(1)} scales output by ${(qLam/q0).toFixed(3)} = λ<sup>${rts.toFixed(2)}</sup>.
@@ -2049,7 +2054,7 @@ function v59Draw() {
 function v59HireWorker() {
   const mpl=v59MPL(v59L+1,v59K);
   if(mpl<=0){
-    document.getElementById('v59-readout').innerHTML=`<strong style="color:#e74c3c">Hire refused!</strong> MPL is negative at L=${v59L+1}. Adding another worker would reduce output. This worker makes the team worse.`;
+    document.getElementById('v59-readout').innerHTML=`<strong style="color:var(--red)">Hire refused!</strong> MPL is negative at L=${v59L+1}. Adding another worker would reduce output. This worker makes the team worse.`;
     return;
   }
   v59L++;
@@ -2082,13 +2087,13 @@ function v59Update() {
       <div class="readout-col"><div class="readout-label">Workers L</div><div class="readout-val">${v59L}</div></div>
       <div class="readout-col"><div class="readout-label">Machines K</div><div class="readout-val">${v59K}</div></div>
       <div class="readout-col"><div class="readout-label">Output TP</div><div class="readout-val">${tp.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">MPL (current)</div><div class="readout-val" style="color:${mpl>0?'#2e8b57':'#e74c3c'}">${v59L>0?mpl.toFixed(3):'n/a'}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL (current)</div><div class="readout-val" style="color:${mpl>0?'#2e8b57':EC.red}">${v59L>0?mpl.toFixed(3):'n/a'}</div></div>
       <div class="readout-col"><div class="readout-label">Total Wage Bill</div><div class="readout-val">$${totalWage}</div></div>
     </div>
     <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
       ${shouldHire
         ?`Next worker's MPL = ${nextMPL.toFixed(3)} > 0. <strong style="color:#2e8b57">Safe to hire (output rises).</strong>`
-        :`Next worker's MPL = ${nextMPL.toFixed(3)} &le; 0. <strong style="color:#e74c3c">Do NOT hire - output would fall.</strong>`}
+        :`Next worker's MPL = ${nextMPL.toFixed(3)} &le; 0. <strong style="color:var(--red)">Do NOT hire - output would fall.</strong>`}
       Wage w = $${w}/worker. Total wage bill = $${totalWage}. Note: the TP curve shows physical output and does not depend on the wage - the wage affects costs and profits, not the production function itself. Use "Buy Machine" to raise K and restart diminishing returns.
     </div>`;
 }
@@ -2155,7 +2160,7 @@ function v510BuildOverlay(W,H) {
   delete svgEl.dataset.vb; // allow d5Svg to (re)size this fresh node
   const svg=d5Svg('cvs510-svg',W,H); if(!svg) return null;
   svg.selectAll('*').remove();
-  const cols=['#2e8b57','#1a56db','#c0392b'];
+  const cols=['#2e8b57','#1a56db',EC.red];
   const nodes=[
     d5Node('q0',cols[0],'Q=2',28,W/2,H/2),
     d5Node('q1',cols[1],'Q=4',28,W/2,H/2),
@@ -2180,7 +2185,7 @@ function quiz510DrawResult(type) {
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
-  const cols=['#2e8b57','#1a56db','#c0392b'];
+  const cols=['#2e8b57','#1a56db',EC.red];
   const ovl510=v510BuildOverlay(W,H);
   [2,4,6].forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2;

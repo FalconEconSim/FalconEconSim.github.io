@@ -39,7 +39,7 @@
     .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:36px;}
     .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
     .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
-    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:#c0392b;}
+    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:var(--red);}
     .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
     .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
     .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
@@ -351,6 +351,11 @@
 </main>
 
 <script>
+/* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
+   resolve CSS var(), so their colours come from here; CSS and inline styles use
+   var() directly. Fallbacks equal the token values. */
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+
 // ─────────────────────────────────────────────────────────────────────────
 // SHARED UTILITIES
 // ─────────────────────────────────────────────────────────────────────────
@@ -570,7 +575,7 @@ function v71Draw(){
     if(q%1<0.05) linePts71.push([cx,cy]);
     first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
   }
-  ctxA.strokeStyle='#e74c3c';ctxA.lineWidth=2;ctxA.stroke();
+  ctxA.strokeStyle=EC.red;ctxA.lineWidth=2;ctxA.stroke();
 
   const trQmax = P>0 ? Math.min(9, yRA[1]/P) : 9;
   ctxA.beginPath();
@@ -587,7 +592,7 @@ function v71Draw(){
   const[trlx,trly]=toC7(trLblQ,P*trLblQ,W,HA,xR,yRA);
   const trText71=pShifted71?'TR′':'TR';
   const lbls71=[
-    {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:'#e74c3c',fontSize:10,bold:true},
+    {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:EC.red,fontSize:10,bold:true},
     {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText(trText71).width+8,h:13,text:trText71,color:'#1a56db',fontSize:10,bold:true},
   ];
   resolveLabels(lbls71,linePts71,80,6,{x0:2,y0:2,x1:W-2,y1:HA-2});
@@ -609,9 +614,9 @@ function v71Draw(){
   ctxA.beginPath();ctxA.moveTo(curX,MT);ctxA.lineTo(curX,HA-MB);ctxA.stroke();
   ctxA.setLineDash([]);
   const mc=v71SMC(q,ms), tr_val=P*q, tc_val=v71TC(q,tfc,ms), pi=tr_val-tc_val;
-  if(tc_val<=yRA[1])dot7(ctxA,curX,toC7(q,tc_val,W,HA,xR,yRA)[1],5,'#e74c3c');
+  if(tc_val<=yRA[1])dot7(ctxA,curX,toC7(q,tc_val,W,HA,xR,yRA)[1],5,EC.red);
   if(tr_val<=yRA[1])dot7(ctxA,curX,toC7(q,tr_val,W,HA,xR,yRA)[1],5,'#1a56db');
-  ctxA.fillStyle=mc>P?'#e74c3c':'#27ae60';
+  ctxA.fillStyle=mc>P?EC.red:EC.green;
   ctxA.font='bold 10px DM Sans,sans-serif';ctxA.textAlign='left';
   const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
   ctxA.fillText(note,curX+6,MT+20);
@@ -629,10 +634,10 @@ function v71Draw(){
     const[cx,cy]=toC7(q2,pi2,W,HB,xR,yRB);
     first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
   }
-  ctxB.strokeStyle='#6b52a8';ctxB.lineWidth=2;ctxB.stroke();
+  ctxB.strokeStyle=EC.purple;ctxB.lineWidth=2;ctxB.stroke();
   if(pi>=yRB[0]&&pi<=yRB[1]){
     const[piX,piY]=toC7(q,pi,W,HB,xR,yRB);
-    dot7(ctxB,piX,piY,5,'#6b52a8','#fff');
+    dot7(ctxB,piX,piY,5,EC.purple,'#fff');
   }
   ctxB.setLineDash([4,4]);ctxB.strokeStyle='#aaa';ctxB.lineWidth=1;
   ctxB.beginPath();ctxB.moveTo(curX,MT);ctxB.lineTo(curX,HB-MB);ctxB.stroke();
@@ -646,7 +651,7 @@ function v71Draw(){
       <div class="readout-col"><div class="readout-label">VC shift</div><div class="readout-val">${ms>=0?'+':''}${ms.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">TC(q)</div><div class="readout-val">$${tc_val.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">TR = P*q</div><div class="readout-val">$${tr_val.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${pi>=0?'#27ae60':'#e74c3c'}">${pi>=0?'+':''}$${pi.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${pi>=0?EC.green:EC.red}">${pi>=0?'+':''}$${pi.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">MC</div><div class="readout-val">$${mc.toFixed(2)}</div></div>
     </div>`;
 }
@@ -820,10 +825,10 @@ function v72InitSvg(){
   // Zone-color backgrounds before curves
   // Curves drawn into named group so rect can be inserted after axis but before labels
   d3AddCurve(v72svg,SAVC7,scX,scY,'#f39c12',yMax);
-  d3AddCurve(v72svg,SAC7,scX,scY,'#2c3e50',yMax);
+  d3AddCurve(v72svg,SAC7,scX,scY,EC.slate,yMax);
   d3AddCurve(v72svg,SMC7,scX,scY,'#1a56db',yMax);
   // Price line
-  v72pLine=v72svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+  v72pLine=v72svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   // Rect group (inserted before labels)
   v72rectG=v72svg.append('g');
   // Labels
@@ -831,9 +836,9 @@ function v72InitSvg(){
   const qStar=Math.max(0.1,qStar7(P));
   v72nodes=[
     d3Node('SAVC','#f39c12','SAVC',46,scX(4.5),scY(SAVC7(4.5))),
-    d3Node('SAC','#2c3e50','SAC',36,scX(5.5),scY(SAC7(5.5))),
+    d3Node('SAC',EC.slate,'SAC',36,scX(5.5),scY(SAC7(5.5))),
     d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
-    d3Node('P','#7d3c98','P*',30,scX(8),scY(P)),
+    d3Node('P',EC.indicator,'P*',30,scX(8),scY(P)),
   ];
   v72sim=d3MakeSim(v72nodes);
   const els=d3AddLabels(v72svg,v72nodes,v72sim);
@@ -865,17 +870,17 @@ function v72DrawUpdate(P){
   }
   if(P>sacQ&&sacQ<yMax){
     v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,sy)).attr('width',x1-x0).attr('height',Math.abs(py-sy))
-      .attr('fill','rgba(39,174,96,0.25)').attr('stroke','#27ae60').attr('stroke-width',2);
-    v72rectG.append('text').attr('x',x1-4).attr('y',(py+sy)/2+4).attr('text-anchor','end').attr('font-size',9).attr('font-weight',600).attr('fill','#27ae60').text('Height = P*−SAC');
+      .attr('fill','rgba(39,174,96,0.25)').attr('stroke',EC.green).attr('stroke-width',2);
+    v72rectG.append('text').attr('x',x1-4).attr('y',(py+sy)/2+4).attr('text-anchor','end').attr('font-size',9).attr('font-weight',600).attr('fill',EC.green).text('Height = P*−SAC');
   } else if(P<sacQ&&sacQ<yMax){
     v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,sy)).attr('width',x1-x0).attr('height',Math.abs(py-sy))
-      .attr('fill','rgba(231,76,60,0.2)').attr('stroke','#e74c3c').attr('stroke-width',2);
-    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',(py+sy)/2+4).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#e74c3c').text('Loss');
+      .attr('fill','rgba(231,76,60,0.2)').attr('stroke',EC.red).attr('stroke-width',2);
+    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',(py+sy)/2+4).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill',EC.red).text('Loss');
   }
-  v72rectG.append('circle').attr('cx',x1).attr('cy',py).attr('r',6).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5);
+  v72rectG.append('circle').attr('cx',x1).attr('cy',py).attr('r',6).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
   // SAC(q*) dot only when SAC is inside the y-domain (at very low prices q* is
   // tiny and SAC(q*) is huge; clamping pinned an orphan dot to the top edge)
-  if(sacQ<yMax)v72rectG.append('circle').attr('cx',x1).attr('cy',sy).attr('r',6).attr('fill','#2c3e50').attr('stroke','white').attr('stroke-width',1.5);
+  if(sacQ<yMax)v72rectG.append('circle').attr('cx',x1).attr('cy',sy).attr('r',6).attr('fill',EC.slate).attr('stroke','white').attr('stroke-width',1.5);
   // Move P label anchor
   const pNode=v72nodes.find(n=>n.id==='P');
   if(pNode){
@@ -892,13 +897,13 @@ function v72DrawUpdate(P){
       <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">P*</div><div class="readout-val">$${P.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">SAC(q*)</div><div class="readout-val">$${sacQ.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit = q*(P*-SAC)</div><div class="readout-val" style="color:${profit>=0?'#27ae60':'#e74c3c'}">${profit>=0?'+':''}$${profit.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit = q*(P*-SAC)</div><div class="readout-val" style="color:${profit>=0?EC.green:EC.red}">${profit>=0?'+':''}$${profit.toFixed(2)}</div></div>
     </div>`;
 
   // Calculation + explanation box: shows WHY the rectangle's area equals total profit
   const margin=P-sacQ;
-  const marginColor=margin>=0?'#27ae60':'#e74c3c';
-  const profitColor=profit>=0?'#27ae60':'#e74c3c';
+  const marginColor=margin>=0?EC.green:EC.red;
+  const profitColor=profit>=0?EC.green:EC.red;
   const profitWord=profit>=0?'profit':'loss';
   document.getElementById('v72-calc-box').innerHTML=
     `<div style="font-family:'DM Sans',system-ui,sans-serif;">
@@ -945,15 +950,15 @@ function v73InitSvg(){
   });
   d3AddAxes2(v73svg,scX,scY,'Quantity q','$/unit');
   d3AddCurve(v73svg,SAVC7,scX,scY,'#f39c12',yMax);
-  d3AddCurve(v73svg,SAC7,scX,scY,'#2c3e50',yMax);
+  d3AddCurve(v73svg,SAC7,scX,scY,EC.slate,yMax);
   d3AddCurve(v73svg,SMC7,scX,scY,'#1a56db',yMax);
-  v73pLine=v73svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+  v73pLine=v73svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   const P=parseFloat(document.getElementById('v73-p').value);
   v73nodes=[
     d3Node('SAVC','#f39c12','SAVC',46,scX(5),scY(SAVC7(5))),
-    d3Node('SAC','#2c3e50','SAC',36,scX(6),scY(SAC7(6))),
+    d3Node('SAC',EC.slate,'SAC',36,scX(6),scY(SAC7(6))),
     d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
-    d3Node('P','#7d3c98','P*',30,scX(7.5),scY(P)),
+    d3Node('P',EC.indicator,'P*',30,scX(7.5),scY(P)),
   ];
   v73sim=d3MakeSim(v73nodes);
   const els=d3AddLabels(v73svg,v73nodes,v73sim);
@@ -977,11 +982,11 @@ function v73DrawUpdate(P){
   }
   // Re-render labels immediately (sim may be cool, e.g. programmatic slider input)
   if(v73gs)d3TickClamp2(v73nodes,v73gs,v73conns);
-  let zLabel='',zColor='#27ae60',zBg='#f0fdf4';
-  if(P<4){zLabel='Shut down: P < min(SAVC) = $4';zColor='#c0392b';zBg='#fff5f5';}
+  let zLabel='',zColor=EC.green,zBg='#f0fdf4';
+  if(P<4){zLabel='Shut down: P < min(SAVC) = $4';zColor=EC.red;zBg='#fff5f5';}
   else if(P<5.5){zLabel='Operate at loss: P > min(SAVC) but < min(SAC)';zColor='#c05800';zBg='#fff7ed';}
-  else if(P<6){zLabel='Near break-even: P &approx; min(SAC)';zColor='#a07800';zBg='#fffbeb';}
-  else{zLabel='Positive profit: P > min(SAC)';zColor='#27ae60';zBg='#f0fdf4';}
+  else if(P<6){zLabel='Near break-even: P &approx; min(SAC)';zColor=EC.gold;zBg='#fffbeb';}
+  else{zLabel='Positive profit: P > min(SAC)';zColor=EC.green;zBg='#f0fdf4';}
   const zl=document.getElementById('v73-zone-label');
   if(zl){zl.style.background=zBg;zl.style.color=zColor;zl.innerHTML=zLabel;}
 }
@@ -1020,12 +1025,12 @@ function v73Draw_OLD_UNUSED(P){
     curveLbls73.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize:9,bold:true,w:tw+6,h:12});
   }
   drawCurve73(SAVC7,'#f39c12','SAVC');
-  drawCurve73(SAC7,'#2c3e50','SAC');
+  drawCurve73(SAC7,EC.slate,'SAC');
   drawCurve73(SMC7,'#1a56db','SMC');
 
   // Horizontal price line + P* label as force label
   const[,py]=toC7(0,P,W,H,xR,yR);
-  ctx.strokeStyle='#7d3c98';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+  ctx.strokeStyle=EC.indicator;ctx.lineWidth=2;ctx.setLineDash([6,4]);
   ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
   ctx.setLineDash([]);
   } // end if(false)
@@ -1069,15 +1074,15 @@ function v75InitSvg(){
   // SMC above PSD (supply, blue, highlighted): rising branch only
   {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v>yMax||q<2.95)continue;pts.push([v75scXa(q),v75scYa(v)]);}
   v75smcHi=v75svgA.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(pts));}
-  v75pLineEl=v75svgA.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
+  v75pLineEl=v75svgA.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
   // Vertical drop-line from the P=MC intersection down to the q-axis (shows "this price gives this quantity")
-  v75dropLine=v75svgA.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
+  v75dropLine=v75svgA.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
   // q label at the foot of the drop-line (sits just above the axis, to the right
   // of the drop-line: drawn IN the tick row it collided with tick numbers
   // whenever q passed an integer during the sweep)
-  v75qLabel=v75svgA.append('text').attr('text-anchor','start').attr('font-size',9).attr('font-weight',700).attr('fill','#7d3c98').attr('opacity',0);
+  v75qLabel=v75svgA.append('text').attr('text-anchor','start').attr('font-size',9).attr('font-weight',700).attr('fill',EC.indicator).attr('opacity',0);
   // Intersection dot where the price line crosses MC -- the (q, P) pairing made visible
-  v75isectDot=v75svgA.append('circle').attr('r',5).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5).attr('opacity',0);
+  v75isectDot=v75svgA.append('circle').attr('r',5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5).attr('opacity',0);
   // Labels for left panel
   v75nodes75=[
     d3Node('SAVC','#f39c12','SAVC',46,v75scXa(5),v75scYa(SAVC7(5))),
@@ -1246,7 +1251,7 @@ function v77InitSvg(){
   for(let i=0;i<3;i++){
     const ox=D3PAD.left+i*(pw+10);
     v77nodes.push(d3Node('D'+i,'#1a56db','D',20,ox+pw-14,panelBot-20));
-    v77nodes.push(d3Node('S'+i,'#e74c3c','S',20,ox+pw-14,D3PAD.top+28));
+    v77nodes.push(d3Node('S'+i,EC.red,'S',20,ox+pw-14,D3PAD.top+28));
   }
   v77sim=d3MakeSim(v77nodes);
   const els=d3AddLabels(v77svg,v77nodes,v77sim);
@@ -1270,24 +1275,24 @@ function v77Draw(){
     g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#888').text(label);
     // Demand (down-slope, blue) and Supply (up-slope, red)
     g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1a56db').attr('stroke-width',2);
-    g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke','#e74c3c').attr('stroke-width',2);
+    g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke',EC.red).attr('stroke-width',2);
     // Shifted curve: only for panels in shiftPanels, using correct direction for this scenario
     const sp=data.shiftPanels||[2,1];
     if(v77step>=panelShiftStep[i] && sp.includes(i)){
       const sh=20;
       const st=data.shiftType||'demand_right';
       if(st==='demand_right'){
-        g.append('line').attr('x1',ox+10+sh).attr('y1',oy+20).attr('x2',ox+pw-10+sh).attr('y2',bot-10).attr('stroke','#27ae60').attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10+sh+8).attr('y',oy+30).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill','#1e8449').text('D →');
+        g.append('line').attr('x1',ox+10+sh).attr('y1',oy+20).attr('x2',ox+pw-10+sh).attr('y2',bot-10).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
+        g.append('text').attr('x',ox+10+sh+8).attr('y',oy+30).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('D →');
       } else if(st==='demand_left'){
-        g.append('line').attr('x1',ox+10-sh).attr('y1',oy+20).attr('x2',ox+pw-10-sh).attr('y2',bot-10).attr('stroke','#27ae60').attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10-sh-2).attr('y',oy+30).attr('text-anchor','end').attr('font-size',8).attr('font-weight',600).attr('fill','#1e8449').text('← D');
+        g.append('line').attr('x1',ox+10-sh).attr('y1',oy+20).attr('x2',ox+pw-10-sh).attr('y2',bot-10).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
+        g.append('text').attr('x',ox+10-sh-2).attr('y',oy+30).attr('text-anchor','end').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('← D');
       } else if(st==='supply_left'){
-        g.append('line').attr('x1',ox+10-sh).attr('y1',bot-10).attr('x2',ox+pw-10-sh).attr('y2',oy+20).attr('stroke','#27ae60').attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10-sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill','#1e8449').text('← S');
+        g.append('line').attr('x1',ox+10-sh).attr('y1',bot-10).attr('x2',ox+pw-10-sh).attr('y2',oy+20).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
+        g.append('text').attr('x',ox+10-sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('← S');
       } else if(st==='supply_right'){
-        g.append('line').attr('x1',ox+10+sh).attr('y1',bot-10).attr('x2',ox+pw-10+sh).attr('y2',oy+20).attr('stroke','#27ae60').attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10+sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill','#1e8449').text('S →');
+        g.append('line').attr('x1',ox+10+sh).attr('y1',bot-10).attr('x2',ox+pw-10+sh).attr('y2',oy+20).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
+        g.append('text').attr('x',ox+10+sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('S →');
       }
     }
   });
@@ -1341,7 +1346,7 @@ function v78DrawMath(n){
         <div style="margin-top:0.35rem;color:var(--muted);font-size:0.79rem;">Linear approx: q &asymp; (P &minus; 4) / 2</div>
       </div>
       <div style="flex:1;min-width:220px;font-family:'DM Mono',monospace;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.9rem 1.1rem;">
-        <div style="font-weight:700;color:#27ae60;margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Market Supply (${n} firms)</div>
+        <div style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Market Supply (${n} firms)</div>
         <div>Q<sub>mkt</sub> = n &times; q* = ${n} &times; (P &minus; 4) / 2</div>
         <div style="margin-top:0.35rem;color:var(--muted);font-size:0.79rem;">At P = $8: Q = ${n} &times; 2 = ${n*2}</div>
       </div>
@@ -1403,8 +1408,8 @@ function v79InitSvg(){
   // Labels (persistent): D anchor at P=8, Qd=500-400=100
   v79nodesA=[
     d3Node('D','#1a56db','D',20,scXM(100),scYM(8)),
-    d3Node('S','#e74c3c','S',20,scXM(100),scYM(10)),
-    d3Node('EQ','#7d3c98','n=150, P*=$6.40',88,scXM(180),scYM(6.4)),
+    d3Node('S',EC.red,'S',20,scXM(100),scYM(10)),
+    d3Node('EQ',EC.indicator,'n=150, P*=$6.40',88,scXM(180),scYM(6.4)),
   ];
   v79simA=d3MakeSim(v79nodesA);
   const elsA=d3AddLabels(v79svgA,v79nodesA,v79simA);
@@ -1418,15 +1423,15 @@ function v79InitSvg(){
   v79svgB=d3MakeSvg2('cvs79b-wrap');
   d3AddAxes2(v79svgB,scXF,scYF,'q','$/unit');
   // Static SAC and SMC
-  d3AddCurve(v79svgB,q=>SAC7(q),scXF,scYF,'#2c3e50',14);
+  d3AddCurve(v79svgB,q=>SAC7(q),scXF,scYF,EC.slate,14);
   d3AddCurve(v79svgB,q=>SMC7(q),scXF,scYF,'#1a56db',14);
   // Placeholder for dynamic price line + profit rect
   v79svgB.append('g').attr('class','v79-dyn-firm');
   // Labels
   v79nodesB=[
-    d3Node('SAC','#2c3e50','SAC',30,scXF(7.5),scYF(SAC7(7.5))),
+    d3Node('SAC',EC.slate,'SAC',30,scXF(7.5),scYF(SAC7(7.5))),
     d3Node('SMC','#1a56db','SMC',30,scXF(5),scYF(SMC7(5))),
-    d3Node('PI','#7d3c98','P*, π',96,scXF(5),scYF(6.4)),
+    d3Node('PI',EC.indicator,'P*, π',96,scXF(5),scYF(6.4)),
   ];
   v79simB=d3MakeSim(v79nodesB);
   const elsB=d3AddLabels(v79svgB,v79nodesB,v79simB);
@@ -1456,7 +1461,7 @@ function v79Draw(){
     const supPtsBase=[];
     for(let P2=4;P2<=14;P2+=0.2){const Q2=QsBase(P2);if(Q2<0||Q2>300)continue;supPtsBase.push([scXM(Q2),scYM(P2)]);}
     if(supPtsBase.length>1){
-      gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',1.4)
+      gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',1.4)
         .attr('stroke-dasharray','5,4').attr('opacity',0.45).attr('d',d3.line()(supPtsBase));
     }
     /* Anchor the ghost label to a QUANTITY that is actually on screen, then
@@ -1467,15 +1472,15 @@ function v79Draw(){
     const gQ79=200, gP79=4+2*gQ79/v79Start.n;
     if(gP79>=4&&gP79<=14){
       gM.append('text').attr('x',scXM(gQ79)+4).attr('y',scYM(gP79)-4)
-        .attr('font-size',9).attr('font-weight',600).attr('fill','#e74c3c').attr('opacity',0.55).text('S');
+        .attr('font-size',9).attr('font-weight',600).attr('fill',EC.red).attr('opacity',0.55).text('S');
     }
   }
 
   const supPts=[];
   for(let P2=4;P2<=14;P2+=0.2){const Q2=Qs(P2);if(Q2<0||Q2>300)continue;supPts.push([scXM(Q2),scYM(P2)]);}
-  if(supPts.length>1)gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('d',d3.line()(supPts));
+  if(supPts.length>1)gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2).attr('d',d3.line()(supPts));
   const Qeq=Math.min(299,Qs(P));
-  gM.append('circle').attr('cx',scXM(Qeq)).attr('cy',scYM(Math.min(13.5,P))).attr('r',5).attr('fill','#7d3c98').attr('stroke','white').attr('stroke-width',1.5);
+  gM.append('circle').attr('cx',scXM(Qeq)).attr('cy',scYM(Math.min(13.5,P))).attr('r',5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
   // n / P* readout is a draggable D3 force label anchored to the equilibrium
   // dot (tracks it during the entry/exit animation via rigid translate)
   const eqN=v79nodesA.find(d=>d.id==='EQ');
@@ -1502,7 +1507,7 @@ function v79Draw(){
   const Pc=Math.min(13.9,P);
   const py=scYF(Pc);
   gF.append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right).attr('y1',py).attr('y2',py)
-    .attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+    .attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   if(P>0.5){
     const qf=qStar7(P), sacF=SAC7(qf), profit=qf*(P-sacF);
     const qfx=scXF(qf), sacy=scYF(Math.min(sacF,13.9));
@@ -1510,7 +1515,7 @@ function v79Draw(){
     if(rectH>2){
       gF.append('rect').attr('x',D3PAD.left).attr('y',rectY).attr('width',qfx-D3PAD.left).attr('height',rectH)
         .attr('fill',profit>0?'rgba(39,174,96,0.25)':'rgba(231,76,60,0.2)')
-        .attr('stroke',profit>0?'#27ae60':'#e74c3c').attr('stroke-width',1.5);
+        .attr('stroke',profit>0?EC.green:EC.red).attr('stroke-width',1.5);
     }
     // P*/π readout is a draggable D3 force label anchored at the firm's
     // optimum (q*, P) on the price line
@@ -1531,7 +1536,7 @@ function v79Draw(){
       <div class="readout-col"><div class="readout-label">Firms (n)</div><div class="readout-val">${n}</div></div>
       <div class="readout-col"><div class="readout-label">P*(n)</div><div class="readout-val">$${P.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar7(P).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'#27ae60':'#e74c3c'}">${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'+':''}$${(qStar7(P)*(P-SAC7(qStar7(P)))).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${qStar7(P)*(P-SAC7(qStar7(P)))>=0?EC.green:EC.red}">${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'+':''}$${(qStar7(P)*(P-SAC7(qStar7(P)))).toFixed(2)}</div></div>
     </div>`;
 
   /* Old / new / change readout. Baseline is v79Start, the n the current run

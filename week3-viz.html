@@ -12,6 +12,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script>
+/* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
+   resolve CSS var(), so their colours come from here; CSS and inline styles use
+   var() directly. Fallbacks equal the token values. */
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+
     window.MathJax = {
       tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
       svg: { fontCache:'global' },
@@ -29,7 +34,7 @@
     :root {
       --bg:#f7f7f7; --bg-card:#fff; --ink:#1a1a1a; --ink-light:#6b6b6b;
       --faint:#9aa3b2; --accent:#1a56db; --accent-lt:#eff4ff;
-      --rule:#e4e4e4; --green:#2e8b57; --red:#c0392b; --amber:#d4813a; --purple:#6b52a8;
+      --rule:#e4e4e4; --green:#2e8b57; --red:var(--red); --amber:var(--amber); --purple:var(--purple);
     }
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     html { scroll-behavior:smooth; }
@@ -679,7 +684,7 @@ function v1SetRate(r) {
    ============================================================ */
 const V1_I = 60, V1_Py = 3, V1_alpha = 0.5;
 const V1_PX_STEPS = [6, 4, 2, 1];
-const V1_COLS = ['#c0392b','#2e8b57','#6b52a8','#3d5a80'];
+const V1_COLS = [EC.red,'#2e8b57',EC.purple,EC.steel];
 const V1_Ystar = (1 - V1_alpha) * V1_I / V1_Py; // = 10, fixed
 
 let v1CurrStep = 0;
@@ -775,7 +780,7 @@ function v1RebuildOverlay() {
     const { svg, w, h } = ov;
     if (v1CurrStep === V1_PX_STEPS.length) {
       const [dlx, dly] = toCss(...c.toR(26, (V1_alpha * V1_I) / 26));
-      const nodes = [ d3OvNode('D', '#3d5a80', 'D', 22, dlx, dly) ];
+      const nodes = [ d3OvNode('D', EC.steel, 'D', 22, dlx, dly) ];
       const sim = d3OvMakeSim(nodes);
       const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
       sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
@@ -1103,7 +1108,7 @@ function v1DrawCanvas(animProg) {
       if (firstPt) { ctxR.moveTo(cx, cy); firstPt = false; }
       else { ctxR.lineTo(cx, cy); }
     }
-    ctxR.strokeStyle = '#3d5a80';
+    ctxR.strokeStyle = EC.steel;
     ctxR.lineWidth = 2*dpr;
     ctxR.stroke();
 
@@ -1292,9 +1297,9 @@ function drawV2() {
   b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#888',fixed:true});
 
   // Budget lines
-  const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
-  const segHicks = b.create('segment',[[0,yHicksInt],[xiHicks,0]],{strokeColor:'#6b52a8',strokeWidth:2,dash:2,fixed:true});
-  const segNew   = b.create('segment',[[0,yi],[xiB,0]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+  const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:EC.steel,strokeWidth:2,fixed:true});
+  const segHicks = b.create('segment',[[0,yHicksInt],[xiHicks,0]],{strokeColor:EC.purple,strokeWidth:2,dash:2,fixed:true});
+  const segNew   = b.create('segment',[[0,yi],[xiB,0]],{strokeColor:EC.red,strokeWidth:2,fixed:true});
   // Curve-name labels ("Original"/"Compensated"/"New") are rendered by the
   // D3 SVG overlay below as draggable force-labels (S6/S8 gold-standard style)
   // instead of fixed JSXGraph text: see d3v2InitOverlay().
@@ -1303,20 +1308,20 @@ function drawV2() {
   const alpha = 0.5;
   const uA = Math.pow(d.XA,alpha)*Math.pow(d.YA,1-alpha);
   b.create('functiongraph',[x=>x>0.05?Math.pow(uA*uA/x,1):NaN,0.05,xmax],
-    {strokeColor:'#3d5a80',strokeWidth:2,fixed:true});
+    {strokeColor:EC.steel,strokeWidth:2,fixed:true});
   const uB = Math.pow(d.XB,alpha)*Math.pow(d.YB,1-alpha);
   b.create('functiongraph',[x=>x>0.05?Math.pow(uB*uB/x,1):NaN,0.05,xmax],
-    {strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+    {strokeColor:EC.red,strokeWidth:2,fixed:true});
 
   // Points A, C, B
-  [{x:d.XA,y:d.YA,n:'A',c:'#3d5a80'},{x:d.XC,y:d.YC,n:'C',c:'#6b52a8'},{x:d.XB,y:d.YB,n:'B',c:'#c0392b'}]
+  [{x:d.XA,y:d.YA,n:'A',c:EC.steel},{x:d.XC,y:d.YC,n:'C',c:EC.purple},{x:d.XB,y:d.YB,n:'B',c:EC.red}]
     .forEach(p => b.create('point',[p.x,p.y],{size:5,fillColor:p.c,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
       name:p.n,withLabel:true,label:{fontSize:9,color:p.c,offset:[7,7]}}));
 
   // SE/IE brackets on X axis
   const yBr = -ymax*0.03;
-  const segSE = b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:'#6b52a8',strokeWidth:2,fixed:true});
-  const segIE = b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:'#c0392b',strokeWidth:2,fixed:true});
+  const segSE = b.create('segment',[[d.XA,yBr],[d.XC,yBr]],{strokeColor:EC.purple,strokeWidth:2,fixed:true});
+  const segIE = b.create('segment',[[d.XC,yBr],[d.XB,yBr]],{strokeColor:EC.red,strokeWidth:2,fixed:true});
   // "SE"/"IE" bracket labels are rendered by the D3 SVG overlay below
   // (see d3v2InitOverlay()) instead of fixed JSXGraph text.
 
@@ -1366,11 +1371,11 @@ function d3v2InitOverlay(b, geo) {
   const scr = pt => { const sc = pt.coords.scrCoords; return [sc[1], sc[2]]; };
 
   const specs = [
-    { id:'orig', color:'#3d5a80', label:'Original',     lw:54, key:'orig' },
-    { id:'comp', color:'#6b52a8', label:'Compensated',  lw:78, key:'comp' },
-    { id:'new',  color:'#c0392b', label:'New',          lw:34, key:'newL' },
-    { id:'se',   color:'#6b52a8', label:'SE',           lw:26, key:'se'   },
-    { id:'ie',   color:'#c0392b', label:'IE',           lw:26, key:'ie'   },
+    { id:'orig', color:EC.steel, label:'Original',     lw:54, key:'orig' },
+    { id:'comp', color:EC.purple, label:'Compensated',  lw:78, key:'comp' },
+    { id:'new',  color:EC.red, label:'New',          lw:34, key:'newL' },
+    { id:'se',   color:EC.purple, label:'SE',           lw:26, key:'se'   },
+    { id:'ie',   color:EC.red, label:'IE',           lw:26, key:'ie'   },
   ];
   const nodes = specs.map(s => {
     const [ax,ay] = scr(anchors[s.key]);
@@ -1433,7 +1438,7 @@ function d3v3InitOverlay(b1, ax, ay, label) {
   const [sx, sy] = scr();
 
   const lw = Math.max(40, label.length * 5.6 + 10);
-  const nodes = [ d3OvNode('iep', '#6b52a8', label, lw, sx, sy) ];
+  const nodes = [ d3OvNode('iep', EC.purple, label, lw, sx, sy) ];
   const sim = d3OvMakeSim(nodes);
   const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
   sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
@@ -1489,7 +1494,7 @@ function initViz3() {
   let v3IepAnchorX, v3IepAnchorY, v3IepLabel;
   if (v3Type === 'normal') {
     // Ray from origin slope = (V3_Px/V3_Py) = 2/3
-    b1.create('line',[[0,0],[1,V3_Px/V3_Py]],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true,
+    b1.create('line',[[0,0],[1,V3_Px/V3_Py]],{strokeColor:EC.purple,strokeWidth:1.5,dash:2,fixed:true,
       point1:{visible:false},point2:{visible:false}});
     /* Anchor low on the ray: the optimum travels the ray from X*=10 (I=40)
        to X*=30 (I=120), so keep the label box left of X=10 at all incomes */
@@ -1502,7 +1507,7 @@ function initViz3() {
     for (let i = 40; i <= 120; i += 5) { pathPts.push([v3Xstar(i), v3Ystar(i)]); }
     const pathX = pathPts.map(p=>p[0]);
     const pathY = pathPts.map(p=>p[1]);
-    b1.create('curve',[pathX,pathY],{strokeColor:'#6b52a8',strokeWidth:1.5,dash:2,fixed:true});
+    b1.create('curve',[pathX,pathY],{strokeColor:EC.purple,strokeWidth:1.5,dash:2,fixed:true});
     v3IepAnchorX = v3Xstar(60)+0.5;
     v3IepAnchorY = v3Ystar(60)+1;
     v3IepLabel = 'IEP (inferior)';
@@ -1537,8 +1542,8 @@ function initViz3() {
     }
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
-    v3Pt = b1.create('point',[xs,ys],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[14,-18]}});
+    v3Pt = b1.create('point',[xs,ys],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:9,color:EC.red,offset:[14,-18]}});
 
     // Right panel: draw demand curve at current I
     [v3D0, v3D0drop, v3D0pt, v3D0lbl, v3D1, v3D2, v3RefPt, v3D1lbl].forEach(o => {
@@ -1577,7 +1582,7 @@ function initViz3() {
 
     v3D1 = b2.create('functiongraph',[dFn(I),0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
     v3D2 = b2.create('segment',[[qAt2(I),0],[qAt2(I),V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
-    v3RefPt = b2.create('point',[qAt2(I),V3_Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
+    v3RefPt = b2.create('point',[qAt2(I),V3_Px],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
       name:'●',withLabel:false});
     v3D1lbl = mkLbl(I, shifted ? 'D′' : 'D', false, 4.7);
 
@@ -1841,8 +1846,8 @@ function redrawV5() {
 
   // Current point
   const curX = safAdj / v5Px;
-  v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[7,5]}});
+  v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
+    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize:9,color:EC.red,offset:[7,5]}});
 
   // "D"/"D′" demand-curve name label as a draggable D3 SVG force-label overlay
   // (S6/S8 gold-standard style), anchored to a point on the curve.

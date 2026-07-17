@@ -322,6 +322,11 @@
 </main>
 
 <script>
+/* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
+   resolve CSS var(), so their colours come from here; CSS and inline styles use
+   var() directly. Fallbacks equal the token values. */
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+
 // ======================================================================
 // SHARED UTILITIES
 // ======================================================================
@@ -524,7 +529,7 @@ function v61Draw(Lcur,Kcur){
     const [lx0,ly0]=toC(0,Math.min(Kint,AXIS_MAX),W,H,xR,yR);
     const [lx1,ly1]=toC(Math.min(Lint,AXIS_MAX),0,W,H,xR,yR);
     if(i===2) for(let t=0;t<=1;t+=0.25) linePts61.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);
-    ctx.beginPath(); ctx.strokeStyle=i===2?'#e74c3c':'#ddd'; ctx.lineWidth=i===2?1.5:1;
+    ctx.beginPath(); ctx.strokeStyle=i===2?EC.red:'#ddd'; ctx.lineWidth=i===2?1.5:1;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
   });
   const [icLx,icLy]=toC(0,Math.min(TCopt/v,AXIS_MAX),W,H,xR,yR);
@@ -534,7 +539,7 @@ function v61Draw(Lcur,Kcur){
   const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
   const lbls61=[
     {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width+8,h:12,text:'Isoquant Q = '+q,color:'#1a56db',fontSize:9,bold:false},
-    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:'#e74c3c',fontSize:9,bold:false},
+    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
   ];
 
   // Resolve and draw static curve labels (isoquant + isocost)
@@ -574,9 +579,9 @@ function v61Draw(Lcur,Kcur){
   const atTangency=Math.abs(MRTS/wv-1)<0.10;
   const atOpt=onIsoquant&&atTangency;
   const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
-  dot6(ctx,bx,by,8,atOpt?'#2e8b57':'#e74c3c','#fff');
+  dot6(ctx,bx,by,8,atOpt?'#2e8b57':EC.red,'#fff');
   ctx.font='9px DM Sans,sans-serif';
-  const dotCol=atOpt?'#2e8b57':'#e74c3c';
+  const dotCol=atOpt?'#2e8b57':EC.red;
   const dragLbls=[
     {ax:bx,ay:by,x:bx+12,y:by-10,w:ctx.measureText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')').width+8,h:12,text:'(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')',color:dotCol,fontSize:9,bold:false},
   ];
@@ -591,7 +596,7 @@ function v61Draw(Lcur,Kcur){
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">L (drag)</div><div class="readout-val">'+Lcur.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">K (drag)</div><div class="readout-val">'+Kcur.toFixed(2)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:#e74c3c">'+MRTS.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:var(--red)">'+MRTS.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(wv).toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">TC = wL + vK</div><div class="readout-val">'+TC.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2e8b57">'+opt.TC.toFixed(2)+'</div></div>' +
@@ -736,7 +741,7 @@ function v62Draw(){
   const xRB=[0,6],yRB=[0,maxTCval];
   drawAxesSt(ctxB,WB,HB,xRB,yRB,'q','TC');
 
-  const colors=['#c0392b','#d4813a','#2e8b57','#1a56db','#6b52a8','#3d5a80','#c0392b','#d4813a','#2e8b57','#1a56db'];
+  const colors=[EC.red,EC.amber,'#2e8b57','#1a56db',EC.purple,EC.steel,EC.red,EC.amber,'#2e8b57','#1a56db'];
 
   for(let i=0;i<v62CurrStep;i++){
     const q=V62_Q_STEPS[i], col=colors[i%colors.length];
@@ -848,14 +853,14 @@ window._initFig65=function initFig65(){
     .attr('stroke','#f0f0f0').attr('stroke-width',1);
 
   // Curve path elements (ordered: LRAC behind, then others)
-  const lracPath=svg.append('path').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',1.8).attr('stroke-dasharray','5,3').attr('opacity',0);
+  const lracPath=svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',1.8).attr('stroke-dasharray','5,3').attr('opacity',0);
   const afcPath=svg.append('path').attr('fill','none').attr('stroke','#888').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
-  const avcPath=svg.append('path').attr('fill','none').attr('stroke','#1e8449').attr('stroke-width',2);
+  const avcPath=svg.append('path').attr('fill','none').attr('stroke',EC.green).attr('stroke-width',2);
   // Ghost ATC (faded, dashed, thinner): re-evaluated at the baseline TFC so
   // raising/lowering TFC leaves the original ATC on screen for comparison.
   const atcGhostPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',1.4).attr('stroke-dasharray','5,4').attr('opacity',0);
   const atcPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
-  const smcPath=svg.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2);
+  const smcPath=svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2);
 
   // min ATC dot
   const minDot=svg.append('circle').attr('r',5).attr('fill','#1a56db').attr('stroke','white').attr('stroke-width',1.5);
@@ -890,13 +895,13 @@ window._initFig65=function initFig65(){
     const qminATC=Math.sqrt(tfc);
     const minATC=v65ATC(qminATC,tfc);
     const nodes=[
-      {id:'SMC',  color:'#e74c3c',label:'SMC',  lw:44,ax:scX(12),  ay:scY(Math.min(v65MC(12),yMax))},
+      {id:'SMC',  color:EC.red,label:'SMC',  lw:44,ax:scX(12),  ay:scY(Math.min(v65MC(12),yMax))},
       {id:'ATC',  color:'#1a56db',label:'ATC',  lw:40, ax:scX(13),  ay:scY(Math.min(v65ATC(13,tfc),yMax))},
-      {id:'AVC',  color:'#1e8449',label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
+      {id:'AVC',  color:EC.green,label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
       {id:'AFC',  color:'#888',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
       {id:'minATC',color:'#1a56db',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
     ];
-    if(v65ShowLR) nodes.push({id:'LRAC',color:'#c0392b',label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
+    if(v65ShowLR) nodes.push({id:'LRAC',color:EC.red,label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
     return nodes.filter(n=>isFinite(n.ay)).map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));
   }
 
@@ -1067,7 +1072,7 @@ window._initFig66=function initFig66(){
   const LABEL_H=15;
   const scX=d3.scaleLinear().domain([0,xMax]).range([PAD.left,W-PAD.right]);
   const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
-  const COLS=['#c0392b','#d4813a','#2e8b57','#6b52a8','#3d5a80','#e67e22','#16a085','#8e44ad'];
+  const COLS=[EC.red,EC.amber,'#2e8b57',EC.purple,EC.steel,'#e67e22','#16a085','#8e44ad'];
   const SUBS=['₁','₂','₃','₄','₅','₆','₇','₈'];
 
   const svg=d3.select('#cvs66-wrap').append('svg')
@@ -1270,12 +1275,12 @@ window._initFig68=function initFig68(){
   // Old isocost (dashed, grey)
   const oldIsocost=svg.append('line').attr('stroke','#aaa').attr('stroke-width',1.5).attr('stroke-dasharray','4,3');
   // New isocost (red)
-  const newIsocost=svg.append('line').attr('stroke','#e74c3c').attr('stroke-width',2);
+  const newIsocost=svg.append('line').attr('stroke',EC.red).attr('stroke-width',2);
   // Arrow old→new
   const arrow=svg.append('line').attr('stroke','#2e8b57').attr('stroke-width',1.5).attr('opacity',0.65);
   // Old optimum X marker
   const oldOptTxt=svg.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle')
-    .attr('fill','#e74c3c').attr('font-size',18).attr('font-weight',700).text('✕');
+    .attr('fill',EC.red).attr('font-size',18).attr('font-weight',700).text('✕');
   // New optimum dot
   const newOptDot=svg.append('circle').attr('r',8).attr('fill','#2e8b57').attr('stroke','white').attr('stroke-width',2);
 
@@ -1303,9 +1308,9 @@ window._initFig68=function initFig68(){
         ax:scX(Math.min(iqL,AXIS_MAX)),ay:scY(Math.min(iqK,AXIS_MAX))},
       {id:'oldIC',color:'#aaa',label:'old isocost',lw:82,
         ax:(scX(0)+scX(Math.min(Lold,AXIS_MAX)))/2, ay:(scY(Math.min(Kold,AXIS_MAX))+scY(0))/2},
-      {id:'newIC',color:'#e74c3c',label:'new isocost (w=$'+w+')',lw:w.toString().length>1?160:146,
+      {id:'newIC',color:EC.red,label:'new isocost (w=$'+w+')',lw:w.toString().length>1?160:146,
         ax:(scX(0)+scX(Math.min(Lnew,AXIS_MAX)))/2, ay:(scY(Math.min(Knew,AXIS_MAX))+scY(0))/2},
-      {id:'oldOpt',color:'#e74c3c',label:'old optimum',lw:90,
+      {id:'oldOpt',color:EC.red,label:'old optimum',lw:90,
         ax:scX(optBase.Ls),ay:scY(optBase.Ks)},
       {id:'newOpt',color:'#2e8b57',label:'new optimum',lw:90,
         ax:scX(optNew.Ls),ay:scY(optNew.Ks)},
@@ -1572,7 +1577,7 @@ window._initFig610=function initFig610(){
 
   // Curves
   const acCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
-  const mcCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',2);
+  const mcCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2);
 
   // q* dashed drop line
   const qstarLine=svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,3');
@@ -1703,7 +1708,7 @@ window._initFig610=function initFig610(){
           nodeList.push({id:'AC',color:'#1a56db',label:'AC',lw:36,ax:scX(acQ),ay:scY(Math.min(ac,acmax))});
         const mcQ=Math.min(13,qmax*0.65);
         const mc=mcFn(mcQ); if(isFinite(mc)&&mc>=0&&mc<=acmax)
-          nodeList.push({id:'MC',color:'#c0392b',label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
+          nodeList.push({id:'MC',color:EC.red,label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
       }
     }
     f610Nodes=nodeList.map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));
