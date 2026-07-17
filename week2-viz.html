@@ -1644,6 +1644,11 @@ var bcBoard;
 var bcOverlay = null;
 
 var bcObjects=[];
+// Baseline slider defaults (Fig 2.3's own defaults) used for the dashed
+// "original line" ghost: when I/Px/Py move away from these, the pre-move
+// line is kept as a faded dashed reference labeled "B", and the current
+// line is primed "B'". At baseline, only the solid "B" line is shown.
+var BC_I0 = 100, BC_PX0 = 5, BC_PY0 = 4;
 
 function initBudgetBoard() {
   bcBoard = mkBoard('jxg-budget', [-2.5, 45, 45, -2.5]);
@@ -1664,7 +1669,9 @@ function buildBudgetBoard() {
 
   var I=slVal('bc-I'), Px=slVal('bc-Px'), Py=slVal('bc-Py');
   var xI=I/Px, yI=I/Py;
-  var m=Math.max(xI,yI)*1.35;
+  var xI0=BC_I0/BC_PX0, yI0=BC_I0/BC_PY0;
+  var shifted = Math.abs(I-BC_I0)>0.5 || Math.abs(Px-BC_PX0)>0.05 || Math.abs(Py-BC_PY0)>0.05;
+  var m=Math.max(xI,yI,shifted?xI0:0,shifted?yI0:0)*1.35;
   bcBoard.setBoundingBox([-m*0.14,m*1.12,m*1.12,-m*0.14],false);
 
   /* Shaded affordable region - fixed, not draggable */
@@ -1672,6 +1679,13 @@ function buildBudgetBoard() {
     fillColor:C.blue,fillOpacity:0.08,strokeWidth:0,
     vertices:{visible:false,fixed:true},fixed:true,highlight:false
   }));
+
+  /* Ghost of the ORIGINAL line at the baseline I/Px/Py: dashed, faded, drawn
+     under the current solid line. Only shown once a slider has moved. */
+  if (shifted) {
+    bcObjects.push(bcBoard.create('functiongraph',[function(x){return(BC_I0-BC_PX0*x)/BC_PY0;},0,xI0],
+      {strokeColor:C.ink,strokeWidth:1.6,dash:2,strokeOpacity:0.45,highlight:false}));
+  }
 
   /* Budget line */
   bcObjects.push(bcBoard.create('functiongraph',[function(x){return(I-Px*x)/Py;},0,xI],
@@ -1689,9 +1703,16 @@ function buildBudgetBoard() {
      to the midpoint of the budget line. Replaces the old fixed JSXGraph text. */
   var mx2=xI*0.45, my2=(I-Px*mx2)/Py;
   if (bcOverlay) {
-    bcOverlay.setLabels([
-      {id:'slope', color:C.blue, label:'slope = \u2212'+(Px/Py).toFixed(2), lw:62, ux:mx2, uy:my2}
-    ]);
+    var bx=xI*0.75, by=(I-Px*bx)/Py;
+    var lbls = [
+      {id:'slope', color:C.blue, label:'slope = \u2212'+(Px/Py).toFixed(2), lw:62, ux:mx2, uy:my2},
+      {id:'bc-b', color:C.ink, label:shifted?'B\u2032':'B', lw:shifted?22:16, ux:bx, uy:by}
+    ];
+    if (shifted) {
+      var gbx=xI0*0.75, gby=(BC_I0-BC_PX0*gbx)/BC_PY0;
+      lbls.push({id:'bc-b-ghost', color:'#9aa3b2', label:'B', lw:16, ux:gbx, uy:gby});
+    }
+    bcOverlay.setLabels(lbls);
   }
 
   /* Sidebar - no plain P_X text */

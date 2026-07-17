@@ -710,6 +710,7 @@ function registerSliderSim(sliderId,getSim){
 // ═════════════════════════════════════════════════════════════════════════
 let v81svg=null,v81sim=null,v81nodes=null,v81gs=null,v81conns=null,v81dyn=null;
 const V81={scX:null,scY:null,a:20,b:4,Qstar:8,Pstar:12};
+const V81_A_BASE=20, V81_B_BASE=4;
 function v81Init(){
   V81.a=20;V81.b=4;
   v81Rebuild();
@@ -731,6 +732,22 @@ function v81Rebuild(){
   v81dyn._yTick =v81svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',2);
   v81dyn._xLbl  =v81svg.append('text').attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#7d3c98');
   v81dyn._yLbl  =v81svg.append('text').attr('text-anchor','end').attr('font-size',9).attr('font-weight',600).attr('fill','#7d3c98');
+  // Ghost D / S (faded, dashed, thinner): the secondary sliders (demand
+  // intercept a, supply minimum price b) genuinely shift these lines, so the
+  // baseline (a=20, b=4) is left on screen for comparison when they differ.
+  // The primary Market Price slider only moves a price line, it never shifts
+  // D or S, so it never triggers a ghost here.
+  const aShifted81=a!==V81_A_BASE, bShifted81=b!==V81_B_BASE;
+  if(aShifted81){
+    d3Seg(v81svg,scX,scY,0,V81_A_BASE,V81_A_BASE,0,STROKE_CS,1.4,'5,4').attr('opacity',0.45);
+    v81svg.append('text').attr('x',scX(V81_A_BASE*0.4)+4).attr('y',scY(V81_A_BASE*0.6)-4)
+      .attr('font-size',9).attr('font-weight',600).attr('fill',STROKE_CS).attr('opacity',0.55).text('D');
+  }
+  if(bShifted81){
+    d3Seg(v81svg,scX,scY,0,V81_B_BASE,domQ,V81_B_BASE+domQ,'#1e8449',1.4,'5,4').attr('opacity',0.45);
+    v81svg.append('text').attr('x',scX(domQ*0.5)+4).attr('y',scY(V81_B_BASE+domQ*0.5)-4)
+      .attr('font-size',9).attr('font-weight',600).attr('fill','#1e8449').attr('opacity',0.55).text('S');
+  }
   // D: P=a-Q and S: P=b+Q
   d3Seg(v81svg,scX,scY,0,a,a,0,STROKE_CS,2);
   d3Seg(v81svg,scX,scY,0,b,domQ,b+domQ,'#1e8449',2);
@@ -739,7 +756,7 @@ function v81Rebuild(){
   v81dyn._pLine=v81svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   v81dyn._vLine=v81svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
   v81dyn._qDot =v81svg.append('circle').attr('r',5).attr('fill','#7d3c98').attr('stroke','#fff').attr('stroke-width',1.5);
-  const dLbl='D: P='+a+'−Q', sLbl='S: P='+b+'+Q';
+  const dLbl=(aShifted81?'D′':'D')+': P='+a+'−Q', sLbl=(bShifted81?'S′':'S')+': P='+b+'+Q';
   v81nodes=[
     d3Node('D','#1a56db',dLbl,dLbl.length*5+6,scX(a*0.72),scY(a*0.08)),
     d3Node('S','#1e8449',sLbl,sLbl.length*5+6,scX(Qstar+2),scY(Pstar+2)),

@@ -1709,6 +1709,10 @@ function drillAnswer(ans) {
 let v5b = null, v5Curve = null, v5Pt = null;
 let v5Px = 4, v5Py = 4, v5I = 100, v5Rel = 'sub';
 const V5_alpha = 0.5;
+// Baseline Py for the dashed "original curve" ghost: Fig 3.5's cross-price
+// shift is driven by Py only (Px is a movement along the curve, not a shift).
+const V5_PY_BASE = 4;
+let v5GhostCurve = null, v5GhostLbl = null;
 
 function v5SetRel(r) {
   v5Rel = r;
@@ -1722,9 +1726,10 @@ function v5SetRel(r) {
    .coords.scrCoords gives the pixel anchor, kept current via setPosition()
    on each redraw and board.on('update',...) for pan/zoom tracking. */
 let v5Ov = null;
-function d3v5UpdateOverlay(b, safAdj) {
+function d3v5UpdateOverlay(b, safAdj, labelText) {
   if (typeof d3 === 'undefined') return;
   const ax = 50, ay = safAdj / ax;
+  labelText = labelText || 'D';
 
   if (!v5Ov || v5Ov.board !== b) {
     if (v5Ov && v5Ov.off) { try { v5Ov.off(); } catch(e){} }
@@ -1734,7 +1739,7 @@ function d3v5UpdateOverlay(b, safAdj) {
     const anchorPt = b.create('point',[ax,ay],{visible:false,fixed:true,withLabel:false});
     const scr = () => { const sc = anchorPt.coords.scrCoords; return [sc[1], sc[2]]; };
     const [sx, sy] = scr();
-    const nodes = [ d3OvNode('D', '#1a56db', 'D', 22, sx, sy) ];
+    const nodes = [ d3OvNode('D', '#1a56db', labelText, 22, sx, sy) ];
     const sim = d3OvMakeSim(nodes);
     const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
     sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
@@ -1744,7 +1749,7 @@ function d3v5UpdateOverlay(b, safAdj) {
       sim.alpha(0.3).restart();
     };
     b.on('update', updateHandler);
-    v5Ov = { svg, w, h, nodes, gs, conns, sim, anchorPt, board:b,
+    v5Ov = { svg, w, h, nodes, gs, conns, sim, anchorPt, board:b, labelText,
              off: () => { try { b.off('update', updateHandler); } catch(e){} } };
   } else {
     // Move the anchor point to track the curve's new position, then re-derive screen coords
@@ -1752,6 +1757,12 @@ function d3v5UpdateOverlay(b, safAdj) {
     v5Ov.board.update();
     const sc = v5Ov.anchorPt.coords.scrCoords;
     d3OvReanchor(v5Ov.nodes[0], sc[1], sc[2]);
+    if (v5Ov.labelText !== labelText) {
+      // Shifted state changed (D <-> D′): update the draggable label's text in place.
+      v5Ov.labelText = labelText;
+      v5Ov.nodes[0].label = labelText;
+      v5Ov.gs.select('text').text(labelText);
+    }
     v5Ov.sim.alpha(0.3).restart();
   }
 }
@@ -1794,6 +1805,8 @@ function redrawV5() {
   if (!v5b) return;
   if (v5Curve) { try { v5b.removeObject(v5Curve); } catch(e){} v5Curve = null; }
   if (v5Pt)    { try { v5b.removeObject(v5Pt);    } catch(e){} v5Pt = null; }
+  [v5GhostCurve, v5GhostLbl].forEach(o => { if (o) { try { v5b.removeObject(o); } catch(e){} } });
+  v5GhostCurve = v5GhostLbl = null;
 
   const b = v5b;
 
@@ -1801,12 +1814,27 @@ function redrawV5() {
   const Ys = (1-V5_alpha) * v5I / v5Py;
 
   // Cross-price adjustment
-  const pyBase = 4;
+  const pyBase = V5_PY_BASE;
   const k = v5Rel === 'sub' ? 0.4 * (v5Py - pyBase) : -0.4 * (v5Py - pyBase);
 
   // Demand curve: P = (V5_alpha * v5I + k*P) / X - simplify: X(P) = (v5I/2 + k*v5I/(2*v5Py)) / P
   const adjI = v5I/2 + k * v5I / (2 * v5Py);
   const safAdj = Math.max(adjI, 5);
+
+  // Convention: Py is the SHIFT driver for this curve (Px is a movement along
+  // it, not a shift). When Py has moved off its baseline, keep the ORIGINAL
+  // (Py = $4) curve as a faded dashed ghost labeled "D", and prime the current
+  // curve's label "D′". At baseline Py, k = 0, so no ghost is needed.
+  const pyShifted = Math.abs(v5Py - pyBase) > 0.01;
+  if (pyShifted) {
+    const safAdjBase = Math.max(v5I / 2, 5); // k = 0 at Py = pyBase
+    v5GhostCurve = b.create('functiongraph',[x => x>0.1 ? safAdjBase/x : NaN, 0.1, 80],
+      {strokeColor:'#1a56db',strokeWidth:1.4,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
+    const gpy = 5.5, gx = safAdjBase / gpy;
+    v5GhostLbl = b.create('text',[gx + 0.6, gpy + 0.3, 'D'],
+      {fontSize:11,color:'#1a56db',fixed:true,highlight:false,
+       cssStyle:'font-weight:600;opacity:0.5;'});
+  }
 
   v5Curve = b.create('functiongraph',[x => x>0.1 ? safAdj/x : NaN, 0.1, 80],
     {strokeColor:'#1a56db',strokeWidth:2,fixed:true});
@@ -1816,9 +1844,9 @@ function redrawV5() {
   v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:'#e05252',strokeColor:'#fff',strokeWidth:1.5,fixed:true,
     name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize:9,color:'#e05252',offset:[7,5]}});
 
-  // "D" demand-curve name label as a draggable D3 SVG force-label overlay
+  // "D"/"D′" demand-curve name label as a draggable D3 SVG force-label overlay
   // (S6/S8 gold-standard style), anchored to a point on the curve.
-  d3v5UpdateOverlay(b, safAdj);
+  d3v5UpdateOverlay(b, safAdj, pyShifted ? 'D′' : 'D');
 
   // Update displays
   const fmla = `X* = αI/P<sub>X</sub> = (0.5 × ${v5I}) / ${v5Px} = <strong>${Xs.toFixed(2)}</strong><br>` +

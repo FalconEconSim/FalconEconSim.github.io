@@ -775,6 +775,7 @@ function v51ChangeForm() {
 
 function v51TP(L, K, a, b) { return Math.pow(K, a) * Math.pow(Math.max(0.001,L), b); }
 function v51MPL(L, K, a, b) { return b * Math.pow(K, a) * Math.pow(Math.max(0.001,L), b-1); }
+const V51_K_BASE=4;
 
 function v51Draw() {
   const cvA = document.getElementById('cvs51a');
@@ -798,6 +799,13 @@ function v51Draw() {
   const tp=l=>form.tp(l,K);
   const mpl=l=>form.mpl(l,K);
 
+  // Capital K shifts BOTH the TP and MPL curves (Workers L only moves the dot
+  // along a fixed curve, so L never triggers a ghost). Only the Cobb-Douglas
+  // form actually uses K; other forms hide the K slider entirely.
+  const kShifted = form.showK && K !== V51_K_BASE;
+  const tpBase = l=>form.tp(l, V51_K_BASE);
+  const mplBase = l=>form.mpl(l, V51_K_BASE);
+
   // Dynamic y-ranges so the curves span the full L domain and the current
   // dot stays visible at every slider position (fixed per-form ranges clipped
   // the TP curve and lost the dot at extremes).
@@ -807,6 +815,12 @@ function v51Draw() {
     const m=mpl(l);
     if(l>=0.8) mplCap=Math.max(mplCap,m);
     mplMin=Math.min(mplMin,m);
+    if(kShifted){
+      tpMax=Math.max(tpMax,tpBase(l));
+      const mb=mplBase(l);
+      if(l>=0.8) mplCap=Math.max(mplCap,mb);
+      mplMin=Math.min(mplMin,mb);
+    }
   }
   const yRA=[0, Math.max(tpMax, tp(L))*1.08];
   const yTopB=Math.max(mplCap, mpl(L))*1.12;
@@ -816,6 +830,26 @@ function v51Draw() {
   ctxA.clearRect(0,0,W,HA);
   drawAxesSt(ctxA,W,HA,xR,yRA,'L (workers)','TP (output)');
 
+  // Ghost TP (faded, dashed, thinner): TP at baseline K=4, left on screen when
+  // K has been moved off baseline so the shift is visible against the original.
+  if(kShifted){
+    ctxA.save();
+    ctxA.setLineDash([5,4]); ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=1.4; ctxA.globalAlpha=0.45;
+    ctxA.beginPath(); let gfirst=true;
+    for(let l=0.1;l<=10;l+=0.05){
+      const [gx,gy]=toC(l,tpBase(l),W,HA,xR,yRA);
+      if(gy<MT-5||gy>HA-MB+5){gfirst=true;continue;}
+      gfirst?(ctxA.moveTo(gx,gy),gfirst=false):ctxA.lineTo(gx,gy);
+    }
+    ctxA.stroke();
+    ctxA.restore();
+    const gL=9.3, [glx,gly]=toC(gL,tpBase(gL),W,HA,xR,yRA);
+    ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1a56db';
+    ctxA.font='9px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
+    ctxA.fillText('TP', glx+3, gly);
+    ctxA.restore();
+  }
+
   // TP curve
   ctxA.beginPath(); let first=true;
   for(let l=0.1;l<=10;l+=0.05){
@@ -824,6 +858,13 @@ function v51Draw() {
     first?(ctxA.moveTo(cx2,cy2),first=false):ctxA.lineTo(cx2,cy2);
   }
   ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2; ctxA.stroke();
+  {
+    const idL=9.3, [ilx,ily]=toC(idL,tp(idL),W,HA,xR,yRA);
+    ctxA.save(); ctxA.fillStyle='#1a56db'; ctxA.font='bold 10px DM Sans,sans-serif';
+    ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
+    ctxA.fillText(kShifted?'TP′':'TP', ilx+3, ily);
+    ctxA.restore();
+  }
 
   // Current point on TP
   const tpL=tp(L), mplL=mpl(L);
@@ -866,6 +907,25 @@ function v51Draw() {
   ctxB.clearRect(0,0,W,HB);
   drawAxesSt(ctxB,W,HB,xR,yRB,'L (workers)','MPL');
 
+  // Ghost MPL (faded, dashed, thinner): MPL at baseline K=4.
+  if(kShifted){
+    ctxB.save();
+    ctxB.setLineDash([5,4]); ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=1.4; ctxB.globalAlpha=0.45;
+    ctxB.beginPath(); let gfirstB=true;
+    for(let l=0.1;l<=10;l+=0.05){
+      const [gx,gy]=toC(l,mplBase(l),W,HB,xR,yRB);
+      if(gy<MT-5||gy>HB-MB+5){gfirstB=true;continue;}
+      gfirstB?(ctxB.moveTo(gx,gy),gfirstB=false):ctxB.lineTo(gx,gy);
+    }
+    ctxB.stroke();
+    ctxB.restore();
+    const gLb=9.3, [glbx,glby]=toC(gLb,mplBase(gLb),W,HB,xR,yRB);
+    ctxB.save(); ctxB.globalAlpha=0.55; ctxB.fillStyle='#e74c3c';
+    ctxB.font='9px DM Sans,sans-serif'; ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
+    ctxB.fillText('MPL', glbx+3, glby);
+    ctxB.restore();
+  }
+
   // MPL curve
   ctxB.beginPath(); first=true;
   for(let l=0.1;l<=10;l+=0.05){
@@ -875,6 +935,13 @@ function v51Draw() {
     first?(ctxB.moveTo(cx2,cy2),first=false):ctxB.lineTo(cx2,cy2);
   }
   ctxB.strokeStyle='#e74c3c'; ctxB.lineWidth=2; ctxB.stroke();
+  {
+    const idLb=9.3, [ilbx,ilby]=toC(idLb,mpl(idLb),W,HB,xR,yRB);
+    ctxB.save(); ctxB.fillStyle='#e74c3c'; ctxB.font='bold 10px DM Sans,sans-serif';
+    ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
+    ctxB.fillText(kShifted?'MPL′':'MPL', ilbx+3, ilby);
+    ctxB.restore();
+  }
 
   // Current MPL point + D3 SVG overlay label
   const [mx,my]=toC(L,mplL,W,HB,xR,yRB);
@@ -1880,6 +1947,7 @@ function v58Update() {
 // FIG 5.9 - BAKERY SIMULATOR
 // ══════════════════════════════════════════════════════════════════════
 let v59L=0, v59K=2;
+const V59_K_BASE=2;
 
 function v59TP(L,K){return K>0&&L>0?Math.pow(K,0.5)*Math.pow(L,0.5):0;}
 function v59MPL(L,K){return L>0.05?0.5*Math.pow(K,0.5)*Math.pow(L,-0.5):Infinity;}
@@ -1911,6 +1979,27 @@ function v59Draw() {
   const xR=[0,Lmax],yR=[0,TPmax];
   drawAxesSt(ctx,W,H,xR,yR,'Workers L','Output (units)');
 
+  // Ghost TP (faded, dashed, thinner): TP at the baseline K=2 machines, left
+  // on screen once "Buy Machine" moves K off baseline so the upward shift the
+  // figure's intro copy describes is visible against the original curve.
+  const kShifted59 = v59K !== V59_K_BASE;
+  if(kShifted59){
+    ctx.save();
+    ctx.setLineDash([5,4]); ctx.strokeStyle='#1a56db'; ctx.lineWidth=1.4; ctx.globalAlpha=0.45;
+    ctx.beginPath(); let gfirst59=true;
+    for(let l=0;l<=Lmax;l+=0.1){
+      const [gx,gy]=toC(l,v59TP(l,V59_K_BASE),W,H,xR,yR);
+      gfirst59?(ctx.moveTo(gx,gy),gfirst59=false):ctx.lineTo(gx,gy);
+    }
+    ctx.stroke();
+    ctx.restore();
+    const gL59=Lmax*0.4, [glx59,gly59]=toC(gL59,v59TP(gL59,V59_K_BASE),W,H,xR,yR);
+    ctx.save(); ctx.globalAlpha=0.55; ctx.fillStyle='#1a56db';
+    ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.fillText('TP', glx59, gly59-6);
+    ctx.restore();
+  }
+
   // TP curve
   ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
   for(let l=0;l<=Lmax;l+=0.1){
@@ -1919,6 +2008,13 @@ function v59Draw() {
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();
+  {
+    const idL59=Lmax*0.4, [ilx59,ily59]=toC(idL59,v59TP(idL59,v59K),W,H,xR,yR);
+    ctx.save(); ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.fillText(kShifted59?'TP′':'TP', ilx59, ily59-6);
+    ctx.restore();
+  }
   const tpMidL=Lmax*0.6;
   const [tpax,tpay]=toC(tpMidL,v59TP(tpMidL,v59K),W,H,xR,yR);
   const ovl59=v59EnsureOverlay(W,H);

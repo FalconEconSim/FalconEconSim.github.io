@@ -514,6 +514,7 @@ function v71qStar(P,ms){const disc=16-4*(7+ms-P);if(disc<0)return 0;return 2+Mat
 // FIG 7.1: PROFIT LANDSCAPE
 // ─────────────────────────────────────────────────────────────────────────
 let v71cursor=5;
+const V71_P_BASE=10;
 
 function v71Draw(){
   const P=parseFloat(document.getElementById('v71-p').value);
@@ -541,6 +542,26 @@ function v71Draw(){
   ctxA.clearRect(0,0,W,HA);
   drawAxes7(ctxA,W,HA,xR,yRA,'Quantity q','$');
 
+  // Ghost TR (faded, dashed, thinner): raising Market Price P* pivots TR
+  // steeper through the origin, so the baseline P*=$10 ray is kept on screen
+  // for comparison whenever the price differs from baseline.
+  const pShifted71 = Math.abs(P - V71_P_BASE) > 0.01;
+  if(pShifted71){
+    const trQmaxBase=V71_P_BASE>0?Math.min(9, yRA[1]/V71_P_BASE):9;
+    ctxA.save();
+    ctxA.setLineDash([5,4]); ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=1.4; ctxA.globalAlpha=0.45;
+    const[gx0,gy0]=toC7(0,0,W,HA,xR,yRA);
+    const[gx1,gy1]=toC7(trQmaxBase,V71_P_BASE*trQmaxBase,W,HA,xR,yRA);
+    ctxA.beginPath(); ctxA.moveTo(gx0,gy0); ctxA.lineTo(gx1,gy1); ctxA.stroke();
+    ctxA.restore();
+    const gLblQ71=Math.min(8, trQmaxBase*0.55);
+    const[glx71,gly71]=toC7(gLblQ71,V71_P_BASE*gLblQ71,W,HA,xR,yRA);
+    ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1a56db';
+    ctxA.font='9px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
+    ctxA.fillText('TR', glx71+4, gly71-4);
+    ctxA.restore();
+  }
+
   const linePts71=[];
   ctxA.beginPath();let first=true;
   for(let q=0;q<=9;q+=0.05){
@@ -564,9 +585,10 @@ function v71Draw(){
   const[tcLx,tcLy]=toC7(qTC,v71TC(qTC,tfc,ms),W,HA,xR,yRA);
   const trLblQ = Math.min(8, trQmax*0.85);
   const[trlx,trly]=toC7(trLblQ,P*trLblQ,W,HA,xR,yRA);
+  const trText71=pShifted71?'TR′':'TR';
   const lbls71=[
     {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:'#e74c3c',fontSize:10,bold:true},
-    {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText('TR').width+8,h:13,text:'TR',color:'#1a56db',fontSize:10,bold:true},
+    {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText(trText71).width+8,h:13,text:trText71,color:'#1a56db',fontSize:10,bold:true},
   ];
   resolveLabels(lbls71,linePts71,80,6,{x0:2,y0:2,x1:W-2,y1:HA-2});
   lbls71.forEach(l=>drawForceLabel(ctxA,l));
@@ -1423,6 +1445,27 @@ function v79Draw(){
   const gM=v79svgA.select('g.v79-dyn-mkt');
   gM.selectAll('*').remove();
   const Qs=Pv=>n*(Pv-4)/2;
+
+  // Ghost supply (faded, dashed, thinner): "Run Entry"/"Run Exit" shift n away
+  // from the run's starting value (v79Start.n, the same baseline the delta bar
+  // above already reports against), so leave that original supply line drawn
+  // for comparison while the animation moves the current one.
+  const nShifted79 = n !== v79Start.n;
+  if(nShifted79){
+    const QsBase=Pv=>v79Start.n*(Pv-4)/2;
+    const supPtsBase=[];
+    for(let P2=4;P2<=14;P2+=0.2){const Q2=QsBase(P2);if(Q2<0||Q2>300)continue;supPtsBase.push([scXM(Q2),scYM(P2)]);}
+    if(supPtsBase.length>1){
+      gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',1.4)
+        .attr('stroke-dasharray','5,4').attr('opacity',0.45).attr('d',d3.line()(supPtsBase));
+    }
+    const gP79=9, gQ79=QsBase(gP79);
+    if(gQ79>=0&&gQ79<=300){
+      gM.append('text').attr('x',scXM(gQ79)+4).attr('y',scYM(gP79)-4)
+        .attr('font-size',9).attr('font-weight',600).attr('fill','#e74c3c').attr('opacity',0.55).text('S');
+    }
+  }
+
   const supPts=[];
   for(let P2=4;P2<=14;P2+=0.2){const Q2=Qs(P2);if(Q2<0||Q2>300)continue;supPts.push([scXM(Q2),scYM(P2)]);}
   if(supPts.length>1)gM.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2).attr('d',d3.line()(supPts));
@@ -1442,6 +1485,10 @@ function v79Draw(){
   // so the label was stranded at its bogus init spot far above the line).
   if(v79nodesA&&v79nodesA[1]){
     d3MoveAnchor(v79nodesA[1],scXM(100),scYM(4+200/n));
+    v79nodesA[1].label = nShifted79 ? 'S′' : 'S';
+    v79nodesA[1].lw = nShifted79 ? 26 : 20;
+    v79gsA.filter(d=>d.id==='S').select('rect').attr('width',d=>d.lw);
+    v79gsA.filter(d=>d.id==='S').select('text').attr('x',d=>d.lw/2).text(d=>d.label);
   }
 
   // Update firm: price line + profit rect

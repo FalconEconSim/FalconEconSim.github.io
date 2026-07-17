@@ -821,6 +821,7 @@ function v62CtrlPlay(){
 // FIG 6.5 - SR vs LR COST CURVES (D3 SVG)
 // ======================================================================
 let v65ShowLR=false;
+const V65_TFC_BASE=100;
 function v65TC(q,tfc){return tfc+q*q;}
 function v65MC(q){return 2*q;}
 function v65ATC(q,tfc){return v65TC(q,tfc)/q;}
@@ -850,11 +851,16 @@ window._initFig65=function initFig65(){
   const lracPath=svg.append('path').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',1.8).attr('stroke-dasharray','5,3').attr('opacity',0);
   const afcPath=svg.append('path').attr('fill','none').attr('stroke','#888').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
   const avcPath=svg.append('path').attr('fill','none').attr('stroke','#1e8449').attr('stroke-width',2);
+  // Ghost ATC (faded, dashed, thinner): re-evaluated at the baseline TFC so
+  // raising/lowering TFC leaves the original ATC on screen for comparison.
+  const atcGhostPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',1.4).attr('stroke-dasharray','5,4').attr('opacity',0);
   const atcPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
   const smcPath=svg.append('path').attr('fill','none').attr('stroke','#e74c3c').attr('stroke-width',2);
 
   // min ATC dot
   const minDot=svg.append('circle').attr('r',5).attr('fill','#1a56db').attr('stroke','white').attr('stroke-width',1.5);
+  const atcGhostLbl=svg.append('text').attr('font-size',9).attr('font-weight',600)
+    .attr('fill','#1a56db').attr('opacity',0).attr('text-anchor','start').text('ATC');
 
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
@@ -936,6 +942,25 @@ window._initFig65=function initFig65(){
     atcPath.attr('d', d3.line()(makePts(q=>v65ATC(q,tfc),0.4,15.9,0.1)));
     avcPath.attr('d', d3.line()(makePts(q=>v65AVC(q),   0.4,15.9,0.1)));
     afcPath.attr('d', d3.line()(makePts(q=>v65AFC(q,tfc),0.4,15.9,0.1)));
+
+    // Ghost ATC: raising TFC shifts ATC upward, leaving SMC and AVC unchanged
+    // (per the figure's own intro copy), so only ATC gets a faded baseline
+    // ghost. At baseline TFC ($100) no ghost is shown and the label stays
+    // plain "ATC"; away from baseline the original ATC(q; TFC=$100) is drawn
+    // dashed/faded and the current curve's label becomes "ATC'".
+    const tfcShifted = Math.abs(tfc - V65_TFC_BASE) > 0.5;
+    if (tfcShifted) {
+      atcGhostPath.attr('d', d3.line()(makePts(q=>v65ATC(q,V65_TFC_BASE),0.4,15.9,0.1))).attr('opacity',0.45);
+      const gq=8, gy=v65ATC(gq,V65_TFC_BASE);
+      if (isFinite(gy) && gy<=yMax) {
+        atcGhostLbl.attr('x',scX(gq)+4).attr('y',scY(gy)-5).attr('opacity',0.5);
+      } else {
+        atcGhostLbl.attr('opacity',0);
+      }
+    } else {
+      atcGhostPath.attr('opacity',0);
+      atcGhostLbl.attr('opacity',0);
+    }
     if(v65ShowLR){
       lracPath.attr('d',d3.line()([[scX(0.4),scY(2)],[scX(15.9),scY(2)]])).attr('opacity',1);
     } else {
@@ -956,6 +981,8 @@ window._initFig65=function initFig65(){
           const dx=nx-n.fx_anchor, dy=ny-n.fy_anchor;
           n.x+=dx; n.y+=dy; n.vx=0; n.vy=0;
           n.fx_anchor=nx; n.fy_anchor=ny;
+          n.label = tfcShifted ? 'ATC′' : 'ATC';
+          n.lw = tfcShifted ? 46 : 40;
         }
         if(n.id==='AFC'){
           const nx=scX(3), ny=scY(Math.min(v65AFC(3,tfc),yMax));
@@ -971,6 +998,10 @@ window._initFig65=function initFig65(){
           n.fx_anchor=nx; n.fy_anchor=ny;
         }
       });
+      if(f65LblGs){
+        f65LblGs.select('rect').attr('width',d=>d.lw);
+        f65LblGs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+      }
     }
 
     document.getElementById('v65-readout').innerHTML=
