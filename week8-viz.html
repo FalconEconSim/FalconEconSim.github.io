@@ -44,11 +44,11 @@
     .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:36px;}
     .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
     .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
-    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:#c0392b;}
-    .viz-btn.red.active{background:#c0392b;border-color:#c0392b;color:#fff;}
+    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:var(--red);}
+    .viz-btn.red.active{background:var(--red);border-color:var(--red);color:#fff;}
     .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
-    .viz-btn.gold{background:#fdf8ec;border-color:#e6cf94;color:#a07800;}
-    .viz-btn.gold.active{background:#a07800;border-color:#a07800;color:#fff;}
+    .viz-btn.gold{background:#fdf8ec;border-color:#e6cf94;color:var(--gold);}
+    .viz-btn.gold.active{background:var(--gold);border-color:var(--gold);color:#fff;}
     .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
     .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
     .readout-col{flex:1;min-width:90px;}
@@ -67,9 +67,9 @@
     .welfare-table th,.welfare-table td{padding:0.4rem 0.6rem;text-align:left;border-bottom:1px solid var(--rule);}
     .welfare-table th{font-family:var(--mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:600;}
     .welfare-table td.num{font-family:var(--mono);text-align:right;}
-    .val-pos{color:#1e8449;font-weight:600;}
-    .val-neg{color:#c0392b;font-weight:600;}
-    .val-neu{color:#2c3e50;font-weight:600;}
+    .val-pos{color:var(--green);font-weight:600;}
+    .val-neg{color:var(--red);font-weight:600;}
+    .val-neu{color:var(--slate);font-weight:600;}
     .anchor-story{background:#f8fafb;border:1px solid var(--rule);border-radius:8px;padding:0.7rem 0.95rem;font-size:0.82rem;line-height:1.6;color:var(--text);margin-top:0.75rem;min-height:1.2rem;}
     .hub-footer{border-top:1px solid var(--rule);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
     .hub-footer-left{font-size:0.82rem;color:var(--muted);}
@@ -201,8 +201,8 @@
     </div>
     <p class="fig-intro">
       When output is held below the efficient level Q* = 8, the lost consumer surplus splits into two categorically
-      different pieces. A <strong style="color:#a07800;">gold rectangle</strong> is <em>transferred</em> from buyers to the
-      seller (redistributed, not lost). A <strong style="color:#c0392b;">red triangle</strong> is <em>destroyed</em>:
+      different pieces. A <strong style="color:var(--gold);">gold rectangle</strong> is <em>transferred</em> from buyers to the
+      seller (redistributed, not lost). A <strong style="color:var(--red);">red triangle</strong> is <em>destroyed</em>:
       it leaves the economy entirely. Slide the restriction left from Q = 8 and watch the triangle outgrow the rectangle.
     </p>
     <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs82-wrap"></div></div>
@@ -218,8 +218,8 @@
     <div class="viz-readout" id="v82-readout"></div>
     <div style="background:#f8fafb;border:1px solid var(--rule);border-radius:10px;padding:1rem 1.2rem;margin-top:0.6rem;font-size:0.88rem;line-height:1.75;">
       <strong>What happens under a monopoly?</strong> A monopolist restricts output below Q* = 8 to raise price above MC = $2.
-      The <strong style="color:#a07800;">gold rectangle</strong> is the <em>transfer</em>: consumers lose it, but the firm gains it, so society as a whole is not worse off, it is simply redistributed.
-      The <strong style="color:#c0392b;">red triangle</strong> is the <em>deadweight loss</em>: this value is destroyed and no one receives it.
+      The <strong style="color:var(--gold);">gold rectangle</strong> is the <em>transfer</em>: consumers lose it, but the firm gains it, so society as a whole is not worse off, it is simply redistributed.
+      The <strong style="color:var(--red);">red triangle</strong> is the <em>deadweight loss</em>: this value is destroyed and no one receives it.
       As Q falls further below Q*, the triangle grows faster than the rectangle: the true social cost (DWL) outweighs the redistribution.
     </div>
     <div class="insight-box red">
@@ -528,8 +528,8 @@
     </div>
     <p class="fig-intro">
       A monopolist serving two consumer groups charges a high price P<sub>A</sub> to high-value customers
-      (earning a <strong style="color:#1e8449;">green profit</strong> relative to AC) and a low price P<sub>R</sub>
-      to price-sensitive customers (incurring a <strong style="color:#c0392b;">red loss</strong> relative to AC).
+      (earning a <strong style="color:var(--green);">green profit</strong> relative to AC) and a low price P<sub>R</sub>
+      to price-sensitive customers (incurring a <strong style="color:var(--red);">red loss</strong> relative to AC).
       High-tier profits <em>cross-subsidize</em> low-tier losses, allowing the firm to reach more consumers.
       Net profit = green area &minus; red area. Drag the sliders to explore when cross-subsidization works.
       Model: D: P = 20 &minus; Q; TC = 50 + 2Q; AC = 50/Q + 2; MC = $2.
@@ -568,6 +568,11 @@
 </main>
 
 <script>
+/* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
+   resolve CSS var(), so their colours come from here; CSS and inline styles use
+   var() directly. Fallbacks equal the token values. */
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+
 // ═════════════════════════════════════════════════════════════════════════
 // SHARED D3 SVG HELPERS  (adapted from week7-viz.html / testing.html S6/S8)
 // ═════════════════════════════════════════════════════════════════════════
@@ -580,9 +585,9 @@ const LABEL_H=15;
 //   DWL → red (#c0392b) @ ~0.30
 //   Gov't revenue → slate (#2c3e50) @ ~0.22
 const FILL_CS='rgba(26,86,219,0.22)', STROKE_CS='#1a56db';
-const FILL_PS='rgba(160,120,0,0.32)', STROKE_PS='#a07800';
-const FILL_DWL='rgba(192,57,43,0.30)', STROKE_DWL='#c0392b';
-const FILL_REV='rgba(44,62,80,0.22)', STROKE_REV='#2c3e50';
+const FILL_PS='rgba(160,120,0,0.32)', STROKE_PS=EC.gold;
+const FILL_DWL='rgba(192,57,43,0.30)', STROKE_DWL=EC.red;
+const FILL_REV='rgba(44,62,80,0.22)', STROKE_REV=EC.slate;
 
 function d3MakeSvg(wrapId){
   d3.select('#'+wrapId).selectAll('svg').remove();
@@ -678,7 +683,7 @@ function d3HaloLabel(g,x,y,txt,opts){
     .attr('text-anchor',opts.anchor||'middle')
     .attr('font-size',opts.size||9)
     .attr('font-weight',opts.weight!=null?opts.weight:600)
-    .attr('fill',opts.color||'#2c3e50').text(txt);
+    .attr('fill',opts.color||EC.slate).text(txt);
   var bb=t.node().getBBox();
   var px=opts.padX!=null?opts.padX:2.5, py=opts.padY!=null?opts.padY:1;
   g.insert('rect',function(){return t.node();})
@@ -725,10 +730,10 @@ function v81Rebuild(){
   d3AddAxes(v81svg,scX,scY,'Quantity (Q)','$ per unit',d=>'$'+d);
   v81dyn=v81svg.append('g');
   // axis tick markers for current price/quantity (drawn into a static group, moved on draw)
-  v81dyn._xTick =v81svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',2);
-  v81dyn._yTick =v81svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',2);
-  v81dyn._xLbl  =v81svg.append('text').attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#7d3c98');
-  v81dyn._yLbl  =v81svg.append('text').attr('text-anchor','end').attr('font-size',9).attr('font-weight',600).attr('fill','#7d3c98');
+  v81dyn._xTick =v81svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',2);
+  v81dyn._yTick =v81svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',2);
+  v81dyn._xLbl  =v81svg.append('text').attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill',EC.indicator);
+  v81dyn._yLbl  =v81svg.append('text').attr('text-anchor','end').attr('font-size',9).attr('font-weight',600).attr('fill',EC.indicator);
   // Ghost D / S (faded, dashed, thinner): the secondary sliders (demand
   // intercept a, supply minimum price b) genuinely shift these lines, so the
   // baseline (a=20, b=4) is left on screen for comparison when they differ.
@@ -741,25 +746,25 @@ function v81Rebuild(){
       .attr('font-size',9).attr('font-weight',600).attr('fill',STROKE_CS).attr('opacity',0.55).text('D');
   }
   if(bShifted81){
-    d3Seg(v81svg,scX,scY,0,V81_B_BASE,domQ,V81_B_BASE+domQ,'#1e8449',1.4,'5,4').attr('opacity',0.45);
+    d3Seg(v81svg,scX,scY,0,V81_B_BASE,domQ,V81_B_BASE+domQ,EC.green,1.4,'5,4').attr('opacity',0.45);
     v81svg.append('text').attr('x',scX(domQ*0.5)+4).attr('y',scY(V81_B_BASE+domQ*0.5)-4)
-      .attr('font-size',9).attr('font-weight',600).attr('fill','#1e8449').attr('opacity',0.55).text('S');
+      .attr('font-size',9).attr('font-weight',600).attr('fill',EC.green).attr('opacity',0.55).text('S');
   }
   // D: P=a-Q and S: P=b+Q
   d3Seg(v81svg,scX,scY,0,a,a,0,STROKE_CS,2);
-  d3Seg(v81svg,scX,scY,0,b,domQ,b+domQ,'#1e8449',2);
-  v81svg.append('circle').attr('cx',scX(Qstar)).attr('cy',scY(Pstar)).attr('r',4).attr('fill','#2c3e50').attr('stroke','#fff').attr('stroke-width',1.5);
+  d3Seg(v81svg,scX,scY,0,b,domQ,b+domQ,EC.green,2);
+  v81svg.append('circle').attr('cx',scX(Qstar)).attr('cy',scY(Pstar)).attr('r',4).attr('fill',EC.slate).attr('stroke','#fff').attr('stroke-width',1.5);
   // price line + traded-quantity guide (dynamic)
-  v81dyn._pLine=v81svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
+  v81dyn._pLine=v81svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   v81dyn._vLine=v81svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
-  v81dyn._qDot =v81svg.append('circle').attr('r',5).attr('fill','#7d3c98').attr('stroke','#fff').attr('stroke-width',1.5);
+  v81dyn._qDot =v81svg.append('circle').attr('r',5).attr('fill',EC.indicator).attr('stroke','#fff').attr('stroke-width',1.5);
   const dLbl=(aShifted81?'D′':'D')+': P='+a+'−Q', sLbl=(bShifted81?'S′':'S')+': P='+b+'+Q';
   v81nodes=[
     d3Node('D','#1a56db',dLbl,dLbl.length*5+6,scX(a*0.72),scY(a*0.08)),
-    d3Node('S','#1e8449',sLbl,sLbl.length*5+6,scX(Qstar+2),scY(Pstar+2)),
+    d3Node('S',EC.green,sLbl,sLbl.length*5+6,scX(Qstar+2),scY(Pstar+2)),
     d3Node('CS','#1a56db','CS',26,scX(Qstar*0.3),scY(Pstar+(a-Pstar)*0.5)),
-    d3Node('PS','#a07800','PS',26,scX(Qstar*0.3),scY(b+(Pstar-b)*0.5)),
-    d3Node('DWL','#c0392b','DWL',34,scX(Qstar),scY(Pstar)),
+    d3Node('PS',EC.gold,'PS',26,scX(Qstar*0.3),scY(b+(Pstar-b)*0.5)),
+    d3Node('DWL',EC.red,'DWL',34,scX(Qstar),scY(Pstar)),
   ];
   v81sim=d3MakeSim(v81nodes);
   const els=d3AddLabels(v81svg,v81nodes,v81sim);
@@ -812,21 +817,21 @@ function v81Draw(){
   document.getElementById('v81-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">CS</div><div class="readout-val" style="color:#1a56db">$${CS.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">PS</div><div class="readout-val" style="color:#a07800">$${PS.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">PS</div><div class="readout-val" style="color:var(--gold)">$${PS.toFixed(1)}</div></div>
       <div class="readout-col"><div class="readout-label">TS</div><div class="readout-val">$${TS.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">DWL</div><div class="readout-val" style="color:${DWL>0.05?'#c0392b':'#1e8449'}">$${DWL.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">DWL</div><div class="readout-val" style="color:${DWL>0.05?EC.red:EC.green}">$${DWL.toFixed(1)}</div></div>
       <div class="readout-col"><div class="readout-label">Q traded</div><div class="readout-val">${Qtr.toFixed(1)}</div></div>
     </div>
-    ${DWL>0.05?`<div style="margin-top:.4rem;color:#c0392b;font-weight:600;">Mutually beneficial trades not happening; society loses $${DWL.toFixed(1)}.</div>`:`<div style="margin-top:.4rem;color:#1e8449;font-weight:600;">At the competitive equilibrium, TS is maximised and DWL = 0.</div>`}`;
+    ${DWL>0.05?`<div style="margin-top:.4rem;color:var(--red);font-weight:600;">Mutually beneficial trades not happening; society loses $${DWL.toFixed(1)}.</div>`:`<div style="margin-top:.4rem;color:var(--green);font-weight:600;">At the competitive equilibrium, TS is maximised and DWL = 0.</div>`}`;
   // DWL calculation box
   const box=document.getElementById('v81-dwl-box');
   if(DWL>0.05){
     const base=Qstar-Qtr, ht=(a-Qtr)-(b+Qtr);
     box.style.display='block';
-    box.innerHTML=`<strong style="color:#c0392b;">DWL Triangle Calculation:</strong><br>
+    box.innerHTML=`<strong style="color:var(--red);">DWL Triangle Calculation:</strong><br>
       Base (quantity gap) = Q* &minus; Q<sub>tr</sub> = ${Qstar.toFixed(1)} &minus; ${Qtr.toFixed(1)} = <strong>${base.toFixed(1)}</strong><br>
       Height (price gap at Q<sub>tr</sub>) = D(Q<sub>tr</sub>) &minus; S(Q<sub>tr</sub>) = $${(a-Qtr).toFixed(1)} &minus; $${(b+Qtr).toFixed(1)} = <strong>$${ht.toFixed(1)}</strong><br>
-      DWL = &frac12; &times; ${base.toFixed(1)} &times; $${ht.toFixed(1)} = <strong style="color:#c0392b;">$${DWL.toFixed(1)}</strong>`;
+      DWL = &frac12; &times; ${base.toFixed(1)} &times; $${ht.toFixed(1)} = <strong style="color:var(--red);">$${DWL.toFixed(1)}</strong>`;
   }else{
     box.style.display='none';
   }
@@ -889,14 +894,14 @@ function v82Init(){
   // MC=2 and Demand P=10−Q
   d3Seg(v82svg,scX,scY,0,2,10,2,STROKE_PS,2);
   d3Seg(v82svg,scX,scY,0,10,8,2,STROKE_CS,2);
-  v82svg.append('circle').attr('cx',scX(8)).attr('cy',scY(2)).attr('r',4).attr('fill','#2c3e50').attr('stroke','#fff').attr('stroke-width',1.5);
+  v82svg.append('circle').attr('cx',scX(8)).attr('cy',scY(2)).attr('r',4).attr('fill',EC.slate).attr('stroke','#fff').attr('stroke-width',1.5);
   v82dyn._vLine=v82svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,4');
-  v82dyn._dot=v82svg.append('circle').attr('r',5).attr('fill','#7d3c98').attr('stroke','#fff').attr('stroke-width',1.5);
+  v82dyn._dot=v82svg.append('circle').attr('r',5).attr('fill',EC.indicator).attr('stroke','#fff').attr('stroke-width',1.5);
   v82nodes=[
     d3Node('D','#1a56db','D: P=10−Q',64,scX(7),scY(3)),
-    d3Node('MC','#a07800','MC = 2',40,scX(9),scY(2)),
-    d3Node('T','#a07800','Transfer',48,scX(2),scY(5)),
-    d3Node('DWL','#c0392b','DWL',32,scX(6),scY(4)),
+    d3Node('MC',EC.gold,'MC = 2',40,scX(9),scY(2)),
+    d3Node('T',EC.gold,'Transfer',48,scX(2),scY(5)),
+    d3Node('DWL',EC.red,'DWL',32,scX(6),scY(4)),
   ];
   v82sim=d3MakeSim(v82nodes);
   const els=d3AddLabels(v82svg,v82nodes,v82sim);
@@ -937,11 +942,11 @@ function v82Draw(){
   document.getElementById('v82-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">CS remaining</div><div class="readout-val" style="color:#1a56db">$${csRem.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">${tLabel} (rect)</div><div class="readout-val" style="color:#a07800">$${transfer.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">DWL destroyed (tri)</div><div class="readout-val" style="color:#c0392b">$${dwl.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">${tLabel} (rect)</div><div class="readout-val" style="color:var(--gold)">$${transfer.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">DWL destroyed (tri)</div><div class="readout-val" style="color:var(--red)">$${dwl.toFixed(1)}</div></div>
       <div class="readout-col"><div class="readout-label">P at Q</div><div class="readout-val">$${PQ.toFixed(1)}</div></div>
     </div>
-    <div style="margin-top:.4rem;">CS loss = transfer $${transfer.toFixed(1)} + DWL $${dwl.toFixed(1)}. ${Q<1.2?'<strong style="color:#c0392b;">Near full restriction the triangle dwarfs the rectangle; restriction is costly.</strong>':''}</div>`;
+    <div style="margin-top:.4rem;">CS loss = transfer $${transfer.toFixed(1)} + DWL $${dwl.toFixed(1)}. ${Q<1.2?'<strong style="color:var(--red);">Near full restriction the triangle dwarfs the rectangle; restriction is costly.</strong>':''}</div>`;
 }
 function v82Update(){document.getElementById('v82-q-val').textContent=parseFloat(document.getElementById('v82-q').value).toFixed(1);v82Draw();}
 function v82ToggleMono(){v82mono=!v82mono;const b=document.getElementById('v82-mono-btn');b.classList.toggle('active',v82mono);b.textContent=v82mono?'Show Transfer Framing':'Show Monopoly Framing';v82Draw();}
@@ -971,9 +976,9 @@ function v83MakePanel(wrapId){
   // D: P=20-Q from (0,20) to (20,0)
   svg.append('line').attr('x1',xS(0)).attr('y1',yS(20)).attr('x2',xS(20)).attr('y2',yS(0)).attr('stroke',STROKE_CS).attr('stroke-width',2);
   // S: P=4+Q from (0,4) to (18,22)
-  svg.append('line').attr('x1',xS(0)).attr('y1',yS(4)).attr('x2',xS(18)).attr('y2',yS(22)).attr('stroke','#1e8449').attr('stroke-width',2);
+  svg.append('line').attr('x1',xS(0)).attr('y1',yS(4)).attr('x2',xS(18)).attr('y2',yS(22)).attr('stroke',EC.green).attr('stroke-width',2);
   svg.append('text').attr('x',xS(1.2)).attr('y',yS(18.8)-4).attr('font-size',10).attr('fill',STROKE_CS).attr('font-weight',600).text('D');
-  svg.append('text').attr('x',xS(15.5)).attr('y',yS(19.5)-4).attr('font-size',10).attr('fill','#1e8449').attr('font-weight',600).text('S');
+  svg.append('text').attr('x',xS(15.5)).attr('y',yS(19.5)-4).attr('font-size',10).attr('fill',EC.green).attr('font-weight',600).text('S');
   const dyn=svg.append('g');
   return {svg,xS,yS,dyn,W,H,PAD};
 }
@@ -982,13 +987,13 @@ function v83DrawAutarky(p){
   dyn.selectAll('*').remove();
   dyn.append('polygon').attr('points',`${xS(0)},${yS(20)} ${xS(8)},${yS(12)} ${xS(0)},${yS(12)}`).attr('fill',FILL_CS);
   dyn.append('polygon').attr('points',`${xS(0)},${yS(4)} ${xS(8)},${yS(12)} ${xS(0)},${yS(12)}`).attr('fill',FILL_PS);
-  dyn.append('circle').attr('cx',xS(8)).attr('cy',yS(12)).attr('r',4).attr('fill','#2c3e50').attr('stroke','#fff').attr('stroke-width',1.5);
-  dyn.append('line').attr('x1',xS(0)).attr('x2',xS(8)).attr('y1',yS(12)).attr('y2',yS(12)).attr('stroke','#2c3e50').attr('stroke-width',1.2).attr('stroke-dasharray','4,3');
-  dyn.append('line').attr('x1',xS(8)).attr('x2',xS(8)).attr('y1',yS(12)).attr('y2',yS(0)).attr('stroke','#2c3e50').attr('stroke-width',1.2).attr('stroke-dasharray','4,3');
+  dyn.append('circle').attr('cx',xS(8)).attr('cy',yS(12)).attr('r',4).attr('fill',EC.slate).attr('stroke','#fff').attr('stroke-width',1.5);
+  dyn.append('line').attr('x1',xS(0)).attr('x2',xS(8)).attr('y1',yS(12)).attr('y2',yS(12)).attr('stroke',EC.slate).attr('stroke-width',1.2).attr('stroke-dasharray','4,3');
+  dyn.append('line').attr('x1',xS(8)).attr('x2',xS(8)).attr('y1',yS(12)).attr('y2',yS(0)).attr('stroke',EC.slate).attr('stroke-width',1.2).attr('stroke-dasharray','4,3');
   d3HaloLabel(dyn,xS(2.5),yS(14.8),'CS = $32',{color:'#1a56db',size:11,weight:700});
-  d3HaloLabel(dyn,xS(2.5),yS(7.5),'PS = $32',{color:'#a07800',size:11,weight:700});
-  d3HaloLabel(dyn,p.PAD.left+4,yS(12)-3,'P*=$12',{anchor:'start',color:'#2c3e50',size:8,weight:600});
-  d3HaloLabel(dyn,xS(8),yS(0)+14,'Q*=8',{color:'#2c3e50',size:8,weight:600});
+  d3HaloLabel(dyn,xS(2.5),yS(7.5),'PS = $32',{color:EC.gold,size:11,weight:700});
+  d3HaloLabel(dyn,p.PAD.left+4,yS(12)-3,'P*=$12',{anchor:'start',color:EC.slate,size:8,weight:600});
+  d3HaloLabel(dyn,xS(8),yS(0)+14,'Q*=8',{color:EC.slate,size:8,weight:600});
 }
 function v83DrawFreeTrade(p,Pw){
   const {xS,yS,dyn}=p;
@@ -996,22 +1001,22 @@ function v83DrawFreeTrade(p,Pw){
   const QS=Math.max(0,Pw-4), QD=20-Pw;
   dyn.append('polygon').attr('points',`${xS(0)},${yS(20)} ${xS(QD)},${yS(Pw)} ${xS(0)},${yS(Pw)}`).attr('fill',FILL_CS);
   dyn.append('polygon').attr('points',`${xS(0)},${yS(4)} ${xS(QS)},${yS(Pw)} ${xS(0)},${yS(Pw)}`).attr('fill',FILL_PS);
-  dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD+1)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke','#7d3c98').attr('stroke-width',1.8).attr('stroke-dasharray','6,3');
+  dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD+1)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,3');
   // QS and QD x-axis ticks
   [[QS,'Qˢ'],[QD,'Qᵈ']].forEach(([q,lbl])=>{
-    dyn.append('line').attr('x1',xS(q)).attr('x2',xS(q)).attr('y1',yS(0)).attr('y2',yS(0)+6).attr('stroke','#7d3c98').attr('stroke-width',1.5);
-    dyn.append('text').attr('x',xS(q)).attr('y',yS(0)+15).attr('text-anchor','middle').attr('font-size',8).attr('fill','#7d3c98').text(q.toFixed(0));
-    dyn.append('text').attr('x',xS(q)).attr('y',yS(0)+24).attr('text-anchor','middle').attr('font-size',7).attr('fill','#7d3c98').text(lbl);
+    dyn.append('line').attr('x1',xS(q)).attr('x2',xS(q)).attr('y1',yS(0)).attr('y2',yS(0)+6).attr('stroke',EC.indicator).attr('stroke-width',1.5);
+    dyn.append('text').attr('x',xS(q)).attr('y',yS(0)+15).attr('text-anchor','middle').attr('font-size',8).attr('fill',EC.indicator).text(q.toFixed(0));
+    dyn.append('text').attr('x',xS(q)).attr('y',yS(0)+24).attr('text-anchor','middle').attr('font-size',7).attr('fill',EC.indicator).text(lbl);
   });
   // imports bracket at Pw level
   if(QD-QS>0.5){
-    dyn.append('line').attr('x1',xS(QS)).attr('x2',xS(QD)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke','#7d3c98').attr('stroke-width',3).attr('opacity',0.5);
-    d3HaloLabel(dyn,xS((QS+QD)/2),yS(Pw)-7,'Imports='+(QD-QS).toFixed(0),{color:'#7d3c98',size:8,weight:600});
+    dyn.append('line').attr('x1',xS(QS)).attr('x2',xS(QD)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke',EC.indicator).attr('stroke-width',3).attr('opacity',0.5);
+    d3HaloLabel(dyn,xS((QS+QD)/2),yS(Pw)-7,'Imports='+(QD-QS).toFixed(0),{color:EC.indicator,size:8,weight:600});
   }
-  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)-3,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:'#7d3c98',size:8,weight:600});
+  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)-3,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:8,weight:600});
   const CS_new=0.5*(20-Pw)*(20-Pw), PS_new=0.5*QS*QS;
   d3HaloLabel(dyn,xS(QD*0.3),yS((20+Pw)/2),'CS=$'+CS_new.toFixed(0),{color:'#1a56db',size:10,weight:700});
-  if(QS>1.5) d3HaloLabel(dyn,xS(QS*0.35),yS((4+Pw)/2),'PS=$'+PS_new.toFixed(0),{color:'#a07800',size:10,weight:700});
+  if(QS>1.5) d3HaloLabel(dyn,xS(QS*0.35),yS((4+Pw)/2),'PS=$'+PS_new.toFixed(0),{color:EC.gold,size:10,weight:700});
 }
 function v83DrawTariff(p,Pw,t){
   const {xS,yS,dyn}=p;
@@ -1025,26 +1030,26 @@ function v83DrawTariff(p,Pw,t){
   // PS region
   dyn.append('polygon').attr('points',`${xS(0)},${yS(4)} ${xS(QS_eff)},${yS(Peff)} ${xS(0)},${yS(Peff)}`).attr('fill',FILL_PS);
   // world price reference
-  dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_free+1)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke','#7d3c98').attr('stroke-width',1.4).attr('stroke-dasharray','4,3').attr('opacity',0.6);
-  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)+9,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:'#7d3c98',size:7,weight:600});
+  dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_free+1)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke',EC.indicator).attr('stroke-width',1.4).attr('stroke-dasharray','4,3').attr('opacity',0.6);
+  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)+9,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:7,weight:600});
   if(tAct>0.1){
     // tariff-inclusive price line
-    dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_eff+0.5)).attr('y1',yS(Peff)).attr('y2',yS(Peff)).attr('stroke','#c0392b').attr('stroke-width',1.8).attr('stroke-dasharray','5,3');
-    d3HaloLabel(dyn,p.PAD.left+4,yS(Peff)-3,'Pₜ=$'+Peff.toFixed(0),{anchor:'start',color:'#c0392b',size:8,weight:600});
+    dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_eff+0.5)).attr('y1',yS(Peff)).attr('y2',yS(Peff)).attr('stroke',EC.red).attr('stroke-width',1.8).attr('stroke-dasharray','5,3');
+    d3HaloLabel(dyn,p.PAD.left+4,yS(Peff)-3,'Pₜ=$'+Peff.toFixed(0),{anchor:'start',color:EC.red,size:8,weight:600});
     // Gov revenue rectangle
-    if(imports_eff>0.5) dyn.append('rect').attr('x',xS(QS_eff)).attr('y',yS(Peff)).attr('width',xS(QD_eff)-xS(QS_eff)).attr('height',yS(Pw)-yS(Peff)).attr('fill',FILL_REV).attr('stroke','#2c3e50').attr('stroke-width',1);
+    if(imports_eff>0.5) dyn.append('rect').attr('x',xS(QS_eff)).attr('y',yS(Peff)).attr('width',xS(QD_eff)-xS(QS_eff)).attr('height',yS(Pw)-yS(Peff)).attr('fill',FILL_REV).attr('stroke',EC.slate).attr('stroke-width',1);
     // DWL production triangle
     if(QS_eff-QS_free>0.3) dyn.append('polygon').attr('points',`${xS(QS_free)},${yS(Pw)} ${xS(QS_eff)},${yS(Peff)} ${xS(QS_eff)},${yS(Pw)}`).attr('fill',FILL_DWL);
     // DWL consumption triangle
     if(QD_free-QD_eff>0.3) dyn.append('polygon').attr('points',`${xS(QD_eff)},${yS(Peff)} ${xS(QD_free)},${yS(Pw)} ${xS(QD_eff)},${yS(Pw)}`).attr('fill',FILL_DWL);
     // Labels for revenue and DWL
-    if(imports_eff>2) d3HaloLabel(dyn,xS((QS_eff+QD_eff)/2),yS((Pw+Peff)/2)+4,'Rev=$'+(tAct*imports_eff).toFixed(0),{color:'#2c3e50',size:8,weight:600});
-    if(QS_eff-QS_free>0.6) d3HaloLabel(dyn,xS((QS_free+QS_eff)/2),yS(Pw)+15,'DWL',{color:'#c0392b',size:7,weight:700});
-    if(QD_free-QD_eff>0.6) d3HaloLabel(dyn,xS((QD_eff+QD_free)/2),yS(Pw)+15,'DWL',{color:'#c0392b',size:7,weight:700});
+    if(imports_eff>2) d3HaloLabel(dyn,xS((QS_eff+QD_eff)/2),yS((Pw+Peff)/2)+4,'Rev=$'+(tAct*imports_eff).toFixed(0),{color:EC.slate,size:8,weight:600});
+    if(QS_eff-QS_free>0.6) d3HaloLabel(dyn,xS((QS_free+QS_eff)/2),yS(Pw)+15,'DWL',{color:EC.red,size:7,weight:700});
+    if(QD_free-QD_eff>0.6) d3HaloLabel(dyn,xS((QD_eff+QD_free)/2),yS(Pw)+15,'DWL',{color:EC.red,size:7,weight:700});
   }
   const CS_eff=0.5*(20-Peff)*(20-Peff), PS_eff=0.5*QS_eff*QS_eff;
   d3HaloLabel(dyn,xS(QD_eff*0.28),yS((20+Peff)/2),'CS=$'+CS_eff.toFixed(0),{color:'#1a56db',size:10,weight:700});
-  if(QS_eff>1.5) d3HaloLabel(dyn,xS(QS_eff*0.35),yS((4+Peff)/2),'PS=$'+PS_eff.toFixed(0),{color:'#a07800',size:10,weight:700});
+  if(QS_eff>1.5) d3HaloLabel(dyn,xS(QS_eff*0.35),yS((4+Peff)/2),'PS=$'+PS_eff.toFixed(0),{color:EC.gold,size:10,weight:700});
 }
 function v83Init(){
   v83panelAL=v83MakePanel('cvs83a-wrap');
@@ -1070,9 +1075,9 @@ function v83Draw(){
   document.getElementById('v83-trade-calc').innerHTML=
     `<strong>Welfare vs. autarky (P*&nbsp;=&nbsp;$12):</strong>&emsp;`+
     `&Delta;CS&nbsp;=&nbsp;$${CS_free.toFixed(0)}&minus;$32&nbsp;=&nbsp;<strong style="color:#1a56db;">+$${dCS_trade.toFixed(1)}</strong>&emsp;`+
-    `&Delta;PS&nbsp;=&nbsp;$${PS_free.toFixed(0)}&minus;$32&nbsp;=&nbsp;<strong style="color:#c0392b;">&minus;$${Math.abs(dPS_trade).toFixed(1)}</strong>&emsp;`+
+    `&Delta;PS&nbsp;=&nbsp;$${PS_free.toFixed(0)}&minus;$32&nbsp;=&nbsp;<strong style="color:var(--red);">&minus;$${Math.abs(dPS_trade).toFixed(1)}</strong>&emsp;`+
     `Imports&nbsp;=&nbsp;${(QD_free-QS_free).toFixed(0)}&emsp;`+
-    `Net gain&nbsp;=&nbsp;<strong style="color:#1e8449;">+$${netTrade.toFixed(1)}</strong> (consumers gain more than producers lose)`;
+    `Net gain&nbsp;=&nbsp;<strong style="color:var(--green);">+$${netTrade.toFixed(1)}</strong> (consumers gain more than producers lose)`;
   // Part B calculation box
   const Peff=Math.min(Pw+t,11.9), tAct=Peff-Pw;
   if(tAct>0.1){
@@ -1084,11 +1089,11 @@ function v83Draw(){
     const net_tar=dCS_tar+dPS_tar+govRev;
     document.getElementById('v83-tariff-calc').innerHTML=
       `<strong>Tariff welfare vs. free trade at P<sub>W</sub>&nbsp;=&nbsp;$${Pw.toFixed(0)}:</strong><br>`+
-      `&Delta;CS&nbsp;=&nbsp;<strong style="color:#c0392b;">&minus;$${Math.abs(dCS_tar).toFixed(1)}</strong>&emsp;`+
-      `&Delta;PS&nbsp;=&nbsp;<strong style="color:#1e8449;">+$${dPS_tar.toFixed(1)}</strong>&emsp;`+
+      `&Delta;CS&nbsp;=&nbsp;<strong style="color:var(--red);">&minus;$${Math.abs(dCS_tar).toFixed(1)}</strong>&emsp;`+
+      `&Delta;PS&nbsp;=&nbsp;<strong style="color:var(--green);">+$${dPS_tar.toFixed(1)}</strong>&emsp;`+
       `Gov revenue&nbsp;=&nbsp;<strong>+$${govRev.toFixed(1)}</strong>&emsp;`+
-      `DWL (2 triangles)&nbsp;=&nbsp;<strong style="color:#c0392b;">&minus;$${dwl.toFixed(1)}</strong><br>`+
-      `Net welfare change&nbsp;=&nbsp;<strong style="color:#c0392b;">&minus;$${Math.abs(net_tar).toFixed(1)}</strong>. The DWL is never recovered by anyone.`;
+      `DWL (2 triangles)&nbsp;=&nbsp;<strong style="color:var(--red);">&minus;$${dwl.toFixed(1)}</strong><br>`+
+      `Net welfare change&nbsp;=&nbsp;<strong style="color:var(--red);">&minus;$${Math.abs(net_tar).toFixed(1)}</strong>. The DWL is never recovered by anyone.`;
   }else{
     document.getElementById('v83-tariff-calc').textContent='Set a tariff above $0 to see the welfare cost.';
   }
@@ -1111,12 +1116,12 @@ function v84Init(){
   // (the S6/S8 pattern) instead of re-scattering on every input.
   v84N={
     D:    d3Node('D',STROKE_CS,'',62,0,0),
-    MR:   d3Node('MR','#7d3c98','MR',26,0,0),
-    MC:   d3Node('MC','#a07800','',46,0,0),
-    Qm:   d3Node('Qm','#c0392b','',52,0,0),
+    MR:   d3Node('MR',EC.indicator,'MR',26,0,0),
+    MC:   d3Node('MC',EC.gold,'',46,0,0),
+    Qm:   d3Node('Qm',EC.red,'',52,0,0),
     Pm:   d3Node('Pm',STROKE_CS,'',60,0,0),
-    Pi:   d3Node('Pi','#a07800','',44,0,0),
-    Wrong:d3Node('Wrong','#c0392b','',84,0,0),
+    Pi:   d3Node('Pi',EC.gold,'',44,0,0),
+    Wrong:d3Node('Wrong',EC.red,'',84,0,0),
   };
   v84Render();
 }
@@ -1140,19 +1145,19 @@ function v84Render(){
   }
   // Demand, MR, MC
   d3Seg(v84svg,scX,scY,0,a,a,0,STROKE_CS,2);            // D
-  d3Seg(v84svg,scX,scY,0,a,a/2,0,'#7d3c98',2,'6,3');    // MR
+  d3Seg(v84svg,scX,scY,0,a,a/2,0,EC.indicator,2,'6,3');    // MR
   d3Seg(v84svg,scX,scY,0,c,a,c,STROKE_PS,2);            // MC
   // step1 guides
   if(v84step>=1){
     v84svg.append('line').attr('x1',scX(Qm)).attr('x2',scX(Qm)).attr('y1',scY(c)).attr('y2',scY(0)).attr('stroke','#aaa').attr('stroke-width',1.2).attr('stroke-dasharray','5,3');
-    v84svg.append('circle').attr('cx',scX(Qm)).attr('cy',scY(c)).attr('r',5).attr('fill','#c0392b').attr('stroke','#fff').attr('stroke-width',1.5);
+    v84svg.append('circle').attr('cx',scX(Qm)).attr('cy',scY(c)).attr('r',5).attr('fill',EC.red).attr('stroke','#fff').attr('stroke-width',1.5);
   }
   if(v84step>=2){
     v84svg.append('line').attr('x1',scX(0)).attr('x2',scX(Qm)).attr('y1',scY(Pm)).attr('y2',scY(Pm)).attr('stroke','#aaa').attr('stroke-width',1.2).attr('stroke-dasharray','5,3');
     v84svg.append('circle').attr('cx',scX(Qm)).attr('cy',scY(Pm)).attr('r',5).attr('fill',STROKE_CS).attr('stroke','#fff').attr('stroke-width',1.5);
   }
   if(v84step>=2&&v84mistake){
-    v84svg.append('circle').attr('cx',scX(Qm)).attr('cy',scY(c)).attr('r',5).attr('fill','#c0392b').attr('opacity',0.6).attr('stroke','#fff').attr('stroke-width',1.2);
+    v84svg.append('circle').attr('cx',scX(Qm)).attr('cy',scY(c)).attr('r',5).attr('fill',EC.red).attr('opacity',0.6).attr('stroke','#fff').attr('stroke-width',1.2);
   }
   // labels: update text + anchors on the persistent nodes, re-bind to new svg
   const N=v84N;
@@ -1177,14 +1182,14 @@ function v84Render(){
   alg.innerHTML=`<div style="font-size:.82rem;line-height:1.8;">
     <strong>Step 1 (MR = MC):</strong> ${a.toFixed(0)} − 2Q = ${c.toFixed(1)} &rarr; Q*ₘ = (${a.toFixed(0)} − ${c.toFixed(1)})/2 = <strong>${Qm.toFixed(1)}</strong><br>
     <strong>Step 2 (read demand):</strong> P*ₘ = ${a.toFixed(0)} − ${Qm.toFixed(1)} = (${a.toFixed(0)} + ${c.toFixed(1)})/2 = <strong>${Pm.toFixed(1)}</strong>
-    ${v84mistake?`<br><span style="color:#c0392b;">✗ Wrong: reading P from MR gives $${c.toFixed(1)} (that's MC, not the price buyers pay).</span>`:''}
+    ${v84mistake?`<br><span style="color:var(--red);">✗ Wrong: reading P from MR gives $${c.toFixed(1)} (that's MC, not the price buyers pay).</span>`:''}
   </div>`;
   document.getElementById('v84-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">Q*ₘ</div><div class="readout-val">${Qm.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">P*ₘ (demand)</div><div class="readout-val" style="color:#1a56db">$${Pm.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">MC = c</div><div class="readout-val">$${c.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit π</div><div class="readout-val" style="color:#a07800">$${profit.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit π</div><div class="readout-val" style="color:var(--gold)">$${profit.toFixed(2)}</div></div>
     </div>`;
 }
 function v84Update(){
@@ -1211,15 +1216,15 @@ function v85Init(){
   d3AddAxes(v85svg,scX,scY,'Quantity (Q)','Price ($)',d=>'$'+d);
   v85dyn=v85svg.append('g');
   d3Seg(v85svg,scX,scY,0,a,a,0,STROKE_CS,2);              // D: P=a-Q
-  d3Seg(v85svg,scX,scY,0,a,a/2,0,'#7d3c98',2,'6,3');      // MR: P=a-2Q
+  d3Seg(v85svg,scX,scY,0,a,a/2,0,EC.indicator,2,'6,3');      // MR: P=a-2Q
   v85dyn._mc=v85svg.append('line').attr('stroke',STROKE_PS).attr('stroke-width',2);
   v85nodes=[
     d3Node('D',STROKE_CS,'D',22,scX(a*0.82),scY(a*0.14)),
-    d3Node('MR','#7d3c98','MR',26,scX(a*0.44),scY(a*0.09)),
-    d3Node('MC','#a07800','MC',26,scX(dom*0.86),scY(2)),
+    d3Node('MR',EC.indicator,'MR',26,scX(a*0.44),scY(a*0.09)),
+    d3Node('MC',EC.gold,'MC',26,scX(dom*0.86),scY(2)),
     d3Node('CS','#1a56db','CS',24,scX(a*0.2),scY(a*0.55)),
-    d3Node('PI','#a07800','π',20,scX(a*0.2),scY(a*0.32)),
-    d3Node('DWL','#c0392b','DWL',32,scX(a*0.58),scY(a*0.32)),
+    d3Node('PI',EC.gold,'π',20,scX(a*0.2),scY(a*0.32)),
+    d3Node('DWL',EC.red,'DWL',32,scX(a*0.58),scY(a*0.32)),
   ];
   v85sim=d3MakeSim(v85nodes);
   const els=d3AddLabels(v85svg,v85nodes,v85sim);
@@ -1249,7 +1254,7 @@ function v85Draw(){
     v85dyn.append('polygon').attr('points',`${scX(0)},${scY(a)} ${scX(Qc)},${scY(Pc)} ${scX(0)},${scY(Pc)}`).attr('fill',FILL_CS);
     d3MoveAnchor(v85nodes.find(n=>n.id==='CS'),scX(Qc*0.2),scY((a+Pc)/2));
     show('CS');hide('PI');hide('DWL');
-    document.getElementById('v85-readout').innerHTML=v85StatRow({label:'State',val:'Competition'},{label:'CS',val:'$'+cs.toFixed(1),c:'#1a56db'},{label:'PS / π',val:'$0.0',c:'#a07800'},{label:'DWL',val:'$0.0',c:'#1e8449'},{label:'TS',val:'$'+cs.toFixed(1)});
+    document.getElementById('v85-readout').innerHTML=v85StatRow({label:'State',val:'Competition'},{label:'CS',val:'$'+cs.toFixed(1),c:'#1a56db'},{label:'PS / π',val:'$0.0',c:EC.gold},{label:'DWL',val:'$0.0',c:EC.green},{label:'TS',val:'$'+cs.toFixed(1)});
   }else{
     const cs=0.5*(a-Pm)*Qm, pi=(Pm-mc)*Qm, dwl=0.5*(Pm-mc)*(Qc-Qm);
     csCur=cs;piCur=pi;dwlCur=dwl;
@@ -1260,7 +1265,7 @@ function v85Draw(){
     d3MoveAnchor(v85nodes.find(n=>n.id==='PI'),scX(Qm/2),scY((Pm+mc)/2));
     d3MoveAnchor(v85nodes.find(n=>n.id==='DWL'),scX((Qm+Qc)/2),scY((Pm+mc)/2+a*0.03));
     show('CS');show('PI');show('DWL');
-    document.getElementById('v85-readout').innerHTML=v85StatRow({label:'State',val:'Monopoly'},{label:'CS',val:'$'+cs.toFixed(1),c:'#1a56db'},{label:'Profit',val:'$'+pi.toFixed(1),c:'#a07800'},{label:'DWL',val:'$'+dwl.toFixed(1),c:'#c0392b'},{label:'TS',val:'$'+(cs+pi).toFixed(1)});
+    document.getElementById('v85-readout').innerHTML=v85StatRow({label:'State',val:'Monopoly'},{label:'CS',val:'$'+cs.toFixed(1),c:'#1a56db'},{label:'Profit',val:'$'+pi.toFixed(1),c:EC.gold},{label:'DWL',val:'$'+dwl.toFixed(1),c:EC.red},{label:'TS',val:'$'+(cs+pi).toFixed(1)});
   }
   if(v85gs)d3TickClamp(v85nodes,v85gs,v85conns);
 
@@ -1306,10 +1311,10 @@ function v87Init(){
   d3Seg(v87svg,scX,scY,0,a,a,0,STROKE_CS,2);              // D: P=a-Q
   v87nodes=[
     d3Node('D',STROKE_CS,'D',22,scX(a*0.75),scY(a*0.22)),
-    d3Node('MC','#a07800','MC='+mc.toFixed(0),40,scX(dom*0.88),scY(mc)),
+    d3Node('MC',EC.gold,'MC='+mc.toFixed(0),40,scX(dom*0.88),scY(mc)),
     d3Node('CS','#1a56db','CS',24,scX(a*0.2),scY(a*0.58)),
-    d3Node('PI','#a07800','π',20,scX(a*0.2),scY(a*0.33)),
-    d3Node('DWL','#c0392b','DWL',32,scX(a*0.55),scY(a*0.33)),
+    d3Node('PI',EC.gold,'π',20,scX(a*0.2),scY(a*0.33)),
+    d3Node('DWL',EC.red,'DWL',32,scX(a*0.55),scY(a*0.33)),
   ];
   v87sim=d3MakeSim(v87nodes);
   const els=d3AddLabels(v87svg,v87nodes,v87sim);
@@ -1335,7 +1340,7 @@ function v87Draw(){
     v87dyn.append('polygon').attr('points',`${scX(0)},${scY(a)} ${scX(Qc)},${scY(mc)} ${scX(0)},${scY(mc)}`).attr('fill',FILL_CS);
     d3MoveAnchor(v87nodes.find(n=>n.id==='CS'),scX(Qc*0.25),scY((a+mc)*0.58));
     show('CS');hide('PI');hide('DWL');
-    stats=[['CS','$'+csComp.toFixed(1),'#1a56db'],['Profit','$0','#a07800'],['DWL','$0','#1e8449'],['TS','$'+csComp.toFixed(1),null]];
+    stats=[['CS','$'+csComp.toFixed(1),'#1a56db'],['Profit','$0',EC.gold],['DWL','$0',EC.green],['TS','$'+csComp.toFixed(1),null]];
   }else if(v87state==='mono'){
     v87dyn.append('polygon').attr('points',`${scX(0)},${scY(a)} ${scX(Qm)},${scY(Pm)} ${scX(0)},${scY(Pm)}`).attr('fill',FILL_CS);
     v87dyn.append('polygon').attr('points',`${scX(0)},${scY(Pm)} ${scX(Qm)},${scY(Pm)} ${scX(Qm)},${scY(mc)} ${scX(0)},${scY(mc)}`).attr('fill',FILL_PS).attr('stroke',STROKE_PS).attr('stroke-width',1);
@@ -1344,7 +1349,7 @@ function v87Draw(){
     d3MoveAnchor(v87nodes.find(n=>n.id==='PI'),scX(Qm*0.55),scY((Pm+mc)/2));
     d3MoveAnchor(v87nodes.find(n=>n.id==='DWL'),scX((Qm+Qc)/2),scY((Pm+mc)/2+a*0.04));
     show('CS');show('PI');show('DWL');
-    stats=[['CS','$'+csMono.toFixed(1),'#1a56db'],['Profit','$'+piMono.toFixed(1),'#a07800'],['DWL','$'+dwlMono.toFixed(1),'#c0392b'],['TS','$'+(csMono+piMono).toFixed(1),null]];
+    stats=[['CS','$'+csMono.toFixed(1),'#1a56db'],['Profit','$'+piMono.toFixed(1),EC.gold],['DWL','$'+dwlMono.toFixed(1),EC.red],['TS','$'+(csMono+piMono).toFixed(1),null]];
   }else{
     // PPD slivers
     const n=40,dq=Qc/n;
@@ -1356,7 +1361,7 @@ function v87Draw(){
     v87nodes.find(n=>n.id==='PI').lw=40;
     v87gs.filter(d=>d.id==='PI').select('text').text('all → π').attr('x',20);
     v87gs.filter(d=>d.id==='PI').select('rect').attr('width',40);
-    stats=[['CS','$0','#1a56db'],['Profit','$'+csComp.toFixed(1),'#a07800'],['DWL','$0','#1e8449'],['TS','$'+csComp.toFixed(1),null]];
+    stats=[['CS','$0','#1a56db'],['Profit','$'+csComp.toFixed(1),EC.gold],['DWL','$0',EC.green],['TS','$'+csComp.toFixed(1),null]];
   }
   if(v87state!=='ppd'){v87nodes.find(n=>n.id==='PI').lw=20;v87gs.filter(d=>d.id==='PI').select('text').text('π').attr('x',10);v87gs.filter(d=>d.id==='PI').select('rect').attr('width',20);}
   if(v87gs)d3TickClamp(v87nodes,v87gs,v87conns);
@@ -1382,11 +1387,11 @@ function v88Init(){
   v88svg=d3MakeSvg('cvs88-wrap');
   d3AddAxes(v88svg,scX,scY,'Quantity (Q)','Price ($)',d=>'$'+d);
   v88dyn=v88svg.append('g');
-  d3Seg(v88svg,scX,scY,0,2,10,2,'#1e8449',1.6,'4,3');   // MC
+  d3Seg(v88svg,scX,scY,0,2,10,2,EC.green,1.6,'4,3');   // MC
   d3Seg(v88svg,scX,scY,0,10,10,0,STROKE_CS,2);          // D
   v88nodes=[
     d3Node('D',STROKE_CS,'D: P=10−Q',64,scX(1.5),scY(8.5)),
-    d3Node('MC','#1e8449','MC=$2',44,scX(8.6),scY(2)),
+    d3Node('MC',EC.green,'MC=$2',44,scX(8.6),scY(2)),
   ];
   v88sim=d3MakeSim(v88nodes);
   const els=d3AddLabels(v88svg,v88nodes,v88sim);
@@ -1403,7 +1408,7 @@ function v88Draw(){
     blocks.forEach(b=>{
       const pmid=a-(b.q0+b.q1)/2;
       v88dyn.append('rect').attr('x',scX(b.q0)).attr('y',scY(pmid)).attr('width',scX(b.q1)-scX(b.q0)-0.5).attr('height',scY(mc)-scY(pmid)).attr('fill',FILL_PS).attr('stroke',STROKE_PS).attr('stroke-width',1);
-      v88dyn.append('text').attr('x',scX((b.q0+b.q1)/2)).attr('y',scY((pmid+mc)/2)).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#a07800').text(b.name);
+      v88dyn.append('text').attr('x',scX((b.q0+b.q1)/2)).attr('y',scY((pmid+mc)/2)).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill',EC.gold).text(b.name);
     });
     document.getElementById('v88-readout').innerHTML='<strong>Spotify 3-tier:</strong> Free (ad-supported) / Student $5.99 / Standard $11.99. This combines <strong>second-degree</strong> discrimination (versioning: free vs paid tiers that consumers self-select into) with <strong>third-degree</strong> discrimination (market separation: the student tier is fenced off by university email verification). The free tier screens low-WTP from high-WTP users, so output rises and deadweight loss falls relative to a single price.';
     return;
@@ -1430,9 +1435,9 @@ function v88Draw(){
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">Tiers n</div><div class="readout-val">${n}</div></div>
       <div class="readout-col"><div class="readout-label">Output Q</div><div class="readout-val">${Qn.toFixed(2)} / 8</div></div>
-      <div class="readout-col"><div class="readout-label">Profit = 32n/(n+1)</div><div class="readout-val" style="color:#a07800">$${profit.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit = 32n/(n+1)</div><div class="readout-val" style="color:var(--gold)">$${profit.toFixed(1)}</div></div>
       <div class="readout-col"><div class="readout-label">CS</div><div class="readout-val" style="color:#1a56db">$${cs.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">DWL = 32/(n+1)²</div><div class="readout-val" style="color:${dwl>0.1?'#c0392b':'#1e8449'}">$${Math.max(0,dwl).toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">DWL = 32/(n+1)²</div><div class="readout-val" style="color:${dwl>0.1?EC.red:EC.green}">$${Math.max(0,dwl).toFixed(1)}</div></div>
     </div>`;
 }
 function v88Update(){document.getElementById('v88-n-val').textContent=document.getElementById('v88-n').value;if(v88spotify)v88ToggleSpotify();else v88Draw();}
@@ -1463,17 +1468,17 @@ function v89SetupPanel(wrapId,a,slopeB,label){
   svg.append('line').attr('x1',xS(0)).attr('y1',yS(a)).attr('x2',xS(dEnd)).attr('y2',yS(0)).attr('stroke',STROKE_CS).attr('stroke-width',2);
   svg.append('text').attr('x',xS(2)).attr('y',yS(a-2*slopeB)-6).attr('font-size',10).attr('fill',STROKE_CS).attr('font-weight',600).text(label);
   const mrEnd=a/(2*slopeB);
-  const mrLine=svg.append('line').attr('stroke','#7d3c98').attr('stroke-width',1.6).attr('stroke-dasharray','5,3').attr('opacity',0)
+  const mrLine=svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.6).attr('stroke-dasharray','5,3').attr('opacity',0)
     .attr('x1',xS(0)).attr('y1',yS(a)).attr('x2',xS(mrEnd)).attr('y2',yS(0));
-  const mrLbl=svg.append('text').attr('x',xS(mrEnd*0.28)).attr('y',yS(a*0.55)-6).attr('font-size',9).attr('fill','#7d3c98').attr('font-weight',600).attr('opacity',0).text('MR');
+  const mrLbl=svg.append('text').attr('x',xS(mrEnd*0.28)).attr('y',yS(a*0.55)-6).attr('font-size',9).attr('fill',EC.indicator).attr('font-weight',600).attr('opacity',0).text('MR');
   const mcLine=svg.append('line').attr('stroke',STROKE_PS).attr('stroke-width',2)
     .attr('x1',xS(0)).attr('y1',yS(0)).attr('x2',xS(Qmax)).attr('y2',yS(0));
-  const unifLine=svg.append('line').attr('stroke','#2c3e50').attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
+  const unifLine=svg.append('line').attr('stroke',EC.slate).attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
   const profitRect=svg.append('rect').attr('fill',FILL_PS).attr('stroke',STROKE_PS).attr('stroke-width',1).attr('opacity',0);
   const vD=svg.append('line').attr('stroke','#999').attr('stroke-dasharray','3,3').attr('opacity',0);
   const hD=svg.append('line').attr('stroke','#999').attr('stroke-dasharray','3,3').attr('opacity',0);
-  const dot=svg.append('circle').attr('r',4).attr('fill','#7d3c98').attr('stroke','#fff').attr('stroke-width',1.2).attr('opacity',0);
-  const pLbl=svg.append('text').attr('text-anchor','start').attr('font-size',9).attr('font-weight',600).attr('fill','#2c3e50').attr('opacity',0);
+  const dot=svg.append('circle').attr('r',4).attr('fill',EC.indicator).attr('stroke','#fff').attr('stroke-width',1.2).attr('opacity',0);
+  const pLbl=svg.append('text').attr('text-anchor','start').attr('font-size',9).attr('font-weight',600).attr('fill',EC.slate).attr('opacity',0);
   const epsLbl=svg.append('text').attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('opacity',0);
   return {svg,xS,yS,Pmax,Qmax,slopeB,a,mrLine,mrLbl,mcLine,unifLine,profitRect,vD,hD,dot,pLbl,epsLbl};
 }
@@ -1527,7 +1532,7 @@ function v89Draw(){
       m.pLbl.attr('x',m.xS(0)+5).attr('y',yP-4).text('P*=$'+P.toFixed(0)).attr('opacity',1);
       const eLabel=(Math.abs(eps)>1?'elastic':'inelastic')+' |ε|='+Math.abs(eps).toFixed(2);
       m.epsLbl.attr('x',(m.xS(0)+xV)/2).attr('y',yMC+20).text(eLabel)
-        .attr('fill',Math.abs(eps)>1?'#1e8449':'#c0392b').attr('opacity',1);
+        .attr('fill',Math.abs(eps)>1?EC.green:EC.red).attr('opacity',1);
     }else{[m.vD,m.hD,m.profitRect,m.dot,m.pLbl,m.epsLbl].forEach(e=>e.attr('opacity',0));}
     if(showOpt&&v89uniform){m.unifLine.attr('x1',m.xS(0)).attr('y1',m.yS(bestP)).attr('x2',m.xS(m.Qmax)).attr('y2',m.yS(bestP)).attr('opacity',0.7);}
     else m.unifLine.attr('opacity',0);
@@ -1539,17 +1544,17 @@ function v89Draw(){
     html=`<div class="readout-row">
       <div class="readout-col"><div class="readout-label">M1 &middot; inelastic</div><div class="readout-val" style="color:#1a56db">P₁=$${P1.toFixed(0)}, Q₁=${Q1.toFixed(0)}</div></div>
       <div class="readout-col"><div class="readout-label">M2 &middot; elastic</div><div class="readout-val" style="color:#1a56db">P₂=$${P2.toFixed(0)}, Q₂=${Q2.toFixed(0)}</div></div>
-      <div class="readout-col"><div class="readout-label">π discriminate</div><div class="readout-val" style="color:#a07800">$${piDisc.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">π discriminate</div><div class="readout-val" style="color:var(--gold)">$${piDisc.toFixed(0)}</div></div>
     </div>
     <div style="margin-top:0.5rem;font-size:0.82rem;line-height:1.85;background:#f8fafb;border:1px solid var(--rule);border-radius:8px;padding:0.7rem 1rem;">
       <strong>Step-by-step derivation:</strong><br>
       M1: MR₁ = ${a1} &minus; 2Q₁ = ${mc.toFixed(0)} &rarr; Q₁ = (${a1}&minus;${mc.toFixed(0)})/2 = <strong>${Q1.toFixed(1)}</strong>, P₁ = ${a1} &minus; Q₁ = <strong>$${P1.toFixed(1)}</strong><br>
       M2: MR₂ = ${a2} &minus; Q₂ = ${mc.toFixed(0)} &rarr; Q₂ = ${a2}&minus;${mc.toFixed(0)} = <strong>${Q2.toFixed(1)}</strong>, P₂ = ${a2} &minus; Q₂/2 = <strong>$${P2.toFixed(1)}</strong><br>
-      M1 elasticity: ε₁ = &minus;P₁/Q₁ = &minus;${P1.toFixed(0)}/${Q1.toFixed(0)} = <strong style="color:#c0392b;">${eps1.toFixed(2)}</strong> (inelastic: |&epsilon;|&lt;1 &rarr; higher markup)<br>
-      M2 elasticity: ε₂ = &minus;2&middot;P₂/Q₂ = &minus;2&times;${P2.toFixed(0)}/${Q2.toFixed(0)} = <strong style="color:#1e8449;">${eps2.toFixed(2)}</strong> (elastic: |&epsilon;|&gt;1 &rarr; lower markup)<br>
+      M1 elasticity: ε₁ = &minus;P₁/Q₁ = &minus;${P1.toFixed(0)}/${Q1.toFixed(0)} = <strong style="color:var(--red);">${eps1.toFixed(2)}</strong> (inelastic: |&epsilon;|&lt;1 &rarr; higher markup)<br>
+      M2 elasticity: ε₂ = &minus;2&middot;P₂/Q₂ = &minus;2&times;${P2.toFixed(0)}/${Q2.toFixed(0)} = <strong style="color:var(--green);">${eps2.toFixed(2)}</strong> (elastic: |&epsilon;|&gt;1 &rarr; lower markup)<br>
       Lerner index: L₁=(P₁&minus;MC)/P₁=${L1.toFixed(2)}, L₂=(P₂&minus;MC)/P₂=${L2.toFixed(2)}. Higher L &rarr; greater market power &rarr; higher price.
     </div>`;
-    if(v89uniform){const gain=piDisc-bestPi;html+=`<div style="margin-top:0.4rem;font-size:0.82rem;line-height:1.8;"><strong>Uniform price:</strong> Q(P)=(${a1}&minus;P)+2(${a2}&minus;P)=${a1+2*a2}&minus;3P &rarr; P*=<strong>$${bestP.toFixed(1)}</strong>, π=$${bestPi.toFixed(0)}.<br><strong style="color:#1e8449;">Gain from price discrimination = $${gain.toFixed(0)}</strong>. The firm captures more surplus by charging each market a separate price.</div>`;}
+    if(v89uniform){const gain=piDisc-bestPi;html+=`<div style="margin-top:0.4rem;font-size:0.82rem;line-height:1.8;"><strong>Uniform price:</strong> Q(P)=(${a1}&minus;P)+2(${a2}&minus;P)=${a1+2*a2}&minus;3P &rarr; P*=<strong>$${bestP.toFixed(1)}</strong>, π=$${bestPi.toFixed(0)}.<br><strong style="color:var(--green);">Gain from price discrimination = $${gain.toFixed(0)}</strong>. The firm captures more surplus by charging each market a separate price.</div>`;}
   }else{
     html='Click <strong>Find Optimum</strong> to derive MR₁ = MR₂ = MC and see the step-by-step calculation.';
   }
@@ -1574,11 +1579,11 @@ function v810Init(){
   d3AddAxes(v810svg,scX,scY,'Quantity (Q)','Price ($)',d=>'$'+d);
   v810dyn=v810svg.append('g');
   d3Seg(v810svg,scX,scY,0,20,20,0,STROKE_CS,2);          // D
-  d3Seg(v810svg,scX,scY,0,20,10,0,'#7d3c98',1.6,'4,3');  // MR
-  d3Seg(v810svg,scX,scY,0,2,21,2,'#1e8449',1.6,'4,3');   // MC
+  d3Seg(v810svg,scX,scY,0,20,10,0,EC.indicator,1.6,'4,3');  // MR
+  d3Seg(v810svg,scX,scY,0,2,21,2,EC.green,1.6,'4,3');   // MC
   // AC curve
   const acPts=d3.range(2.6,21,0.25).map(q=>[scX(q),scY(50/q+2)]).filter(p=>p[1]>=D3PAD.top);
-  v810svg.append('path').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',2).attr('d',d3.line()(acPts));
+  v810svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2).attr('d',d3.line()(acPts));
   // Fixed top-right legend
   const legX=D3W-D3PAD.right-134, legY=D3PAD.top+2;
   const legItems=[{color:FILL_CS,stroke:STROKE_CS,label:'Consumer Surplus (CS)'},{color:FILL_PS,stroke:STROKE_PS,label:'Profit / Transfer'},{color:FILL_DWL,stroke:STROKE_DWL,label:'Deadweight Loss / Loss'}];
@@ -1588,9 +1593,9 @@ function v810Init(){
   v810dyn._price=v810svg.append('line').attr('stroke-width',2).attr('stroke-dasharray','5,3');
   v810nodes=[
     d3Node('D',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
-    d3Node('MR','#7d3c98','MR',26,scX(8.4),scY(3.2)),
-    d3Node('MC','#1e8449','MC',26,scX(18.6),scY(2)),
-    d3Node('AC','#c0392b','AC',26,scX(4),scY(50/4+2)),
+    d3Node('MR',EC.indicator,'MR',26,scX(8.4),scY(3.2)),
+    d3Node('MC',EC.green,'MC',26,scX(18.6),scY(2)),
+    d3Node('AC',EC.red,'AC',26,scX(4),scY(50/4+2)),
   ];
   v810sim=d3MakeSim(v810nodes);
   const els=d3AddLabels(v810svg,v810nodes,v810sim);
@@ -1613,21 +1618,21 @@ function v810Draw(){
     v810dyn.append('polygon').attr('points',`${scX(0)},${scY(20)} ${scX(Q)},${scY(P)} ${scX(0)},${scY(P)}`).attr('fill',FILL_CS);
     v810dyn.append('rect').attr('x',scX(0)).attr('y',scY(P)).attr('width',scX(Q)-scX(0)).attr('height',scY(AC(Q))-scY(P)).attr('fill',FILL_PS).attr('stroke',STROKE_PS).attr('stroke-width',1);
     v810dyn.append('polygon').attr('points',`${scX(Q)},${scY(P)} ${scX(18)},${scY(mc)} ${scX(Q)},${scY(mc)}`).attr('fill',FILL_DWL);
-    v810dyn._price.attr('x1',scX(0)).attr('y1',scY(P)).attr('x2',scX(Q)).attr('y2',scY(P)).attr('stroke','#2c3e50');
-    out=['Unregulated Monopoly','Q*=9, P*=$11, profit=$31 (AC=$'+(AC(9)).toFixed(1)+'), DWL=$40.5','Efficient? No. Profitable? Yes.','#c0392b'];
+    v810dyn._price.attr('x1',scX(0)).attr('y1',scY(P)).attr('x2',scX(Q)).attr('y2',scY(P)).attr('stroke',EC.slate);
+    out=['Unregulated Monopoly','Q*=9, P*=$11, profit=$31 (AC=$'+(AC(9)).toFixed(1)+'), DWL=$40.5','Efficient? No. Profitable? Yes.',EC.red];
   }else if(v810state==='mc'){
     const Q=18,P=2;
     v810dyn.append('polygon').attr('points',`${scX(0)},${scY(20)} ${scX(Q)},${scY(P)} ${scX(0)},${scY(P)}`).attr('fill',FILL_CS);
     // loss rectangle: from price P=2 UP to AC(18)≈4.78 (AC above price)
     v810dyn.append('rect').attr('x',scX(0)).attr('y',scY(AC(Q))).attr('width',scX(Q)-scX(0)).attr('height',scY(P)-scY(AC(Q))).attr('fill',FILL_DWL).attr('stroke',STROKE_DWL).attr('stroke-width',1).attr('stroke-dasharray','4,3');
-    v810dyn._price.attr('x1',scX(0)).attr('y1',scY(P)).attr('x2',scX(Q)).attr('y2',scY(P)).attr('stroke','#c0392b');
-    out=['Regulate P = MC','Q=18, P=$2, loss=$50 (subsidy needed), DWL=$0','Efficient? Yes. Viable? No, needs a subsidy.','#1e8449'];
+    v810dyn._price.attr('x1',scX(0)).attr('y1',scY(P)).attr('x2',scX(Q)).attr('y2',scY(P)).attr('stroke',EC.red);
+    out=['Regulate P = MC','Q=18, P=$2, loss=$50 (subsidy needed), DWL=$0','Efficient? Yes. Viable? No, needs a subsidy.',EC.green];
   }else{
     const Q=14.57,P=5.43;
     v810dyn.append('polygon').attr('points',`${scX(0)},${scY(20)} ${scX(Q)},${scY(P)} ${scX(0)},${scY(P)}`).attr('fill',FILL_CS);
     v810dyn.append('polygon').attr('points',`${scX(Q)},${scY(P)} ${scX(18)},${scY(2)} ${scX(Q)},${scY(2)}`).attr('fill',FILL_DWL);
-    v810dyn._price.attr('x1',scX(0)).attr('y1',scY(P)).attr('x2',scX(Q)).attr('y2',scY(P)).attr('stroke','#1e8449');
-    out=['Regulate P = AC','Q≈14.6, P≈$5.43, profit=$0 (P=AC exactly), DWL≈$5.9','Efficient? Second-best. Viable? Yes.','#a07800'];
+    v810dyn._price.attr('x1',scX(0)).attr('y1',scY(P)).attr('x2',scX(Q)).attr('y2',scY(P)).attr('stroke',EC.green);
+    out=['Regulate P = AC','Q≈14.6, P≈$5.43, profit=$0 (P=AC exactly), DWL≈$5.9','Efficient? Second-best. Viable? Yes.',EC.gold];
   }
   document.getElementById('v810-readout').innerHTML=`<div style="font-weight:600;color:${out[3]};margin-bottom:.25rem;">${out[0]}</div><div>${out[1]}</div><div style="margin-top:.3rem;font-style:italic;color:var(--muted);">${out[2]}</div>`;
 }
@@ -1652,20 +1657,20 @@ function v811Init(){
   // D: (0,20)→(20,0)
   d3Seg(v811svg,scX,scY,0,20,20,0,STROKE_CS,2);
   // MR: (0,20)→(10,0)
-  d3Seg(v811svg,scX,scY,0,20,10,0,'#7d3c98',1.6,'5,3');
+  d3Seg(v811svg,scX,scY,0,20,10,0,EC.indicator,1.6,'5,3');
   // MC=2 horizontal
-  d3Seg(v811svg,scX,scY,0,2,21,2,'#1e8449',1.6,'4,3');
+  d3Seg(v811svg,scX,scY,0,2,21,2,EC.green,1.6,'4,3');
   // AC curve: 50/Q+2 from Q=2.5 to Q=21
   const acPts=d3.range(2.5,21,0.2).map(q=>[scX(q),scY(50/q+2)]).filter(p=>p[1]>=D3PAD.top);
-  v811svg.append('path').attr('fill','none').attr('stroke','#c0392b').attr('stroke-width',2).attr('d',d3.line()(acPts));
+  v811svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2).attr('d',d3.line()(acPts));
   // Dynamic layer drawn on top
   v811dyn=v811svg.append('g');
   // Force-sim labels for static curves
   v811nodes=[
     d3Node('D811',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
-    d3Node('MR811','#7d3c98','MR',26,scX(8.5),scY(3.5)),
-    d3Node('MC811','#1e8449','MC',26,scX(19.5),scY(2.3)),
-    d3Node('AC811','#c0392b','AC',26,scX(4.5),scY(50/4.5+2)),
+    d3Node('MR811',EC.indicator,'MR',26,scX(8.5),scY(3.5)),
+    d3Node('MC811',EC.green,'MC',26,scX(19.5),scY(2.3)),
+    d3Node('AC811',EC.red,'AC',26,scX(4.5),scY(50/4.5+2)),
   ];
   v811sim=d3MakeSim(v811nodes);
   const els=d3AddLabels(v811svg,v811nodes,v811sim);
@@ -1698,9 +1703,9 @@ function v811Draw(){
     if(PA>AC_QR){
       const h=scY(AC_QR)-scY(PA);
       v811dyn.append('rect').attr('x',scX(0)).attr('y',scY(PA)).attr('width',scX(QA)-scX(0)).attr('height',h)
-        .attr('fill','rgba(39,174,96,0.28)').attr('stroke','#1e8449').attr('stroke-width',1);
+        .attr('fill','rgba(39,174,96,0.28)').attr('stroke',EC.green).attr('stroke-width',1);
       if(highContrib>3) v811dyn.append('text').attr('x',(scX(0)+scX(QA))/2).attr('y',(scY(PA)+scY(AC_QR))/2+4)
-        .attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#0e6b32')
+        .attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill',EC.green)
         .text('Profit=$'+highContrib.toFixed(0));
     } else if(PA<AC_QR){
       const h=scY(PA)-scY(AC_QR);
@@ -1720,21 +1725,21 @@ function v811Draw(){
     } else if(PR>AC_QR){
       const h=scY(AC_QR)-scY(PR);
       v811dyn.append('rect').attr('x',scX(QA)).attr('y',scY(PR)).attr('width',scX(QR)-scX(QA)).attr('height',h)
-        .attr('fill','rgba(39,174,96,0.28)').attr('stroke','#1e8449').attr('stroke-width',1);
+        .attr('fill','rgba(39,174,96,0.28)').attr('stroke',EC.green).attr('stroke-width',1);
       if(lowContrib>3) v811dyn.append('text').attr('x',(scX(QA)+scX(QR))/2).attr('y',(scY(PR)+scY(AC_QR))/2+4)
-        .attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill','#0e6b32')
+        .attr('text-anchor','middle').attr('font-size',10).attr('font-weight',700).attr('fill',EC.green)
         .text('+$'+lowContrib.toFixed(0));
     }
   }
   // AC(Q_R) dashed horizontal reference
   v811dyn.append('line').attr('x1',scX(0)).attr('x2',scX(QR+0.8)).attr('y1',scY(AC_QR)).attr('y2',scY(AC_QR))
-    .attr('stroke','#c0392b').attr('stroke-width',1.3).attr('stroke-dasharray','3,4').attr('opacity',0.75);
+    .attr('stroke',EC.red).attr('stroke-width',1.3).attr('stroke-dasharray','3,4').attr('opacity',0.75);
   // P_A horizontal dash from y-axis to Q_A
   v811dyn.append('line').attr('x1',scX(0)).attr('x2',scX(QA+0.3)).attr('y1',scY(PA)).attr('y2',scY(PA))
-    .attr('stroke','#2c3e50').attr('stroke-width',1.4).attr('stroke-dasharray','5,3');
+    .attr('stroke',EC.slate).attr('stroke-width',1.4).attr('stroke-dasharray','5,3');
   // P_R horizontal dash from y-axis to Q_R
   v811dyn.append('line').attr('x1',scX(0)).attr('x2',scX(QR+0.3)).attr('y1',scY(PR)).attr('y2',scY(PR))
-    .attr('stroke','#2c3e50').attr('stroke-width',1.4).attr('stroke-dasharray','5,3');
+    .attr('stroke',EC.slate).attr('stroke-width',1.4).attr('stroke-dasharray','5,3');
   // Q_A vertical drop
   v811dyn.append('line').attr('x1',scX(QA)).attr('x2',scX(QA)).attr('y1',scY(PA)).attr('y2',scY(0))
     .attr('stroke','#bbb').attr('stroke-width',1.1).attr('stroke-dasharray','4,4');
@@ -1746,27 +1751,27 @@ function v811Draw(){
   v811dyn.append('circle').attr('cx',scX(QR)).attr('cy',scY(PR)).attr('r',4).attr('fill',STROKE_CS).attr('stroke','#fff').attr('stroke-width',1.5);
   // Price labels: sit just inside the axis on each dashed line, haloed so they
   // clear the y-axis $ ticks and the guide lines instead of stacking on them.
-  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PA)-3,'PA=$'+PA.toFixed(0),{anchor:'start',color:'#2c3e50',size:9,weight:700});
-  d3HaloLabel(v811dyn,D3PAD.left+5,scY(AC_QR)-3,'AC=$'+AC_QR.toFixed(1),{anchor:'start',color:'#c0392b',size:9,weight:600});
-  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PR)-3,'PR=$'+PR.toFixed(0),{anchor:'start',color:'#2c3e50',size:9,weight:700});
+  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PA)-3,'PA=$'+PA.toFixed(0),{anchor:'start',color:EC.slate,size:9,weight:700});
+  d3HaloLabel(v811dyn,D3PAD.left+5,scY(AC_QR)-3,'AC=$'+AC_QR.toFixed(1),{anchor:'start',color:EC.red,size:9,weight:600});
+  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PR)-3,'PR=$'+PR.toFixed(0),{anchor:'start',color:EC.slate,size:9,weight:700});
   // Quantity labels: own row below the x-axis tick numbers, haloed.
-  d3HaloLabel(v811dyn,scX(QA),scY(0)+24,'QA='+QA.toFixed(0),{color:'#2c3e50',size:9,weight:600});
-  d3HaloLabel(v811dyn,scX(QR),scY(0)+24,'QR='+QR.toFixed(0),{color:'#2c3e50',size:9,weight:600});
+  d3HaloLabel(v811dyn,scX(QA),scY(0)+24,'QA='+QA.toFixed(0),{color:EC.slate,size:9,weight:600});
+  d3HaloLabel(v811dyn,scX(QR),scY(0)+24,'QR='+QR.toFixed(0),{color:EC.slate,size:9,weight:600});
   document.getElementById('v811-pa-val').textContent='$'+PA.toFixed(0);
   document.getElementById('v811-pr-val').textContent='$'+PR.toFixed(0);
-  const netColor=profit>0.5?'#1e8449':profit<-0.5?'#c0392b':'#2c3e50';
+  const netColor=profit>0.5?EC.green:profit<-0.5?EC.red:EC.slate;
   const bothAboveAC=PA>AC_QR&&PR>AC_QR;
   const netMsg=Math.abs(profit)<1?
-    '<span style="color:#1e8449;font-weight:600;">Cross-subsidization is exactly balanced: net profit ≈ $0 (break-even).</span>':
+    '<span style="color:var(--green);font-weight:600;">Cross-subsidization is exactly balanced: net profit ≈ $0 (break-even).</span>':
     bothAboveAC?`Both tiers are above AC, so no cross-subsidization needed. Total profit $${profit.toFixed(0)} = high-tier $${highContrib.toFixed(0)} + low-tier $${lowContrib.toFixed(0)}.`:
     profit>0?`Green ($${greenArea.toFixed(0)}) &gt; Red ($${redArea.toFixed(0)}): high-tier profits more than cover low-tier losses, so the firm is profitable.`:
-    `<span style="color:#c0392b;">Red ($${redArea.toFixed(0)}) &gt; Green ($${greenArea.toFixed(0)}): high-tier markup is insufficient: raise P<sub>A</sub> or narrow the low tier.</span>`;
+    `<span style="color:var(--red);">Red ($${redArea.toFixed(0)}) &gt; Green ($${greenArea.toFixed(0)}): high-tier markup is insufficient: raise P<sub>A</sub> or narrow the low tier.</span>`;
   document.getElementById('v811-readout').innerHTML=`<div class="readout-row">
     <div class="readout-col"><div class="readout-label">Q<sub>A</sub></div><div class="readout-val">${QA.toFixed(1)}</div></div>
     <div class="readout-col"><div class="readout-label">Q<sub>R</sub></div><div class="readout-val">${QR.toFixed(1)}</div></div>
-    <div class="readout-col"><div class="readout-label">AC(Q<sub>R</sub>)</div><div class="readout-val" style="color:#c0392b">$${AC_QR.toFixed(2)}</div></div>
-    <div class="readout-col"><div class="readout-label">Green profit</div><div class="readout-val" style="color:#1e8449">$${greenArea.toFixed(1)}</div></div>
-    <div class="readout-col"><div class="readout-label">Red loss</div><div class="readout-val" style="color:#c0392b">$${redArea.toFixed(1)}</div></div>
+    <div class="readout-col"><div class="readout-label">AC(Q<sub>R</sub>)</div><div class="readout-val" style="color:var(--red)">$${AC_QR.toFixed(2)}</div></div>
+    <div class="readout-col"><div class="readout-label">Green profit</div><div class="readout-val" style="color:var(--green)">$${greenArea.toFixed(1)}</div></div>
+    <div class="readout-col"><div class="readout-label">Red loss</div><div class="readout-val" style="color:var(--red)">$${redArea.toFixed(1)}</div></div>
     <div class="readout-col"><div class="readout-label">Net profit</div><div class="readout-val" style="color:${netColor}">$${profit.toFixed(1)}</div></div>
   </div><div style="margin-top:.4rem;">${netMsg}</div>`;
 }
