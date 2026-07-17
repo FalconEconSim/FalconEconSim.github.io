@@ -635,15 +635,16 @@ html[data-theme="dark"] .top-bar{ background:rgba(21,23,28,0.85); }
     /* Grain over a dark background reads much heavier, so ease it off. */
     html[data-theme="dark"] body::after { opacity: 0.32; }
 
-    /* Dark mode figure cards. The canvas figures stay light on purpose (the
-       drawing code is not themed), but on a near-black page a bare white
-       rectangle reads as a rendering error. .cvs-wrap (the 50 canvas figures
-       across weeks 4 to 8) is already a white card with a border and radius;
-       lifting it with a soft shadow and a faint light edge makes it read as an
-       intentional printed handout floating on the dark page. Only the outer
-       frame is touched, never the canvas internals.
-       Note: the week2/3 JSXGraph figures use id-based containers (jxg-*-wrap),
-       not this class, so they are not framed here; they need their own pass. */
+    /* Dark mode figure cards, FORWARD-LOOKING. Viz pages currently do NOT load
+       theme.js, so they are always light and this rule does not take effect for
+       real users today (the expert screenshots that showed white figures on a
+       dark page were a force-applied state). Kept because it is correct and
+       ready IF dark mode is ever extended to the viz pages: it lifts .cvs-wrap
+       (the 50 canvas figures across weeks 4 to 8) with a soft shadow and a
+       faint light edge so the white card reads as an intentional handout
+       rather than a rendering error. Outer frame only, never canvas internals.
+       The week2/3 JSXGraph figures use id-based containers (jxg-*-wrap), not
+       this class, and would need their own pass at that point. */
     html[data-theme="dark"] .cvs-wrap {
       box-shadow: 0 0 0 1px rgba(255,255,255,0.09), 0 12px 34px rgba(0,0,0,0.5);
       border-color: rgba(255,255,255,0.14) !important;
