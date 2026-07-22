@@ -14,11 +14,19 @@
        "DESIGN SYSTEM v2"; see DESIGN.md. Nothing here declares a colour or a
        font size that is not a token. */
 
-    .eyebrow {
+    /* Prefixed to outrank shared.css's html[data-ds="v2"] p rule, which is
+       (0,1,2) and would otherwise force every classed <p> back to --t-body. */
+    html[data-ds="v2"] .eyebrow {
       font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase;
       color: var(--unit-ink); margin-bottom: var(--s-3);
     }
-    .lede { font-size: var(--t-lead); line-height: 1.5; color: var(--ink-soft); margin-top: var(--s-4); }
+    html[data-ds="v2"] .lede {
+      font-size: var(--t-lead); line-height: 1.5;
+      color: var(--ink-soft); margin-top: var(--s-4);
+    }
+    html[data-ds="v2"] .byline {
+      font-size: var(--t-body); color: var(--ink-faint); margin-top: var(--s-3);
+    }
     .page-hd { margin-bottom: var(--s-9); }
     .page-hd > div { position: relative; }
     /* Device 3: the week numeral, set in the left margin rather than floated
@@ -186,7 +194,7 @@
         derived from it, and the <span style="color:var(--unit-ink);font-weight:500">dark green</span>
         point is the bundle you control.
       </p>
-      <p class="lede" style="font-size:var(--t-body);margin-top:var(--s-3);color:var(--ink-faint)">Prof. Naveen Sunder</p>
+      <p class="byline">Prof. Naveen Sunder</p>
     </div>
   </header>
 
@@ -2155,7 +2163,7 @@ function v59Draw() {
   const [tpax,tpay]=toC(tpMidL,v59TP(tpMidL,v59K),W,H,xR,yR);
   const ovl59=v59EnsureOverlay(W,H);
   if(ovl59){
-    const kTxt=`K = ${v59K} machines`;
+    const kTxt=`K = ${Math.round(v59K)} machines`;
     const n=ovl59.nodes[0];
     n.label=kTxt; n.lw=Math.max(60,kTxt.length*6+10);
     d5MoveAnchor(n,tpax,tpay);
@@ -2191,7 +2199,11 @@ function v59FireWorker() {
 }
 
 function v59BuyMachine() {
-  v59K++; v59Update();
+  // Buying a machine lifts the whole TP curve, so it is a curve-moving button
+  // and it tweens (DESIGN 6.2). Hiring and firing move along the curve one
+  // discrete worker at a time, which is already legible as a step.
+  const K0 = v59K, K1 = v59K + 1;
+  ecTween('v59', EC_DUR_VALUE, p => { v59K = K0 + (K1 - K0) * p; v59Update(); });
 }
 
 function v59Reset() {
@@ -2360,7 +2372,10 @@ function quiz510Answer(ans) {
   });
   const fb=document.getElementById('q510-fb');
   fb.style.display='block';
-  fb.innerHTML=`${correct?'✅ Correct!':'❌ Incorrect.'} ${fn.desc}`;
+  // Typographic marks in the semantic colours rather than emoji (AG-3): emoji
+  // render differently on every OS and carry none of the palette's meaning.
+  fb.innerHTML=`<strong style="color:var(--${correct?'d-gain':'d-loss'})">`+
+               `${correct?'&#10003; Correct.':'&#10007; Incorrect.'}</strong> ${fn.desc}`;
   quiz510DrawResult(fn.type);
   const nextBtn=document.getElementById('q510-next');
   nextBtn.style.display='inline-block';
