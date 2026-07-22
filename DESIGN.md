@@ -344,13 +344,20 @@ Do not make every figure a pinned scrolly. MLU's decision-tree article is
 ### 4.2 Chart ink
 
 ```
-Axis lines, gridlines, frames  rgba(28, 36, 51, 0.10)
-Axis tick labels               --ink-faint, --t-caption
-Axis titles                    --ink-soft, --t-small
-Data curves                    4px stroke minimum
+Gridlines                      rgba(28, 36, 51, 0.07)
+Axis lines, tick marks         rgba(28, 36, 51, 0.14)
+Axis tick labels               --ink-faint, 12px
+Axis titles                    --ink-soft, 13px
+Data curves                    3px up to a 640px plot, 4px above
 Data points                    r = 7 desktop, r = 6 mobile
-Emphasis point                 r = 10
+Emphasis point                 r = 9 to 10
 ```
+
+The curve weight scales with the plot because ours are smaller than the
+references': MLU draws at 5px in 790 to 1100px plots, which is the same optical
+weight as 3px in our 512 to 736px ones. Scaling stroke with figure width is the
+references' own practice (`decision-tree/main.37eaf4da.css` steps its type down
+at `max-width: 850px`).
 
 Setosa: `.axis path, .axis line { stroke: rgba(0,0,0,0.1) }` and
 `.axis text { fill: rgba(0,0,0,0.6) }` (`style.less:139-150`). MLU: model lines
@@ -367,15 +374,22 @@ Labels are **haloed text, not boxes**:
 ```css
 .fig-label-text {
   font-family: var(--font-body);
-  font-size: var(--t-small);        /* 15px, not 9px */
+  font-size: 13px;                  /* --t-caption, not 9px */
   font-weight: 500;
   fill: currentColor;
-  stroke: var(--paper);
+  stroke: var(--paper-raised);      /* the plot's own background */
   stroke-width: 3px;
   stroke-linejoin: round;
   paint-order: stroke fill;
 }
 ```
+
+13px rather than `--t-small`, for the same reason as the curve weights above:
+13px in a 512 to 736px plot is the optical size of MLU's 16px in a 790 to
+1100px one. Anything larger and four labels cannot coexist inside one of our
+square plots. The figures compute each label's box width assuming the old 9px
+type, so a single `d5w()` helper rescales those numbers instead of fifteen
+width formulas being edited by hand.
 
 `paint-order: stroke fill` with a stroke in the page colour is how every MLU
 in-chart label survives being drawn over data
@@ -404,8 +418,17 @@ with no readout panel anywhere on the page
 (`shots/slice-mlu/bias-variance-index-html__1440-s4.png`, ANALYSIS 2.2).
 
 Where a figure genuinely needs derived quantities (MRTS, elasticity, surplus),
-they are drawn **inside the figure** at the point they describe, not listed in a
-panel below it.
+they are drawn **inside the figure** at the point they describe wherever the
+figure already draws a label there. What is left over, a verdict or a sentence
+of feedback that cannot live inside a plot ("Hire refused: MPL is negative at
+L=9"), goes in a **`.fig-state` line under the plot with no border, no fill and
+no radius**. That is still one container for the figure block, so AG-1 holds.
+What does not survive is the bordered off-white `.viz-readout` panel and any
+value the student can already read off a control.
+
+`assets/deltabar.js` is treated the same way: the old/new/change information
+stays, its grey card per item does not (see the `data-ds="v2"` override in
+`shared.css`).
 
 ```css
 .ctrl-row   { display: flex; flex-wrap: wrap; gap: var(--s-5);
