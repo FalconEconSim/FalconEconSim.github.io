@@ -34,7 +34,7 @@
     .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
     .fig-label{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--unit-ink);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
     .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
-    .fig-intro{font-size:0.9rem;color:var(--ink-faint);line-height:1.7;margin-bottom:1.5rem;}
+    .fig-intro { font-size: var(--t-body); color: var(--ink); line-height: var(--lh-body); margin-bottom: var(--s-6); }
     .cvs-wrap{border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;background:#fff;}
     canvas{display:block;width:100%;cursor:default;}
     .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
@@ -699,7 +699,7 @@ function v81Rebuild(){
   const a=V81.a,b=V81.b;
   const Qstar=(a-b)/2, Pstar=(a+b)/2;
   V81.Qstar=Qstar;V81.Pstar=Pstar;
-  const domQ=Math.ceil(a)+2, domP=a+2;
+  const domQ=26, domP=26;   // fixed: a spans 14..24, so 26 always fits
   const scX=d3.scaleLinear().domain([0,domQ]).range([D3PAD.left,D3W-D3PAD.right]);
   const scY=d3.scaleLinear().domain([0,domP]).range([D3H-D3PAD.bottom,D3PAD.top]);
   V81.scX=scX;V81.scY=scY;
@@ -1104,7 +1104,7 @@ function v84Init(){
   v84Render();
 }
 function v84BuildScales(a){
-  const m=a+1;
+  const m=17;   // fixed: a spans 6..16, so 17 always fits
   V84.scX=d3.scaleLinear().domain([0,m]).range([D3PAD.left,D3W-D3PAD.right]);
   V84.scY=d3.scaleLinear().domain([0,m]).range([D3H-D3PAD.bottom,D3PAD.top]);
 }
@@ -1430,7 +1430,7 @@ function v88ToggleSpotify(){v88spotify=!v88spotify;document.getElementById('v88-
 let v89step=0,v89uniform=false,v89m1=null,v89m2=null;
 const V89={a1:100,a2:50};
 function v89SetupPanel(wrapId,a,slopeB,label){
-  const Qmax=Math.ceil(a/slopeB)+5, Pmax=a+5;
+  const Qmax=45, Pmax=21;   // fixed to the reachable extremes of a and slopeB
   const W=340,H=300,PAD={top:18,right:16,bottom:40,left:46};
   const svg=d3MakeSvgWH(wrapId,W,H);
   const xS=d3.scaleLinear().domain([0,Qmax]).range([PAD.left,W-PAD.right]);

@@ -29,7 +29,7 @@
     .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
     .fig-label{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--unit-ink);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
     .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
-    .fig-intro{font-size:0.9rem;color:var(--ink-faint);line-height:1.7;margin-bottom:1.5rem;}
+    .fig-intro { font-size: var(--t-body); color: var(--ink); line-height: var(--lh-body); margin-bottom: var(--s-6); }
     .cvs-wrap{border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;background:#fff;}
     canvas{display:block;width:100%;cursor:default;}
     .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
@@ -441,6 +441,7 @@ function toC7(x,y,W,H,xR,yR){
 }
 
 function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
+  if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
   const[ox,oy]=toC7(xR[0],yR[0],W,H,xR,yR);
   const[x1]   =toC7(xR[1],yR[0],W,H,xR,yR);
   const[,y2]  =toC7(xR[0],yR[1],W,H,xR,yR);
@@ -459,7 +460,7 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
   ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox,y2);ctx.stroke();
   // Tick text
   const nx=4;
-  ctx.font="9px 'DM Sans',sans-serif";ctx.fillStyle='var(--ink-faint)';
+  ctx.font="9px 'DM Sans',sans-serif";ctx.fillStyle='#8b95a5';
   for(let i=0;i<=nx;i++){
     const xv=xR[0]+i*(xR[1]-xR[0])/nx;
     const[cx]=toC7(xv,yR[0],W,H,xR,yR);
@@ -534,8 +535,8 @@ function v71Draw(){
   const xR=[0,9],yRA=[0,30];
   let piPeak71=0;
   for(let qq=0;qq<=9;qq+=0.1){ piPeak71=Math.max(piPeak71, P*qq-v71TC(qq,tfc,ms)); }
-  const yMaxB71=Math.max(8, piPeak71*1.15);
-  const yRB=[-8,yMaxB71];
+  // Fixed: the reachable profit peak is about 51 across the three sliders.
+  const yRB=[-8,52];
 
   // TOP: TR and TC
   ctxA.clearRect(0,0,W,HA);

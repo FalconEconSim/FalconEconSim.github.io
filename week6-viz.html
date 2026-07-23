@@ -424,6 +424,7 @@ function toC(x,y,W,H,xR,yR){
 }
 
 function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
+  if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
   ctx.save();
   // Grid lines at 4 y-ticks
   const ys=(yR[1]-yR[0])/4;
@@ -437,7 +438,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
   // Tick text
-  ctx.fillStyle='var(--ink-faint)'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#8b95a5'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
   const xs=(xR[1]-xR[0])/4;
   for(let i=0;i<=4;i++){
     const v=xR[0]+i*xs; const [px]=toC(v,yR[0],W,H,xR,yR);
@@ -579,8 +580,8 @@ function v61Draw(Lcur,Kcur){
     {ax:bx,ay:by,x:bx+12,y:by-10,w:ctx.measureText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')').width+8,h:12,text:'(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')',color:dotCol,fontSize:9,bold:false},
   ];
   if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false});
-  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'var(--ink-faint)',fontSize:9,bold:false});
-  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'var(--ink-faint)',fontSize:9,bold:false});
+  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'#8b95a5',fontSize:9,bold:false});
+  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#8b95a5',fontSize:9,bold:false});
   resolveLabels(dragLbls,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
   dragLbls.forEach(l=>drawForceLabel(ctx,l));
 
@@ -891,7 +892,7 @@ window._initFig65=function initFig65(){
       {id:'SMC',  color:EC.red,label:'SMC',  lw:44,ax:scX(12),  ay:scY(Math.min(v65MC(12),yMax))},
       {id:'ATC',  color:'#1f6fb2',label:'ATC',  lw:40, ax:scX(13),  ay:scY(Math.min(v65ATC(13,tfc),yMax))},
       {id:'AVC',  color:EC.green,label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
-      {id:'AFC',  color:'var(--ink-faint)',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
+      {id:'AFC',  color:'#8b95a5',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
       {id:'minATC',color:'#1f6fb2',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
     ];
     if(v65ShowLR) nodes.push({id:'LRAC',color:EC.red,label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
@@ -1693,7 +1694,7 @@ window._initFig610=function initFig610(){
     if(qstar&&acstar<=acmax){
       nodeList.push({id:'qstar',color:'#1f6fb2',label:'q* = '+qstar.toFixed(1),lw:80,
         ax:scX(qstar),ay:scY(acstar)});
-      nodeList.push({id:'acstar',color:'var(--ink-faint)',label:'AC* = $'+acstar.toFixed(2),lw:90,
+      nodeList.push({id:'acstar',color:'#8b95a5',label:'AC* = $'+acstar.toFixed(2),lw:90,
         ax:scX(qstar),ay:scY(0)});
       if(v610ShowMC){
         const acQ=Math.min(13,qmax*0.75);

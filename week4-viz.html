@@ -31,7 +31,7 @@
     .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
     .fig-label { font-family:var(--font-mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--unit-ink); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
     .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
-    .fig-intro { font-size:0.9rem; color:var(--ink-faint); line-height:1.7; margin-bottom:1.5rem; }
+    .fig-intro { font-size: var(--t-body); color: var(--ink); line-height: var(--lh-body); margin-bottom: var(--s-6); }
 
     /* ── canvas wrapper ── */
     .cvs-wrap { border:1px solid var(--rule-strong); border-radius:10px; overflow:hidden; background:#fff; max-width:482px; margin-left:auto; margin-right:auto; }
@@ -596,6 +596,7 @@ function eColor(ed) {
 }
 
 function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
+  if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
   ctx.save();
   // horizontal grid lines
   ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
@@ -618,7 +619,7 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   ctx.lineTo(ML, H - MB);
   ctx.stroke();
 
-  ctx.fillStyle = 'var(--ink-faint)';
+  ctx.fillStyle = '#8b95a5';
   ctx.font = '9px DM Sans, sans-serif';
   ctx.textAlign = 'center';
 
@@ -1010,7 +1011,7 @@ function v3Draw() {
   ctx.clearRect(0,0,W,H);
   // Update xR3 based on max Q
   const xMax = Math.max(v3.a, 115);
-  const xR3l=[0,xMax], yR3l=[0,Math.max(55, v3.a/b*1.1)];
+  const xR3l=[0,xMax], yR3l=[0,55];   // fixed: both price sliders top out at 45
   drawAxes(ctx, W, H, xR3l, yR3l);
 
   const [lx0,ly0]=toC(0,v3.a/b,W,H,xR3l,yR3l);
@@ -1098,7 +1099,7 @@ function v3Init() {
   if (v3Svg) {
     const b=v3GetB();
     const xMax = Math.max(v3.a, 115);
-    const xR3l=[0,xMax], yR3l=[0,Math.max(55, v3.a/b*1.1)];
+    const xR3l=[0,xMax], yR3l=[0,55];   // fixed: both price sliders top out at 45
     const [lx0,ly0]=toC(0, v3.a/b, v3W, v3H, xR3l, yR3l);
     v3Nodes = [ d3LblNode('D', '#1f6fb2', 'D', 18, lx0, ly0) ];
     v3Sim = d3LabelSim(v3Nodes);
@@ -1584,7 +1585,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
     const [,cy]=toXY(0,choke);
     ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML2-4,cy); ctx.lineTo(ML2,cy); ctx.stroke();
-    ctx.fillStyle='var(--ink-faint)'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+    ctx.fillStyle='#8b95a5'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
     ctx.fillText(`Choke $${choke.toFixed(0)}`,ML2-5,cy+3);
   }
 
@@ -1679,7 +1680,7 @@ function v8aMarketDraw(P) {
   const [,cy30]=toXY(0,30);
   ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2-4,cy30); ctx.lineTo(ML2,cy30); ctx.stroke();
-  ctx.fillStyle='var(--ink-faint)'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle='#8b95a5'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
   ctx.fillText('Choke $30',ML2-2,cy30+3);  // slightly right
 
   // P=12: Consumer 2's choke price (kink)

@@ -80,7 +80,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     .main-content { padding:2.5rem 2.5rem 5rem; min-width:0; }
     .section-block { margin-bottom:4.5rem; scroll-margin-top:70px; }
     .section-block h2 { font-size: var(--t-h2); font-weight: 700; color:var(--ink); margin-bottom:0.35rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent-lt); }
-    .section-intro { font-size: var(--t-body-sm); color:var(--ink-light); margin-bottom:1.5rem; max-width:680px; }
+    .section-intro { font-size: var(--t-body); color: var(--ink); line-height: var(--lh-body); margin-bottom: var(--s-6); max-width: var(--measure); }
     .section-number { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--unit-ink); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:0.25rem; }
 
     .viz-wrapper { background:var(--bg-card); border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; margin:1.5rem 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
@@ -912,7 +912,7 @@ function v1DrawAxes(ctx, c) {
 function v1DrawLeftAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
-  ctx.fillStyle = 'var(--ink-faint)';
+  ctx.fillStyle = '#8b95a5';
   ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
   ctx.textAlign = 'left';
   ctx.fillText('X', W - MR + 3*dpr, oy + 4*dpr);
@@ -924,7 +924,7 @@ function v1DrawLeftAxisLabels(ctx, c) {
 function v1DrawRightAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
-  ctx.fillStyle = 'var(--ink-faint)';
+  ctx.fillStyle = '#8b95a5';
   ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
   ctx.textAlign = 'left';
   ctx.fillText('Qty', W - MR + 3*dpr, oy + 4*dpr);
@@ -1299,15 +1299,18 @@ function drawV2() {
   const icHicks  = PxNew * d.XC + Py * d.YC;
   const yHicksInt = icHicks / Py;
   const xiHicks   = icHicks / PxNew;
-  const xmax     = Math.max(xiA,xiB,xiHicks)*1.25;
-  const ymax   = Math.max(yi,d.YC,d.YA)*1.45;
+  // Fixed. These were recomputed from the current bundle every redraw, so
+  // the axes crept while the student dragged a price slider and the
+  // decomposition appeared to move less than it does.
+  const xmax = 26;
+  const ymax = 26;
 
   v2b = JXG.JSXGraph.initBoard('jxg-v2',{
     boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.06],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
   });
   const b = v2b;
   // Horizontal grid lines
@@ -1315,8 +1318,8 @@ function drawV2() {
   for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
     b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
-  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#8b95a5',fixed:true});
 
   // Budget lines
   const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:EC.steel,strokeWidth:2,fixed:true});
@@ -1485,15 +1488,15 @@ function initViz3() {
     boundingbox:[-2,ymax,xmax,-2],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
   });
   v3b2 = JXG.JSXGraph.initBoard('jxg-v3-right',{
     boundingbox:[-2,7,xmax,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
   });
 
   const b1 = v3b1, b2 = v3b2;
@@ -1505,10 +1508,10 @@ function initViz3() {
   for (let gy = 1; gy <= 6; gy++) {
     b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
-  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
-  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
-  b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#8b95a5',fixed:true});
 
   // Draw expansion path (static dashed line). Its label is rendered by the
   // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
@@ -1802,16 +1805,16 @@ function initViz5() {
     boundingbox:[-2,8.8,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
   });
   const b = v5b;
   // Horizontal grid lines (price 0-8)
   for (let gy = 1; gy <= 8; gy++) {
     b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[76,-0.3,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
-  b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b.create('text',[76,-0.3,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'#8b95a5',fixed:true});
 
   redrawV5();
 
