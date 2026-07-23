@@ -540,7 +540,7 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
   }
 }
 function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
+  const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false} = lbl;
   ctx.save();
   if (Math.hypot(x-ax,y-ay)>5) {
     ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]); ctx.globalAlpha=0.55;
@@ -704,9 +704,59 @@ function d5Svg(svgId, W, H) {
 }
 
 // Build a label node in the S6/S8 shape: {id,color,label,lw,ax,ay,fx_anchor,fy_anchor,x,y}
+// (d.x, d.y) is the label's CENTRE, not its top-left corner. That used to be the
+// corner, which meant forceCollide's circle sat off to one side of the box it
+// was meant to represent, so wide labels shoved each other asymmetrically and
+// never found a stable arrangement. Rendering and clamping both offset by half
+// the box now, so the physics and the pixels agree.
+// x/y start at the anchor and are moved to the preferred offset by d5Seed once
+// the plot size is known. Nothing is random: a figure must look the same on
+// every load.
 function d5Node(id, color, label, lw, ax, ay) {
   return { id, color, label, lw, ax, ay, fx_anchor:ax, fy_anchor:ay,
-           x: ax+(Math.random()-0.5)*50, y: ay+(Math.random()-0.5)*50 };
+           ox:0, oy:0, x:ax, y:ay };
+}
+
+/* The preferred resting place for a label, relative to its anchor.
+   Deterministic and readable rather than scattered: a label sits clear of its
+   anchor on the side with more room, so it never covers the point it names and
+   never starts off the edge of the plot. The force sim pulls it back here, and
+   only collisions move it away. */
+function d5Seed(nodes, W, H) {
+  for (const d of nodes) {
+    const toRight = d.fx_anchor < W * 0.55;   // anchor left of centre: label right
+    const toBelow = d.fy_anchor < H * 0.42;   // anchor high in the plot: label below
+    d.ox = (toRight ? 1 : -1) * (d5w(d) / 2 + 14);
+    d.oy = (toBelow ? 1 : -1) * 22;
+  }
+  /* Labels that share an anchor (Fig 5.1's "TP = ..." and "slope = MPL = ..."
+     both point at the same moving dot) would otherwise be given the same
+     preferred spot, collide forever, and shove each other back and forth for
+     as long as the slider is held. Stack a cluster vertically instead, so each
+     one has a resting place of its own and collide has nothing left to do. */
+  const CLUSTER = 44, STEP = D5_LABEL_H + 8;
+  const done = new Set();
+  for (let i = 0; i < nodes.length; i++) {
+    if (done.has(i)) continue;
+    const group = [i];
+    for (let j = i + 1; j < nodes.length; j++) {
+      if (done.has(j)) continue;
+      if (Math.hypot(nodes[i].fx_anchor - nodes[j].fx_anchor,
+                     nodes[i].fy_anchor - nodes[j].fy_anchor) < CLUSTER) group.push(j);
+    }
+    group.forEach(k => done.add(k));
+    if (group.length > 1) {
+      // Centre the stack on the shared offset so the group stays balanced
+      // around its anchor rather than drifting off to one side.
+      const mid = (group.length - 1) / 2;
+      group.forEach((k, n) => { nodes[k].oy = nodes[i].oy + (n - mid) * STEP; });
+    }
+  }
+  for (const d of nodes) {
+    d.x = d.fx_anchor + d.ox;
+    d.y = d.fy_anchor + d.oy;
+    d.vx = 0; d.vy = 0;
+  }
 }
 
 // Append connector-lines + draggable label groups. DESIGN 4.3: the label is
@@ -717,6 +767,10 @@ function d5Node(id, color, label, lw, ax, ay) {
 // unchanged from the S6/S8 standard.
 // Returns {gs, conns} so the caller can wire a tick handler.
 function d5AddLabels(svg, nodes, sim) {
+  // Put every label at its preferred offset before the first frame, so the
+  // figure paints in its resting arrangement instead of settling into one.
+  const vb = (svg.attr('viewBox') || '0 0 500 500').split(/\s+/);
+  d5Seed(nodes, +vb[2] || 500, +vb[3] || 500);
   const conns = svg.append('g').selectAll('line').data(nodes).enter()
     .append('line')
     .attr('stroke', d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
@@ -741,26 +795,44 @@ function d5AddLabels(svg, nodes, sim) {
   return { gs, conns };
 }
 
-// Standard collide + anchor-spring force sim (S6/S8 spec)
+/* Collide + anchor-spring force sim.
+   Three changes from the original S6/S8 parameters, all aimed at stopping the
+   labels oscillating while a slider is held:
+   - the spring targets anchor + preferred offset, not the anchor itself, so a
+     label has somewhere to return to instead of trying to sit on the point it
+     labels and being pushed off it again;
+   - the spring is nearly 4x stiffer (0.04 -> 0.15) so it returns promptly;
+   - velocityDecay goes from d3's default 0.4 to 0.82. This is the single
+     biggest anti-oscillation lever: labels glide to rest rather than carrying
+     momentum through their target and swinging back.
+   Collide is also gentler (0.85 -> 0.55) and its radius smaller, because the
+   label boxes got 1.44x wider when the type went from 9px to 13px and the old
+   radius was over-separating them. */
 function d5MakeSim(nodes) {
   return d3.forceSimulation(nodes)
-    .force('collide', d3.forceCollide(d=>d5w(d)*0.55+4).strength(0.85))
-    .force('x', d3.forceX(d=>d.fx_anchor).strength(0.04))
-    .force('y', d3.forceY(d=>d.fy_anchor).strength(0.04));
+    .velocityDecay(0.82)
+    .force('collide', d3.forceCollide(d=>d5w(d)*0.42+3).strength(0.55))
+    .force('x', d3.forceX(d=>d.fx_anchor+d.ox).strength(0.15))
+    .force('y', d3.forceY(d=>d.fy_anchor+d.oy).strength(0.15));
 }
 
 // Tick handler: clamp into plot bounds [PAD..W-PAD]/[PAD..H-PAD], position
 // label groups + connector lines. PAD here is the canvas ML/MR/MT/MB margin box.
 function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
   nodes.forEach(d=>{
+    // Clamp the CENTRE, keeping the whole box inside the plot's margin box.
     // padR was accepted but never used, so a wide label could sit flush against
-    // the right edge of the plot and read as clipped. Clamp to the real margin.
-    d.x = Math.max(padL-4, Math.min(W-d5w(d)-padR, d.x));
-    d.y = Math.max(padT,   Math.min(H-padB-D5_LABEL_H, d.y));
+    // the right edge and read as clipped.
+    const hw = d5w(d)/2, hh = D5_LABEL_H/2;
+    d.x = Math.max(padL+hw, Math.min(W-padR-hw, d.x));
+    d.y = Math.max(padT+hh, Math.min(H-padB-hh, d.y));
   });
-  gs.attr('transform', d=>`translate(${d.x},${d.y})`);
+  gs.attr('transform', d=>`translate(${d.x-d5w(d)/2},${d.y-D5_LABEL_H/2})`);
+  // The connector runs from the anchor to the label's centre, and is hidden
+  // when the label is close enough that a leader line would be noise.
   conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor)
-       .attr('x2',d=>d.x+d5w(d)/2).attr('y2',d=>d.y+D5_LABEL_H/2);
+       .attr('x2',d=>d.x).attr('y2',d=>d.y)
+       .attr('opacity',d=>Math.hypot(d.x-d.fx_anchor,d.y-d.fy_anchor) > 26 ? 0.55 : 0);
 }
 
 // Reposition a node's anchor (e.g. after a slider/drag changes curve position)
@@ -778,8 +850,12 @@ function d5MoveAnchor(node, newAx, newAy) {
 function d5WireSliderSmoothness(el, sim) {
   if (!el || !sim || el._d5Wired) return;
   el._d5Wired = true;
-  el.addEventListener('mousedown', ()=>sim.alphaTarget(0.3).restart());
-  el.addEventListener('touchstart', ()=>sim.alphaTarget(0.3).restart(), {passive:true});
+  // 0.3 kept the simulation permanently hot for as long as the slider was
+  // held, so labels were being flung around by collide the whole time. 0.05 is
+  // enough to keep collisions resolving as the anchors move, without the
+  // energy to overshoot.
+  el.addEventListener('mousedown', ()=>sim.alphaTarget(0.05).restart());
+  el.addEventListener('touchstart', ()=>sim.alphaTarget(0.05).restart(), {passive:true});
 }
 let _d5GlobalUpHooked = false;
 const _d5AllSims = [];
@@ -793,14 +869,16 @@ function d5RegisterSim(sim) {
   return sim;
 }
 
-// Reset a label-overlay simulation: scatter nodes back near their anchors and reheat.
+// Reset a label-overlay simulation: put nodes back at their preferred offsets.
+// This used to scatter them randomly, which is why a figure looked different
+// every time it was reset or reloaded.
 function d5ResetSim(nodes, sim) {
   nodes.forEach(d=>{
-    d.x = d.fx_anchor + (Math.random()-0.5)*60;
-    d.y = d.fy_anchor + (Math.random()-0.5)*60;
+    d.x = d.fx_anchor + d.ox;
+    d.y = d.fy_anchor + d.oy;
     d.vx = 0; d.vy = 0; d.fx = null; d.fy = null;
   });
-  sim.alpha(0.5).restart();
+  sim.alpha(0.35).restart();
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1019,7 +1097,7 @@ function v51Draw() {
 
   // Drop line
   const [axL]=toC(L,0,W,HA,xR,yRA);
-  ctxA.setLineDash([3,3]); ctxA.strokeStyle='#aaa'; ctxA.lineWidth=1;
+  ctxA.setLineDash([3,3]); ctxA.strokeStyle='#9aa3b0'; ctxA.lineWidth=1;
   ctxA.beginPath(); ctxA.moveTo(cx,cy); ctxA.lineTo(axL,HA-MB); ctxA.stroke();
   ctxA.setLineDash([]);
 
@@ -1084,7 +1162,7 @@ function v51Draw() {
 
   // Zero line
   const [,zy]=toC(0,0,W,HB,xR,yRB);
-  ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1;
+  ctxB.strokeStyle='#c9c2b6'; ctxB.lineWidth=1;
   ctxB.beginPath(); ctxB.moveTo(ML,zy); ctxB.lineTo(W-MR,zy); ctxB.stroke();
 
   v51WireSliders();
@@ -1683,7 +1761,7 @@ function v55Draw() {
   ctx.restore(); // end clip
 
   // Draw the 45-degree ray
-  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
   const [r0x,r0y]=toC(0,0,W,H,xR,yR);
   const [r1x,r1y]=toC(9,9,W,H,xR,yR);
   ctx.beginPath(); ctx.moveTo(r0x,r0y); ctx.lineTo(r1x,r1y); ctx.stroke(); ctx.setLineDash([]);
@@ -1917,7 +1995,7 @@ function v57Draw() {
       if(q<=0) return;
       const alpha=qi===1?1:0.4;
       ctx.globalAlpha=alpha;
-      ctx.beginPath(); let first=true; ctx.strokeStyle=qi===1?'#1f6fb2':'#aac';  ctx.lineWidth=qi===1?2.5:1.5;
+      ctx.beginPath(); let first=true; ctx.strokeStyle=qi===1?'#1f6fb2':'#9dc0dc';  ctx.lineWidth=qi===1?2.5:1.5;
       for(let x=0.3;x<=10;x+=0.1){
         const y=q*q/x; if(y>10||y<0.1){first=true;continue;}
         const [cx,cy]=toC(x,y,W,H,xR,yR);
@@ -2011,7 +2089,7 @@ function v58Draw() {
   // Isoquant map
   const qBase=v58Q(Kpt,Lpt,A,a,b);
   [qBase*0.5,qBase,qBase*2].forEach((q,qi)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=['#aac','#1f6fb2','#aac'][qi]; ctx.lineWidth=qi===1?2.5:1.5;
+    ctx.beginPath(); let first=true; ctx.strokeStyle=['#9dc0dc','#1f6fb2','#9dc0dc'][qi]; ctx.lineWidth=qi===1?3:2;
     for(let l=0.2;l<=10;l+=0.05){
       const K=Math.pow(q/(A*Math.pow(l,b)),1/a);
       if(K>10||K<0.1){first=true;continue;}
@@ -2028,7 +2106,7 @@ function v58Draw() {
   if(Math.abs(lam-1)>0.05){
     const [spx,spy]=toC(Lpt*lam,Kpt*lam,W,H,xR,yR);
     dot5(ctx,spx,spy,7,EC.red,'#fff');
-    ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(spx,spy); ctx.stroke(); ctx.setLineDash([]);
     if(ovl58){
       const lamTxt=`λ = ${lam.toFixed(1)} (scaled inputs)`;
@@ -2177,7 +2255,7 @@ function v59Draw() {
     const [px,py]=toC(v59L,tp,W,H,xR,yR);
     dot5(ctx,px,py,7,'#2f5c3a','#fff');
     const [ax]=toC(v59L,0,W,H,xR,yR);
-    ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ax,H-MB); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle='#2f5c3a'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
     ctx.fillText(`L=${v59L}`,ax,H-MB+12);
