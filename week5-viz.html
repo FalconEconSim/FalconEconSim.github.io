@@ -62,6 +62,12 @@
     }
     .cvs-ovl-host > svg .draggable-label { cursor: grab; pointer-events: auto; }
     .cvs-ovl-host > svg .draggable-label:active { cursor: grabbing; }
+    /* While a point on the canvas is being dragged, the label layer must not
+       intercept the pointer: crossing a label used to cancel the drag and
+       start dragging the label instead. */
+    .cvs-ovl-host.dragging > svg,
+    .cvs-ovl-host.dragging > svg .draggable-label { pointer-events: none; }
+    .cvs-ovl-host.dragging { cursor: grabbing; }
 
     /* Square single-canvas figures. Capped so a square plot does not become a
        730px-tall wall. The explicit width:100% matters: with auto margins alone
@@ -610,7 +616,7 @@ function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
   for(let i=0;i<=4;i++){
     const v=xR[0]+i*xStep;
     const [px]=toC(v,yR[0],W,H,xR,yR);
-    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+13);
+    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+17);
     ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,H-MB); ctx.lineTo(px,H-MB+4); ctx.stroke();
   }
@@ -623,8 +629,8 @@ function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
     ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(ML-4,py); ctx.stroke();
   }
   ctx.fillStyle="#4a5566"; ctx.font="13px DM Sans,sans-serif";
-  ctx.textAlign='center'; ctx.fillText(xLbl||'L',W/2,H-2);
-  ctx.save(); ctx.translate(10,H/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText(xLbl||'L',W/2,H-6);
+  ctx.save(); ctx.translate(13,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'K',0,0); ctx.restore();
   ctx.restore();
 }
@@ -847,6 +853,53 @@ function d5MoveAnchor(node, newAx, newAy) {
 // Wire mousedown/touchstart -> alphaTarget(0.3).restart() and a shared
 // window mouseup/touchend -> alphaTarget(0) for slider-driven smoothness,
 // exactly like the S6/S8 slider wiring. Call once per slider element.
+/* Wire a draggable point on a canvas.
+   The figures used to listen for mousemove/mouseup on the canvas itself. That
+   breaks as soon as the pointer crosses one of the SVG labels drawn over the
+   canvas, because the label sits on top and has pointer-events:auto:
+     - the canvas stops receiving mousemove, so the point freezes;
+     - the canvas fires mouseleave, so the drag is cancelled outright;
+     - and the label's own d3.drag takes over, so the student ends up dragging
+       the label off its anchor while trying to move the point, which is why
+       labels appeared to "stop pointing at" the thing they name.
+   Fixing it takes two things: track the drag on window, and make the label
+   layer transparent to the pointer for the duration of the drag.
+   Touch already behaves, because the element that receives touchstart keeps
+   receiving touchmove and touchend wherever the finger goes. */
+function d5CanvasDrag(cvs, onMove) {
+  if (!cvs || cvs._d5Drag) return;
+  cvs._d5Drag = true;
+  const host = cvs.closest('.cvs-ovl-host');
+  const at = e => {
+    const r = cvs.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    return [(e.clientX - r.left) * (cvs.width / r.width) / dpr,
+            (e.clientY - r.top)  * (cvs.height / r.height) / dpr];
+  };
+  let on = false;
+  const move = e => { if (on) onMove(...at(e)); };
+  const end  = () => {
+    if (!on) return;
+    on = false;
+    if (host) host.classList.remove('dragging');
+    window.removeEventListener('mousemove', move);
+    window.removeEventListener('mouseup', end);
+  };
+  cvs.addEventListener('mousedown', e => {
+    e.preventDefault();
+    on = true;
+    if (host) host.classList.add('dragging');
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    onMove(...at(e));
+  });
+  const tAt = e => at(e.touches[0] || e.changedTouches[0]);
+  cvs.addEventListener('touchstart', e => { e.preventDefault(); on = true; onMove(...tAt(e)); }, { passive: false });
+  cvs.addEventListener('touchmove',  e => { if (!on) return; e.preventDefault(); onMove(...tAt(e)); }, { passive: false });
+  cvs.addEventListener('touchend',   () => { on = false; });
+  cvs.addEventListener('touchcancel',() => { on = false; });
+}
+
 function d5WireSliderSmoothness(el, sim) {
   if (!el || !sim || el._d5Wired) return;
   el._d5Wired = true;
@@ -1196,13 +1249,13 @@ let v52Mode = 'iq';
 
 function v52SetMode(m) {
   v52Mode = m;
-  document.getElementById('v52-mode-iq').classList.toggle('active', m==='iq');
-  document.getElementById('v52-mode-ic').classList.toggle('active', m==='ic');
+  document.getElementById('v52-mode-iq').classList.toggle('on', m==='iq');
+  document.getElementById('v52-mode-ic').classList.toggle('on', m==='ic');
   v52DrawAll();
 }
 
 // Draggable point state for Fig 5.2 (Cobb-Douglas panel only)
-let v52DragL = 4, v52DragK = 4, v52Dragging = false;
+let v52DragL = 4, v52DragK = 4;
 
 // D3 SVG label-overlay state, one per panel (cvs52a/b/c). Each overlay holds
 // up to 3 curve labels (Q=2/4/6) plus, on the Cobb-Douglas panel only, the
@@ -1374,11 +1427,6 @@ function v52DrawAll() {
 
 function v52InitDrag() {
   const cvs=document.getElementById('cvs52a'); if(!cvs) return;
-  function getCanvasXY(e) {
-    const r=cvs.getBoundingClientRect();
-    const dpr=window.devicePixelRatio||1;
-    return [(e.clientX-r.left)*(cvs.width/r.width)/dpr,(e.clientY-r.top)*(cvs.height/r.height)/dpr];
-  }
   function closestLOnIsoquant(px,py) {
     const dpr=window.devicePixelRatio||1;
     const W=cvs.width/dpr, H=cvs.height/dpr;
@@ -1391,19 +1439,13 @@ function v52InitDrag() {
     }
     return Math.max(0.5,Math.min(9.5,bestL));
   }
-  cvs.addEventListener('mousedown',e=>{const [px,py]=getCanvasXY(e);v52Dragging=true;v52DragL=closestLOnIsoquant(px,py);v52DrawAll();});
-  cvs.addEventListener('mousemove',e=>{if(!v52Dragging)return;const [px,py]=getCanvasXY(e);v52DragL=closestLOnIsoquant(px,py);v52DrawAll();});
-  cvs.addEventListener('mouseup',()=>v52Dragging=false);
-  cvs.addEventListener('mouseleave',()=>v52Dragging=false);
-  cvs.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v52Dragging=true;v52DragL=closestLOnIsoquant(px,py);v52DrawAll();},{passive:false});
-  cvs.addEventListener('touchmove',e=>{e.preventDefault();if(!v52Dragging)return;const t=e.touches[0];const [px,py]=getCanvasXY(t);v52DragL=closestLOnIsoquant(px,py);v52DrawAll();},{passive:false});
-  cvs.addEventListener('touchend',()=>v52Dragging=false);
+  d5CanvasDrag(cvs, (px, py) => { v52DragL = closestLOnIsoquant(px, py); v52DrawAll(); });
 }
 
 // ══════════════════════════════════════════════════════════════════════
 // FIG 5.3 - MRTS LIVE CALCULATOR
 // ══════════════════════════════════════════════════════════════════════
-let v53L=4, v53drag=false, v53W, v53H;
+let v53L=4, v53W, v53H;
 
 function v53Q0() { return 4; } // Fixed Q level: Q=K^0.5*L^0.5=4 => K=16/L
 function v53K(L) { return v53Q0()*v53Q0()/L; }
@@ -1532,25 +1574,7 @@ function v53Init() {
     }
     return Math.max(0.4,Math.min(16,bestL));
   }
-  function getCanvasXY(e) {
-    const r=cvs.getBoundingClientRect();
-    const dpr=window.devicePixelRatio||1;
-    return [(e.clientX-r.left)*(cvs.width/r.width)/dpr, (e.clientY-r.top)*(cvs.height/r.height)/dpr];
-  }
-  cvs.addEventListener('mousedown',e=>{
-    const [px,py]=getCanvasXY(e);
-    v53drag=true; v53L=closestLOnCurve(px,py); v53Draw();
-  });
-  cvs.addEventListener('mousemove',e=>{
-    if(!v53drag)return;
-    const [px,py]=getCanvasXY(e);
-    v53L=closestLOnCurve(px,py); v53Draw();
-  });
-  cvs.addEventListener('mouseup',()=>v53drag=false);
-  cvs.addEventListener('mouseleave',()=>v53drag=false);
-  cvs.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v53drag=true;v53L=closestLOnCurve(px,py);v53Draw();},{passive:false});
-  cvs.addEventListener('touchmove',e=>{if(!v53drag)return;e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v53L=closestLOnCurve(px,py);v53Draw();},{passive:false});
-  cvs.addEventListener('touchend',()=>v53drag=false);
+  d5CanvasDrag(cvs, (px, py) => { v53L = closestLOnCurve(px, py); v53Draw(); });
   v53Draw();
 }
 
