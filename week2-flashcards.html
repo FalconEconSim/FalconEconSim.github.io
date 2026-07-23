@@ -1,12 +1,12 @@
 ﻿<!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u1);--unit-ink:var(--u1-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Week 2: Flashcards - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <script>
     window.MathJax = {
@@ -23,55 +23,54 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
   <style>
-    body { background: #f4f7fb; }
+    
 
-    .fc-wrap {
-      max-width: 640px; margin: 0 auto;
-      padding: 1.75rem 1rem 3rem;
-      display: flex; flex-direction: column; gap: 1.25rem;
-    }
+    .fc-wrap { max-width: 40rem; margin: 0 auto; padding: var(--s-7) var(--s-4) var(--s-9);
+               display: flex; flex-direction: column; gap: var(--s-5);
+               min-height: calc(100vh - 3rem - var(--s-9)); justify-content: center; }
 
     .fc-hdr {
       display: flex; align-items: center; justify-content: space-between;
     }
     .fc-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.05rem; color: #0077C8;
+      font-family: var(--font-display);
+      font-size: var(--t-h3); color: var(--unit-ink);
     }
     .fc-ctr {
-      font-size: 13px; color: #999; font-weight: 500;
+      font-size: var(--t-small); color: var(--ink-faint); font-weight: 500;
     }
     .fc-streak {
-      font-size: 12px; font-weight: 500; color: #854F0B;
-      background: #FAEEDA; padding: 3px 10px; border-radius: 99px;
+      font-size: var(--t-caption); font-weight: 500; color: var(--d-transfer);
+      background: color-mix(in srgb, var(--mark) 30%, white); padding: 3px 10px; border-radius: 99px;
     }
 
     .fc-prog {
       width: 100%; height: 4px;
-      background: #E8EFF8; border-radius: 99px; overflow: hidden;
+      background: var(--rule2); border-radius: 99px; overflow: hidden;
     }
     .fc-prog-fill {
-      height: 100%; background: #0077C8;
+      height: 100%; background: var(--unit-ink);
       border-radius: 99px; transition: width 0.4s ease;
     }
 
     .fc-filters {
       display: flex; gap: 6px; flex-wrap: wrap;
     }
-    .fc-ftag {
-      border: 1px solid #E2EAF4; border-radius: 99px;
-      padding: 4px 12px; font-size: 12px; font-weight: 500;
-      cursor: pointer; background: #fff; color: #666;
-      transition: all 0.15s; font-family: 'DM Sans', sans-serif;
-    }
-    .fc-ftag.active {
-      background: #0077C8; color: #fff; border-color: #0077C8;
-    }
+    .fc-ftag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 5px 13px;
+              font-size: var(--t-small); font-weight: 500; cursor: pointer;
+              background: var(--paper-raised); color: var(--ink-soft);
+              font-family: var(--font-body);
+              transition: background var(--dur-state) var(--ease-out),
+                          border-color var(--dur-state) var(--ease-out),
+                          color var(--dur-state) var(--ease-out); }
+    .fc-ftag.active { background: var(--unit-ink); color: var(--paper-raised); border-color: var(--unit-ink); }
 
-    .fc-badge {
-      display: inline-flex; font-size: 12px; font-weight: 500;
-      padding: 4px 12px; border-radius: 99px; width: fit-content;
-    }
+    .fc-badge { display: inline-flex; width: fit-content; padding: 0;
+               font-size: var(--t-caption); font-weight: 400; letter-spacing: 0.06em;
+               text-transform: uppercase; border-radius: 0;
+               /* AG-3: not a coloured pill. The inline background and colour the
+                  deck JS emits are overridden here rather than chased per deck. */
+               background: none !important; color: var(--ink-faint) !important; }
 
     .fc-scene { perspective: 1000px; }
     .fc-card-inner {
@@ -84,8 +83,8 @@
     .fc-front, .fc-back {
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      background: #fff;
-      border: 1px solid #E2EAF4;
+      background: var(--paper-raised);
+      border: 1px solid var(--rule2);
       border-radius: 20px;
       padding: 1.75rem;
       min-height: 220px;
@@ -94,7 +93,7 @@
     .fc-back {
       position: absolute; top: 0; left: 0; right: 0;
       transform: rotateY(180deg);
-      border-color: #CBD8EC;
+      border-color: var(--rule-strong);
     }
     .fc-front {
       cursor: pointer;
@@ -106,32 +105,32 @@
     }
 
     .fc-q {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.2rem; line-height: 1.5; color: #111;
+      font-family: var(--font-display);
+      font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink);
       flex: 1; display: flex; align-items: center;
     }
     .fc-q-sm {
-      font-size: 0.88rem; color: #666; font-weight: 500;
+      font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500;
       padding-bottom: 0.65rem;
-      border-bottom: 1px solid #EEF3FA;
+      border-bottom: 1px solid var(--rule2);
       margin-bottom: 0.65rem; line-height: 1.45;
     }
     .fc-a {
-      font-size: 0.88rem; line-height: 1.75;
-      color: #333; white-space: pre-line; flex: 1;
+      font-size: var(--t-body-sm); line-height: 1.75;
+      color: var(--ink); white-space: pre-line; flex: 1;
     }
     .fc-hint {
-      font-size: 12px; color: #BCC8D8; text-align: center;
+      font-size: var(--t-caption); color: var(--ink-faint); text-align: center;
       margin-top: 0.75rem; letter-spacing: 0.03em;
     }
     .fc-kbd {
-      display: inline-block; background: #F0F4FA;
-      border: 1px solid #DDE6F0; border-radius: 4px;
-      padding: 0 5px; font-size: 10px; color: #888;
+      display: inline-block; background: var(--paper-sunk);
+      border: 1px solid var(--rule2); border-radius: 4px;
+      padding: 0 5px; font-size: var(--t-caption); color: var(--ink-faint);
     }
 
     .fc-rate-label {
-      font-size: 12px; color: #BCC8D8; text-align: center;
+      font-size: var(--t-caption); color: var(--ink-faint); text-align: center;
       margin-bottom: 0.5rem; letter-spacing: 0.03em;
     }
     .fc-rate-row {
@@ -139,14 +138,14 @@
     }
     .fc-rbtn {
       border: 1px solid; border-radius: 12px;
-      padding: 0.6rem 0.5rem; font-size: 13px; font-weight: 500;
+      padding: 0.6rem 0.5rem; font-size: var(--t-small); font-weight: 500;
       cursor: pointer;
       display: flex; flex-direction: column; align-items: center; gap: 2px;
-      background: #fff; font-family: 'DM Sans', sans-serif;
+      background: var(--paper-raised); font-family: var(--font-body);
       transition: opacity 0.15s, transform 0.1s;
     }
     .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
-    .fc-rbtn .kh { font-size: 10px; opacity: 0.55; margin-top: 1px; }
+    .fc-rbtn .kh { font-size: var(--t-caption); opacity: 0.55; margin-top: 1px; }
 
     .fc-reveal {
       animation: fc-ri 0.22s ease both;
@@ -171,46 +170,46 @@
 
     /* Summary screen */
     .fc-summary {
-      background: #fff; border: 1px solid #E2EAF4;
+      background: var(--paper-raised); border: 1px solid var(--rule2);
       border-radius: 20px; padding: 2rem;
       display: flex; flex-direction: column; gap: 1.25rem;
       align-items: center; text-align: center;
     }
     .fc-sum-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.5rem; color: #0077C8;
+      font-family: var(--font-display);
+      font-size: var(--t-h2); color: var(--unit-ink);
     }
     .fc-stat-row { display: flex; gap: 10px; width: 100%; }
     .fc-stat {
       flex: 1; padding: 0.9rem; border-radius: 14px;
       display: flex; flex-direction: column; gap: 4px; text-align: center;
     }
-    .fc-stat-n { font-size: 1.5rem; font-weight: 500; }
-    .fc-stat-l { font-size: 11px; font-weight: 500; opacity: 0.7; }
+    .fc-stat-n { font-size: var(--t-h2); font-weight: 500; }
+    .fc-stat-l { font-size: var(--t-caption); font-weight: 500; opacity: 0.7; }
 
     .fc-bar-track {
-      width: 100%; height: 10px; background: #F0F4FA;
+      width: 100%; height: 10px; background: var(--paper-sunk);
       border-radius: 99px; overflow: hidden; display: flex;
     }
     .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
 
     .fc-btn-row { display: flex; gap: 8px; width: 100%; }
     .fc-btn-primary {
-      flex: 1; background: #0077C8; color: #fff; border: none;
+      flex: 1; background: var(--unit-ink); color: var(--paper-raised); border: none;
       border-radius: 12px; padding: 0.7rem 1rem;
-      font-size: 13px; font-weight: 500; cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-size: var(--t-small); font-weight: 500; cursor: pointer;
+      font-family: var(--font-body);
       transition: opacity 0.2s;
     }
     .fc-btn-primary:hover { opacity: 0.88; }
     .fc-btn-outline {
-      flex: 1; border: 1px solid #E2EAF4; border-radius: 12px;
-      padding: 0.65rem 1rem; font-size: 13px; font-weight: 500;
-      cursor: pointer; background: #fff;
-      font-family: 'DM Sans', sans-serif; color: #0077C8;
+      flex: 1; border: 1px solid var(--rule2); border-radius: 12px;
+      padding: 0.65rem 1rem; font-size: var(--t-small); font-weight: 500;
+      cursor: pointer; background: var(--paper-raised);
+      font-family: var(--font-body); color: var(--unit-ink);
       transition: background 0.15s;
     }
-    .fc-btn-outline:hover { background: #E6F1FB; }
+    .fc-btn-outline:hover { background: var(--brand-wash); }
   </style>
 </head>
 <body>
@@ -234,21 +233,12 @@
   </ul>
 </nav>
 
-<div class="top-bar">
-  <div class="top-bar-left">
-    <a href="index.html" aria-label="Course home">
-      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-    </a>
-    <div class="top-bar-divider"></div>
-    <div class="breadcrumb">
-      <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="week2.html">Week 2</a>
-      <span class="breadcrumb-sep">›</span>
-      <span>Flashcards</span>
-    </div>
-  </div>
-  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week2.html">Week 2</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Flashcards</span>
 </div>
 
 <main>
@@ -324,16 +314,16 @@ const CARDS = [
 ];
 
 const TS = {
-  Def:   { bg:"#E6F1FB", color:"#185FA5", label:"Definition" },
-  "T/F": { bg:"#FAEEDA", color:"#854F0B", label:"True / False" },
-  Eq:    { bg:"#EAF3DE", color:"#3B6D11", label:"Equation" },
-  Graph: { bg:"#FAECE7", color:"#993C1D", label:"Graphical" },
+  Def:   { bg:"var(--brand-wash)", color:"var(--unit-ink)", label:"Definition" },
+  "T/F": { bg:"color-mix(in srgb, var(--mark) 30%, white)", color:"var(--d-transfer)", label:"True / False" },
+  Eq:    { bg:"var(--paper-raised)", color:"var(--d-gain)", label:"Equation" },
+  Graph: { bg:"var(--paper-raised)", color:"var(--d-loss)", label:"Graphical" },
 };
 const TYPES = ["All", "Def", "T/F", "Eq", "Graph"];
 const RLABEL = { got:"Got it", almost:"Almost", missed:"Missed" };
 const RSYM   = { got:"✓", almost:"~", missed:"✕" };
-const RCOLORS = { got:"#3B6D11", almost:"#854F0B", missed:"#993C1D" };
-const RBGS    = { got:"#EAF3DE", almost:"#FAEEDA", missed:"#FAECE7" };
+const RCOLORS = { got:"var(--d-gain)", almost:"var(--d-transfer)", missed:"var(--d-loss)" };
+const RBGS    = { got:"var(--paper-raised)", almost:"color-mix(in srgb, var(--mark) 30%, white)", missed:"var(--paper-raised)" };
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
@@ -389,7 +379,7 @@ function revealBtnsHTML() {
   return `<div class="fc-reveal">
     <div class="fc-rate-label">How did you do? &nbsp;<span class="fc-kbd">1</span><span class="fc-kbd">2</span><span class="fc-kbd">3</span></div>
     <div class="fc-rate-row">
-      ${[["got","#3B6D11","#EAF3DE","1"],["almost","#854F0B","#FAEEDA","2"],["missed","#993C1D","#FAECE7","3"]].map(([key,color,bg,k]) => `
+      ${[["got","var(--d-gain)","var(--paper-raised)","1"],["almost","var(--d-transfer)","color-mix(in srgb, var(--mark) 30%, white)","2"],["missed","var(--d-loss)","var(--paper-raised)","3"]].map(([key,color,bg,k]) => `
         <button class="fc-rbtn" style="border-color:${bg};color:${color}" data-rate="${key}">
           <span style="font-size:15px">${RSYM[key]}</span>
           ${RLABEL[key]}
@@ -537,20 +527,20 @@ function renderDone() {
     </div>
     <div class="fc-summary">
       <div class="fc-sum-title">Deck complete</div>
-      <div style="font-size:13px;color:#666">
+      <div style="font-size:13px;color:var(--ink-soft)">
         ${g === tot ? "Perfect round. You nailed every card." : `${pctGot}% confidence · ${tot} cards rated`}
       </div>
       <div class="fc-stat-row">
-        <div class="fc-stat" style="background:#EAF3DE"><span class="fc-stat-n" style="color:#3B6D11">${g}</span><span class="fc-stat-l" style="color:#3B6D11">Got it</span></div>
-        <div class="fc-stat" style="background:#FAEEDA"><span class="fc-stat-n" style="color:#854F0B">${a}</span><span class="fc-stat-l" style="color:#854F0B">Almost</span></div>
-        <div class="fc-stat" style="background:#FAECE7"><span class="fc-stat-n" style="color:#993C1D">${m}</span><span class="fc-stat-l" style="color:#993C1D">Missed</span></div>
+        <div class="fc-stat" style="background:var(--paper-raised)"><span class="fc-stat-n" style="color:var(--d-gain)">${g}</span><span class="fc-stat-l" style="color:var(--d-gain)">Got it</span></div>
+        <div class="fc-stat" style="background:color-mix(in srgb, var(--mark) 30%, white)"><span class="fc-stat-n" style="color:var(--d-transfer)">${a}</span><span class="fc-stat-l" style="color:var(--d-transfer)">Almost</span></div>
+        <div class="fc-stat" style="background:var(--paper-raised)"><span class="fc-stat-n" style="color:var(--d-loss)">${m}</span><span class="fc-stat-l" style="color:var(--d-loss)">Missed</span></div>
       </div>
       <div class="fc-bar-track">
-        <div class="fc-bar-seg" style="width:${tot?Math.round((g/tot)*100):0}%;background:#3B6D11"></div>
-        <div class="fc-bar-seg" style="width:${tot?Math.round((a/tot)*100):0}%;background:#854F0B"></div>
-        <div class="fc-bar-seg" style="width:${tot?Math.round((m/tot)*100):0}%;background:#993C1D"></div>
+        <div class="fc-bar-seg" style="width:${tot?Math.round((g/tot)*100):0}%;background:var(--d-gain)"></div>
+        <div class="fc-bar-seg" style="width:${tot?Math.round((a/tot)*100):0}%;background:var(--d-transfer)"></div>
+        <div class="fc-bar-seg" style="width:${tot?Math.round((m/tot)*100):0}%;background:var(--d-loss)"></div>
       </div>
-      ${g < tot ? `<div style="font-size:12px;color:#999">Tip: review missed cards in your textbook before attempting practice problems.</div>` : ''}
+      ${g < tot ? `<div style="font-size:12px;color:var(--ink-faint)">Tip: review missed cards in your textbook before attempting practice problems.</div>` : ''}
       <div class="fc-btn-row">
         <button class="fc-btn-outline" id="btn-dl-md">Download Markdown</button>
         <button class="fc-btn-outline" id="btn-dl-pdf">Download PDF</button>
@@ -610,25 +600,25 @@ function downloadPDF() {
   const bar = (n, bg) => `<div style="background:${bg};width:${tot?Math.round((n/tot)*100):0}%;height:10px;border-radius:99px"></div>`;
   const w = window.open("","_blank");
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-    body{font-family:Arial,sans-serif;padding:36px;color:#111;max-width:920px;margin:0 auto}
-    h1{font-size:20px;color:#0077C8;margin-bottom:2px}
-    .meta{font-size:12px;color:#666;margin-bottom:20px}
+    body{font-family:Arial,sans-serif;padding:36px;color:var(--ink);max-width:920px;margin:0 auto}
+    h1{font-size:20px;color:var(--unit-ink);margin-bottom:2px}
+    .meta{font-size:12px;color:var(--ink-soft);margin-bottom:20px}
     .stats{display:flex;gap:10px;margin-bottom:16px}
     .stat{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600}
-    .bar-wrap{display:flex;gap:4px;align-items:center;margin-bottom:24px;background:#f0f4fa;border-radius:99px;overflow:hidden;height:10px}
+    .bar-wrap{display:flex;gap:4px;align-items:center;margin-bottom:24px;background:var(--paper-sunk);border-radius:99px;overflow:hidden;height:10px}
     table{width:100%;border-collapse:collapse;font-size:12px}
-    th{background:#0077C8;color:#fff;padding:8px 10px;text-align:left}
+    th{background:var(--unit-ink);color:var(--paper-raised);padding:8px 10px;text-align:left}
     td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top}
-    tr:nth-child(even) td{background:#fafbfd}
+    tr:nth-child(even) td{background:var(--paper-raised)}
   </style></head><body>
   <h1>EC224 Week 2 Flashcard Summary</h1>
   <div class="meta">Date: ${date} | Score: ${g} got it, ${a} almost, ${m} missed | Best streak: ${state.bestStreak} | Confidence: ${pctGot}%</div>
   <div class="stats">
-    <div class="stat" style="background:#EAF3DE;color:#3B6D11">${g} Got it</div>
-    <div class="stat" style="background:#FAEEDA;color:#854F0B">${a} Almost</div>
-    <div class="stat" style="background:#FAECE7;color:#993C1D">${m} Missed</div>
+    <div class="stat" style="background:var(--paper-raised);color:var(--d-gain)">${g} Got it</div>
+    <div class="stat" style="background:color-mix(in srgb, var(--mark) 30%, white);color:var(--d-transfer)">${a} Almost</div>
+    <div class="stat" style="background:var(--paper-raised);color:var(--d-loss)">${m} Missed</div>
   </div>
-  <div class="bar-wrap">${bar(g,"#3B6D11")}${bar(a,"#854F0B")}${bar(m,"#993C1D")}</div>
+  <div class="bar-wrap">${bar(g,"var(--d-gain)")}${bar(a,"var(--d-transfer)")}${bar(m,"var(--d-loss)")}</div>
   <table><thead><tr><th width="55">Type</th><th width="28%">Question</th><th>Answer</th><th width="85">Result</th></tr></thead>
   <tbody>${rows}</tbody></table>
   </body></html>`);
