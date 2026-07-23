@@ -735,31 +735,41 @@ entities, horizontal overflow, blank canvases, JS errors), and the figure pages
 report clean from `review/exercise.js`, which drives every control in
 combination and checks the result.
 
-What is **not** finished, stated plainly rather than left to be discovered:
+Done since the first rollout pass:
 
-1. **The label system is week5-only.** `d5*` (deterministic seeding, the
-   canvas-ink placement pass, haloed text instead of outlined boxes, the
-   window-level canvas drag, the repaint-on-anchor-move fix) exists only in
-   `week5-viz.html`. Weeks 2 and 3 are JSXGraph, weeks 4, 6 and 7 use a canvas
-   `resolveLabels` / `drawForceLabel` pair, and week 8 is pure d3. They all got
-   the shell, measure, type, palette and chart ink, but they still render
-   labels as white boxes with coloured borders. Porting `d5*` to the canvas
-   pages is the single highest-value follow-up.
+- **Fixed axes across every figure page.** `drawAxes` / `drawAxesSt` /
+  `drawAxes7` now record `data-xr` / `data-yr`, and the five figures that were
+  recomputing their range every draw (week4 Fig 4.3, week7 Fig 7.1, week8 Figs
+  8.1/8.4/8.9, week3's Slutsky box) are pinned to the extreme their own sliders
+  can reach. All seven viz pages PASS `review/axis-fixed.js`.
 
-2. **Fixed axes are week5-only.** `review/axis-fixed.js` passes on week5. The
-   other canvas pages were not audited for dynamic ranges; `drawAxesSt` records
-   `data-xr` / `data-yr` wherever it exists, so the guard can be pointed at them
-   as soon as someone wants to do that pass.
+- **Haloed in-plot labels on the canvas pages.** week6 and week7's
+  `drawForceLabel` paint 13px haloed text instead of a 9px outlined white box
+  (DESIGN 4.3). The `d5*` label engine (deterministic seeding, canvas-ink
+  placement, the window-level drag, repaint-on-anchor-move) is still richer on
+  week5, but the outlined-box look is gone everywhere.
 
-3. **Motion is week5-only.** `ecTween` and the 6.2 table are implemented there.
-   Buttons that move a curve on weeks 4, 6, 7 and 8 still jump.
+- **Functional motion via `assets/figkit.js`** (`ecTween` / `ecSetSliders`),
+  loaded on all seven viz pages. The Reset and Solve buttons that snapped now
+  tween (week7 7.1, week8 8.1 and 8.11). The remaining state buttons that swap
+  a discrete curve set (mode toggles, "Show optimal") are intentionally instant.
 
-4. **week6-viz Fig 6.1**: at the extreme corner (w at minimum, v at maximum)
-   the draggable bundle can be dragged to L above the x-axis maximum, so the
-   dot renders half outside the plot. Pre-existing, cosmetic, only reachable at
-   a slider extreme.
+- **week6-viz Fig 6.1** drag fixed: the drawn bundle is clamped to the axes,
+  and the drag is tracked on window so crossing a label no longer cancels it.
 
-5. **AUDIT S-1 stands.** The six slides pages and three videos pages still
+- **A canvas colour bug fixed** (introduced by the palette sweep): `var()` in
+  `ctx.fillStyle` and JSXGraph options is invalid; 89 dropped colours restored
+  to literals.
+
+What is **still** not finished, stated plainly:
+
+1. **The full `d5*` label engine is week5-only.** The other canvas pages got
+   haloed text but not the deterministic ink-aware seeding or the
+   repaint-on-anchor-move fix, so a label there can still start on a curve or
+   lag a dragged point until the sim reheats. Porting `d5*` wholesale is the
+   highest-value follow-up.
+
+2. **AUDIT S-1 stands.** The six slides pages and three videos pages still
    exist as separate pages carrying three links each. Folding them into the
    hub remains right, and was not done because it changes URLs that both the
    hubs and the chatbot's Pinecone index point at.
