@@ -1,62 +1,63 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u2);--unit-ink:var(--u2-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Week 6: Interactive Visualizations - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     .demo-svg-wrap { padding: 0; }
     .demo-svg-wrap svg { display: block; width: 100%; }
     .draggable-label { cursor: move; }
-    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
+    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule-strong); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
-    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; position:relative; z-index:1; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--unit-ink); margin-bottom:0.4rem; position:relative; z-index:1; }
     .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
-    .viz-instructor { font-size:0.9rem; color:var(--muted); }
-    .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
-    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
+    .viz-instructor { font-size:0.9rem; color:var(--ink-faint); }
+    .toc { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
+    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:0.6rem; }
     .toc ol { margin:0; padding-left:0.5rem; display:flex; flex-direction:column; gap:0.28rem; }
-    .toc li { font-size:0.855rem; color:var(--muted); }
-    .toc a { color:var(--accent); text-decoration:none; }
+    .toc li { font-size:0.855rem; color:var(--ink-faint); }
+    .toc a { color:var(--unit-ink); text-decoration:none; }
     .toc a:hover { text-decoration:underline; }
-    .fig-section { border-top:2px solid var(--rule); padding-top:2.5rem; margin-top:3rem; }
+    .fig-section { border-top:2px solid var(--rule-strong); padding-top:2.5rem; margin-top:3rem; }
     .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
-    .fig-label { font-family:var(--mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
+    .fig-label { font-family:var(--font-mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--unit-ink); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
     .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
-    .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
-    .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
+    .fig-intro { font-size:0.9rem; color:var(--ink-faint); line-height:1.7; margin-bottom:1.5rem; }
+    .cvs-wrap { border:1px solid var(--rule-strong); border-radius:10px; overflow:hidden; background:#fff; }
     canvas { display:block; width:100%; cursor:default; }
     .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
     .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
-    .viz-slider-label { font-family:var(--mono); font-size:0.75rem; color:var(--muted); white-space:nowrap; }
-    .viz-slider { width:130px; accent-color:var(--accent); }
-    .viz-slider:focus-visible { outline:3px solid var(--accent); outline-offset:3px; border-radius:3px; }
-    .viz-slider-val { font-family:var(--mono); font-size:0.82rem; color:var(--accent); min-width:36px; }
-    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
-    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
-    .viz-readout { background:var(--off-white); border:1px solid var(--rule); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
+    .viz-slider-label { font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-faint); white-space:nowrap; }
+    .viz-slider { width:130px; accent-color:var(--unit-ink); }
+    .viz-slider:focus-visible { outline:3px solid var(--unit-ink); outline-offset:3px; border-radius:3px; }
+    .viz-slider-val { font-family:var(--font-mono); font-size:0.82rem; color:var(--unit-ink); min-width:36px; }
+    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule-strong); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
+    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--unit-ink); color:var(--unit-ink); }
+    .viz-readout { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
     .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
     .readout-col { flex:1; min-width:110px; }
-    .readout-label { font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
-    .readout-val { font-size:1.05rem; font-weight:600; color:var(--accent); font-family:var(--mono); }
+    .readout-label { font-family:var(--font-mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-faint); }
+    .readout-val { font-size:1.05rem; font-weight:600; color:var(--unit-ink); font-family:var(--font-mono); }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
-    .panel-label { font-family:var(--mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0.4rem 0.6rem; background:var(--off-white); border-bottom:1px solid var(--rule); }
-    .hub-footer { border-top:1px solid var(--rule); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
-    .hub-footer-left { font-size:0.82rem; color:var(--muted); }
-    .hub-footer-left a { color:var(--muted); text-decoration:none; }
-    .hub-footer-left a:hover { color:var(--accent); }
+    .panel-label { font-family:var(--font-mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-faint); padding:0.4rem 0.6rem; background:var(--off-white); border-bottom:1px solid var(--rule-strong); }
+    .hub-footer { border-top:1px solid var(--rule-strong); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
+    .hub-footer-left { font-size:0.82rem; color:var(--ink-faint); }
+    .hub-footer-left a { color:var(--ink-faint); text-decoration:none; }
+    .hub-footer-left a:hover { color:var(--unit-ink); }
     .footer-logo { height:22px; opacity:0.5; }
-    .v61-steps { background:#f8fafb; border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.1rem; margin-top:0.75rem; font-size:0.875rem; line-height:1.8; display:none; }
+    .v61-steps { background:#f8fafb; border:1px solid var(--rule-strong); border-radius:8px; padding:0.9rem 1.1rem; margin-top:0.75rem; font-size:0.875rem; line-height:1.8; display:none; }
     .v61-steps.visible { display:block; }
     .v61-step { margin-bottom:0.35rem; }
-    .v61-step-num { font-family:var(--mono); font-size:0.72rem; font-weight:600; color:var(--accent); background:var(--accent-light); padding:1px 6px; border-radius:3px; margin-right:0.4rem; }
-    .v62-form-note { font-size:0.84rem; color:var(--muted); line-height:1.65; margin-top:0.6rem; padding:0.65rem 0.9rem; background:var(--off-white); border:1px solid var(--rule); border-radius:7px; }
-    .viz-select { font-family:var(--mono); font-size:0.82rem; border:1px solid var(--rule); border-radius:6px; padding:4px 8px; background:var(--off-white); color:var(--text); cursor:pointer; }
+    .v61-step-num { font-family:var(--font-mono); font-size:0.72rem; font-weight:600; color:var(--unit-ink); background:var(--accent-light); padding:1px 6px; border-radius:3px; margin-right:0.4rem; }
+    .v62-form-note { font-size:0.84rem; color:var(--ink-faint); line-height:1.65; margin-top:0.6rem; padding:0.65rem 0.9rem; background:var(--off-white); border:1px solid var(--rule-strong); border-radius:7px; }
+    .viz-select { font-family:var(--font-mono); font-size:0.82rem; border:1px solid var(--rule-strong); border-radius:6px; padding:4px 8px; background:var(--off-white); color:var(--text); cursor:pointer; }
     @media(max-width:580px){ .two-col { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -98,72 +99,83 @@
   <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
 </div>
 
-<main class="main" style="max-width:1400px;">
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week6.html">Week 6</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+</div>
 
-  <div class="viz-hero">
-    <div class="viz-ghost">06</div>
-    <p class="viz-week-label">Week 6 &middot; Interactive Visualizations</p>
-    <h1 class="viz-title">Cost Theory</h1>
-    <p class="viz-instructor">Prof. Naveen Sunder</p>
-    <nav class="toc">
-      <div class="toc-title">Six Figures</div>
-      <ol>
-        <li><a href="#sec-6-1">Fig 6.1: Cost Minimisation Sandbox</a></li>
-        <li><a href="#sec-6-2">Fig 6.2: Two-Panel Cost Derivation</a></li>
-        <li><a href="#sec-6-5">Fig 6.5: SR vs LR Cost Curves</a></li>
-        <li><a href="#sec-6-6">Fig 6.6: LRAC Envelope Builder</a></li>
-        <li><a href="#sec-6-8">Fig 6.8: Minimum Wage Automation Simulator</a></li>
-        <li><a href="#sec-6-10">Fig 6.10: Efficient Scale Finder</a></li>
-      </ol>
-    </nav>
-  </div>
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-6-1"><span>6.1</span>Cost Minimisation Sandbox</a></li>
+      <li><a href="#sec-6-2"><span>6.2</span>Two-Panel Cost Derivation</a></li>
+      <li><a href="#sec-6-5"><span>6.5</span>SR vs LR Cost Curves</a></li>
+      <li><a href="#sec-6-6"><span>6.6</span>LRAC Envelope Builder</a></li>
+      <li><a href="#sec-6-8"><span>6.8</span>Minimum Wage Automation Simulator</a></li>
+      <li><a href="#sec-6-10"><span>6.10</span>Efficient Scale Finder</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">06</span>
+      <p class="eyebrow">Week 6 &middot; Interactive Visualizations</p>
+      <h1>Cost Theory</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
 
   <!-- Fig 6.1 - COST MINIMISATION SANDBOX -->
-  <section class="fig-section" id="sec-6-1">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 6.1</span>
-      <span class="fig-title">Cost Minimisation Sandbox</span>
+  <section class="sec page" id="sec-6-1">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 6.1</span>
+      <h3>Cost Minimisation Sandbox</h3>
     </div>
     <p class="fig-intro">
       Set the wage w, rental rate v, and target output q using the sliders. Then drag the dot on the graph to your best guess for the cost-minimising bundle (L, K). The dot turns green when you find the tangency. When you are ready to check your work, click "Show Optimal Bundle" to see the step-by-step solution.
     </p>
-    <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Wage w:</span>
-        <input type="range" class="viz-slider" id="v61-w" min="1" max="10" step="any" value="4" oninput="v61Update()" aria-label="Wage rate w">
-        <span class="viz-slider-val" id="v61-w-val">4</span>
+    <div class="ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">Wage w: <span class="ctrl-value" id="v61-w-val">4</span></span>
+        <input type="range" class="ctrl-track" id="v61-w" min="1" max="10" step="any" value="4" oninput="v61Update()" aria-label="Wage rate w">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Rental rate v:</span>
-        <input type="range" class="viz-slider" id="v61-v" min="1" max="10" step="any" value="4" oninput="v61Update()" aria-label="Rental rate v">
-        <span class="viz-slider-val" id="v61-v-val">4</span>
+      <div class="ctrl">
+        <span class="ctrl-label">Rental rate v: <span class="ctrl-value" id="v61-v-val">4</span></span>
+        <input type="range" class="ctrl-track" id="v61-v" min="1" max="10" step="any" value="4" oninput="v61Update()" aria-label="Rental rate v">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Output q:</span>
-        <input type="range" class="viz-slider" id="v61-q" min="1" max="6" step="any" value="3" oninput="v61Update()" aria-label="Output quantity q">
-        <span class="viz-slider-val" id="v61-q-val">3</span>
+      <div class="ctrl">
+        <span class="ctrl-label">Output q: <span class="ctrl-value" id="v61-q-val">3</span></span>
+        <input type="range" class="ctrl-track" id="v61-q" min="1" max="6" step="any" value="3" oninput="v61Update()" aria-label="Output quantity q">
       </div>
-      <button class="viz-btn" id="v61-show-btn" onclick="v61ShowOptimal()">Show Optimal Bundle</button>
+      <button class="btn" id="v61-show-btn" onclick="v61ShowOptimal()">Show Optimal Bundle</button>
     </div>
-    <div class="cvs-wrap" style="max-width:682px;margin-left:auto;margin-right:auto;"><canvas id="cvs61" height="320"></canvas></div>
-    <div class="viz-readout" id="v61-readout"></div>
+    <div class="fig-plot" style="max-width:682px;margin-left:auto;margin-right:auto;"><canvas id="cvs61" height="320"></canvas></div>
+    <div class="fig-state" id="v61-readout"></div>
     <div class="v61-steps" id="v61-steps">
       <div id="v61-steps-content"></div>
     </div>
   </section>
 
   <!-- Fig 6.2 - TWO-PANEL COST DERIVATION -->
-  <section class="fig-section" id="sec-6-2">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 6.2</span>
-      <span class="fig-title">Two-Panel Cost Derivation</span>
+  <section class="sec page" id="sec-6-2">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 6.2</span>
+      <h3>Two-Panel Cost Derivation</h3>
     </div>
     <p class="fig-intro">
       Left panel: isoquant map with the expanding isocost sweeping across output levels. Right panel: TC(q) curve building itself point by point. Step through output levels to watch each cost-minimising bundle map to a TC value.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
-      <span class="viz-slider-label">Production function:</span>
-      <select class="viz-select" id="v62-form" onchange="v62FormChange()">
+    <div class="ctrl-row" style="margin-bottom:0.5rem;">
+      <span class="ctrl-label">Production function:</span>
+      <select class="sel" id="v62-form" onchange="v62FormChange()">
         <option value="cd">Cobb-Douglas: Q = K^(1/2) &middot; L^(1/2)</option>
         <option value="subs">Perfect Substitutes: Q = L + K</option>
         <option value="comp">Perfect Complements: Q = min(L, K)</option>
@@ -173,52 +185,51 @@
       Cobb-Douglas production: each input is imperfectly substitutable. The expansion path is a ray through the origin, meaning the firm scales both inputs proportionally as output rises. The TC curve is linear in q (constant returns to scale here).
     </div>
     <div class="two-col" style="margin-top:0.75rem;">
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Isoquant map + isocost</div>
         <canvas id="cvs62a" height="260"></canvas>
       </div>
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Total Cost curve TC(q)</div>
         <canvas id="cvs62b" height="260"></canvas>
       </div>
     </div>
-    <div class="viz-ctrl-row">
-      <button class="viz-btn" onclick="v62CtrlPlay()">&#9654; Play</button>
-      <button class="viz-btn" onclick="v62CtrlStep(-1)">&#8592; Prev</button>
-      <button class="viz-btn" onclick="v62CtrlStep(1)">Next &#8594;</button>
-      <button class="viz-btn" onclick="v62CtrlReset()">&#8635; Reset</button>
-      <span id="v62-status" style="font-family:var(--mono);font-size:0.76rem;color:var(--muted);flex:1;text-align:center;"></span>
+    <div class="ctrl-row">
+      <button class="btn" onclick="v62CtrlPlay()">&#9654; Play</button>
+      <button class="btn" onclick="v62CtrlStep(-1)">&#8592; Prev</button>
+      <button class="btn" onclick="v62CtrlStep(1)">Next &#8594;</button>
+      <button class="btn" onclick="v62CtrlReset()">&#8635; Reset</button>
+      <span id="v62-status" style="font-family:var(--font-mono);font-size:0.76rem;color:var(--ink-faint);flex:1;text-align:center;"></span>
     </div>
-    <div class="viz-readout" id="v62-readout"></div>
+    <div class="fig-state" id="v62-readout"></div>
   </section>
 
   <!-- Fig 6.5 - SR vs LR COST CURVES -->
-  <section class="fig-section" id="sec-6-5">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 6.5</span>
-      <span class="fig-title">SR vs LR Cost Curves</span>
+  <section class="sec page" id="sec-6-5">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 6.5</span>
+      <h3>SR vs LR Cost Curves</h3>
     </div>
     <p class="fig-intro">
       Short-run Marginal Cost (SMC), Average Variable Cost (AVC), Average Total Cost (ATC), and Average Fixed Cost (AFC) are drawn simultaneously. The Total Fixed Cost (TFC) slider shows how fixed costs shift ATC upward but leave SMC and AVC unchanged. A toggle overlays the Long-Run Average Cost (LRAC) for comparison. All five short-run curve properties in one diagram.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">TFC:</span>
-        <input type="range" class="viz-slider" id="v65-tfc" min="10" max="200" step="any" value="100" oninput="v65Update()" aria-label="Total fixed cost TFC">
-        <span class="viz-slider-val" id="v65-tfc-val">100</span>
+    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">TFC: <span class="ctrl-value" id="v65-tfc-val">100</span></span>
+        <input type="range" class="ctrl-track" id="v65-tfc" min="10" max="200" step="any" value="100" oninput="v65Update()" aria-label="Total fixed cost TFC">
       </div>
-      <button class="viz-btn" id="v65-lr-btn" onclick="v65ToggleLR()">Show LRAC</button>
-      <button class="viz-btn" onclick="window.resetFig65&&window.resetFig65()">Reset labels</button>
+      <button class="btn" id="v65-lr-btn" onclick="v65ToggleLR()">Show LRAC</button>
+      <button class="btn" onclick="window.resetFig65&&window.resetFig65()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs65-wrap"></div></div>
-    <div class="viz-readout" id="v65-readout"></div>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs65-wrap"></div></div>
+    <div class="fig-state" id="v65-readout"></div>
   </section>
 
   <!-- Fig 6.6 - LRAC ENVELOPE BUILDER -->
-  <section class="fig-section" id="sec-6-6">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 6.6</span>
-      <span class="fig-title">LRAC Envelope Builder</span>
+  <section class="sec page" id="sec-6-6">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 6.6</span>
+      <h3>LRAC Envelope Builder</h3>
     </div>
     <p class="fig-intro">
       Each SRAC curve corresponds to a different fixed level of capital (K = 1, 2, 3, 4, ...). The LRAC is the lower envelope of all SRAC curves: at each output level, the long-run optimum is whichever fixed-capital option is cheapest. Watch the animation below, then explore the interactive builder.
@@ -232,23 +243,22 @@
     </div>
     <!-- Interactive canvas -->
     <p class="fig-intro" style="margin-top:0;font-size:0.9rem;color:var(--ink-light);">Interactive builder: drag the slider to add more plant sizes and see the LRAC approach a smooth curve.</p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.5rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Number of SRAC curves:</span>
-        <input type="range" class="viz-slider" id="v66-nk" min="1" max="8" step="1" value="4" oninput="v66Update()" style="width:160px;" aria-label="Number of SRAC curves">
-        <span class="viz-slider-val" id="v66-nk-val">4</span>
+    <div class="ctrl-row" style="margin-bottom:0.5rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">Number of SRAC curves: <span class="ctrl-value" id="v66-nk-val">4</span></span>
+        <input type="range" class="ctrl-track" id="v66-nk" min="1" max="8" step="1" value="4" oninput="v66Update()" style="width:160px;" aria-label="Number of SRAC curves">
       </div>
-      <button class="viz-btn" onclick="window.resetFig66&&window.resetFig66()">Reset labels</button>
+      <button class="btn" onclick="window.resetFig66&&window.resetFig66()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs66-wrap"></div></div>
-    <div class="viz-readout" id="v66-readout"></div>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs66-wrap"></div></div>
+    <div class="fig-state" id="v66-readout"></div>
   </section>
 
   <!-- Fig 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR -->
-  <section class="fig-section" id="sec-6-8">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 6.8</span>
-      <span class="fig-title">Minimum Wage Automation Simulator</span>
+  <section class="sec page" id="sec-6-8">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 6.8</span>
+      <h3>Minimum Wage Automation Simulator</h3>
     </div>
     <p class="fig-intro">
       Imagine you manage a firm. Currently, the government's minimum wage is exactly what you're paying your workers. Now the government passes a law raising the minimum wage. What do you think happens?
@@ -259,38 +269,36 @@
     <p class="fig-intro" style="margin-top:-0.75rem;">
       Use the wage slider below to see the effect. Watch how the isocost line rotates, and see where the new cost-minimising bundle lands. Does it match your intuition?
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Min wage w:</span>
-        <input type="range" class="viz-slider" id="v68-w" min="1" max="12" step="any" value="3" oninput="v68Update()" aria-label="Minimum wage w">
-        <span class="viz-slider-val" id="v68-w-val">3</span>
+    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">Min wage w: <span class="ctrl-value" id="v68-w-val">3</span></span>
+        <input type="range" class="ctrl-track" id="v68-w" min="1" max="12" step="any" value="3" oninput="v68Update()" aria-label="Minimum wage w">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Capital cost v:</span>
-        <input type="range" class="viz-slider" id="v68-v" min="1" max="8" step="any" value="3" oninput="v68Update()" aria-label="Capital cost v">
-        <span class="viz-slider-val" id="v68-v-val">3</span>
+      <div class="ctrl">
+        <span class="ctrl-label">Capital cost v: <span class="ctrl-value" id="v68-v-val">3</span></span>
+        <input type="range" class="ctrl-track" id="v68-v" min="1" max="8" step="any" value="3" oninput="v68Update()" aria-label="Capital cost v">
       </div>
-      <button class="viz-btn" onclick="window.resetFig68&&window.resetFig68()">Reset labels</button>
+      <button class="btn" onclick="window.resetFig68&&window.resetFig68()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs68-wrap"></div></div>
-    <div class="viz-readout" id="v68-readout"></div>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs68-wrap"></div></div>
+    <div class="fig-state" id="v68-readout"></div>
     <!-- old / new / change readout, baseline is w = v = $3 -->
     <div id="v68-delta" class="delta-bar"></div>
   </section>
 
   <!-- Fig 6.10 - EFFICIENT SCALE FINDER -->
-  <section class="fig-section" id="sec-6-10">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 6.10</span>
-      <span class="fig-title">Efficient Scale Finder</span>
+  <section class="sec page" id="sec-6-10">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 6.10</span>
+      <h3>Efficient Scale Finder</h3>
     </div>
     <p class="fig-intro">
       Choose a preset average cost function from the dropdown. The tool plots AC, marks q* (the efficient scale), and shades economies of scale in green and diseconomies in red. Toggle "Show Marginal Cost" to overlay the MC curve and see where it crosses AC at the minimum.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;flex-wrap:wrap;gap:0.75rem;">
+    <div class="ctrl-row" style="margin-bottom:0.75rem;flex-wrap:wrap;gap:0.75rem;">
       <div style="display:flex;flex-direction:column;gap:0.3rem;">
-        <span class="viz-slider-label">AC function:</span>
-        <select class="viz-select" id="v610-preset" onchange="v610Draw()" style="max-width:320px;">
+        <span class="ctrl-label">AC function:</span>
+        <select class="sel" id="v610-preset" onchange="v610Draw()" style="max-width:320px;">
           <option value="0">Constant AC: AC = 5</option>
           <option value="1">Linear AC: AC = 2q + 3</option>
           <option value="2" selected>Classic U-shape: AC = q - 6 + 36/q</option>
@@ -303,14 +311,14 @@
           <option value="9">Textbook standard: AC = q&sup2; - 10q + 40</option>
         </select>
       </div>
-      <button class="viz-btn" id="v610-mc-btn" onclick="v610ToggleMC()">Show Marginal Cost</button>
-      <button class="viz-btn" onclick="window.resetFig610&&window.resetFig610()">Reset labels</button>
+      <button class="btn" id="v610-mc-btn" onclick="v610ToggleMC()">Show Marginal Cost</button>
+      <button class="btn" onclick="window.resetFig610&&window.resetFig610()">Reset labels</button>
     </div>
-    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs610-wrap"></div></div>
-    <div class="viz-readout" id="v610-readout"></div>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs610-wrap"></div></div>
+    <div class="fig-state" id="v610-readout"></div>
   </section>
 
-  <footer class="hub-footer">
+  <footer class="site-foot">
     <div class="hub-footer-left">
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
       &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
@@ -319,13 +327,14 @@
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
 
-</main>
+  </main>
+</div>
 
 <script>
 /* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
    resolve CSS var(), so their colours come from here; CSS and inline styles use
    var() directly. Fallbacks equal the token values. */
-var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
 
 // ======================================================================
 // SHARED UTILITIES
@@ -379,7 +388,7 @@ function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
   }
 }
 function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false,w,h} = lbl;
+  const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false,w,h} = lbl;
   const LH=15;
   const bw=w||ctx.measureText(text).width+10;
   const bh=h||LH;
@@ -436,15 +445,15 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
   const ys=(yR[1]-yR[0])/4;
   for(let i=1;i<=4;i++){
     const v=yR[0]+i*ys; const [,py]=toC(xR[0],v,W,H,xR,yR);
-    ctx.strokeStyle='#f0f0f0'; ctx.lineWidth=1;
+    ctx.strokeStyle="rgba(28,36,51,0.07)"; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(W-MR,py); ctx.stroke();
   }
   // Axes
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
   // Tick text
-  ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='var(--ink-faint)'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
   const xs=(xR[1]-xR[0])/4;
   for(let i=0;i<=4;i++){
     const v=xR[0]+i*xs; const [px]=toC(v,yR[0],W,H,xR,yR);
@@ -455,7 +464,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
     ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-5,py+3);
   }
   // Axis labels
-  ctx.fillStyle='#666'; ctx.font='10px DM Sans,sans-serif';
+  ctx.fillStyle="#4a5566"; ctx.font="13px DM Sans,sans-serif";
   ctx.textAlign='center'; ctx.fillText(xLbl||'q',W/2,H-4);
   ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'$',0,0); ctx.restore(); ctx.restore();
@@ -512,7 +521,7 @@ function v61Draw(Lcur,Kcur){
 
   // Isoquant for Q=q
   const linePts61=[];
-  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   for(let l=0.4;l<=AXIS_MAX;l+=0.05){
     const k=q*q/l; if(k>AXIS_MAX||k<0.05){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
@@ -529,7 +538,7 @@ function v61Draw(Lcur,Kcur){
     const [lx0,ly0]=toC(0,Math.min(Kint,AXIS_MAX),W,H,xR,yR);
     const [lx1,ly1]=toC(Math.min(Lint,AXIS_MAX),0,W,H,xR,yR);
     if(i===2) for(let t=0;t<=1;t+=0.25) linePts61.push([lx0+(lx1-lx0)*t,ly0+(ly1-ly0)*t]);
-    ctx.beginPath(); ctx.strokeStyle=i===2?EC.red:'#ddd'; ctx.lineWidth=i===2?1.5:1;
+    ctx.beginPath(); ctx.strokeStyle=i===2?EC.red:'#c9c2b6'; ctx.lineWidth=i===2?1.5:1;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
   });
   const [icLx,icLy]=toC(0,Math.min(TCopt/v,AXIS_MAX),W,H,xR,yR);
@@ -538,7 +547,7 @@ function v61Draw(Lcur,Kcur){
   const iqL=AXIS_MAX*0.7, iqK=q*q/iqL;
   const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
   const lbls61=[
-    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width+8,h:12,text:'Isoquant Q = '+q,color:'#1a56db',fontSize:9,bold:false},
+    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width+8,h:12,text:'Isoquant Q = '+q,color:'#1f6fb2',fontSize:9,bold:false},
     {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
   ];
 
@@ -549,15 +558,15 @@ function v61Draw(Lcur,Kcur){
   // If optimal is shown, draw the green dot at the optimal location
   if(v61OptimalShown){
     const [ox,oy]=toC(opt.Ls,opt.Ks,W,H,xR,yR);
-    dot6(ctx,ox,oy,9,'#2e8b57','#fff');
-    ctx.setLineDash([3,3]); ctx.strokeStyle='#2e8b57aa'; ctx.lineWidth=1;
+    dot6(ctx,ox,oy,9,'#2f5c3a','#fff');
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#2f5c3aaa'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.setLineDash([]);
     ctx.font='9px DM Sans,sans-serif';
     const optLbls=[
-      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2e8b57',fontSize:9,bold:false},
-      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2e8b57',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
     ];
     resolveLabels(optLbls,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
     optLbls.forEach(l=>drawForceLabel(ctx,l));
@@ -565,9 +574,9 @@ function v61Draw(Lcur,Kcur){
       '<div class="readout-row">' +
       '<div class="readout-col"><div class="readout-label">L*</div><div class="readout-val">'+opt.Ls.toFixed(2)+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">K*</div><div class="readout-val">'+opt.Ks.toFixed(2)+'</div></div>' +
-      '<div class="readout-col"><div class="readout-label">MRTS = K/L at optimum</div><div class="readout-val" style="color:#2e8b57">'+(opt.Ks/opt.Ls).toFixed(2)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">MRTS = K/L at optimum</div><div class="readout-val" style="color:#2f5c3a">'+(opt.Ks/opt.Ls).toFixed(2)+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(w/v).toFixed(2)+'</div></div>' +
-      '<div class="readout-col"><div class="readout-label">Min TC = wL* + vK*</div><div class="readout-val" style="color:#2e8b57">'+opt.TC.toFixed(2)+'</div></div>' +
+      '<div class="readout-col"><div class="readout-label">Min TC = wL* + vK*</div><div class="readout-val" style="color:#2f5c3a">'+opt.TC.toFixed(2)+'</div></div>' +
       '</div>';
     return;
   }
@@ -579,15 +588,15 @@ function v61Draw(Lcur,Kcur){
   const atTangency=Math.abs(MRTS/wv-1)<0.10;
   const atOpt=onIsoquant&&atTangency;
   const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
-  dot6(ctx,bx,by,8,atOpt?'#2e8b57':EC.red,'#fff');
+  dot6(ctx,bx,by,8,atOpt?'#2f5c3a':EC.red,'#fff');
   ctx.font='9px DM Sans,sans-serif';
-  const dotCol=atOpt?'#2e8b57':EC.red;
+  const dotCol=atOpt?'#2f5c3a':EC.red;
   const dragLbls=[
     {ax:bx,ay:by,x:bx+12,y:by-10,w:ctx.measureText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')').width+8,h:12,text:'(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')',color:dotCol,fontSize:9,bold:false},
   ];
-  if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2e8b57',fontSize:9,bold:false});
-  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'#888',fontSize:9,bold:false});
-  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#888',fontSize:9,bold:false});
+  if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false});
+  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'var(--ink-faint)',fontSize:9,bold:false});
+  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'var(--ink-faint)',fontSize:9,bold:false});
   resolveLabels(dragLbls,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
   dragLbls.forEach(l=>drawForceLabel(ctx,l));
 
@@ -596,12 +605,12 @@ function v61Draw(Lcur,Kcur){
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">L (drag)</div><div class="readout-val">'+Lcur.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">K (drag)</div><div class="readout-val">'+Kcur.toFixed(2)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:var(--red)">'+MRTS.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:var(--d-second)">'+MRTS.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(wv).toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">TC = wL + vK</div><div class="readout-val">'+TC.toFixed(2)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2e8b57">'+opt.TC.toFixed(2)+'</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2f5c3a">'+opt.TC.toFixed(2)+'</div></div>' +
     '</div>' +
-    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">' +
+    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-faint)">' +
     (atOpt?'Cost minimised: MRTS = w/v. This is the cheapest way to produce Q='+q+'.':
       'Not optimal. Drag the dot toward the tangency where MRTS = w/v = '+(wv).toFixed(2)+'. Click "Show Optimal Bundle" when ready.') +
     '</div>';
@@ -741,7 +750,7 @@ function v62Draw(){
   const xRB=[0,6],yRB=[0,maxTCval];
   drawAxesSt(ctxB,WB,HB,xRB,yRB,'q','TC');
 
-  const colors=[EC.red,EC.amber,'#2e8b57','#1a56db',EC.purple,EC.steel,EC.red,EC.amber,'#2e8b57','#1a56db'];
+  const colors=[EC.red,EC.amber,'#2f5c3a','#1f6fb2',EC.purple,EC.steel,EC.red,EC.amber,'#2f5c3a','#1f6fb2'];
 
   for(let i=0;i<v62CurrStep;i++){
     const q=V62_Q_STEPS[i], col=colors[i%colors.length];
@@ -794,7 +803,7 @@ function v62Draw(){
   }
 
   // Right: TC curve (full, gray)
-  ctxB.beginPath(); let fpB=true; ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1.5;
+  ctxB.beginPath(); let fpB=true; ctxB.strokeStyle='#c9c2b6'; ctxB.lineWidth=1.5;
   for(let q=0.1;q<=5.5;q+=0.05){
     const tc=v62Bundle(q,form).TC;
     const [cx,cy]=toC(q,tc,WB,HB,xRB,yRB);
@@ -854,26 +863,26 @@ window._initFig65=function initFig65(){
 
   // Curve path elements (ordered: LRAC behind, then others)
   const lracPath=svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',1.8).attr('stroke-dasharray','5,3').attr('opacity',0);
-  const afcPath=svg.append('path').attr('fill','none').attr('stroke','#888').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
+  const afcPath=svg.append('path').attr('fill','none').attr('stroke','var(--ink-faint)').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
   const avcPath=svg.append('path').attr('fill','none').attr('stroke',EC.green).attr('stroke-width',2);
   // Ghost ATC (faded, dashed, thinner): re-evaluated at the baseline TFC so
   // raising/lowering TFC leaves the original ATC on screen for comparison.
-  const atcGhostPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',1.4).attr('stroke-dasharray','5,4').attr('opacity',0);
-  const atcPath=svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
+  const atcGhostPath=svg.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',1.4).attr('stroke-dasharray','5,4').attr('opacity',0);
+  const atcPath=svg.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2);
   const smcPath=svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2);
 
   // min ATC dot
-  const minDot=svg.append('circle').attr('r',5).attr('fill','#1a56db').attr('stroke','white').attr('stroke-width',1.5);
+  const minDot=svg.append('circle').attr('r',5).attr('fill','#1f6fb2').attr('stroke','white').attr('stroke-width',1.5);
   const atcGhostLbl=svg.append('text').attr('font-size',9).attr('font-weight',600)
-    .attr('fill','#1a56db').attr('opacity',0).attr('text-anchor','start').text('ATC');
+    .attr('fill','#1f6fb2').attr('opacity',0).attr('text-anchor','start').text('ATC');
 
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Quantity (q)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -896,10 +905,10 @@ window._initFig65=function initFig65(){
     const minATC=v65ATC(qminATC,tfc);
     const nodes=[
       {id:'SMC',  color:EC.red,label:'SMC',  lw:44,ax:scX(12),  ay:scY(Math.min(v65MC(12),yMax))},
-      {id:'ATC',  color:'#1a56db',label:'ATC',  lw:40, ax:scX(13),  ay:scY(Math.min(v65ATC(13,tfc),yMax))},
+      {id:'ATC',  color:'#1f6fb2',label:'ATC',  lw:40, ax:scX(13),  ay:scY(Math.min(v65ATC(13,tfc),yMax))},
       {id:'AVC',  color:EC.green,label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
-      {id:'AFC',  color:'#888',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
-      {id:'minATC',color:'#1a56db',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
+      {id:'AFC',  color:'var(--ink-faint)',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
+      {id:'minATC',color:'#1f6fb2',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
     ];
     if(v65ShowLR) nodes.push({id:'LRAC',color:EC.red,label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
     return nodes.filter(n=>isFinite(n.ay)).map(n=>({...n,fx_anchor:n.ax,fy_anchor:n.ay,x:n.ax+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:n.ay+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))}));
@@ -1015,7 +1024,7 @@ window._initFig65=function initFig65(){
       '<div class="readout-col"><div class="readout-label">Efficient scale q* (min ATC)</div><div class="readout-val">q*='+Math.sqrt(tfc).toFixed(1)+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">Variable cost (TVC) formula</div><div class="readout-val" style="font-size:0.75rem;">q²</div></div>' +
       '</div>' +
-      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">Key property: SMC always passes through the minimum of ATC and AVC. Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.</div>';
+      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-faint)">Key property: SMC always passes through the minimum of ATC and AVC. Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.</div>';
   }
 
   // Initial build
@@ -1041,7 +1050,7 @@ window._initFig65=function initFig65(){
   };
   window.v65ToggleLR=function(){
     v65ShowLR=!v65ShowLR;
-    document.getElementById('v65-lr-btn').classList.toggle('active',v65ShowLR);
+    document.getElementById('v65-lr-btn').classList.toggle('on',v65ShowLR);
     document.getElementById('v65-lr-btn').textContent=v65ShowLR?'Hide LRAC':'Show LRAC';
     const tfc=parseFloat(document.getElementById('v65-tfc').value);
     initSim(tfc);
@@ -1072,7 +1081,7 @@ window._initFig66=function initFig66(){
   const LABEL_H=15;
   const scX=d3.scaleLinear().domain([0,xMax]).range([PAD.left,W-PAD.right]);
   const scY=d3.scaleLinear().domain([0,yMax]).range([H-PAD.bottom,PAD.top]);
-  const COLS=[EC.red,EC.amber,'#2e8b57',EC.purple,EC.steel,'#e67e22','#16a085','#8e44ad'];
+  const COLS=[EC.red,EC.amber,'#2f5c3a',EC.purple,EC.steel,'#e67e22','#16a085','#8e44ad'];
   const SUBS=['₁','₂','₃','₄','₅','₆','₇','₈'];
 
   const svg=d3.select('#cvs66-wrap').append('svg')
@@ -1094,10 +1103,10 @@ window._initFig66=function initFig66(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(7).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('q (output)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1156,18 +1165,18 @@ window._initFig66=function initFig66(){
 
     // LRAC
     const lracMin=2*Math.sqrt(V66_W*V66_V);
-    lracLayer.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',3)
+    lracLayer.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',3)
       .attr('d',d3.line()(makeLracPts(nk)));
     if(lracMin<=yMax){
       lracLayer.append('line').attr('x1',PAD.left).attr('x2',W-PAD.right)
         .attr('y1',scY(lracMin)).attr('y2',scY(lracMin))
-        .attr('stroke','#1a56db').attr('stroke-width',1).attr('stroke-dasharray','5,4').attr('opacity',0.6);
+        .attr('stroke','#1f6fb2').attr('stroke-width',1).attr('stroke-dasharray','5,4').attr('opacity',0.6);
     }
     const lracQ=7; let lracAC=Infinity;
     for(let ki=0;ki<nk;ki++){ const ac=v66SRAC(lracQ,ki+1); if(ac<lracAC) lracAC=ac; }
     if(lracAC<=yMax){
       const lw=160;
-      nodeList.push({id:'LRAC',color:'#1a56db',label:'LRAC (envelope)',lw,
+      nodeList.push({id:'LRAC',color:'#1f6fb2',label:'LRAC (envelope)',lw,
         ax:scX(lracQ),ay:scY(lracAC),fx_anchor:scX(lracQ),fy_anchor:scY(lracAC),
         x:scX(lracQ)+(Math.cos(Math.random()*6.28)*(110+Math.random()*50)),y:scY(lracAC)+(Math.sin(Math.random()*6.28)*(110+Math.random()*50))});
     }
@@ -1206,7 +1215,7 @@ window._initFig66=function initFig66(){
 
     const lracMin2=2*Math.sqrt(V66_W*V66_V);
     document.getElementById('v66-readout').innerHTML=
-      '<div style="font-size:0.84rem;color:var(--muted);line-height:1.7;">' +
+      '<div style="font-size:0.84rem;color:var(--ink-faint);line-height:1.7;">' +
       'In the long run, we can choose any capital level. At each output level, we pick whichever fixed-capital option is cheapest. The LRAC (thick blue) is the lower envelope of all SRAC curves. ' +
       'With Q = K^0.5·L^0.5, w = '+V66_W+', v = '+V66_V+': SRAC(q,K) = '+V66_W+'q/K + '+V66_V+'K/q. ' +
       'The analytical LRAC = 2·sqrt(w·v) = $'+lracMin2.toFixed(2)+' (constant). Add more curves to see the discrete envelope approach this smooth floor.' +
@@ -1269,28 +1278,28 @@ window._initFig68=function initFig68(){
     const k=V68_Q*V68_Q/l; if(k>AXIS_MAX||k<0.05) continue;
     iqPts.push([scX(l),scY(k)]);
   }
-  svg.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2)
+  svg.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2)
     .attr('d',d3.line()(iqPts));
 
   // Old isocost (dashed, grey)
-  const oldIsocost=svg.append('line').attr('stroke','#aaa').attr('stroke-width',1.5).attr('stroke-dasharray','4,3');
+  const oldIsocost=svg.append('line').attr('stroke','#9aa3b0').attr('stroke-width',1.5).attr('stroke-dasharray','4,3');
   // New isocost (red)
   const newIsocost=svg.append('line').attr('stroke',EC.red).attr('stroke-width',2);
   // Arrow old→new
-  const arrow=svg.append('line').attr('stroke','#2e8b57').attr('stroke-width',1.5).attr('opacity',0.65);
+  const arrow=svg.append('line').attr('stroke','#2f5c3a').attr('stroke-width',1.5).attr('opacity',0.65);
   // Old optimum X marker
   const oldOptTxt=svg.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle')
     .attr('fill',EC.red).attr('font-size',18).attr('font-weight',700).text('✕');
   // New optimum dot
-  const newOptDot=svg.append('circle').attr('r',8).attr('fill','#2e8b57').attr('stroke','white').attr('stroke-width',2);
+  const newOptDot=svg.append('circle').attr('r',8).attr('fill','#2f5c3a').attr('stroke','white').attr('stroke-width',2);
 
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('L (labor)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1304,15 +1313,15 @@ window._initFig68=function initFig68(){
     const TCnew=optNew.TC, Lnew=TCnew/w, Knew=TCnew/v;
     const iqL=AXIS_MAX*0.78, iqK=V68_Q*V68_Q/iqL;
     const nodes=[
-      {id:'IQ', color:'#1a56db',label:'Q = '+V68_Q,   lw:54,
+      {id:'IQ', color:'#1f6fb2',label:'Q = '+V68_Q,   lw:54,
         ax:scX(Math.min(iqL,AXIS_MAX)),ay:scY(Math.min(iqK,AXIS_MAX))},
-      {id:'oldIC',color:'#aaa',label:'old isocost',lw:82,
+      {id:'oldIC',color:'#9aa3b0',label:'old isocost',lw:82,
         ax:(scX(0)+scX(Math.min(Lold,AXIS_MAX)))/2, ay:(scY(Math.min(Kold,AXIS_MAX))+scY(0))/2},
       {id:'newIC',color:EC.red,label:'new isocost (w=$'+w+')',lw:w.toString().length>1?160:146,
         ax:(scX(0)+scX(Math.min(Lnew,AXIS_MAX)))/2, ay:(scY(Math.min(Knew,AXIS_MAX))+scY(0))/2},
       {id:'oldOpt',color:EC.red,label:'old optimum',lw:90,
         ax:scX(optBase.Ls),ay:scY(optBase.Ks)},
-      {id:'newOpt',color:'#2e8b57',label:'new optimum',lw:90,
+      {id:'newOpt',color:'#2f5c3a',label:'new optimum',lw:90,
         ax:scX(optNew.Ls),ay:scY(optNew.Ks)},
     ];
     return nodes.filter(n=>isFinite(n.ax)&&isFinite(n.ay))
@@ -1420,7 +1429,7 @@ window._initFig68=function initFig68(){
     /* The old/new K/L and TC columns that used to live here are now the delta
        bar above, which shows the same values plus how far they moved. */
     document.getElementById('v68-readout').innerHTML=
-      '<div style="font-size:0.84rem;color:var(--muted)">' +
+      '<div style="font-size:0.84rem;color:var(--ink-faint)">' +
       (w>wBase&&v===vBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
         w<wBase&&v===vBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
         w>wBase&&v>vBase?'Both costs rose. K/L changes from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
@@ -1548,7 +1557,7 @@ function v610GetPreset(){
 function v610ToggleMC(){
   v610ShowMC=!v610ShowMC;
   const btn=document.getElementById('v610-mc-btn');
-  btn.classList.toggle('active',v610ShowMC);
+  btn.classList.toggle('on',v610ShowMC);
   btn.textContent=v610ShowMC?'Hide Marginal Cost':'Show Marginal Cost';
   window.v610Draw&&window.v610Draw();
 }
@@ -1576,13 +1585,13 @@ window._initFig610=function initFig610(){
   const diseconShade=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','rgba(231,76,60,0.11)');
 
   // Curves
-  const acCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2);
+  const acCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2);
   const mcCurve=svg.append('path').attr('clip-path','url(#clip610)').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2);
 
   // q* dashed drop line
-  const qstarLine=svg.append('line').attr('stroke','#aaa').attr('stroke-width',1).attr('stroke-dasharray','4,3');
+  const qstarLine=svg.append('line').attr('stroke','#9aa3b0').attr('stroke-width',1).attr('stroke-dasharray','4,3');
   // q* dot
-  const qstarDot=svg.append('circle').attr('r',7).attr('fill','#1a56db').attr('stroke','white').attr('stroke-width',1.5);
+  const qstarDot=svg.append('circle').attr('r',7).attr('fill','#1f6fb2').attr('stroke','white').attr('stroke-width',1.5);
 
   // Shading labels
   const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',10).attr('font-family',"'DM Sans',sans-serif");
@@ -1627,9 +1636,9 @@ window._initFig610=function initFig610(){
 
     // Axes
     xAxisG.call(d3.axisBottom(scX).ticks(10).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
     yAxisG.call(d3.axisLeft(scY).ticks(6).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
     xLblEl.attr('x',PAD.left+(W-PAD.left-PAD.right)/2);
 
     // AC curve points
@@ -1698,14 +1707,14 @@ window._initFig610=function initFig610(){
     labelG.selectAll('.f610conn,.f610lbl').remove();
     const nodeList=[];
     if(qstar&&acstar<=acmax){
-      nodeList.push({id:'qstar',color:'#1a56db',label:'q* = '+qstar.toFixed(1),lw:80,
+      nodeList.push({id:'qstar',color:'#1f6fb2',label:'q* = '+qstar.toFixed(1),lw:80,
         ax:scX(qstar),ay:scY(acstar)});
-      nodeList.push({id:'acstar',color:'#888',label:'AC* = $'+acstar.toFixed(2),lw:90,
+      nodeList.push({id:'acstar',color:'var(--ink-faint)',label:'AC* = $'+acstar.toFixed(2),lw:90,
         ax:scX(qstar),ay:scY(0)});
       if(v610ShowMC){
         const acQ=Math.min(13,qmax*0.75);
         const ac=acFn(acQ); if(isFinite(ac)&&ac>0&&ac<=acmax)
-          nodeList.push({id:'AC',color:'#1a56db',label:'AC',lw:36,ax:scX(acQ),ay:scY(Math.min(ac,acmax))});
+          nodeList.push({id:'AC',color:'#1f6fb2',label:'AC',lw:36,ax:scX(acQ),ay:scY(Math.min(ac,acmax))});
         const mcQ=Math.min(13,qmax*0.65);
         const mc=mcFn(mcQ); if(isFinite(mc)&&mc>=0&&mc<=acmax)
           nodeList.push({id:'MC',color:EC.red,label:'MC',lw:36,ax:scX(mcQ),ay:scY(Math.min(mc,acmax))});
@@ -1750,7 +1759,7 @@ window._initFig610=function initFig610(){
       '<div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val">'+(qstar?qstar.toFixed(2):'n/a')+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">Min AC</div><div class="readout-val">$'+(acstar<Infinity?acstar.toFixed(2):'n/a')+'</div></div>' +
       '</div>' +
-      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">'+preset.desc+'</div>';
+      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-faint)">'+preset.desc+'</div>';
   }
 
   draw610();
@@ -1787,6 +1796,31 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+/* Section rail: mark the figure currently being read (DESIGN 2.2). Scrolls the
+   strip itself on mobile, never scrollIntoView, which walks up and drags the
+   whole page while the reader is scrolling it. */
+(function railTracking() {
+  const links = [...document.querySelectorAll('.rail a')];
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+    let best = 0, bestId = null;
+    for (const [id, r] of seen) if (r > best) { best = r; bestId = id; }
+    if (!bestId) return;
+    for (const a of links) a.classList.remove('on');
+    const hit = byId.get(bestId);
+    if (!hit) return;
+    hit.classList.add('on');
+    const strip = hit.closest('ol');
+    if (strip && strip.scrollWidth > strip.clientWidth) {
+      strip.scrollTo({ left: Math.max(0, hit.offsetLeft - (strip.clientWidth - hit.offsetWidth) / 2), behavior: 'smooth' });
+    }
+  }, { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+  document.querySelectorAll('section.sec[id]').forEach(x => io.observe(x));
+})();
 
 window.addEventListener('resize', () => {
   v61Draw();
