@@ -1,0 +1,144 @@
+/* vizpage.css - page-level styles shared by every weekN-viz page.
+ * Structural tokens and components live in shared.css under DESIGN SYSTEM v2;
+ * this is only what a figure page adds on top. See DESIGN.md.
+ * Extracted from week5-viz.html so the other viz pages do not each carry a
+ * copy that can drift.
+ */
+
+/* Page-local only. Everything structural lives in shared.css under
+   "DESIGN SYSTEM v2"; see DESIGN.md. Nothing here declares a colour or a
+   font size that is not a token. */
+
+/* Prefixed to outrank shared.css's html[data-ds="v2"] p rule, which is
+   (0,1,2) and would otherwise force every classed <p> back to --t-body. */
+html[data-ds="v2"] .eyebrow {
+  font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--unit-ink); margin-bottom: var(--s-3);
+}
+html[data-ds="v2"] .lede {
+  font-size: var(--t-lead); line-height: 1.5;
+  color: var(--ink-soft); margin-top: var(--s-4);
+}
+html[data-ds="v2"] .byline {
+  font-size: var(--t-body); color: var(--ink-faint); margin-top: var(--s-3);
+}
+.page-hd { margin-bottom: var(--s-9); }
+.page-hd > div { position: relative; }
+/* Device 3: the week numeral, set in the left margin rather than floated
+   behind the text at 3% contrast (AUDIT H-4). */
+.page-hd .numeral { position: absolute; left: -4.75rem; top: -0.45rem; }
+@media (max-width: 1200px) { .page-hd .numeral { display: none; } }
+
+/* 4.5: the explanatory paragraph IS the caption, so it is body ink at body
+   size in the text column, not muted 14px across the full container. */
+.fig-intro { margin-bottom: var(--s-6); }
+
+/* 4.4: derived quantities and verdicts, unboxed, under the plot. No border,
+   no fill, no radius: the figure block already has its one container. */
+.fig-state { margin-top: var(--s-4); font-size: var(--t-body-sm); line-height: 1.6; color: var(--ink-soft); }
+.fig-state:empty { display: none; }
+.readout-row { display: flex; flex-wrap: wrap; gap: var(--s-5) var(--s-6); }
+.readout-col { flex: 0 1 auto; }
+.readout-label { font-size: var(--t-caption); color: var(--ink-faint); }
+.readout-val { font-family: var(--font-mono); font-size: var(--t-body-sm); color: var(--unit-ink); }
+
+/* Multi-panel figures: the panel name is information (which panel is this),
+   so it stays; it is plain sentence-case text, not a mono uppercase bar. */
+.panel-label {
+  font-size: var(--t-small); color: var(--ink-soft);
+  margin-bottom: var(--s-2);
+}
+
+canvas { display: block; width: 100%; cursor: default; }
+.cvs-ovl-host { position: relative; }
+.cvs-ovl-host > svg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; font-family: var(--font-body);
+}
+.cvs-ovl-host > svg .draggable-label { cursor: grab; pointer-events: auto; }
+.cvs-ovl-host > svg .draggable-label:active { cursor: grabbing; }
+/* While a point on the canvas is being dragged, the label layer must not
+   intercept the pointer: crossing a label used to cancel the drag and
+   start dragging the label instead. */
+.cvs-ovl-host.dragging > svg,
+.cvs-ovl-host.dragging > svg .draggable-label { pointer-events: none; }
+.cvs-ovl-host.dragging { cursor: grabbing; }
+
+/* Square single-canvas figures. Capped so a square plot does not become a
+   730px-tall wall. The explicit width:100% matters: with auto margins alone
+   a grid item shrink-to-fits, and a canvas with width:100% inside a
+   shrink-to-fit parent falls back to its 300px intrinsic size. */
+.fig-plot.square {
+  width: 100%; max-width: 34rem;
+  justify-self: start;   /* left edge lines up with the prose above it */
+}
+/* Multi-panel comparisons need real width per panel, so they take the full
+   content column, capped at --figure-max (DESIGN 1.6). */
+.two-col-panels, .three-col-panels {
+  display: grid; gap: var(--s-5);
+  width: 100%; max-width: var(--figure-max); margin-inline: auto;
+}
+.two-col-panels   { grid-template-columns: 1fr 1fr; }
+.three-col-panels { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 700px) {
+  .two-col-panels, .three-col-panels { grid-template-columns: 1fr; }
+}
+
+/* Quiz: one container (.fig-plot) holds it, so the parts inside are bare. */
+.quiz-scenario { font-size: var(--t-body); margin-bottom: var(--s-4); }
+.quiz-btns { display: flex; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
+.quiz-btn {
+  padding: 0.6rem 1rem; font: 500 var(--t-small)/1 var(--font-body);
+  border: 1px solid var(--rule-strong); border-radius: var(--radius);
+  cursor: pointer; background: var(--paper-raised); color: var(--ink);
+  transition: background var(--dur-state) var(--ease-out),
+              border-color var(--dur-state) var(--ease-out),
+              color var(--dur-state) var(--ease-out);
+}
+.quiz-btn:hover { border-color: var(--unit-ink); color: var(--unit-ink); }
+.quiz-btn.correct   { background: color-mix(in srgb, var(--d-gain) 12%, white); border-color: var(--d-gain); color: var(--d-gain); }
+.quiz-btn.incorrect { background: color-mix(in srgb, var(--d-loss) 10%, white); border-color: var(--d-loss); color: var(--d-loss); }
+.quiz-btn.revealed  { border-color: var(--unit-ink); color: var(--unit-ink); }
+.quiz-feedback { font-size: var(--t-body-sm); line-height: 1.6; margin-bottom: var(--s-4); color: var(--ink); }
+.quiz-next {
+  font: 500 var(--t-small)/1 var(--font-body); padding: 0.55rem 1rem;
+  border: 1px solid var(--unit-ink); border-radius: var(--radius);
+  background: var(--unit-ink); color: var(--paper-raised); cursor: pointer;
+}
+.phase-badge { font-family: var(--font-mono); font-size: var(--t-small); color: var(--unit-ink); }
+
+.site-foot {
+  margin-top: var(--s-9); padding-top: var(--s-5);
+  border-top: 1px solid var(--rule2);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--s-3);
+  font-size: var(--t-small); color: var(--ink-faint);
+}
+.site-foot a { color: var(--ink-soft) !important; text-decoration: none; }
+.site-foot a:hover { color: var(--unit-ink) !important; }
+.footer-logo { height: 22px; opacity: 0.5; }
+
+/* The crumb has three parts and a button; at 390px only the last part and
+   the wordmark earn their space, so the middle collapses rather than wraps
+   the bar to two lines. */
+@media (max-width: 560px) {
+  .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
+  .topbar > a:not(.wordmark), .topbar > .crumb-sep:first-of-type { display: none; }
+  .crumb-here { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .btn { padding: 0.4rem 0.6rem; white-space: nowrap; }
+}
+
+/* ds2 heading face.
+   Some viz pages predate the display face and set their own heading font, and
+   week2-viz has a stray CSS block that is not inside a <style> element at all,
+   so a page-level rule there is never parsed. Putting it in the linked
+   stylesheet is both more reliable and the right home for a shared concern. */
+html[data-ds="v2"] h1,
+html[data-ds="v2"] h2,
+html[data-ds="v2"] h3,
+html[data-ds="v2"] .section-title,
+html[data-ds="v2"] .viz-title,
+html[data-ds="v2"] .fig-hd h3 {
+  font-family: var(--font-display) !important;
+  font-weight: 400 !important;
+}

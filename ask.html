@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u1);--unit-ink:var(--u1-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +7,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="shared.css" />
   <script src="assets/theme.js"></script>
@@ -18,76 +18,107 @@
     /* ---- hero ---- */
     .ask-hero { display:flex; align-items:center; gap:1.1rem; padding:1.8rem 0 1.2rem; }
     .ask-logo { width:64px; height:64px; flex:0 0 auto; }
-    .ask-hero h1 { font-size:1.6rem; font-weight:600; margin:0; color:var(--text); line-height:1.2; }
-    .ask-hero .ask-tag { font-size:0.72rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
-      color:var(--accent); margin:0 0 0.25rem; }
-    .ask-hero p { color:var(--muted); font-size:0.92rem; margin:0.35rem 0 0; max-width:640px; line-height:1.55; }
-    .ask-hero .ask-247 { display:inline-flex; align-items:center; gap:5px; font-size:0.7rem; font-weight:700;
-      color:#16a34a; background:var(--green-bg,#eafaf0); border:1px solid #bbf7d0; border-radius:999px;
+    .ask-hero h1 { font-size: var(--t-h3); font-weight: 500; margin:0; color:var(--ink); line-height:1.2; }
+    .ask-hero .ask-tag { font-size: var(--t-caption); font-weight: 500; letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--unit-ink); margin:0 0 0.25rem; }
+    .ask-hero p { color:var(--ink-faint); font-size: var(--t-small); margin:0.35rem 0 0; max-width:640px; line-height:1.55; }
+    .ask-hero .ask-247 { display:inline-flex; align-items:center; gap:5px; font-size: var(--t-caption); font-weight: 700;
+      color:var(--d-gain); background:var(--green-bg,var(--paper-raised)); border:1px solid var(--d-gain); border-radius:999px;
       padding:2px 9px; margin-left:0.5rem; vertical-align:middle; }
-    html[data-theme="dark"] .ask-247 { border-color:#1e5637; }
+    html[data-theme="dark"] .ask-247 { border-color:var(--d-gain); }
 
     /* ---- tabs ---- */
     .ask-tabs { display:flex; gap:.4rem; flex-wrap:wrap; margin:0.4rem 0 1.1rem; }
-    .ask-tab { border:1px solid var(--rule); background:var(--white); color:var(--text); font-family:inherit;
-      font-weight:600; font-size:.85rem; padding:.5rem .95rem; border-radius:999px; cursor:pointer; transition:all .12s; }
-    .ask-tab:hover { border-color:var(--accent); color:var(--accent); }
-    .ask-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .ask-tab { border:1px solid var(--rule-strong); background:var(--paper-raised); color:var(--ink); font-family:inherit;
+      font-weight: 500; font-size: var(--t-caption); padding:.5rem .95rem; border-radius:999px; cursor:pointer; transition:all .12s; }
+    .ask-tab:hover { border-color:var(--unit-ink); color:var(--unit-ink); }
+    .ask-tab.active { background:var(--unit-ink); color:#fff; border-color:var(--unit-ink); }
     .ask-panel[hidden] { display:none; }
-    .panel-note { font-size:.86rem; color:var(--muted); margin:0 0 1rem; max-width:720px; line-height:1.55; }
-    .panel-note b { color:var(--text); }
+    .panel-note { font-size: var(--t-body-sm); color: var(--ink-soft); margin: 0 0 var(--s-6); max-width: var(--measure); line-height: var(--lh-body); }
+    .panel-note b { color:var(--ink); }
+
+    /* AUDIT A-1/A-2: the page used to open as two empty grey rectangles whose
+       only affordance was retyping the input placeholder. */
+    .sv-starters { padding: var(--s-4); display: flex; flex-direction: column;
+                   align-items: flex-start; gap: var(--s-2); }
+    .sv-starters-hd { font-size: var(--t-caption); letter-spacing: 0.08em;
+                      text-transform: uppercase; color: var(--ink-faint); margin-bottom: var(--s-1); }
+    .sv-starter { text-align: left; font: 400 var(--t-body-sm)/1.4 var(--font-body);
+                  color: var(--ink); background: var(--paper-raised);
+                  border: 1px solid var(--rule-strong); border-radius: var(--radius);
+                  padding: 0.5rem 0.7rem; cursor: pointer;
+                  transition: border-color var(--dur-state) var(--ease-out),
+                              color var(--dur-state) var(--ease-out); }
+    .sv-starter:hover { border-color: var(--unit-ink); color: var(--unit-ink); }
 
     /* ---- split view ---- */
     .sv { display:grid; grid-template-columns: 420px 1fr; gap:1rem; align-items:start; }
     @media (max-width:880px){ .sv { grid-template-columns:1fr; } }
-    .sv-chat { border:1px solid #e4e4e4; border-radius:14px; background:#fff; overflow:hidden;
+    .sv-chat { border:1px solid var(--rule2); border-radius:14px; background:#fff; overflow:hidden;
       box-shadow:0 4px 24px rgba(0,0,0,.06); display:flex; flex-direction:column; }
-    .sv-head { padding:.8rem 1.05rem; border-bottom:1px solid #eee; font-weight:600; font-size:.95rem;
-      display:flex; align-items:center; gap:.5rem; color:#1a1a1a; }
-    .sv-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; }
-    .sv-log { height:440px; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.65rem; background:#fafafa; }
-    .sv-msg { padding:.6rem .85rem; border-radius:12px; font-size:.9rem; line-height:1.5; max-width:92%; white-space:pre-wrap; word-wrap:break-word; color:#1a1a1a; }
-    .sv-msg.user { align-self:flex-end; background:#1a56db; color:#fff; border-bottom-right-radius:4px; }
-    .sv-msg.bot { align-self:flex-start; background:#fff; border:1px solid #e8e8e8; border-bottom-left-radius:4px; }
-    .sv-msg.note { align-self:flex-start; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; }
-    .sv-msg.error { align-self:flex-start; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+    .sv-head { padding:.8rem 1.05rem; border-bottom:1px solid #eee; font-weight: 500; font-size: var(--t-small);
+      display:flex; align-items:center; gap:.5rem; color:var(--ink); }
+    .sv-dot { width:8px; height:8px; border-radius:50%; background:var(--d-gain); }
+    .sv-log { height:440px; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.65rem; background:var(--paper-sunk); }
+    .sv-msg { padding:.6rem .85rem; border-radius:12px; font-size: var(--t-small); line-height:1.5; max-width:92%; white-space:pre-wrap; word-wrap:break-word; color:var(--ink); }
+    .sv-msg.user { align-self:flex-end; background:var(--unit-ink); color:#fff; border-bottom-right-radius:4px; }
+    .sv-msg.bot { align-self:flex-start; background:#fff; border:1px solid var(--rule2); border-bottom-left-radius:4px; }
+    .sv-msg.note { align-self:flex-start; background:var(--paper-raised); border:1px solid var(--d-transfer); color:var(--d-transfer); }
+    .sv-msg.error { align-self:flex-start; background:var(--paper-raised); border:1px solid var(--d-loss); color:var(--d-loss); }
     .sv-cites { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.55rem; }
-    .sv-cite { font-size:.74rem; font-weight:600; color:#1a56db; background:#eef2ff; border:1px solid #dbe3ff;
+    .sv-cite { font-size: var(--t-caption); font-weight: 500; color:var(--unit-ink); background:var(--brand-wash); border:1px solid var(--rule-strong);
       border-radius:999px; padding:3px 10px; cursor:pointer; }
-    .sv-cite:hover, .sv-cite.active { background:#1a56db; color:#fff; }
-    .sv-cite-book { color:#6b7280; background:#f3f4f6; border-color:#e5e7eb; cursor:default; }
-    .sv-cite-book:hover { background:#f3f4f6; color:#6b7280; }
+    .sv-cite:hover, .sv-cite.active { background:var(--unit-ink); color:#fff; }
+    .sv-cite-book { color:var(--ink-soft); background:var(--paper-sunk); border-color:var(--rule2); cursor:default; }
+    .sv-cite-book:hover { background:var(--paper-sunk); color:var(--ink-soft); }
     .sv-form { display:flex; gap:.5rem; padding:.7rem; border-top:1px solid #eee; }
-    .sv-input { flex:1; border:1px solid #ddd; border-radius:8px; padding:.55rem .8rem; font:inherit; font-size:.9rem; outline:none; color:#1a1a1a; }
-    .sv-input:focus { border-color:#1a56db; }
-    .sv-send { border:none; background:#1a56db; color:#fff; font-weight:600; font-size:.9rem; padding:0 1.1rem; border-radius:8px; cursor:pointer; font-family:inherit; }
+    .sv-input { flex:1; border:1px solid #ddd; border-radius:8px; padding:.55rem .8rem; font:inherit; font-size: var(--t-small); outline:none; color:var(--ink); }
+    .sv-input:focus { border-color:var(--unit-ink); }
+    .sv-send { border:none; background:var(--unit-ink); color:#fff; font-weight: 500; font-size: var(--t-small); padding:0 1.1rem; border-radius:8px; cursor:pointer; font-family:inherit; }
     .sv-send:disabled { opacity:.55; }
     .sv-typing{display:inline-flex;gap:3px}.sv-typing span{width:6px;height:6px;border-radius:50%;background:#bbb;animation:svb 1.2s infinite both}
     .sv-typing span:nth-child(2){animation-delay:.2s}.sv-typing span:nth-child(3){animation-delay:.4s}@keyframes svb{0%,80%,100%{opacity:.25}40%{opacity:1}}
-    .sv-preview { border:1px solid #e4e4e4; border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.06);
+    .sv-preview { border:1px solid var(--rule2); border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.06);
       display:flex; flex-direction:column; height:507px; }
-    .sv-pv-bar { display:flex; align-items:center; gap:.6rem; padding:.55rem .85rem; border-bottom:1px solid #eee; font-size:.82rem; flex-wrap:wrap; color:#1a1a1a; }
-    .sv-pv-bar b { font-weight:600; }
-    .sv-pv-status { color:#6b7280; font-size:.76rem; }
-    .sv-pv-bar a { margin-left:auto; color:#1a56db; text-decoration:none; font-size:.78rem; }
+    .sv-pv-bar { display:flex; align-items:center; gap:.6rem; padding:.55rem .85rem; border-bottom:1px solid #eee; font-size: var(--t-caption); flex-wrap:wrap; color:var(--ink); }
+    .sv-pv-bar b { font-weight: 500; }
+    .sv-pv-status { color:var(--ink-soft); font-size: var(--t-caption); }
+    .sv-pv-bar a { margin-left:auto; color:var(--unit-ink); text-decoration:none; font-size: var(--t-caption); }
     .sv-pv-frame { flex:1; border:0; width:100%; background:#fff; }
-    .sv-pv-empty { flex:1; display:flex; align-items:center; justify-content:center; text-align:center; color:#9ca3af; font-size:.9rem; padding:2rem; }
+    .sv-pv-empty { flex:1; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--ink-faint); font-size: var(--t-small); padding:2rem; }
 
     .compact-hold { max-width:600px; }
-    .ask-back { font-size:.82rem; color:var(--muted); margin-top:1.6rem; }
-    .ask-back a { color:var(--accent); text-decoration:none; }
+    .ask-back { max-width: var(--measure-wide); font-size: var(--t-caption); color:var(--ink-faint); margin-top:1.6rem; }
+    .ask-back a { color:var(--unit-ink); text-decoration:none; }
+
+    /* ds2 page furniture */
+    .eyebrow { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase;
+               color: var(--unit-ink); margin-bottom: var(--s-3); }
+    html[data-ds="v2"] .byline { font-size: var(--t-body); color: var(--ink-faint); margin-top: var(--s-3); }
+    .page-hd { margin-bottom: var(--s-7); position: relative; max-width: var(--measure-wide); }
+    .page-hd .numeral { position: absolute; left: -4.75rem; top: -0.45rem; }
+    @media (max-width: 1200px) { .page-hd .numeral { display: none; } }
+    .site-foot { margin-top: var(--s-9); padding-top: var(--s-5); border-top: 1px solid var(--rule2);
+                 display: flex; align-items: center; justify-content: space-between;
+                 flex-wrap: wrap; gap: var(--s-3); font-size: var(--t-small); color: var(--ink-faint); }
+    .site-foot a { color: var(--ink-soft) !important; text-decoration: none; }
+    .site-foot a:hover { color: var(--unit-ink) !important; }
+    .footer-logo { height: 22px; opacity: 0.5; }
+    @media (max-width: 560px) {
+      .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
+      .topbar > a:not(.wordmark), .topbar > .crumb-sep:first-of-type { display: none; }
+      .topbar .btn { padding: 0.4rem 0.6rem; white-space: nowrap; }
+    }
   </style>
 </head>
 <body>
 
 <!-- Top bar -->
-<div class="top-bar" role="banner">
-  <a href="index.html" aria-label="EC224 course home">
-    <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-  </a>
-  <div class="top-bar-divider"></div>
-  <span class="top-bar-course">EC224: Intermediate Microeconomics</span>
-  <button class="left-nav-toggle" onclick="openLN()" style="margin-left:auto">&#9776;&nbsp; Weeks</button>
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Ask the course AI</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
 </div>
 
 <div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
@@ -109,31 +140,13 @@
   </ul>
 </nav>
 
-<main class="ask-main">
+<main class="layout-solo" id="main-content">
 
-  <div class="ask-hero">
-    <!-- Econ logo: a supply & demand cross inside a chat bubble -->
-    <svg class="ask-logo" viewBox="0 0 48 48" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M7 11a4 4 0 0 1 4-4h26a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H20l-8 7v-7h-1a4 4 0 0 1-4-4z"
-            fill="#eff4ff" stroke="#1a56db" stroke-width="2.2"/>
-      <path d="M16 25V13" stroke="#9aa3b2" stroke-width="1.6"/>
-      <path d="M16 25h15" stroke="#9aa3b2" stroke-width="1.6"/>
-      <path d="M17 14l13 10" stroke="#e11d48" stroke-width="2.6"/>
-      <path d="M17 24l13 -10" stroke="#16a34a" stroke-width="2.6"/>
-      <circle cx="23.5" cy="19" r="2.1" fill="#1a56db"/>
-    </svg>
-    <div>
-      <p class="ask-tag">Course assistant</p>
-      <h1>Ask the Course AI <span class="ask-247">● 24/7</span></h1>
-      <p>Answers come <b>only</b> from the EC224 course pages, and it shows you the exact spot the
-        answer came from. If it&rsquo;s not in the course materials, it says so plainly (no made-up links).</p>
-    </div>
-  </div>
-
-  <div class="ask-tabs">
-    <button class="ask-tab active" data-tab="split">Split-view &middot; see it on the page</button>
-    <button class="ask-tab" data-tab="compact">Compact &middot; quick chat</button>
-  </div>
+  <header class="page-hd">
+    <p class="eyebrow">Course assistant</p>
+    <h1>Ask the Course AI</h1>
+    <p class="byline">Prof. Naveen Sunder</p>
+  </header>
 
   <!-- ============ SPLIT VIEW ============ -->
   <section class="ask-panel" data-panel="split">
@@ -144,6 +157,15 @@
       <div class="sv-chat">
         <div class="sv-head"><span class="sv-dot"></span>Ask the Course AI</div>
         <div class="sv-log" id="sv-log" aria-live="polite"></div>
+        <!-- Inside the scroll column rather than beside it: .sv-log is flex:1 in a
+             fixed-height panel, so a sibling gets squeezed out of view entirely. -->
+        <div class="sv-starters" id="sv-starters">
+          <p class="sv-starters-hd">Try one of these</p>
+          <button type="button" class="sv-starter">What is the difference between Slutsky and Hicks?</button>
+          <button type="button" class="sv-starter">Why does the MRTS diminish along an isoquant?</button>
+          <button type="button" class="sv-starter">When is marginal revenue less than price?</button>
+          <button type="button" class="sv-starter">What causes deadweight loss under monopoly?</button>
+        </div>
         <form class="sv-form" id="sv-form" autocomplete="off">
           <input class="sv-input" id="sv-input" type="text" placeholder="e.g. What is the Slutsky decomposition?" aria-label="Your question" />
           <button class="sv-send" id="sv-send" type="submit">Send</button>
@@ -172,8 +194,8 @@
   <p class="ask-back">&larr; <a href="index.html">Back to the course home</a></p>
 
   <!-- Footer -->
-  <footer class="site-footer" role="contentinfo">
-    <div class="footer-left">
+  <footer class="site-foot" role="contentinfo">
+    <div>
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
       &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
     </div>
@@ -196,7 +218,30 @@
   var WORKER = "https://ec224-chatbot.zachtwinship.workers.dev/";
 
   // ---- tabs ----
-  var tabs = document.querySelectorAll(".ask-tab");
+  // Starter questions: click one to ask it. They disappear once there is a
+  // conversation, so they are an empty state rather than permanent chrome.
+  (function starters() {
+    var box = document.getElementById('sv-starters');
+    var logEl = document.getElementById('sv-log');
+    // After a tick, so the assistant greeting lands first and the starters
+    // read as a follow-up rather than jumping ahead of it.
+    if (box && logEl) setTimeout(function () { logEl.appendChild(box); }, 60);
+    var input = document.getElementById('sv-input');
+    var form = document.getElementById('sv-form');
+    if (!box || !input || !form) return;
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('.sv-starter');
+      if (!b) return;
+      input.value = b.textContent.trim();
+      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    });
+    // Hide on the first question, not on the first log entry: the greeting is
+    // already in the log when the page loads, so watching childList hid the
+    // starters immediately and they never appeared at all.
+    form.addEventListener('submit', function () { box.style.display = 'none'; });
+  })();
+
+  var tabs = document.querySelectorAll(".ask-tab");   // may be empty: the tab bar was removed
   var panels = document.querySelectorAll(".ask-panel");
   tabs.forEach(function (t) {
     t.addEventListener("click", function () {
@@ -245,7 +290,7 @@
     pvFrame.onload = function () {
       try {
         var found = EC224Bot.locateInFrame(pvFrame, match.text || "");
-        pvStatus.textContent = found ? "✓ highlighted the relevant passage" : "loaded (couldn't pinpoint the exact line)";
+        pvStatus.textContent = found ? " highlighted the relevant passage" : "loaded (couldn't pinpoint the exact line)";
       } catch (e) {
         pvStatus.textContent = "open the page directly to auto-highlight";
       }

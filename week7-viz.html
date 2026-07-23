@@ -1,63 +1,64 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u2);--unit-ink:var(--u2-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Week 7: Interactive Visualizations - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     .demo-svg-wrap{padding:0;}
     .demo-svg-wrap svg{display:block;width:100%;}
     .draggable-label{cursor:move;}
-    .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
+    .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule-strong);position:relative;}
     .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
-    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--unit-ink);margin-bottom:0.4rem;position:relative;z-index:1;}
     .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;position:relative;z-index:1;}
-    .viz-instructor{font-size:0.9rem;color:var(--muted);}
-    .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
-    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .viz-instructor{font-size:0.9rem;color:var(--ink-faint);}
+    .toc{background:var(--off-white);border:1px solid var(--rule-strong);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:0.6rem;}
     .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
-    .toc li{font-size:0.855rem;color:var(--muted);}
-    .toc a{color:var(--accent);text-decoration:none;}
+    .toc li{font-size:0.855rem;color:var(--ink-faint);}
+    .toc a{color:var(--unit-ink);text-decoration:none;}
     .toc a:hover{text-decoration:underline;}
-    .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
+    .fig-section{border-top:2px solid var(--rule-strong);padding-top:2.5rem;margin-top:3rem;}
     .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
-    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-label{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--unit-ink);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
     .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
-    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
-    .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
+    .fig-intro{font-size:0.9rem;color:var(--ink-faint);line-height:1.7;margin-bottom:1.5rem;}
+    .cvs-wrap{border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;background:#fff;}
     canvas{display:block;width:100%;cursor:default;}
     .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
     .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
-    .viz-slider-label{font-family:var(--mono);font-size:0.75rem;color:var(--muted);white-space:nowrap;}
-    .viz-slider{width:130px;accent-color:var(--accent);}
-    .viz-slider:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:3px;}
-    .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:36px;}
-    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
-    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
-    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:var(--red);}
+    .viz-slider-label{font-family:var(--font-mono);font-size:0.75rem;color:var(--ink-faint);white-space:nowrap;}
+    .viz-slider{width:130px;accent-color:var(--unit-ink);}
+    .viz-slider:focus-visible{outline:3px solid var(--unit-ink);outline-offset:3px;border-radius:3px;}
+    .viz-slider-val{font-family:var(--font-mono);font-size:0.82rem;color:var(--unit-ink);min-width:36px;}
+    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule-strong);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--unit-ink);color:var(--unit-ink);}
+    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:var(--d-second);}
     .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
-    .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
+    .viz-readout{background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
     .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
     .readout-col{flex:1;min-width:110px;}
-    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
-    .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
+    .readout-label{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-faint);}
+    .readout-val{font-size:1.05rem;font-weight:600;color:var(--unit-ink);font-family:var(--font-mono);}
     .two-col-panels{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
-    .panel-label{font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule);}
+    .panel-label{font-family:var(--font-mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-faint);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule-strong);}
     .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
-    .step-box{background:#f8fafb;border:1px solid var(--rule);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;display:none;}
+    .step-box{background:#f8fafb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;display:none;}
     .step-box.visible{display:block;}
     .scenario-tabs{display:flex;gap:0.5rem;margin-bottom:1rem;}
-    .scenario-tab{font-size:0.78rem;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--rule);background:var(--off-white);color:var(--muted);cursor:pointer;}
-    .scenario-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-    .hub-footer{border-top:1px solid var(--rule);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
-    .hub-footer-left{font-size:0.82rem;color:var(--muted);}
-    .hub-footer-left a{color:var(--muted);text-decoration:none;}
-    .hub-footer-left a:hover{color:var(--accent);}
+    .scenario-tab{font-size:0.78rem;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--rule-strong);background:var(--off-white);color:var(--ink-faint);cursor:pointer;}
+    .scenario-tab.active{background:var(--unit-ink);color:#fff;border-color:var(--unit-ink);}
+    .hub-footer{border-top:1px solid var(--rule-strong);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
+    .hub-footer-left{font-size:0.82rem;color:var(--ink-faint);}
+    .hub-footer-left a{color:var(--ink-faint);text-decoration:none;}
+    .hub-footer-left a:hover{color:var(--unit-ink);}
     .footer-logo{height:22px;opacity:0.5;}
     @media(max-width:580px){.two-col-panels{grid-template-columns:1fr;}}
   </style>
@@ -83,48 +84,46 @@
   </ul>
 </nav>
 
-<div class="top-bar">
-  <div class="top-bar-left">
-    <a href="index.html" aria-label="Course home">
-      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-    </a>
-    <div class="top-bar-divider"></div>
-    <div class="breadcrumb">
-      <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">&#x203A;</span>
-      <a href="week7.html">Week 7</a>
-      <span class="breadcrumb-sep">&#x203A;</span>
-      <span>Visualizations</span>
-    </div>
-  </div>
-  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week7.html">Week 7</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
 </div>
 
-<main class="main" style="max-width:1400px;">
-  <div class="viz-hero">
-    <div class="viz-ghost">07</div>
-    <p class="viz-week-label">Week 7 &middot; Interactive Visualizations</p>
-    <h1 class="viz-title">Profit Maximization &amp; the Competitive Firm</h1>
-    <p class="viz-instructor">Prof. Naveen Sunder</p>
-    <nav class="toc">
-      <div class="toc-title">Seven Tools</div>
-      <ol>
-        <li><a href="#sec-71">Fig 7.1: Profit Landscape (TR vs TC)</a></li>
-        <li><a href="#sec-72">Fig 7.2: Profit Rectangle Anatomy</a></li>
-        <li><a href="#sec-73">Fig 7.3: Shutdown Decision Zone Map</a></li>
-        <li><a href="#sec-75">Fig 7.5: Supply Curve Emergence</a></li>
-        <li><a href="#sec-77">Fig 7.7: Three-Panel Demand Shock</a></li>
-        <li><a href="#sec-78">Fig 7.8: Market Supply Builder</a></li>
-        <li><a href="#sec-79">Fig 7.9: Long-Run Entry/Exit Machine</a></li>
-      </ol>
-    </nav>
-  </div>
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-71"><span>7.1</span>Profit Landscape (TR vs TC)</a></li>
+      <li><a href="#sec-72"><span>7.2</span>Profit Rectangle Anatomy</a></li>
+      <li><a href="#sec-73"><span>7.3</span>Shutdown Decision Zone Map</a></li>
+      <li><a href="#sec-75"><span>7.5</span>Supply Curve Emergence</a></li>
+      <li><a href="#sec-77"><span>7.7</span>Three-Panel Demand Shock</a></li>
+      <li><a href="#sec-78"><span>7.8</span>Market Supply Builder</a></li>
+      <li><a href="#sec-79"><span>7.9</span>Long-Run Entry/Exit Machine</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">07</span>
+      <p class="eyebrow">Week 7 &middot; Interactive Visualizations</p>
+      <h1>Profit Maximization &amp; the Competitive Firm</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
 
   <!-- FIG 7.1 -->
-  <section class="fig-section" id="sec-71">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 7.1</span>
-      <span class="fig-title">Profit Landscape (TR vs TC)</span>
+  <section class="sec page" id="sec-71">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 7.1</span>
+      <h3>Profit Landscape (TR vs TC)</h3>
     </div>
     <p class="fig-intro">
       The firm earns profit wherever TR &gt; TC. Drag the price slider to change the slope of the TR line (revenue from
@@ -142,59 +141,55 @@
         <canvas id="cvs71b"></canvas>
       </div>
     </div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Market Price P*:</span>
-        <input type="range" class="viz-slider" id="v71-p" min="3.5" max="15" step="any" value="10" oninput="v71Update()" aria-label="Market price P*">
-        <span class="viz-slider-val" id="v71-p-val">$10.00</span>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v71-p-val">$10.00</span></span>
+        <input type="range" class="ctrl-track" id="v71-p" min="3.5" max="15" step="any" value="10" oninput="v71Update()" aria-label="Market price P*">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Fixed Cost TFC:</span>
-        <input type="range" class="viz-slider" id="v71-tfc" min="0" max="20" step="0.5" value="5" oninput="v71Update()" aria-label="Total fixed cost TFC">
-        <span class="viz-slider-val" id="v71-tfc-val">$5</span>
+      <div class="ctrl">
+        <span class="ctrl-label">Fixed Cost TFC: <span class="ctrl-value" id="v71-tfc-val">$5</span></span>
+        <input type="range" class="ctrl-track" id="v71-tfc" min="0" max="20" step="0.5" value="5" oninput="v71Update()" aria-label="Total fixed cost TFC">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Variable Cost shift:</span>
-        <input type="range" class="viz-slider" id="v71-ms" min="-3" max="3" step="0.25" value="0" oninput="v71Update()" aria-label="Variable cost curve shift">
-        <span class="viz-slider-val" id="v71-ms-val">0</span>
+      <div class="ctrl">
+        <span class="ctrl-label">Variable Cost shift: <span class="ctrl-value" id="v71-ms-val">0</span></span>
+        <input type="range" class="ctrl-track" id="v71-ms" min="-3" max="3" step="0.25" value="0" oninput="v71Update()" aria-label="Variable cost curve shift">
       </div>
-      <button class="viz-btn" onclick="v71Reset()">Reset</button>
+      <button class="btn" onclick="v71Reset()">Reset</button>
     </div>
-    <div class="viz-readout" id="v71-readout"></div>
+    <div class="fig-state" id="v71-readout"></div>
     <div class="insight-box">
       <strong>Key insight:</strong> The firm maximizes profit where MR = MC (the revenue from one more unit exactly equals its cost). To the left of q*, MR &gt; MC (produce more). To the right, MC &gt; MR (cut back).
     </div>
   </section>
 
   <!-- FIG 7.2 -->
-  <section class="fig-section" id="sec-72">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 7.2</span>
-      <span class="fig-title">Profit Rectangle Anatomy</span>
+  <section class="sec page" id="sec-72">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 7.2</span>
+      <h3>Profit Rectangle Anatomy</h3>
     </div>
     <p class="fig-intro">
       The profit rectangle has height = P* &minus; SAC(q*) and width = q*. The area = total profit. Use the price slider
       to change P*. Toggle "Show Common Mistakes" to see ghost rectangles using SAVC or SMC as the bottom edge (both wrong).
     </p>
-    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs72-wrap"></div></div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Market Price P*:</span>
-        <input type="range" class="viz-slider" id="v72-p" min="2" max="12" step="any" value="7" oninput="v72Update()" aria-label="Market price P* for profit rectangle">
-        <span class="viz-slider-val" id="v72-p-val">$7.00</span>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs72-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v72-p-val">$7.00</span></span>
+        <input type="range" class="ctrl-track" id="v72-p" min="2" max="12" step="any" value="7" oninput="v72Update()" aria-label="Market price P* for profit rectangle">
       </div>
-      <button class="viz-btn" id="v72-mistakes-btn" onclick="v72ToggleMistakes()">Show Common Mistakes</button>
-      <button class="viz-btn" onclick="resetV72Labels()">Reset labels</button>
+      <button class="btn" id="v72-mistakes-btn" onclick="v72ToggleMistakes()">Show Common Mistakes</button>
+      <button class="btn" onclick="resetV72Labels()">Reset labels</button>
     </div>
-    <div class="viz-readout" id="v72-readout"></div>
-    <div class="viz-readout" id="v72-calc-box" style="margin-top:0.6rem;"></div>
+    <div class="fig-state" id="v72-readout"></div>
+    <div class="fig-state" id="v72-calc-box"></div>
   </section>
 
   <!-- FIG 7.3 -->
-  <section class="fig-section" id="sec-73">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 7.3</span>
-      <span class="fig-title">Shutdown Decision Zone Map</span>
+  <section class="sec page" id="sec-73">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 7.3</span>
+      <h3>Shutdown Decision Zone Map</h3>
     </div>
     <p class="fig-intro">
       Use the price slider to set P*. The colored zone shows whether the firm should shut down, operate at a loss,
@@ -202,33 +197,32 @@
       it never changes. What changes is the price you choose, and therefore which zone (and which decision) applies.
     </p>
     <div class="two-col-panels">
-      <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs73-wrap"></div></div>
-      <div style="padding:1rem;background:#f8fafb;border:1px solid var(--rule);border-radius:10px;display:flex;flex-direction:column;gap:0.5rem;">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Algebraic Proof: When to Produce <span style="font-weight:500;text-transform:none;letter-spacing:normal;color:#888;">(this logic never changes, only the price below does)</span></div>
+      <div class="fig-plot"><div class="demo-svg-wrap" id="cvs73-wrap"></div></div>
+      <div style="padding:1rem;background:#f8fafb;border:1px solid var(--rule-strong);border-radius:10px;display:flex;flex-direction:column;gap:0.5rem;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--unit-ink);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Algebraic Proof: When to Produce <span style="font-weight:500;text-transform:none;letter-spacing:normal;color:#888;">(this logic never changes, only the price below does)</span></div>
         <div id="v73-proof-step0" style="font-size:0.88rem;line-height:1.7;color:var(--text);">Produce if operating loss &lt; shutdown loss:</div>
         <div id="v73-proof-step1" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 1:</strong> Profits &gt; &minus;TFC &nbsp;&rarr;&nbsp; keep producing</div>
         <div id="v73-proof-step2" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 2:</strong> TR &minus; TVC &minus; TFC &gt; &minus;TFC</div>
         <div id="v73-proof-step3" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 3:</strong> TR &minus; TVC &gt; 0 &nbsp;&rarr;&nbsp; TR &gt; TVC</div>
         <div id="v73-proof-step4" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 4:</strong> P&middot;q &gt; AVC&middot;q</div>
-        <div id="v73-proof-step5" style="font-size:0.88rem;line-height:1.7;color:var(--accent);font-weight:700;"><strong>Conclusion: P &gt; AVC</strong> &nbsp;&#10003;&nbsp; produce whenever price covers average variable cost; shut down otherwise.</div>
+        <div id="v73-proof-step5" style="font-size:0.88rem;line-height:1.7;color:var(--unit-ink);font-weight:700;"><strong>Conclusion: P &gt; AVC</strong> &nbsp;&#10003;&nbsp; produce whenever price covers average variable cost; shut down otherwise.</div>
         <div id="v73-zone-label" style="margin-top:auto;padding:0.6rem 0.9rem;border-radius:7px;font-size:0.85rem;font-weight:600;background:#f0fdf4;color:#16a34a;"></div>
       </div>
     </div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Market Price P*:</span>
-        <input type="range" class="viz-slider" id="v73-p" min="0" max="10" step="any" value="6" oninput="v73Update()" aria-label="Market price P* for shutdown decision">
-        <span class="viz-slider-val" id="v73-p-val">$6.00</span>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v73-p-val">$6.00</span></span>
+        <input type="range" class="ctrl-track" id="v73-p" min="0" max="10" step="any" value="6" oninput="v73Update()" aria-label="Market price P* for shutdown decision">
       </div>
-      <button class="viz-btn" onclick="resetV73Labels()">Reset labels</button>
+      <button class="btn" onclick="resetV73Labels()">Reset labels</button>
     </div>
   </section>
 
   <!-- FIG 7.5 -->
-  <section class="fig-section" id="sec-75">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 7.5</span>
-      <span class="fig-title">Supply Curve Emergence</span>
+  <section class="sec page" id="sec-75">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 7.5</span>
+      <h3>Supply Curve Emergence</h3>
     </div>
     <p class="fig-intro">
       Watch the price sweep upward from zero. Below the shutdown price (min(SAVC) = $4), the firm supplies nothing.
@@ -247,7 +241,7 @@
       <strong>That's why the SMC curve (above the shutdown point) <em>is</em> the firm's supply curve</strong>:
       profit-maximization (P = SMC) directly maps each price to the quantity the firm will supply at that price.
     </div>
-    <div class="cvs-wrap" style="background:#000;border-radius:10px;overflow:hidden;">
+    <div class="fig-plot" style="background:#000;border-radius:10px;overflow:hidden;">
       <video id="v75-video" data-autoplay controls playsinline preload="metadata" style="width:100%;display:block;"
         src="media/videos/fig75_supply_emergence_manim/1080p60/SupplyEmergence.mp4">
         Your browser does not support HTML5 video.
@@ -256,17 +250,17 @@
   </section>
 
   <!-- FIG 7.7 -->
-  <section class="fig-section" id="sec-77">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 7.7</span>
-      <span class="fig-title">Three-Panel Demand Shock</span>
+  <section class="sec page" id="sec-77">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 7.7</span>
+      <h3>Three-Panel Demand Shock</h3>
     </div>
     <p class="fig-intro">
       The market mechanism has three linked panels: the typical firm (left), the market (center), and the typical consumer
       (right). Choose a shock scenario and click through the steps to see how causality flows from consumer to market to firm.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
-      <select class="viz-slider" id="v77-scenario" onchange="v77Reset()" style="width:auto;font-size:0.82rem;padding:4px 8px;">
+    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      <select class="ctrl-track" id="v77-scenario" onchange="v77Reset()" style="width:auto;font-size:0.82rem;padding:4px 8px;">
         <option value="sub">Price of Substitute Rises</option>
         <option value="sub_fall">Price of Substitute Falls</option>
         <option value="income">Consumer Income Rises</option>
@@ -275,41 +269,40 @@
         <option value="input_fall">Input Price Falls</option>
       </select>
     </div>
-    <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs77-wrap"></div></div>
-    <div class="viz-ctrl-row">
-      <button class="viz-btn" id="v77-step-btn" onclick="v77NextStep()">Step 1: Consumer Effect &rarr;</button>
-      <button class="viz-btn" onclick="v77Reset()">Reset</button>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs77-wrap"></div></div>
+    <div class="ctrl-row">
+      <button class="btn" id="v77-step-btn" onclick="v77NextStep()">Step 1: Consumer Effect &rarr;</button>
+      <button class="btn" onclick="v77Reset()">Reset</button>
     </div>
-    <div class="viz-readout" id="v77-readout">Choose a scenario and click through the steps to trace the causal chain.</div>
+    <div class="fig-state" id="v77-readout">Choose a scenario and click through the steps to trace the causal chain.</div>
   </section>
 
   <!-- FIG 7.8 -->
-  <section class="fig-section" id="sec-78">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 7.8</span>
-      <span class="fig-title">Market Supply Builder</span>
+  <section class="sec page" id="sec-78">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 7.8</span>
+      <h3>Market Supply Builder</h3>
     </div>
     <p class="fig-intro">
       Market supply is the <strong>horizontal sum</strong> of all individual firm supply curves: at each price, add up
       the quantities each firm wants to supply. Adjust the number of firms to see exactly how the arithmetic works.
     </p>
     <div id="v78-math-display"></div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Number of firms n:</span>
-        <input type="range" class="viz-slider" id="v78-n" min="1" max="50" step="1" value="10" oninput="v78Update()" aria-label="Number of firms n in market">
-        <span class="viz-slider-val" id="v78-n-val">10</span>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Number of firms n: <span class="ctrl-value" id="v78-n-val">10</span></span>
+        <input type="range" class="ctrl-track" id="v78-n" min="1" max="50" step="1" value="10" oninput="v78Update()" aria-label="Number of firms n in market">
       </div>
     </div>
-    <div class="viz-readout" id="v78-readout"></div>
+    <div class="fig-state" id="v78-readout"></div>
     <div class="insight-box"><strong>Key insight:</strong> At each price, add quantities across all firms; never add prices. If each of n identical firms supplies q units, market supply is Q = n &times; q. The market supply curve is flatter (more elastic) than any individual firm's supply curve and shifts right as n grows.</div>
   </section>
 
   <!-- FIG 7.9 -->
-  <section class="fig-section" id="sec-79">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 7.9</span>
-      <span class="fig-title">Long-Run Entry/Exit Machine</span>
+  <section class="sec page" id="sec-79">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 7.9</span>
+      <h3>Long-Run Entry/Exit Machine</h3>
     </div>
     <p class="fig-intro">
       Start with 150 firms earning a healthy profit (P* &asymp; $6.40 &gt; SAC, green rectangle visible). Click "Run Entry" to
@@ -319,42 +312,43 @@
       the same zero-profit equilibrium is reached from above.
     </p>
     <div class="two-col-panels">
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Market (Supply and Demand)</div>
         <div class="demo-svg-wrap" id="cvs79a-wrap"></div>
       </div>
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Firm (Profit Rectangle)</div>
         <div class="demo-svg-wrap" id="cvs79b-wrap"></div>
       </div>
     </div>
-    <div class="viz-ctrl-row">
+    <div class="ctrl-row">
       <button class="viz-btn green" onclick="v79RunEntry()">Run Entry (n=150 &rarr; 297, profit &rarr; 0)</button>
       <button class="viz-btn red" onclick="v79RunExit()">Run Exit (n=450 &rarr; 297, loss &rarr; 0)</button>
-      <button class="viz-btn" onclick="v79Reset()">Reset to n=150</button>
-      <button class="viz-btn" onclick="resetV79Labels()">Reset labels</button>
+      <button class="btn" onclick="v79Reset()">Reset to n=150</button>
+      <button class="btn" onclick="resetV79Labels()">Reset labels</button>
     </div>
-    <div class="viz-readout" id="v79-readout"></div>
+    <div class="fig-state" id="v79-readout"></div>
     <!-- old / new / change readout, baseline is the n at which the current run started
          (150 for entry, 450 for exit, matching the button that was clicked) -->
     <div id="v79-delta" class="delta-bar"></div>
     <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly, just not earning excess returns.</div>
   </section>
 
-  <footer class="hub-footer">
+  <footer class="site-foot">
     <div class="hub-footer-left">
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
       &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
     </div>
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
-</main>
+  </main>
+</div>
 
 <script>
 /* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
    resolve CSS var(), so their colours come from here; CSS and inline styles use
    var() directly. Fallbacks equal the token values. */
-var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
 
 // ─────────────────────────────────────────────────────────────────────────
 // SHARED UTILITIES
@@ -402,7 +396,7 @@ function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
   }
 }
 function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
+  const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false} = lbl;
   ctx.save();
 
   // Connector line
@@ -465,7 +459,7 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
   ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox,y2);ctx.stroke();
   // Tick text
   const nx=4;
-  ctx.font="9px 'DM Sans',sans-serif";ctx.fillStyle='#888';
+  ctx.font="9px 'DM Sans',sans-serif";ctx.fillStyle='var(--ink-faint)';
   for(let i=0;i<=nx;i++){
     const xv=xR[0]+i*(xR[1]-xR[0])/nx;
     const[cx]=toC7(xv,yR[0],W,H,xR,yR);
@@ -486,8 +480,8 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
 
 function dot7(ctx,x,y,r,fill,stroke){
   ctx.beginPath();ctx.arc(x,y,r,0,2*Math.PI);
-  ctx.fillStyle=fill||'#1a56db';ctx.fill();
-  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+  ctx.fillStyle=fill||'#1f6fb2';ctx.fill();
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke();}
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -554,14 +548,14 @@ function v71Draw(){
   if(pShifted71){
     const trQmaxBase=V71_P_BASE>0?Math.min(9, yRA[1]/V71_P_BASE):9;
     ctxA.save();
-    ctxA.setLineDash([5,4]); ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=1.4; ctxA.globalAlpha=0.45;
+    ctxA.setLineDash([5,4]); ctxA.strokeStyle='#1f6fb2'; ctxA.lineWidth=1.4; ctxA.globalAlpha=0.45;
     const[gx0,gy0]=toC7(0,0,W,HA,xR,yRA);
     const[gx1,gy1]=toC7(trQmaxBase,V71_P_BASE*trQmaxBase,W,HA,xR,yRA);
     ctxA.beginPath(); ctxA.moveTo(gx0,gy0); ctxA.lineTo(gx1,gy1); ctxA.stroke();
     ctxA.restore();
     const gLblQ71=Math.min(8, trQmaxBase*0.55);
     const[glx71,gly71]=toC7(gLblQ71,V71_P_BASE*gLblQ71,W,HA,xR,yRA);
-    ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1a56db';
+    ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1f6fb2';
     ctxA.font='9px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
     ctxA.fillText('TR', glx71+4, gly71-4);
     ctxA.restore();
@@ -575,7 +569,7 @@ function v71Draw(){
     if(q%1<0.05) linePts71.push([cx,cy]);
     first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
   }
-  ctxA.strokeStyle=EC.red;ctxA.lineWidth=2;ctxA.stroke();
+  ctxA.strokeStyle=EC.red;ctxA.lineWidth=3;ctxA.stroke();
 
   const trQmax = P>0 ? Math.min(9, yRA[1]/P) : 9;
   ctxA.beginPath();
@@ -583,7 +577,7 @@ function v71Draw(){
   const[tx1,ty1]=toC7(trQmax,P*trQmax,W,HA,xR,yRA);
   for(let t=0;t<=1;t+=0.15) linePts71.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
   ctxA.moveTo(tx0,ty0);ctxA.lineTo(tx1,ty1);
-  ctxA.strokeStyle='#1a56db';ctxA.lineWidth=2;ctxA.stroke();
+  ctxA.strokeStyle='#1f6fb2';ctxA.lineWidth=3;ctxA.stroke();
 
   ctxA.font='bold 10px DM Sans,sans-serif';
   let qTC=8; while(qTC>0.6 && v71TC(qTC,tfc,ms)>yRA[1]*0.9) qTC-=0.05;
@@ -593,9 +587,9 @@ function v71Draw(){
   const trText71=pShifted71?'TR′':'TR';
   const lbls71=[
     {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:EC.red,fontSize:10,bold:true},
-    {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText(trText71).width+8,h:13,text:trText71,color:'#1a56db',fontSize:10,bold:true},
+    {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText(trText71).width+8,h:13,text:trText71,color:'#1f6fb2',fontSize:10,bold:true},
   ];
-  resolveLabels(lbls71,linePts71,80,6,{x0:2,y0:2,x1:W-2,y1:HA-2});
+  resolveLabels(lbls71,linePts71,80,6,{x0:8,y0:8,x1:W-12,y1:HA-12});
   lbls71.forEach(l=>drawForceLabel(ctxA,l));
 
   for(let q=0;q<=9;q+=0.1){
@@ -610,12 +604,12 @@ function v71Draw(){
 
   const q=Math.min(v71cursor,8.9);
   const[curX]=toC7(q,0,W,HA,xR,yRA);
-  ctxA.setLineDash([4,4]);ctxA.strokeStyle='#aaa';ctxA.lineWidth=1;
+  ctxA.setLineDash([4,4]);ctxA.strokeStyle='#9aa3b0';ctxA.lineWidth=1;
   ctxA.beginPath();ctxA.moveTo(curX,MT);ctxA.lineTo(curX,HA-MB);ctxA.stroke();
   ctxA.setLineDash([]);
   const mc=v71SMC(q,ms), tr_val=P*q, tc_val=v71TC(q,tfc,ms), pi=tr_val-tc_val;
   if(tc_val<=yRA[1])dot7(ctxA,curX,toC7(q,tc_val,W,HA,xR,yRA)[1],5,EC.red);
-  if(tr_val<=yRA[1])dot7(ctxA,curX,toC7(q,tr_val,W,HA,xR,yRA)[1],5,'#1a56db');
+  if(tr_val<=yRA[1])dot7(ctxA,curX,toC7(q,tr_val,W,HA,xR,yRA)[1],5,'#1f6fb2');
   ctxA.fillStyle=mc>P?EC.red:EC.green;
   ctxA.font='bold 10px DM Sans,sans-serif';ctxA.textAlign='left';
   const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
@@ -625,7 +619,7 @@ function v71Draw(){
   ctxB.clearRect(0,0,W,HB);
   drawAxes7(ctxB,W,HB,xR,yRB,'Quantity q','Profit');
   const[,zy]=toC7(0,0,W,HB,xR,yRB);
-  ctxB.strokeStyle='#ddd';ctxB.lineWidth=1;
+  ctxB.strokeStyle='#c9c2b6';ctxB.lineWidth=1;
   ctxB.beginPath();ctxB.moveTo(ML,zy);ctxB.lineTo(W-MR,zy);ctxB.stroke();
   ctxB.beginPath();first=true;
   for(let q2=0;q2<=9;q2+=0.05){
@@ -634,12 +628,12 @@ function v71Draw(){
     const[cx,cy]=toC7(q2,pi2,W,HB,xR,yRB);
     first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
   }
-  ctxB.strokeStyle=EC.purple;ctxB.lineWidth=2;ctxB.stroke();
+  ctxB.strokeStyle=EC.purple;ctxB.lineWidth=3;ctxB.stroke();
   if(pi>=yRB[0]&&pi<=yRB[1]){
     const[piX,piY]=toC7(q,pi,W,HB,xR,yRB);
     dot7(ctxB,piX,piY,5,EC.purple,'#fff');
   }
-  ctxB.setLineDash([4,4]);ctxB.strokeStyle='#aaa';ctxB.lineWidth=1;
+  ctxB.setLineDash([4,4]);ctxB.strokeStyle='#9aa3b0';ctxB.lineWidth=1;
   ctxB.beginPath();ctxB.moveTo(curX,MT);ctxB.lineTo(curX,HB-MB);ctxB.stroke();
   ctxB.setLineDash([]);
 
@@ -709,7 +703,7 @@ function v72ToggleMistakes(){
   v72showMistakes=!v72showMistakes;
   const btn=document.getElementById('v72-mistakes-btn');
   btn.textContent=v72showMistakes?'Hide Common Mistakes':'Show Common Mistakes';
-  btn.classList.toggle('active',v72showMistakes);
+  btn.classList.toggle('on',v72showMistakes);
   v72Update();
 }
 // ── D3 SVG helpers ────────────────────────────────────────────────────────
@@ -735,10 +729,10 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xLabel);
   if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yLabel);
 }
@@ -748,10 +742,10 @@ function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H2-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','#888').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xLabel);
   if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yLabel);
 }
@@ -826,7 +820,7 @@ function v72InitSvg(){
   // Curves drawn into named group so rect can be inserted after axis but before labels
   d3AddCurve(v72svg,SAVC7,scX,scY,'#f39c12',yMax);
   d3AddCurve(v72svg,SAC7,scX,scY,EC.slate,yMax);
-  d3AddCurve(v72svg,SMC7,scX,scY,'#1a56db',yMax);
+  d3AddCurve(v72svg,SMC7,scX,scY,'#1f6fb2',yMax);
   // Price line
   v72pLine=v72svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   // Rect group (inserted before labels)
@@ -837,7 +831,7 @@ function v72InitSvg(){
   v72nodes=[
     d3Node('SAVC','#f39c12','SAVC',46,scX(4.5),scY(SAVC7(4.5))),
     d3Node('SAC',EC.slate,'SAC',36,scX(5.5),scY(SAC7(5.5))),
-    d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
+    d3Node('SMC','#1f6fb2','SMC',36,scX(5),scY(SMC7(5))),
     d3Node('P',EC.indicator,'P*',30,scX(8),scY(P)),
   ];
   v72sim=d3MakeSim(v72nodes);
@@ -907,7 +901,7 @@ function v72DrawUpdate(P){
   const profitWord=profit>=0?'profit':'loss';
   document.getElementById('v72-calc-box').innerHTML=
     `<div style="font-family:'DM Sans',system-ui,sans-serif;">
-      <div style="font-weight:700;color:var(--accent);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">The Calculation</div>
+      <div style="font-weight:700;color:var(--unit-ink);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">The Calculation</div>
       <div style="font-size:1.0rem;font-weight:600;color:var(--text);margin-bottom:0.5rem;">
         Profit = (P* &minus; SAC) &times; q*&nbsp; = &nbsp;($${P.toFixed(2)} &minus; $${sacQ.toFixed(2)}) &times; ${qStar.toFixed(2)}&nbsp; = &nbsp;<span style="color:${marginColor}">$${margin.toFixed(2)}</span> &times; ${qStar.toFixed(2)} &nbsp;=&nbsp; <span style="color:${profitColor}">${profit>=0?'+':'−'}$${Math.abs(profit).toFixed(2)}</span>
       </div>
@@ -951,13 +945,13 @@ function v73InitSvg(){
   d3AddAxes2(v73svg,scX,scY,'Quantity q','$/unit');
   d3AddCurve(v73svg,SAVC7,scX,scY,'#f39c12',yMax);
   d3AddCurve(v73svg,SAC7,scX,scY,EC.slate,yMax);
-  d3AddCurve(v73svg,SMC7,scX,scY,'#1a56db',yMax);
+  d3AddCurve(v73svg,SMC7,scX,scY,'#1f6fb2',yMax);
   v73pLine=v73svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
   const P=parseFloat(document.getElementById('v73-p').value);
   v73nodes=[
     d3Node('SAVC','#f39c12','SAVC',46,scX(5),scY(SAVC7(5))),
     d3Node('SAC',EC.slate,'SAC',36,scX(6),scY(SAC7(6))),
-    d3Node('SMC','#1a56db','SMC',36,scX(5),scY(SMC7(5))),
+    d3Node('SMC','#1f6fb2','SMC',36,scX(5),scY(SMC7(5))),
     d3Node('P',EC.indicator,'P*',30,scX(7.5),scY(P)),
   ];
   v73sim=d3MakeSim(v73nodes);
@@ -1017,7 +1011,7 @@ function v73Draw_OLD_UNUSED(P){
       if(q%0.5<0.05) linePts73.push([cx,cy]);
       fst?(ctx.moveTo(cx,cy),fst=false):ctx.lineTo(cx,cy);
     }
-    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+    ctx.strokeStyle=col;ctx.lineWidth=3;ctx.stroke();
     const ql=fn===SMC7?7:fn===SAC7?6:5;
     const[ax,ay]=toC7(ql,fn(ql),W,H,xR,yR);
     ctx.font='bold 9px DM Sans,sans-serif';
@@ -1026,11 +1020,11 @@ function v73Draw_OLD_UNUSED(P){
   }
   drawCurve73(SAVC7,'#f39c12','SAVC');
   drawCurve73(SAC7,EC.slate,'SAC');
-  drawCurve73(SMC7,'#1a56db','SMC');
+  drawCurve73(SMC7,'#1f6fb2','SMC');
 
   // Horizontal price line + P* label as force label
   const[,py]=toC7(0,P,W,H,xR,yR);
-  ctx.strokeStyle=EC.indicator;ctx.lineWidth=2;ctx.setLineDash([6,4]);
+  ctx.strokeStyle=EC.indicator;ctx.lineWidth=3;ctx.setLineDash([6,4]);
   ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
   ctx.setLineDash([]);
   } // end if(false)
@@ -1070,10 +1064,10 @@ function v75InitSvg(){
   // (with a hair of overlap at q=3 so the gray and blue strokes join seamlessly).
   // SMC non-supply portion (gray): everything left of q=3
   {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<0||v>yMax||q>3.05)continue;pts.push([v75scXa(q),v75scYa(v)]);}
-  v75svgA.append('path').attr('fill','none').attr('stroke','#aaa').attr('stroke-width',2).attr('d',d3.line()(pts));}
+  v75svgA.append('path').attr('fill','none').attr('stroke','#9aa3b0').attr('stroke-width',2).attr('d',d3.line()(pts));}
   // SMC above PSD (supply, blue, highlighted): rising branch only
   {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v>yMax||q<2.95)continue;pts.push([v75scXa(q),v75scYa(v)]);}
-  v75smcHi=v75svgA.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(pts));}
+  v75smcHi=v75svgA.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2).attr('d',d3.line()(pts));}
   v75pLineEl=v75svgA.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
   // Vertical drop-line from the P=MC intersection down to the q-axis (shows "this price gives this quantity")
   v75dropLine=v75svgA.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
@@ -1086,7 +1080,7 @@ function v75InitSvg(){
   // Labels for left panel
   v75nodes75=[
     d3Node('SAVC','#f39c12','SAVC',46,v75scXa(5),v75scYa(SAVC7(5))),
-    d3Node('SMC','#1a56db','SMC',36,v75scXa(5),v75scYa(SMC7(5))),
+    d3Node('SMC','#1f6fb2','SMC',36,v75scXa(5),v75scYa(SMC7(5))),
   ];
   v75sim75=d3MakeSim(v75nodes75);
   const els=d3AddLabels(v75svgA,v75nodes75,v75sim75);
@@ -1101,7 +1095,7 @@ function v75InitSvg(){
   // (rising branch only, see the chord note above; q<2.95 excludes the
   // descending branch that also satisfies v >= PSD)
   {const pts=[];for(let q=0.4;q<=7;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax||q<2.95)continue;pts.push([v75scXb(q),v75scYb(v)]);}
-  v75mcOverlay=v75svgB.append('path').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2.5)
+  v75mcOverlay=v75svgB.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2.5)
     .attr('stroke-dasharray','2,3').attr('opacity',0).attr('d',d3.line()(pts));}
   v75supplyDots=v75svgB.append('g');
 }
@@ -1113,7 +1107,7 @@ function v75DrawPanels(){
   if(v75P>0){
     const py=v75scYa(Math.min(v75P,yMax-0.01));
     v75pLineEl.attr('y1',py).attr('y2',py).attr('opacity',0.85);
-    v75smcHi.attr('stroke',v75P>=PSD75?'#1a56db':'#aaa');
+    v75smcHi.attr('stroke',v75P>=PSD75?'#1f6fb2':'#9aa3b0');
   }
   // Mark the MC = P intersection: drop a vertical line to the q-axis and label q
   if(v75P>=PSD75){
@@ -1130,7 +1124,7 @@ function v75DrawPanels(){
   }
   // Supply dots right panel
   v75supplyDots.selectAll('circle').data(v75supplyPts).join('circle')
-    .attr('cx',d=>v75scXb(d.q)).attr('cy',d=>v75scYb(d.P)).attr('r',3).attr('fill','#1a56db');
+    .attr('cx',d=>v75scXb(d.q)).attr('cy',d=>v75scYb(d.P)).attr('r',3).attr('fill','#1f6fb2');
   // Reveal the faint MC overlay once the sweep finishes -- the punchline: the dots ARE the MC curve
   if(v75mcOverlay) v75mcOverlay.attr('opacity', (!v75animRunning && v75P>=13.4) ? 0.55 : 0);
   const ro=document.getElementById('v75-readout');
@@ -1250,7 +1244,7 @@ function v77InitSvg(){
   v77nodes=[];
   for(let i=0;i<3;i++){
     const ox=D3PAD.left+i*(pw+10);
-    v77nodes.push(d3Node('D'+i,'#1a56db','D',20,ox+pw-14,panelBot-20));
+    v77nodes.push(d3Node('D'+i,'#1f6fb2','D',20,ox+pw-14,panelBot-20));
     v77nodes.push(d3Node('S'+i,EC.red,'S',20,ox+pw-14,D3PAD.top+28));
   }
   v77sim=d3MakeSim(v77nodes);
@@ -1272,9 +1266,9 @@ function v77Draw(){
     const ox=D3PAD.left+i*(pw+10);
     const oy=D3PAD.top, bot=D3H-D3PAD.bottom;
     g.append('rect').attr('x',ox).attr('y',oy).attr('width',pw).attr('height',bot-oy).attr('fill','none').attr('stroke','#e0e4f0').attr('stroke-width',1);
-    g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','#888').text(label);
+    g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','var(--ink-faint)').text(label);
     // Demand (down-slope, blue) and Supply (up-slope, red)
-    g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1a56db').attr('stroke-width',2);
+    g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1f6fb2').attr('stroke-width',2);
     g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke',EC.red).attr('stroke-width',2);
     // Shifted curve: only for panels in shiftPanels, using correct direction for this scenario
     const sp=data.shiftPanels||[2,1];
@@ -1334,30 +1328,30 @@ function v78DrawMath(n){
       <td style="padding:0.45rem 0.8rem;text-align:center;">$${P.toFixed(0)}</td>
       <td style="padding:0.45rem 0.8rem;text-align:center;">(${P}&minus;4)/2 = ${qf.toFixed(1)}</td>
       <td style="padding:0.45rem 0.8rem;text-align:center;">&times; ${n}</td>
-      <td style="padding:0.45rem 0.8rem;text-align:center;font-weight:600;color:var(--accent);">${Qm.toFixed(0)}</td>
+      <td style="padding:0.45rem 0.8rem;text-align:center;font-weight:600;color:var(--unit-ink);">${Qm.toFixed(0)}</td>
     </tr>`;
   }
   document.getElementById('v78-math-display').innerHTML=`
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.9rem;">
-      <div style="flex:1;min-width:220px;font-family:'DM Mono',monospace;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.9rem 1.1rem;">
-        <div style="font-weight:700;color:var(--accent);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Individual Firm Supply</div>
+      <div style="flex:1;min-width:220px;font-family:'DM Mono',monospace;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
+        <div style="font-weight:700;color:var(--unit-ink);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Individual Firm Supply</div>
         <div>Set P = SMC: &nbsp;P = q&sup2; &minus; 4q + 7</div>
         <div style="margin-top:0.2rem;">Solve: &nbsp;<strong>q* = 2 + &radic;(P &minus; 3)</strong> &nbsp;for P &ge; $4</div>
-        <div style="margin-top:0.35rem;color:var(--muted);font-size:0.79rem;">Linear approx: q &asymp; (P &minus; 4) / 2</div>
+        <div style="margin-top:0.35rem;color:var(--ink-faint);font-size:0.79rem;">Linear approx: q &asymp; (P &minus; 4) / 2</div>
       </div>
-      <div style="flex:1;min-width:220px;font-family:'DM Mono',monospace;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.9rem 1.1rem;">
+      <div style="flex:1;min-width:220px;font-family:'DM Mono',monospace;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
         <div style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Market Supply (${n} firms)</div>
         <div>Q<sub>mkt</sub> = n &times; q* = ${n} &times; (P &minus; 4) / 2</div>
-        <div style="margin-top:0.35rem;color:var(--muted);font-size:0.79rem;">At P = $8: Q = ${n} &times; 2 = ${n*2}</div>
+        <div style="margin-top:0.35rem;color:var(--ink-faint);font-size:0.79rem;">At P = $8: Q = ${n} &times; 2 = ${n*2}</div>
       </div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:0.87rem;">
       <thead>
-        <tr style="background:var(--off-white);border-bottom:2px solid var(--rule);">
+        <tr style="background:var(--off-white);border-bottom:2px solid var(--rule-strong);">
           <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'DM Sans',sans-serif;">Price P</th>
           <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'DM Sans',sans-serif;">Firm q* = (P&minus;4)/2</th>
           <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'DM Sans',sans-serif;">Multiply</th>
-          <th style="padding:0.45rem 0.8rem;text-align:center;color:var(--accent);font-family:'DM Sans',sans-serif;">Market Q = n &times; q*</th>
+          <th style="padding:0.45rem 0.8rem;text-align:center;color:var(--unit-ink);font-family:'DM Sans',sans-serif;">Market Q = n &times; q*</th>
         </tr>
       </thead>
       <tbody style="font-family:'DM Mono',monospace;">${rows}</tbody>
@@ -1402,12 +1396,12 @@ function v79InitSvg(){
   // Static demand: Qd=500-50P (P-intercept=10 ≤ yMax=14, touches y-axis)
   const demPts79=[];
   for(let P2=10;P2>=4;P2-=0.1){const Q2=500-50*P2;if(Q2<0||Q2>300)continue;demPts79.push([scXM(Q2),scYM(P2)]);}
-  if(demPts79.length>1)v79svgA.append('path').attr('class','v79-demand').attr('fill','none').attr('stroke','#1a56db').attr('stroke-width',2).attr('d',d3.line()(demPts79));
+  if(demPts79.length>1)v79svgA.append('path').attr('class','v79-demand').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2).attr('d',d3.line()(demPts79));
   // Placeholder groups for dynamic supply + equilibrium
   v79svgA.append('g').attr('class','v79-dyn-mkt');
   // Labels (persistent): D anchor at P=8, Qd=500-400=100
   v79nodesA=[
-    d3Node('D','#1a56db','D',20,scXM(100),scYM(8)),
+    d3Node('D','#1f6fb2','D',20,scXM(100),scYM(8)),
     d3Node('S',EC.red,'S',20,scXM(100),scYM(10)),
     d3Node('EQ',EC.indicator,'n=150, P*=$6.40',88,scXM(180),scYM(6.4)),
   ];
@@ -1424,13 +1418,13 @@ function v79InitSvg(){
   d3AddAxes2(v79svgB,scXF,scYF,'q','$/unit');
   // Static SAC and SMC
   d3AddCurve(v79svgB,q=>SAC7(q),scXF,scYF,EC.slate,14);
-  d3AddCurve(v79svgB,q=>SMC7(q),scXF,scYF,'#1a56db',14);
+  d3AddCurve(v79svgB,q=>SMC7(q),scXF,scYF,'#1f6fb2',14);
   // Placeholder for dynamic price line + profit rect
   v79svgB.append('g').attr('class','v79-dyn-firm');
   // Labels
   v79nodesB=[
     d3Node('SAC',EC.slate,'SAC',30,scXF(7.5),scYF(SAC7(7.5))),
-    d3Node('SMC','#1a56db','SMC',30,scXF(5),scYF(SMC7(5))),
+    d3Node('SMC','#1f6fb2','SMC',30,scXF(5),scYF(SMC7(5))),
     d3Node('PI',EC.indicator,'P*, π',96,scXF(5),scYF(6.4)),
   ];
   v79simB=d3MakeSim(v79nodesB);
@@ -1621,6 +1615,32 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
 function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+/* Section rail: mark the figure currently being read (DESIGN 2.2). Scrolls the
+   strip itself on mobile, never scrollIntoView, which walks up and drags the
+   whole page while the reader is scrolling it. */
+(function railTracking() {
+  const links = [...document.querySelectorAll('.rail a')];
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+    let best = 0, bestId = null;
+    for (const [id, r] of seen) if (r > best) { best = r; bestId = id; }
+    if (!bestId) return;
+    for (const a of links) a.classList.remove('on');
+    const hit = byId.get(bestId);
+    if (!hit) return;
+    hit.classList.add('on');
+    const strip = hit.closest('ol');
+    if (strip && strip.scrollWidth > strip.clientWidth) {
+      strip.scrollTo({ left: Math.max(0, hit.offsetLeft - (strip.clientWidth - hit.offsetWidth) / 2), behavior: 'smooth' });
+    }
+  }, { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+  document.querySelectorAll('section.sec[id]').forEach(x => io.observe(x));
+})();
+
+
 </script>
   <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>

@@ -1,13 +1,14 @@
 ﻿<!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u1);--unit-ink:var(--u1-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Week 3: Interactive Visualizations · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -15,7 +16,7 @@
 /* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
    resolve CSS var(), so their colours come from here; CSS and inline styles use
    var() directly. Fallbacks equal the token values. */
-var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
 
     window.MathJax = {
       tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
@@ -33,18 +34,18 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
   <style>
     :root {
       --bg:#f7f7f7; --bg-card:#fff; --ink:#1a1a1a; --ink-light:#6b6b6b;
-      --faint:#9aa3b2; --accent:#1a56db; --accent-lt:#eff4ff;
-      --rule:#e4e4e4; --green:#2e8b57; --red:var(--red); --amber:var(--amber); --purple:var(--purple);
+      --faint:#9aa3b2; --accent:#1f6fb2; --accent-lt:#eff4ff;
+      --rule:#e4e4e4; --green:#2f5c3a; --red:var(--d-second); --amber:var(--amber); --purple:var(--unit-ink);
     }
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     html { scroll-behavior:smooth; }
-    body { background:var(--bg); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased; }
+    body { background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size: var(--t-body-sm); line-height:1.7; -webkit-font-smoothing:antialiased; }
 
     .topnav {
       position:sticky; top:0; z-index:100;
       background:rgba(250,249,247,0.96);
       backdrop-filter:blur(8px);
-      border-bottom:1px solid var(--rule);
+      border-bottom:1px solid var(--rule-strong);
       height:52px; display:flex; align-items:center;
     }
     .topnav-inner {
@@ -52,60 +53,57 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
       display:flex; align-items:center; justify-content:space-between; gap:1rem;
     }
     .nav-left { display:flex; align-items:center; gap:0.75rem; }
-    .nav-course { font-family:var(--mono); font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); }
-    .nav-sep { color:var(--rule); font-size:0.9rem; }
-    .nav-week { font-family:var(--mono); font-size:0.7rem; color:var(--accent); letter-spacing:0.08em; }
-    .nav-title { font-size:0.85rem; color:var(--ink-light); font-style:italic; }
-    .nav-home { font-size:0.82rem; color:var(--accent); text-decoration:none; }
+    .nav-course { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); }
+    .nav-sep { color:var(--rule-strong); font-size: var(--t-small); }
+    .nav-week { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--unit-ink); letter-spacing:0.08em; }
+    .nav-title { font-size: var(--t-caption); color:var(--ink-light); font-style:italic; }
+    .nav-home { font-size: var(--t-caption); color:var(--unit-ink); text-decoration:none; }
     .nav-home:hover { text-decoration:underline; }
     .nav-ln-btn {
-      font-family:var(--font); font-size:0.78rem; font-weight:500;
-      padding:0.3rem 0.8rem; border:1px solid var(--rule); border-radius:6px;
+      font-family:var(--font-body); font-size: var(--t-caption); font-weight: 500;
+      padding:0.3rem 0.8rem; border:1px solid var(--rule-strong); border-radius:6px;
       background:var(--bg-card); color:var(--ink-light); cursor:pointer; transition:all 0.15s;
     }
-    .nav-ln-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-lt); }
+    .nav-ln-btn:hover { border-color:var(--unit-ink); color:var(--unit-ink); background:var(--accent-lt); }
 
-    .week-hero { padding:3rem 2rem 2.5rem; max-width:1100px; margin:0 auto; border-bottom:1px solid var(--rule); }
-    .week-tag { font-family:var(--mono); font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:0.6rem; }
-    .week-hero h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:700; line-height:1.18; color:var(--ink); margin-bottom:0.6rem; }
-    .week-hero .intro { font-size:1rem; color:var(--ink-light); max-width:660px; }
+    .week-hero { padding:3rem 2rem 2.5rem; max-width:1100px; margin:0 auto; border-bottom:1px solid var(--rule-strong); }
+    .week-tag { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase; color: var(--unit-ink); margin-bottom: var(--s-3); max-width: var(--measure-wide); }
+    .week-hero h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight: 700; line-height:1.18; color:var(--ink); margin-bottom:0.6rem; }
+    .week-hero .intro { font-size: var(--t-body-sm); color:var(--ink-light); max-width:660px; }
 
-    .page-layout { display:grid; grid-template-columns:220px 1fr; max-width:1520px; margin:0 auto; align-items:start; }
-    .viz-toc {
-      position:sticky; top:52px; height:calc(100vh - 52px);
-      overflow-y:auto; border-right:1px solid var(--rule); padding:1.75rem 1.1rem;
-    }
-    .viz-toc-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--faint); margin-bottom:0.8rem; padding-bottom:0.4rem; border-bottom:1px solid var(--rule); }
-    .viz-toc nav a { display:block; font-size:0.82rem; color:var(--ink-light); padding:0.32rem 0.55rem; border-radius:3px; border-left:2px solid transparent; transition:all 0.15s; margin-bottom:0.08rem; text-decoration:none; }
-    .viz-toc nav a:hover, .viz-toc nav a.active { background:var(--accent-lt); border-left-color:var(--accent); color:var(--accent); }
+    
+    
+    
+    .viz-toc nav a { display:block; font-size: var(--t-caption); color:var(--ink-light); padding:0.32rem 0.55rem; border-radius:3px; border-left:2px solid transparent; transition:all 0.15s; margin-bottom:0.08rem; text-decoration:none; }
+    .viz-toc nav a:hover, .viz-toc nav a.active { background:var(--accent-lt); border-left-color:var(--unit-ink); color:var(--unit-ink); }
 
     .main-content { padding:2.5rem 2.5rem 5rem; min-width:0; }
     .section-block { margin-bottom:4.5rem; scroll-margin-top:70px; }
-    .section-block h2 { font-size:1.85rem; font-weight:700; color:var(--ink); margin-bottom:0.35rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent-lt); }
-    .section-intro { font-size:0.97rem; color:var(--ink-light); margin-bottom:1.5rem; max-width:680px; }
-    .section-number { font-family:var(--mono); font-size:0.78rem; color:var(--accent); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:0.25rem; }
+    .section-block h2 { font-size: var(--t-h2); font-weight: 700; color:var(--ink); margin-bottom:0.35rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent-lt); }
+    .section-intro { font-size: var(--t-body-sm); color:var(--ink-light); margin-bottom:1.5rem; max-width:680px; }
+    .section-number { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--unit-ink); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:0.25rem; }
 
-    .viz-wrapper { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin:1.5rem 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
-    .viz-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.1rem; background:#f4f6fa; border-bottom:1px solid var(--rule); cursor:pointer; user-select:none; }
-    .viz-header:focus-visible { outline:3px solid var(--accent); outline-offset:2px; border-radius:4px; }
-    .fig-num-badge { font-family:var(--mono); font-size:0.67rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; background:var(--accent-lt); color:var(--accent); border:1px solid rgba(26,86,219,0.2); border-radius:20px; padding:2px 8px; flex-shrink:0; }
-    .viz-title { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--accent); margin-left:0.75rem; flex:1; }
-    .fig-chevron { color:var(--faint); font-size:0.85rem; transition:transform 0.2s; }
+    .viz-wrapper { background:var(--bg-card); border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; margin:1.5rem 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+    .viz-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.1rem; background:#f4f6fa; border-bottom:1px solid var(--rule-strong); cursor:pointer; user-select:none; }
+    .viz-header:focus-visible { outline:3px solid var(--unit-ink); outline-offset:2px; border-radius:4px; }
+    .fig-num-badge { font-family:var(--font-mono); font-size: var(--t-caption); font-weight: 500; letter-spacing:0.08em; text-transform:uppercase; background:var(--accent-lt); color:var(--unit-ink); border:1px solid rgba(26,86,219,0.2); border-radius:20px; padding:2px 8px; flex-shrink:0; }
+    .viz-title { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.07em; text-transform:uppercase; color:var(--unit-ink); margin-left:0.75rem; flex:1; }
+    .fig-chevron { color:var(--faint); font-size: var(--t-caption); transition:transform 0.2s; }
     .viz-wrapper.collapsed .fig-chevron { transform:rotate(-90deg); }
     .viz-wrapper.collapsed .viz-body { display:none; }
     .viz-body { padding:1.4rem; }
 
-    .viz-controls { display:flex; flex-wrap:wrap; gap:1.2rem; align-items:flex-end; margin-bottom:1.2rem; padding:0.9rem 1.1rem; background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; }
+    .viz-controls { display:flex; flex-wrap:wrap; gap:1.2rem; align-items:flex-end; margin-bottom:1.2rem; padding:0.9rem 1.1rem; background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:6px; }
     .ctrl-group { display:flex; flex-direction:column; gap:0.28rem; min-width:130px; }
-    .ctrl-group label { font-family:var(--mono); font-size:0.73rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); display:flex; align-items:center; gap:4px; }
-    .ctrl-val { font-family:var(--mono); font-size:0.9rem; color:var(--accent); font-weight:600; }
+    .ctrl-group label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); display:flex; align-items:center; gap:4px; }
+    .ctrl-val { font-family:var(--font-mono); font-size: var(--t-small); color:var(--unit-ink); font-weight: 500; }
     input[type="range"] { -webkit-appearance:none; width:100%; height:4px; background:var(--accent-lt); border-radius:2px; outline:none; cursor:pointer; }
-    input[type="range"]:focus-visible { outline:3px solid var(--accent); outline-offset:4px; border-radius:3px; }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.18); }
+    input[type="range"]:focus-visible { outline:3px solid var(--unit-ink); outline-offset:4px; border-radius:3px; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--unit-ink); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.18); }
 
     .viz-two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    .viz-panel { background:var(--bg-card); border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
-    .viz-panel-label { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); padding:0.5rem 0.8rem; background:#f8f9fb; border-bottom:1px solid var(--rule); }
+    .viz-panel { background:var(--bg-card); border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; }
+    .viz-panel-label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); padding:0.5rem 0.8rem; background:#f8f9fb; border-bottom:1px solid var(--rule-strong); }
 
     .jxgbox { background:#fff !important; border:none !important; border-radius:0 !important; }
     .draggable-label { cursor:move; }
@@ -113,62 +111,67 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     .d3-overlay .draggable-label { pointer-events:auto; }
 
     .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; padding:0.8rem; }
-    .stat-box { background:#f8f9fb; border:1px solid var(--rule); border-radius:5px; padding:0.55rem 0.75rem; }
-    .stat-label { font-family:var(--mono); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--faint); margin-bottom:2px; }
-    .stat-val { font-family:var(--mono); font-size:0.95rem; font-weight:600; color:var(--ink); }
+    .stat-box { background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:5px; padding:0.55rem 0.75rem; }
+    .stat-label { font-size: var(--t-caption); color: var(--ink-faint); }
+    .stat-val { font-family:var(--font-mono); font-size: var(--t-small); font-weight: 500; color:var(--ink); }
 
-    .scoreboard { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.9rem 1rem; margin-top:0.75rem; }
-    .sb-title { font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); margin-bottom:0.55rem; }
-    .sb-row { display:flex; justify-content:space-between; align-items:center; padding:0.32rem 0; border-bottom:1px solid var(--rule); font-size:0.85rem; }
-    .sb-row:last-child { border-bottom:none; font-weight:600; }
+    .scoreboard { background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:6px; padding:0.9rem 1rem; margin-top:0.75rem; }
+    .sb-title { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); margin-bottom:0.55rem; }
+    .sb-row { display:flex; justify-content:space-between; align-items:center; padding:0.32rem 0; border-bottom:1px solid var(--rule-strong); font-size: var(--t-caption); }
+    .sb-row:last-child { border-bottom:none; font-weight: 500; }
     .sb-row .sb-lbl { color:var(--ink-light); }
-    .sb-row .sb-num { font-family:var(--mono); font-weight:600; }
+    .sb-row .sb-num { font-family:var(--font-mono); font-weight: 500; }
 
-    .info-card { background:var(--accent-lt); border-left:4px solid var(--accent); border-radius:0 4px 4px 0; padding:0.9rem 1.1rem; margin:1rem 0; font-size:0.9rem; color:var(--ink-light); }
-    .info-card strong { color:var(--accent); }
-    .callout { border-radius:4px; padding:0.85rem 1.05rem; margin:0.9rem 0; font-size:0.9rem; line-height:1.65; }
+    .info-card { background:var(--accent-lt); border-left:4px solid var(--unit-ink); border-radius:0 4px 4px 0; padding:0.9rem 1.1rem; margin:1rem 0; font-size: var(--t-small); color:var(--ink-light); }
+    .info-card strong { color:var(--unit-ink); }
+    .callout { border-radius:4px; padding:0.85rem 1.05rem; margin:0.9rem 0; font-size: var(--t-small); line-height:1.65; }
     .callout.key-idea { background:#e8f4fd; border-left:4px solid #2196F3; }
     .callout.common-mistake { background:#fff3e0; border-left:4px solid #f57c00; }
 
     /* Quiz viz */
-    .quiz-scenario { background:var(--bg-card); border:1px solid var(--rule); border-radius:8px; padding:1.1rem 1.3rem; margin-bottom:1rem; font-size:0.97rem; font-weight:500; color:var(--ink); }
+    .quiz-scenario { background:var(--bg-card); border:1px solid var(--rule-strong); border-radius:8px; padding:1.1rem 1.3rem; margin-bottom:1rem; font-size: var(--t-body-sm); font-weight: 500; color:var(--ink); }
     .quiz-btns { display:flex; gap:0.6rem; margin-bottom:0.9rem; }
     .quiz-btn {
-      flex:1; padding:0.6rem 0.9rem; font-family:var(--font); font-size:0.85rem; font-weight:600;
-      border:1px solid var(--rule); border-radius:8px; cursor:pointer; transition:all 0.15s; background:var(--bg-card); color:var(--ink);
+      flex:1; padding:0.6rem 0.9rem; font-family:var(--font-body); font-size: var(--t-caption); font-weight: 500;
+      border:1px solid var(--rule-strong); border-radius:8px; cursor:pointer; transition:all 0.15s; background:var(--bg-card); color:var(--ink);
     }
-    .quiz-btn:hover { border-color:var(--accent); background:var(--accent-lt); color:var(--accent); }
+    .quiz-btn:hover { border-color:var(--unit-ink); background:var(--accent-lt); color:var(--unit-ink); }
     .quiz-btn.correct  { background:#dcfce7; border-color:#4ade80; color:#166534; }
     .quiz-btn.incorrect { background:#fee2e2; border-color:#fc8181; color:#991b1b; }
-    .quiz-btn.revealed { background:var(--accent-lt); border-color:var(--accent); color:var(--accent); }
-    .quiz-feedback { background:#f8f9fb; border:1px solid var(--rule); border-radius:6px; padding:0.75rem 1rem; font-size:0.86rem; color:var(--ink-light); line-height:1.65; margin-bottom:0.75rem; }
-    .quiz-score { font-family:var(--mono); font-size:0.82rem; color:var(--muted); margin-bottom:0.5rem; }
-    .quiz-next { font-family:var(--font); font-size:0.82rem; font-weight:500; padding:0.35rem 1rem; border:1px solid var(--accent); border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; transition:opacity 0.15s; }
+    .quiz-btn.revealed { background:var(--accent-lt); border-color:var(--unit-ink); color:var(--unit-ink); }
+    .quiz-feedback { background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:6px; padding:0.75rem 1rem; font-size: var(--t-small); color:var(--ink-light); line-height:1.65; margin-bottom:0.75rem; }
+    .quiz-score { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--ink-faint); margin-bottom:0.5rem; }
+    .quiz-next { font-family:var(--font-body); font-size: var(--t-caption); font-weight: 500; padding:0.35rem 1rem; border:1px solid var(--unit-ink); border-radius:6px; background:var(--unit-ink); color:#fff; cursor:pointer; transition:opacity 0.15s; }
     .quiz-next:hover { opacity:0.85; }
 
     /* Toggle switch */
     .toggle-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.8rem; }
-    .toggle-label { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); }
-    .toggle-switch { display:flex; background:#f0f3f8; border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+    .toggle-label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); }
+    .toggle-switch { display:flex; background:#f0f3f8; border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; }
     .toggle-opt {
-      padding:0.32rem 0.9rem; font-family:var(--font); font-size:0.8rem; font-weight:500;
+      padding:0.32rem 0.9rem; font-family:var(--font-body); font-size: var(--t-caption); font-weight: 500;
       cursor:pointer; transition:all 0.15s; color:var(--ink-light); border:none; background:transparent;
     }
-    .toggle-opt.active { background:var(--accent); color:#fff; }
+    .toggle-opt.active { background:var(--unit-ink); color:#fff; }
 
     /* Expandable */
-    .expand-box { border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin-top:0.75rem; }
-    .expand-header { display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:#f8f9fb; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--ink); user-select:none; }
-    .expand-body { padding:0.85rem 1rem; font-size:0.87rem; color:var(--ink-light); line-height:1.7; display:none; }
+    .expand-box { border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; margin-top:0.75rem; }
+    .expand-header { display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:#f8f9fb; cursor:pointer; font-size: var(--t-caption); font-weight: 500; color:var(--ink); user-select:none; }
+    .expand-body { padding:0.85rem 1rem; font-size: var(--t-small); color:var(--ink-light); line-height:1.7; display:none; }
     .expand-body.open { display:block; }
 
     @media (max-width:900px) {
-      .page-layout { grid-template-columns:1fr; }
-      .viz-toc { display:none; }
+      
+      
       .main-content { padding:1.5rem 1.2rem 4rem; }
     }
     @media (max-width:620px) {
       .viz-two-col { grid-template-columns:1fr; }
+    }
+    /* ds2 headings */
+    html[data-ds="v2"] h1, html[data-ds="v2"] h2, html[data-ds="v2"] h3,
+    html[data-ds="v2"] .section-title, html[data-ds="v2"] .viz-title {
+      font-family: var(--font-display) !important; font-weight: 400 !important;
     }
   </style>
 </head>
@@ -195,21 +198,15 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 </nav>
 
 <!-- Top bar (shared chrome, matches week4 to week8) -->
-<div class="top-bar">
-  <div class="top-bar-left">
-    <a href="index.html" aria-label="Course home">
-      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-    </a>
-    <div class="top-bar-divider"></div>
-    <div class="breadcrumb">
-      <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="week3.html">Week 3</a>
-      <span class="breadcrumb-sep">›</span>
-      <span>Visualizations</span>
-    </div>
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week3.html">Week 3</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+</div>
   </div>
-  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
 </div>
 
 <!-- Hero -->
@@ -219,11 +216,11 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
   <p class="intro">Five interactive diagrams mapping the Week 3 syllabus: animate the derivation of a demand curve step by step, decompose price changes into substitution and income effects, explore income shifts, drill shift-vs-movement, and map cross-price effects.</p>
 </div>
 
-<div class="page-layout">
+<div class="layout">
 
   <!-- Sidebar TOC -->
-  <aside class="viz-toc">
-    <div class="viz-toc-title">Figures</div>
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">Figures</div>
     <nav id="toc-nav">
       <a href="#sec-demand"   class="toc-link">Fig 3.1 · Demand Derivation</a>
       <a href="#sec-slutsky"  class="toc-link">Fig 3.2 · Slutsky Decomposition</a>
@@ -231,7 +228,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
       <a href="#sec-drill"    class="toc-link">Fig 3.4 · Shift vs. Movement</a>
       <a href="#sec-cross"    class="toc-link">Fig 3.5 · Cross-Price Explorer</a>
     </nav>
-  </aside>
+  </nav>
 
   <!-- Main content -->
   <main class="main-content" id="main">
@@ -239,7 +236,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 1 · Two-Panel Demand Derivation
          ═══════════════════════════════════════════════════════ -->
-    <section class="section-block" id="sec-demand">
+    <section class="sec page" id="sec-demand">
       <span class="section-number">Fig 3.1 · LO2 &amp; LO3</span>
       <h2>Two-Panel Demand Derivation</h2>
       <p class="section-intro">Every price of X pins down one optimal bundle on the left. Now let's change the price of X and see what changes. As we lower the price step by step, the budget line pivots outward, the consumer finds a new indifference curve, and a new optimal point emerges. That bundle's X-coordinate is then plotted on the right, building the demand curve one point at a time.</p>
@@ -261,25 +258,25 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
           </div>
           <!-- Playback speed controls -->
           <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.85rem;flex-wrap:wrap;">
-            <span style="font-family:var(--mono);font-size:0.72rem;color:var(--ink-light);">Playback speed:</span>
-            <button class="v1-speed-btn" data-rate="0.5" onclick="v1SetRate(0.5)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
-            <button class="v1-speed-btn active-rate" data-rate="1" onclick="v1SetRate(1)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
-            <button class="v1-speed-btn" data-rate="2" onclick="v1SetRate(2)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
+            <span style="font-family:var(--font-mono);font-size: var(--t-caption);color:var(--ink-light);">Playback speed:</span>
+            <button class="v1-speed-btn" data-rate="0.5" onclick="v1SetRate(0.5)" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
+            <button class="v1-speed-btn active-rate" data-rate="1" onclick="v1SetRate(1)" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.6rem;border:1px solid var(--unit-ink);border-radius:5px;background:var(--accent-lt);color:var(--unit-ink);cursor:pointer;">1x</button>
+            <button class="v1-speed-btn" data-rate="2" onclick="v1SetRate(2)" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
           </div>
           <!-- Narration box: above both panels -->
-          <div id="v1-narration" style="font-size:1.18rem;font-weight:500;color:var(--ink);background:var(--accent-lt);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:1rem 1.3rem;margin-bottom:1rem;line-height:1.65;min-height:3.8rem;"></div>
+          <div id="v1-narration" style="font-size: var(--t-body);font-weight: 500;color:var(--ink);background:var(--accent-lt);border-left:4px solid var(--unit-ink);border-radius:0 8px 8px 0;padding:1rem 1.3rem;margin-bottom:1rem;line-height:1.65;min-height:3.8rem;"></div>
 
           <!-- Two-panel canvas area -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
-            <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;">
-              <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule);">Utility Maximization</div>
+            <div style="border:1px solid var(--rule-strong);border-radius:8px;overflow:hidden;background:#fff;">
+              <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">Utility Maximization</div>
               <div id="cv1-left-wrap" style="position:relative;">
                 <canvas id="cv1-left" style="width:100%;display:block;"></canvas>
                 <div id="cv1-left-ov" class="d3-overlay"></div>
               </div>
             </div>
-            <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:#fff;">
-              <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule);">Demand Curve</div>
+            <div style="border:1px solid var(--rule-strong);border-radius:8px;overflow:hidden;background:#fff;">
+              <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">Demand Curve</div>
               <div id="cv1-right-wrap" style="position:relative;">
                 <canvas id="cv1-right" style="width:100%;display:block;"></canvas>
                 <div id="cv1-right-ov" class="d3-overlay"></div>
@@ -289,15 +286,15 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 
           <!-- Controls -->
           <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-            <button id="v1-play-btn" onclick="v1PlayPause()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 1rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;">Play</button>
-            <button onclick="v1StepBack()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 0.8rem;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">&larr; Back</button>
-            <button onclick="v1StepFwd()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 0.8rem;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">Next &rarr;</button>
-            <button onclick="v1Reset()" style="font-family:var(--font);font-size:0.82rem;font-weight:600;padding:0.38rem 0.8rem;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">Reset</button>
-            <span style="font-family:var(--mono);font-size:0.72rem;color:var(--ink-light);">Speed:</span>
-            <button onclick="v1SetSpeed(0.5)" id="v1-sp-05" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
-            <button onclick="v1SetSpeed(1)" id="v1-sp-1" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-lt);color:var(--accent);cursor:pointer;">1x</button>
-            <button onclick="v1SetSpeed(2)" id="v1-sp-2" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.55rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
-            <span id="v1-step-counter" style="font-family:var(--mono);font-size:0.72rem;color:var(--faint);margin-left:auto;">Step 0 / 4</span>
+            <button id="v1-play-btn" onclick="v1PlayPause()" style="font-family:var(--font-body);font-size: var(--t-caption);font-weight: 500;padding:0.38rem 1rem;border:1px solid var(--unit-ink);border-radius:6px;background:var(--unit-ink);color:#fff;cursor:pointer;">Play</button>
+            <button onclick="v1StepBack()" style="font-family:var(--font-body);font-size: var(--t-caption);font-weight: 500;padding:0.38rem 0.8rem;border:1px solid var(--rule-strong);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">&larr; Back</button>
+            <button onclick="v1StepFwd()" style="font-family:var(--font-body);font-size: var(--t-caption);font-weight: 500;padding:0.38rem 0.8rem;border:1px solid var(--rule-strong);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">Next &rarr;</button>
+            <button onclick="v1Reset()" style="font-family:var(--font-body);font-size: var(--t-caption);font-weight: 500;padding:0.38rem 0.8rem;border:1px solid var(--rule-strong);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">Reset</button>
+            <span style="font-family:var(--font-mono);font-size: var(--t-caption);color:var(--ink-light);">Speed:</span>
+            <button onclick="v1SetSpeed(0.5)" id="v1-sp-05" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.55rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
+            <button onclick="v1SetSpeed(1)" id="v1-sp-1" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.55rem;border:1px solid var(--unit-ink);border-radius:5px;background:var(--accent-lt);color:var(--unit-ink);cursor:pointer;">1x</button>
+            <button onclick="v1SetSpeed(2)" id="v1-sp-2" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.55rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
+            <span id="v1-step-counter" style="font-family:var(--font-mono);font-size: var(--t-caption);color:var(--faint);margin-left:auto;">Step 0 / 4</span>
           </div>
         </div>
       </div>
@@ -306,7 +303,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 2 · Slutsky Decomposition
          ═══════════════════════════════════════════════════════ -->
-    <section class="section-block" id="sec-slutsky">
+    <section class="sec page" id="sec-slutsky">
       <span class="section-number">Fig 3.2 · LO6</span>
       <h2>Slutsky Decomposition Explorer</h2>
       <p class="section-intro">Any price change can be split into a substitution effect (SE) - moving along the original IC at new prices - and an income effect (IE) - shifting between ICs due to changed real income. Use the slider to vary the new price and watch the decomposition update live.</p>
@@ -319,11 +316,11 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
         </div>
         <div class="viz-body">
           <div class="viz-controls">
-            <div class="ctrl-group">
+            <div class="ctrl">
               <label>New P<sub>X</sub> = <span class="ctrl-val" id="v2-px-val">$1.50</span></label>
               <input type="range" id="v2-px" min="0.5" max="6" step="any" value="1.5" aria-label="New price of X" />
             </div>
-            <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
+            <div style="font-size: var(--t-caption);color:var(--ink-light);align-self:center;">
               Fixed original: <strong>P<sub>X</sub> = $3</strong> &nbsp;·&nbsp; <strong>I = $60</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
             </div>
           </div>
@@ -341,21 +338,21 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
                 <div class="sb-row"><span class="sb-lbl">Bundle A (original)</span><span class="sb-num" id="v2-a">-</span></div>
                 <div class="sb-row"><span class="sb-lbl">Bundle C (compensated)</span><span class="sb-num" id="v2-c">-</span></div>
                 <div class="sb-row"><span class="sb-lbl">Bundle B (new)</span><span class="sb-num" id="v2-b">-</span></div>
-                <div class="sb-row" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--rule);">
-                  <span class="sb-lbl" style="color:var(--purple);">SE = X<sub>C</sub> - X<sub>A</sub></span>
-                  <span class="sb-num" style="color:var(--purple);" id="v2-se">-</span>
+                <div class="sb-row" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--rule-strong);">
+                  <span class="sb-lbl" style="color:var(--unit-ink);">SE = X<sub>C</sub> - X<sub>A</sub></span>
+                  <span class="sb-num" style="color:var(--unit-ink);" id="v2-se">-</span>
                 </div>
                 <div class="sb-row">
-                  <span class="sb-lbl" style="color:var(--red);">IE = X<sub>B</sub> - X<sub>C</sub></span>
-                  <span class="sb-num" style="color:var(--red);" id="v2-ie">-</span>
+                  <span class="sb-lbl" style="color:var(--d-second);">IE = X<sub>B</sub> - X<sub>C</sub></span>
+                  <span class="sb-num" style="color:var(--d-second);" id="v2-ie">-</span>
                 </div>
                 <div class="sb-row">
                   <span class="sb-lbl">Total Effect</span>
                   <span class="sb-num" id="v2-te">-</span>
                 </div>
                 <div class="sb-row" style="background:var(--accent-lt);border-radius:4px;padding:0.4rem 0.5rem;margin-top:0.4rem;">
-                  <span class="sb-lbl" style="color:var(--accent);">Good type</span>
-                  <span class="sb-num" style="color:var(--accent);" id="v2-type">-</span>
+                  <span class="sb-lbl" style="color:var(--unit-ink);">Good type</span>
+                  <span class="sb-num" style="color:var(--unit-ink);" id="v2-type">-</span>
                 </div>
               </div>
             </div>
@@ -370,7 +367,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 3 · Income Effects & Demand Shifts
          ═══════════════════════════════════════════════════════ -->
-    <section class="section-block" id="sec-income">
+    <section class="sec page" id="sec-income">
       <span class="section-number">Fig 3.3 · LO4 &amp; LO5</span>
       <h2>Income Effects &amp; Demand Shifts</h2>
       <p class="section-intro">A change in income shifts the entire demand curve. Toggle between a normal good (rising income shifts demand rightward) and an inferior good (rising income shifts demand leftward), and watch the income expansion path trace out.</p>
@@ -383,7 +380,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
         </div>
         <div class="viz-body">
           <div class="viz-controls">
-            <div class="ctrl-group">
+            <div class="ctrl">
               <label>Income I = <span class="ctrl-val" id="v3-i-val">$80</span></label>
               <input type="range" id="v3-income" min="40" max="120" step="any" value="80" aria-label="Income I" />
             </div>
@@ -394,7 +391,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
                 <button class="toggle-opt" id="v3-inferior-btn" onclick="v3SetType('inferior')">Inferior Good</button>
               </div>
             </div>
-            <div style="font-size:0.82rem;color:var(--ink-light);align-self:center;">
+            <div style="font-size: var(--t-caption);color:var(--ink-light);align-self:center;">
               Fixed: <strong>P<sub>X</sub> = $2</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
             </div>
           </div>
@@ -415,10 +412,10 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
             </div>
           </div>
           <div class="stat-grid" style="margin-top:0.8rem;">
-            <div class="stat-box"><div class="stat-label">X* (optimal)</div><div class="stat-val" id="v3-xstar">-</div></div>
-            <div class="stat-box"><div class="stat-label">Y* (optimal)</div><div class="stat-val" id="v3-ystar">-</div></div>
-            <div class="stat-box"><div class="stat-label">∂X*/∂I (sign)</div><div class="stat-val" id="v3-dxi">-</div></div>
-            <div class="stat-box"><div class="stat-label">Demand shift direction</div><div class="stat-val" id="v3-shift">-</div></div>
+            <div class="readout-col"><div class="readout-label">X* (optimal)</div><div class="readout-val" id="v3-xstar">-</div></div>
+            <div class="readout-col"><div class="readout-label">Y* (optimal)</div><div class="readout-val" id="v3-ystar">-</div></div>
+            <div class="readout-col"><div class="readout-label">∂X*/∂I (sign)</div><div class="readout-val" id="v3-dxi">-</div></div>
+            <div class="readout-col"><div class="readout-label">Demand shift direction</div><div class="readout-val" id="v3-shift">-</div></div>
           </div>
           <!-- old / new / change readout, baseline is income I0 = $80 -->
           <div id="v3-delta" class="delta-bar"></div>
@@ -429,7 +426,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 4 · Shift vs. Movement Drill
          ═══════════════════════════════════════════════════════ -->
-    <section class="section-block" id="sec-drill">
+    <section class="sec page" id="sec-drill">
       <span class="section-number">Fig 3.4 · LO2, LO3 &amp; LO4</span>
       <h2>Shift vs. Movement Drill</h2>
       <p class="section-intro">The demand curve for X plots P<sub>X</sub> on the vertical axis and Q<sub>X</sub> on the horizontal axis - everything else is held fixed. So a change in P<sub>X</sub> itself simply slides the consumer along the existing curve (a <em>movement</em>). Any other change - income, the price of another good, tastes, number of buyers - alters how much X is demanded <em>at every price</em>, which shifts the entire curve. Read each scenario below and decide which of the two it is; the explanation tells you why.</p>
@@ -449,12 +446,12 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 5 · Cross-Price & Demand Function Explorer
          ═══════════════════════════════════════════════════════ -->
-    <section class="section-block" id="sec-cross">
+    <section class="sec page" id="sec-cross">
       <span class="section-number">Fig 3.5 · LO1 &amp; LO4</span>
       <h2>Cross-Price &amp; Demand Function Explorer</h2>
       <p class="section-intro">Two types of price effects show up on a demand diagram - and they look completely different. Moving the <strong>own price</strong> (P<sub>X</sub>) traces a path <em>along</em> the existing demand curve: quantity adjusts, but the curve itself stays put. Changing the <strong>cross price</strong> (P<sub>Y</sub>, the price of another good) <em>shifts the entire curve</em> - at every possible P<sub>X</sub>, demand for X is now higher or lower than before.</p>
       <p class="section-intro" style="margin-top:0.6rem;">Why the difference? The demand curve for X already embeds a fixed P<sub>Y</sub>. When P<sub>Y</sub> changes, that embedded assumption breaks - you need a whole new curve. The direction of the shift reveals the relationship: if X and Y are <strong>substitutes</strong> (think Pepsi vs Coke), a higher P<sub>Y</sub> makes X look relatively cheaper and shifts demand for X <em>rightward</em>. If they are <strong>complements</strong> (think coffee and milk), a higher P<sub>Y</sub> makes the combination more expensive and shifts demand for X <em>leftward</em>.</p>
-      <p class="section-intro" style="margin-top:0.6rem;color:var(--accent);font-weight:500;">Try this: set the relationship to <em>Substitutes</em>, then hold P<sub>X</sub> fixed and raise P<sub>Y</sub>. Watch the demand curve shift right - meaning at the same P<sub>X</sub>, consumers now want <em>more</em> X because Y just got more expensive. Then switch to <em>Complements</em> and repeat: the shift reverses.</p>
+      <p class="section-intro" style="margin-top:0.6rem;color:var(--unit-ink);font-weight: 500;">Try this: set the relationship to <em>Substitutes</em>, then hold P<sub>X</sub> fixed and raise P<sub>Y</sub>. Watch the demand curve shift right - meaning at the same P<sub>X</sub>, consumers now want <em>more</em> X because Y just got more expensive. Then switch to <em>Complements</em> and repeat: the shift reverses.</p>
 
       <div class="viz-wrapper" id="vw-cross">
         <div class="viz-header fig-header-row" onclick="toggleViz('vw-cross')">
@@ -464,15 +461,15 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
         </div>
         <div class="viz-body">
           <div class="viz-controls">
-            <div class="ctrl-group">
+            <div class="ctrl">
               <label>P<sub>X</sub> = <span class="ctrl-val" id="v5-px-val">$4.00</span></label>
               <input type="range" id="v5-px" min="1" max="8" step="any" value="4" aria-label="Price of X" />
             </div>
-            <div class="ctrl-group">
+            <div class="ctrl">
               <label>P<sub>Y</sub> = <span class="ctrl-val" id="v5-py-val">$4.00</span></label>
               <input type="range" id="v5-py" min="1" max="8" step="any" value="4" aria-label="Price of Y" />
             </div>
-            <div class="ctrl-group">
+            <div class="ctrl">
               <label>I = <span class="ctrl-val" id="v5-i-val">$100</span></label>
               <input type="range" id="v5-income" min="40" max="150" step="any" value="100" aria-label="Income I" />
             </div>
@@ -486,15 +483,15 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div>
-              <div style="background:#f8f9fb;border:1px solid var(--rule);border-radius:6px;padding:1rem 1.2rem;font-size:0.88rem;line-height:1.8;">
-                <div style="font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin-bottom:0.5rem;">Live Demand Function</div>
-                <div id="v5-formula" style="font-size:0.9rem;line-height:2;"></div>
+              <div style="background:#f8f9fb;border:1px solid var(--rule-strong);border-radius:6px;padding:1rem 1.2rem;font-size: var(--t-small);line-height:1.8;">
+                <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin-bottom:0.5rem;">Live Demand Function</div>
+                <div id="v5-formula" style="font-size: var(--t-small);line-height:2;"></div>
               </div>
               <div class="stat-grid" style="margin-top:0.6rem;">
-                <div class="stat-box"><div class="stat-label">X* =</div><div class="stat-val" id="v5-xstar">-</div></div>
-                <div class="stat-box"><div class="stat-label">Y* =</div><div class="stat-val" id="v5-ystar">-</div></div>
-                <div class="stat-box"><div class="stat-label">P<sub>X</sub>·X* (expenditure)</div><div class="stat-val" id="v5-expx">-</div></div>
-                <div class="stat-box"><div class="stat-label">Curve effect of P<sub>Y</sub></div><div class="stat-val" id="v5-pyeff">-</div></div>
+                <div class="readout-col"><div class="readout-label">X* =</div><div class="readout-val" id="v5-xstar">-</div></div>
+                <div class="readout-col"><div class="readout-label">Y* =</div><div class="readout-val" id="v5-ystar">-</div></div>
+                <div class="readout-col"><div class="readout-label">P<sub>X</sub>·X* (expenditure)</div><div class="readout-val" id="v5-expx">-</div></div>
+                <div class="readout-col"><div class="readout-label">Curve effect of P<sub>Y</sub></div><div class="readout-val" id="v5-pyeff">-</div></div>
               </div>
             </div>
             <div class="viz-panel">
@@ -517,7 +514,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 </div>
 
 <!-- Tooltip -->
-<div id="tip-global" style="position:fixed;display:none;background:#1a1a1a;color:#fff;font-size:0.75rem;padding:5px 9px;border-radius:5px;pointer-events:none;z-index:9999;max-width:220px;line-height:1.5;"></div>
+<div id="tip-global" style="position:fixed;display:none;background:#1a1a1a;color:#fff;font-size: var(--t-caption);padding:5px 9px;border-radius:5px;pointer-events:none;z-index:9999;max-width:220px;line-height:1.5;"></div>
 
 <script>
 /* ============================================================
@@ -562,9 +559,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
+        links.forEach(l => l.classList.remove('on'));
         const link = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
-        if (link) link.classList.add('active');
+        if (link) link.classList.add('on');
       }
     });
   }, { rootMargin: '-30% 0px -60% 0px' });
@@ -673,9 +670,9 @@ function v1SetRate(r) {
   if (vid) vid.playbackRate = r;
   document.querySelectorAll('.v1-speed-btn').forEach(b => {
     const on = parseFloat(b.dataset.rate) === r;
-    b.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
+    b.style.borderColor = on ? 'var(--unit-ink)' : 'var(--rule-strong)';
     b.style.background  = on ? 'var(--accent-lt)' : '#fff';
-    b.style.color       = on ? 'var(--accent)' : '';
+    b.style.color       = on ? 'var(--unit-ink)' : '';
   });
 }
 
@@ -684,7 +681,7 @@ function v1SetRate(r) {
    ============================================================ */
 const V1_I = 60, V1_Py = 3, V1_alpha = 0.5;
 const V1_PX_STEPS = [6, 4, 2, 1];
-const V1_COLS = [EC.red,'#2e8b57',EC.purple,EC.steel];
+const V1_COLS = [EC.red,'#2f5c3a',EC.purple,EC.steel];
 const V1_Ystar = (1 - V1_alpha) * V1_I / V1_Py; // = 10, fixed
 
 let v1CurrStep = 0;
@@ -723,7 +720,32 @@ function initViz1() {
   }
 
   setSize();
-  window.addEventListener('resize', setSize);
+  /* Section rail: mark the figure currently being read (DESIGN 2.2). Scrolls the
+   strip itself on mobile, never scrollIntoView, which walks up and drags the
+   whole page while the reader is scrolling it. */
+(function railTracking() {
+  const links = [...document.querySelectorAll('.rail a')];
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+    let best = 0, bestId = null;
+    for (const [id, r] of seen) if (r > best) { best = r; bestId = id; }
+    if (!bestId) return;
+    for (const a of links) a.classList.remove('on');
+    const hit = byId.get(bestId);
+    if (!hit) return;
+    hit.classList.add('on');
+    const strip = hit.closest('ol');
+    if (strip && strip.scrollWidth > strip.clientWidth) {
+      strip.scrollTo({ left: Math.max(0, hit.offsetLeft - (strip.clientWidth - hit.offsetWidth) / 2), behavior: 'smooth' });
+    }
+  }, { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+  document.querySelectorAll('section.sec[id]').forEach(x => io.observe(x));
+})();
+
+window.addEventListener('resize', setSize);
   v1UpdateNarration();
 }
 
@@ -890,7 +912,7 @@ function v1DrawAxes(ctx, c) {
 function v1DrawLeftAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = 'var(--ink-faint)';
   ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
   ctx.textAlign = 'left';
   ctx.fillText('X', W - MR + 3*dpr, oy + 4*dpr);
@@ -902,7 +924,7 @@ function v1DrawLeftAxisLabels(ctx, c) {
 function v1DrawRightAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = 'var(--ink-faint)';
   ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
   ctx.textAlign = 'left';
   ctx.fillText('Qty', W - MR + 3*dpr, oy + 4*dpr);
@@ -1157,9 +1179,9 @@ function v1SetSpeed(s) {
     const btn = document.getElementById(ids[r]);
     if (!btn) return;
     const on = r === s;
-    btn.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
+    btn.style.borderColor = on ? 'var(--unit-ink)' : 'var(--rule-strong)';
     btn.style.background  = on ? 'var(--accent-lt)' : '#fff';
-    btn.style.color       = on ? 'var(--accent)' : '';
+    btn.style.color       = on ? 'var(--unit-ink)' : '';
   });
 }
 
@@ -1284,8 +1306,8 @@ function drawV2() {
     boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.06],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
   });
   const b = v2b;
   // Horizontal grid lines
@@ -1293,8 +1315,8 @@ function drawV2() {
   for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
     b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'#888',fixed:true});
-  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#888',fixed:true});
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
 
   // Budget lines
   const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:EC.steel,strokeWidth:2,fixed:true});
@@ -1416,8 +1438,8 @@ function v3Ystar(I) {
 }
 function v3SetType(t) {
   v3Type = t;
-  document.getElementById('v3-normal-btn').classList.toggle('active', t==='normal');
-  document.getElementById('v3-inferior-btn').classList.toggle('active', t==='inferior');
+  document.getElementById('v3-normal-btn').classList.toggle('on', t==='normal');
+  document.getElementById('v3-inferior-btn').classList.toggle('on', t==='inferior');
   initViz3();
 }
 
@@ -1463,15 +1485,15 @@ function initViz3() {
     boundingbox:[-2,ymax,xmax,-2],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
   });
   v3b2 = JXG.JSXGraph.initBoard('jxg-v3-right',{
     boundingbox:[-2,7,xmax,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
   });
 
   const b1 = v3b1, b2 = v3b2;
@@ -1483,10 +1505,10 @@ function initViz3() {
   for (let gy = 1; gy <= 6; gy++) {
     b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'#888',fixed:true});
-  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'#888',fixed:true});
-  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
-  b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#888',fixed:true});
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
 
   // Draw expansion path (static dashed line). Its label is rendered by the
   // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
@@ -1531,14 +1553,14 @@ function initViz3() {
     if (v3Type === 'normal') {
       const u2 = xs * ys;
       v3IC = b1.create('functiongraph',[x => x>0.05 ? u2/x : NaN, 0.05, xmax],
-        {strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+        {strokeColor:'#1f6fb2',strokeWidth:2,fixed:true});
     } else {
       // For inferior: draw a convex IC approximation through (xs, ys) with slope = -Px/Py
       const slope = -V3_Px/V3_Py;
       const k = ys - slope * xs;
       v3IC = b1.create('functiongraph',[
         x => x>0.05 ? k + slope*x + 0.5*(x-xs)*(x-xs)*0.05 : NaN, 0.05, xmax
-      ],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+      ],{strokeColor:'#1f6fb2',strokeWidth:2,fixed:true});
     }
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
@@ -1566,13 +1588,13 @@ function initViz3() {
     const coef = (Iv) => v3Type==='normal' ? 0.5*Iv : V3_Px*v3Xstar(Iv);
     const mkLbl = (Iv, txt, faded, py) => b2.create('text',
       [coef(Iv)/py + 0.4, py + 0.3, txt],
-      {fontSize: faded?12:13, color:'#1a56db', fixed:true, highlight:false,
+      {fontSize: faded?12:13, color:'#1f6fb2', fixed:true, highlight:false,
        cssStyle:'font-weight:'+(faded?600:700)+';'+(faded?'opacity:0.5;':'')});
 
     if (shifted) {
       const xs0 = qAt2(V3_I0);
       v3D0 = b2.create('functiongraph',[dFn(V3_I0),0.1,xmax],
-        {strokeColor:'#1a56db',strokeWidth:1.6,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
+        {strokeColor:'#1f6fb2',strokeWidth:1.6,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
       v3D0drop = b2.create('segment',[[xs0,0],[xs0,V3_Px]],
         {strokeColor:'#9aa3b2',strokeWidth:1,dash:2,strokeOpacity:0.5,fixed:true,highlight:false});
       v3D0pt = b2.create('point',[xs0,V3_Px],
@@ -1580,7 +1602,7 @@ function initViz3() {
       v3D0lbl = mkLbl(V3_I0, 'D', true, 3.1);
     }
 
-    v3D1 = b2.create('functiongraph',[dFn(I),0.1,xmax],{strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+    v3D1 = b2.create('functiongraph',[dFn(I),0.1,xmax],{strokeColor:'#1f6fb2',strokeWidth:2,fixed:true});
     v3D2 = b2.create('segment',[[qAt2(I),0],[qAt2(I),V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
     v3RefPt = b2.create('point',[qAt2(I),V3_Px],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
       name:'●',withLabel:false});
@@ -1700,9 +1722,9 @@ function drillAnswer(ans) {
   }
 
   fb.style.display = 'block';
-  fb.innerHTML = `${correct ? '✅ <strong>Correct!</strong>' : `❌ <strong>Incorrect.</strong> The answer is <em>${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}</em>.`} ${sc.explanation}`;
+  fb.innerHTML = `${correct ? '<span style="color:var(--d-gain)">&#10003;</span> <strong>Correct!</strong>' : `<span style="color:var(--d-loss)">&#10007;</span> <strong>Incorrect.</strong> The answer is <em>${sc.answer === 'movement' ? 'Movement Along' : 'Shift of Curve'}</em>.`} ${sc.explanation}`;
   next.style.display = 'inline-block';
-  next.style.cssText = 'font-family:var(--font);font-size:0.88rem;font-weight:600;padding:0.45rem 1.4rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;';
+  next.style.cssText = 'font-family:var(--font-body);font-size: var(--t-small);font-weight: 500;padding:0.45rem 1.4rem;border:1px solid var(--unit-ink);border-radius:6px;background:var(--unit-ink);color:#fff;cursor:pointer;';
   setTimeout(() => next.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
 
   if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([fb]);
@@ -1721,8 +1743,8 @@ let v5GhostCurve = null, v5GhostLbl = null;
 
 function v5SetRel(r) {
   v5Rel = r;
-  document.getElementById('v5-sub-btn').classList.toggle('active', r==='sub');
-  document.getElementById('v5-comp-btn').classList.toggle('active', r==='comp');
+  document.getElementById('v5-sub-btn').classList.toggle('on', r==='sub');
+  document.getElementById('v5-comp-btn').classList.toggle('on', r==='comp');
   redrawV5();
 }
 
@@ -1744,7 +1766,7 @@ function d3v5UpdateOverlay(b, safAdj, labelText) {
     const anchorPt = b.create('point',[ax,ay],{visible:false,fixed:true,withLabel:false});
     const scr = () => { const sc = anchorPt.coords.scrCoords; return [sc[1], sc[2]]; };
     const [sx, sy] = scr();
-    const nodes = [ d3OvNode('D', '#1a56db', labelText, 22, sx, sy) ];
+    const nodes = [ d3OvNode('D', '#1f6fb2', labelText, 22, sx, sy) ];
     const sim = d3OvMakeSim(nodes);
     const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
     sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
@@ -1780,16 +1802,16 @@ function initViz5() {
     boundingbox:[-2,8.8,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#888'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'var(--ink-faint)'}}}}
   });
   const b = v5b;
   // Horizontal grid lines (price 0-8)
   for (let gy = 1; gy <= 8; gy++) {
     b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[76,-0.3,'X'],{fontSize:10,color:'#888',fixed:true});
-  b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'#888',fixed:true});
+  b.create('text',[76,-0.3,'X'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
+  b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'var(--ink-faint)',fixed:true});
 
   redrawV5();
 
@@ -1834,15 +1856,15 @@ function redrawV5() {
   if (pyShifted) {
     const safAdjBase = Math.max(v5I / 2, 5); // k = 0 at Py = pyBase
     v5GhostCurve = b.create('functiongraph',[x => x>0.1 ? safAdjBase/x : NaN, 0.1, 80],
-      {strokeColor:'#1a56db',strokeWidth:1.4,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
+      {strokeColor:'#1f6fb2',strokeWidth:1.4,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
     const gpy = 5.5, gx = safAdjBase / gpy;
     v5GhostLbl = b.create('text',[gx + 0.6, gpy + 0.3, 'D'],
-      {fontSize:11,color:'#1a56db',fixed:true,highlight:false,
-       cssStyle:'font-weight:600;opacity:0.5;'});
+      {fontSize:11,color:'#1f6fb2',fixed:true,highlight:false,
+       cssStyle:'font-weight: 500;opacity:0.5;'});
   }
 
   v5Curve = b.create('functiongraph',[x => x>0.1 ? safAdj/x : NaN, 0.1, 80],
-    {strokeColor:'#1a56db',strokeWidth:2,fixed:true});
+    {strokeColor:'#1f6fb2',strokeWidth:2,fixed:true});
 
   // Current point
   const curX = safAdj / v5Px;

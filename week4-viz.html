@@ -1,39 +1,40 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u1);--unit-ink:var(--u1-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Week 4: Interactive Visualizations - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     /* ── layout ── */
-    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
+    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule-strong); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
-    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; position:relative; z-index:1; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--unit-ink); margin-bottom:0.4rem; position:relative; z-index:1; }
     .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
-    .viz-instructor { font-size:0.9rem; color:var(--muted); }
+    .viz-instructor { font-size:0.9rem; color:var(--ink-faint); }
 
     /* ── TOC ── */
-    .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
-    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
+    .toc { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
+    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:0.6rem; }
     .toc ol { margin:0; padding-left:0.5rem; display:flex; flex-direction:column; gap:0.28rem; }
-    .toc li { font-size:0.855rem; color:var(--muted); }
-    .toc a { color:var(--accent); text-decoration:none; }
+    .toc li { font-size:0.855rem; color:var(--ink-faint); }
+    .toc a { color:var(--unit-ink); text-decoration:none; }
     .toc a:hover { text-decoration:underline; }
 
     /* ── figure sections ── */
-    .fig-section { border-top:2px solid var(--rule); padding-top:2.5rem; margin-top:3rem; }
+    .fig-section { border-top:2px solid var(--rule-strong); padding-top:2.5rem; margin-top:3rem; }
     .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
-    .fig-label { font-family:var(--mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
+    .fig-label { font-family:var(--font-mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--unit-ink); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
     .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
-    .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
+    .fig-intro { font-size:0.9rem; color:var(--ink-faint); line-height:1.7; margin-bottom:1.5rem; }
 
     /* ── canvas wrapper ── */
-    .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; max-width:482px; margin-left:auto; margin-right:auto; }
+    .cvs-wrap { border:1px solid var(--rule-strong); border-radius:10px; overflow:hidden; background:#fff; max-width:482px; margin-left:auto; margin-right:auto; }
     canvas { display:block; width:100%; height:320px; cursor:default; }
 
     /* ── canvas + D3 SVG label overlay ── */
@@ -46,31 +47,31 @@
     /* ── controls ── */
     .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
     .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
-    .viz-slider-label { font-family:var(--mono); font-size:0.75rem; color:var(--muted); white-space:nowrap; }
-    .viz-slider { width:130px; accent-color:var(--accent); }
-    .viz-slider:focus-visible { outline:3px solid var(--accent); outline-offset:3px; border-radius:3px; }
-    .viz-slider-val { font-family:var(--mono); font-size:0.82rem; color:var(--accent); min-width:36px; }
-    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
-    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
-    .viz-select { font-size:0.82rem; font-family:var(--mono); border:1px solid var(--rule); border-radius:6px; padding:3px 8px; background:var(--off-white); color:var(--text); cursor:pointer; }
+    .viz-slider-label { font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-faint); white-space:nowrap; }
+    .viz-slider { width:130px; accent-color:var(--unit-ink); }
+    .viz-slider:focus-visible { outline:3px solid var(--unit-ink); outline-offset:3px; border-radius:3px; }
+    .viz-slider-val { font-family:var(--font-mono); font-size:0.82rem; color:var(--unit-ink); min-width:36px; }
+    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule-strong); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
+    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--unit-ink); color:var(--unit-ink); }
+    .viz-select { font-size:0.82rem; font-family:var(--font-mono); border:1px solid var(--rule-strong); border-radius:6px; padding:3px 8px; background:var(--off-white); color:var(--text); cursor:pointer; }
 
     /* ── readout boxes ── */
-    .viz-readout { background:var(--off-white); border:1px solid var(--rule); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
+    .viz-readout { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
     .viz-readout b { color:var(--text); }
     .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
     .readout-col { flex:1; min-width:140px; }
-    .readout-label { font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
-    .readout-val { font-size:1.05rem; font-weight:600; color:var(--accent); font-family:var(--mono); }
+    .readout-label { font-size: var(--t-caption); color: var(--ink-faint); }
+    .readout-val { font-size:1.05rem; font-weight:600; color:var(--unit-ink); font-family:var(--font-mono); }
     .verdict { font-weight:600; font-size:0.9rem; margin-top:0.5rem; }
-    .verdict.elastic { color:var(--red); }
+    .verdict.elastic { color:var(--d-second); }
     .verdict.unit { color:#888; }
-    .verdict.inelastic { color:#1a56db; }
+    .verdict.inelastic { color:#1f6fb2; }
 
     /* ── footer ── */
-    .hub-footer { border-top:1px solid var(--rule); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
-    .hub-footer-left { font-size:0.82rem; color:var(--muted); }
-    .hub-footer-left a { color:var(--muted); text-decoration:none; }
-    .hub-footer-left a:hover { color:var(--accent); }
+    .hub-footer { border-top:1px solid var(--rule-strong); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
+    .hub-footer-left { font-size:0.82rem; color:var(--ink-faint); }
+    .hub-footer-left a { color:var(--ink-faint); text-decoration:none; }
+    .hub-footer-left a:hover { color:var(--unit-ink); }
     .footer-logo { height:22px; opacity:0.5; }
   </style>
 </head>
@@ -95,49 +96,47 @@
   </ul>
 </nav>
 
-<div class="top-bar">
-  <div class="top-bar-left">
-    <a href="index.html" aria-label="Course home">
-      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-    </a>
-    <div class="top-bar-divider"></div>
-    <div class="breadcrumb">
-      <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="week4.html">Week 4</a>
-      <span class="breadcrumb-sep">›</span>
-      <span>Visualizations</span>
-    </div>
-  </div>
-  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week4.html">Week 4</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
 </div>
 
-<main class="main" style="max-width:1400px;">
+<div class="layout">
 
-  <div class="viz-hero">
-    <div class="viz-ghost">04</div>
-    <p class="viz-week-label">Week 4 · Interactive Visualizations</p>
-    <h1 class="viz-title">Elasticity &amp; Consumer Welfare</h1>
-    <p class="viz-instructor">Prof. Naveen Sunder</p>
-    <nav class="toc">
-      <div class="toc-title">Seven Figures</div>
-      <ol>
-        <li><a href="#sec-4-1">Fig 4.1: Elasticity Meter: Point vs Arc</a></li>
-        <li><a href="#sec-4-2">Fig 4.2: Elasticity Heatmap: Living Demand Curve</a></li>
-        <li><a href="#sec-4-3">Fig 4.3: Revenue Rectangle: Price vs Quantity Effect</a></li>
-        <li><a href="#sec-4-4">Fig 4.4: Pricing Strategy Simulator</a></li>
-        <li><a href="#sec-4-6">Fig 4.6: Consumer Surplus Triangle</a></li>
-        <li><a href="#sec-4-7">Fig 4.7: Surge Pricing Simulator</a></li>
-        <li><a href="#sec-4-8">Fig 4.8: Market Demand Builder</a></li>
-      </ol>
-    </nav>
-  </div>
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-4-1"><span>4.1</span>Elasticity Meter: Point vs Arc</a></li>
+      <li><a href="#sec-4-2"><span>4.2</span>Elasticity Heatmap: Living Demand Curve</a></li>
+      <li><a href="#sec-4-3"><span>4.3</span>Revenue Rectangle: Price vs Quantity Effect</a></li>
+      <li><a href="#sec-4-4"><span>4.4</span>Pricing Strategy Simulator</a></li>
+      <li><a href="#sec-4-6"><span>4.6</span>Consumer Surplus Triangle</a></li>
+      <li><a href="#sec-4-7"><span>4.7</span>Surge Pricing Simulator</a></li>
+      <li><a href="#sec-4-8"><span>4.8</span>Market Demand Builder</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">04</span>
+      <p class="eyebrow">Week 4 · Interactive figures</p>
+      <h1>Elasticity &amp; Consumer Welfare</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.1 -->
-  <section class="fig-section" id="sec-4-1">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 4.1</span>
-      <span class="fig-title">Elasticity Meter: Point vs Arc</span>
+  <section class="sec page" id="sec-4-1">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 4.1</span>
+      <h3>Elasticity Meter: Point vs Arc</h3>
     </div>
     <p class="fig-intro">
       Drag either point along the demand curve. <strong>Point elasticity</strong> measures responsiveness at a single location
@@ -145,98 +144,95 @@
       between two points using the midpoint formula. Toggle between modes to compare how the two methods diverge as the
       gap between points widens.
     </p>
-    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs1" height="320"></canvas><div class="cvs-overlay" id="cvs1-ov"></div></div></div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Mode:</span>
-        <button class="viz-btn active" id="v1-btn-arc" onclick="v1SetMode('arc')">Arc</button>
-        <button class="viz-btn" id="v1-btn-point" onclick="v1SetMode('point')">Point</button>
+    <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs1" height="320"></canvas><div class="cvs-overlay" id="cvs1-ov"></div></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Mode:</span>
+        <button class="btn on" id="v1-btn-arc" onclick="v1SetMode('arc')">Arc</button>
+        <button class="btn" id="v1-btn-point" onclick="v1SetMode('point')">Point</button>
       </div>
     </div>
-    <div class="viz-readout" id="v1-readout"></div>
+    <div class="fig-state" id="v1-readout"></div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.2 -->
-  <section class="fig-section" id="sec-4-2">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 4.2</span>
-      <span class="fig-title">Elasticity Heatmap: Living Demand Curve</span>
+  <section class="sec page" id="sec-4-2">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 4.2</span>
+      <h3>Elasticity Heatmap: Living Demand Curve</h3>
     </div>
     <p class="fig-intro">
-      The demand curve is shaded as a continuous gradient: <strong style="color:var(--red)">red</strong> at the top (elastic,
-      |e<sub>d</sub>|&gt;1), <strong style="color:#e6a817">amber</strong> at the midpoint (unit elastic, |e<sub>d</sub>|=1), and <strong style="color:#1a56db">blue</strong>
+      The demand curve is shaded as a continuous gradient: <strong style="color:var(--d-second)">red</strong> at the top (elastic,
+      |e<sub>d</sub>|&gt;1), <strong style="color:#e6a817">amber</strong> at the midpoint (unit elastic, |e<sub>d</sub>|=1), and <strong style="color:#1f6fb2">blue</strong>
       at the bottom (inelastic, |e<sub>d</sub>|&lt;1). Drag the yellow dot to any point and read off its exact elasticity.
       Type your own linear demand equation below to reshape the curve.
     </p>
-    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs2" height="320"></canvas><div class="cvs-overlay" id="cvs2-ov"></div></div></div>
-    <div class="viz-ctrl-row" style="align-items:center;gap:0.6rem;">
+    <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs2" height="320"></canvas><div class="cvs-overlay" id="cvs2-ov"></div></div></div>
+    <div class="ctrl-row" style="align-items:center;gap:0.6rem;">
       <div style="display:flex;flex-direction:column;gap:0.28rem;">
-        <span class="viz-slider-label" style="font-size:0.73rem;">Enter demand equation (format: Q = a &minus; bP)</span>
+        <span class="ctrl-label" style="font-size:0.73rem;">Enter demand equation (format: Q = a &minus; bP)</span>
         <div style="display:flex;align-items:center;gap:0.5rem;">
-          <span style="font-family:var(--mono);font-size:0.85rem;color:var(--muted);">Q =</span>
+          <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-faint);">Q =</span>
           <input type="number" id="v2-a-in" value="100" min="20" max="300" step="5"
-            style="font-family:var(--mono);font-size:0.9rem;width:72px;border:1px solid var(--rule);border-radius:5px;padding:0.25rem 0.4rem;background:var(--off-white);"
+            style="font-family:var(--font-mono);font-size:0.9rem;width:72px;border:1px solid var(--rule-strong);border-radius:5px;padding:0.25rem 0.4rem;background:var(--off-white);"
             oninput="v2ParseEq()" />
-          <span style="font-family:var(--mono);font-size:0.85rem;color:var(--muted);">&minus;</span>
+          <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-faint);">&minus;</span>
           <input type="number" id="v2-b-in" value="2" min="0.1" max="20" step="0.1"
-            style="font-family:var(--mono);font-size:0.9rem;width:65px;border:1px solid var(--rule);border-radius:5px;padding:0.25rem 0.4rem;background:var(--off-white);"
+            style="font-family:var(--font-mono);font-size:0.9rem;width:65px;border:1px solid var(--rule-strong);border-radius:5px;padding:0.25rem 0.4rem;background:var(--off-white);"
             oninput="v2ParseEq()" />
-          <span style="font-family:var(--mono);font-size:0.85rem;color:var(--muted);">P</span>
+          <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-faint);">P</span>
         </div>
-        <span id="v2-eq-preview" style="font-family:var(--mono);font-size:0.8rem;color:var(--accent);"></span>
+        <span id="v2-eq-preview" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--unit-ink);"></span>
       </div>
     </div>
-    <div class="viz-readout" id="v2-readout"></div>
+    <div class="fig-state" id="v2-readout"></div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.3 -->
-  <section class="fig-section" id="sec-4-3">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 4.3</span>
-      <span class="fig-title">Revenue Rectangle: Price vs Quantity Effect</span>
+  <section class="sec page" id="sec-4-3">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 4.3</span>
+      <h3>Revenue Rectangle: Price vs Quantity Effect</h3>
     </div>
     <p class="fig-intro">
-      Total revenue equals the area of the rectangle P&times;Q. When price rises, the <strong style="color:var(--red)">red
+      Total revenue equals the area of the rectangle P&times;Q. When price rises, the <strong style="color:var(--d-second)">red
       strip</strong> shows revenue gained from existing buyers paying more; the <strong style="color:var(--green)">green
       strip</strong> shows revenue lost from buyers who leave. The live verdict tells you which effect dominates.
       Set the old price, pick the new price, and adjust the demand slope to explore.
     </p>
-    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs3" height="320"></canvas><div class="cvs-overlay" id="cvs3-ov"></div></div></div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Old price P<sub>old</sub>:</span>
-        <input type="range" class="viz-slider" id="v3-pb" min="5" max="40" value="25" oninput="v3Update()" aria-label="Old price (P old)">
-        <span class="viz-slider-val" id="v3-pb-val">$25</span>
+    <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs3" height="320"></canvas><div class="cvs-overlay" id="cvs3-ov"></div></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Old price P<sub>old</sub>: <span class="ctrl-value" id="v3-pb-val">$25</span></span>
+        <input type="range" class="ctrl-track" id="v3-pb" min="5" max="40" value="25" oninput="v3Update()" aria-label="Old price (P old)">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">New price P<sub>new</sub>:</span>
-        <input type="range" class="viz-slider" id="v3-p" min="5" max="45" value="35" oninput="v3Update()" aria-label="New price (P new)">
-        <span class="viz-slider-val" id="v3-p-val">$35</span>
+      <div class="ctrl">
+        <span class="ctrl-label">New price P<sub>new</sub>: <span class="ctrl-value" id="v3-p-val">$35</span></span>
+        <input type="range" class="ctrl-track" id="v3-p" min="5" max="45" value="35" oninput="v3Update()" aria-label="New price (P new)">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Demand slope b:</span>
-        <input type="range" class="viz-slider" id="v3-slope" min="5" max="40" value="20" oninput="v3Update()" aria-label="Demand slope b">
-        <span class="viz-slider-val" id="v3-slope-val">2.0</span>
+      <div class="ctrl">
+        <span class="ctrl-label">Demand slope b: <span class="ctrl-value" id="v3-slope-val">2.0</span></span>
+        <input type="range" class="ctrl-track" id="v3-slope" min="5" max="40" value="20" oninput="v3Update()" aria-label="Demand slope b">
       </div>
     </div>
-    <div class="viz-readout" id="v3-readout"></div>
+    <div class="fig-state" id="v3-readout"></div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.4 -->
-  <section class="fig-section" id="sec-4-4">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 4.4</span>
-      <span class="fig-title">Pricing Strategy Simulator</span>
+  <section class="sec page" id="sec-4-4">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 4.4</span>
+      <h3>Pricing Strategy Simulator</h3>
     </div>
     <p class="fig-intro">
       Select an industry with its real-world empirical elasticity estimate. Then adjust the price change and see the predicted
       change in total revenue. Uses the approximation %&Delta;TR &asymp; %&Delta;P &times; (1&nbsp;+&nbsp;e<sub>d</sub>).
     </p>
-    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs4" height="320"></canvas><div class="cvs-overlay" id="cvs4-ov"></div></div></div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Industry:</span>
-        <select class="viz-select" id="v4-ind" onchange="v4Update()">
+    <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs4" height="320"></canvas><div class="cvs-overlay" id="cvs4-ov"></div></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Industry:</span>
+        <select class="sel" id="v4-ind" onchange="v4Update()">
           <option value="pharma">Pharmaceuticals (e = &minus;0.3)</option>
           <option value="petrol">Gasoline (e = &minus;0.2)</option>
           <option value="electric">Electricity (e = &minus;0.1)</option>
@@ -246,20 +242,19 @@
           <option value="hotel">Hotel rooms (e = &minus;1.8)</option>
         </select>
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">%&Delta;P:</span>
-        <input type="range" class="viz-slider" id="v4-dp" min="-30" max="30" value="10" oninput="v4Update()" aria-label="Percent price change">
-        <span class="viz-slider-val" id="v4-dp-val">+10%</span>
+      <div class="ctrl">
+        <span class="ctrl-label">%&Delta;P: <span class="ctrl-value" id="v4-dp-val">+10%</span></span>
+        <input type="range" class="ctrl-track" id="v4-dp" min="-30" max="30" value="10" oninput="v4Update()" aria-label="Percent price change">
       </div>
     </div>
-    <div class="viz-readout" id="v4-readout"></div>
+    <div class="fig-state" id="v4-readout"></div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.6 -->
-  <section class="fig-section" id="sec-4-6">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 4.6</span>
-      <span class="fig-title">Consumer Surplus Triangle</span>
+  <section class="sec page" id="sec-4-6">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 4.6</span>
+      <h3>Consumer Surplus Triangle</h3>
     </div>
     <p class="fig-intro">
       Consumer surplus (CS) is the area of the triangle above the market price and below the demand curve. Use the first slider
@@ -267,54 +262,51 @@
       <strong style="color:var(--green)">rectangle</strong> (existing buyers now paying more) and the <strong style="color:#e6ac17">exit triangle</strong>
       (buyers who exit the market). Click <strong>Show Calculation</strong> to see the step-by-step formula.
     </p>
-    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs6" height="320"></canvas><div class="cvs-overlay" id="cvs6-ov"></div></div></div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Base price P*:</span>
-        <input type="range" class="viz-slider" id="v6-p" min="5" max="35" value="15" oninput="v6Update()" aria-label="Base price P*">
-        <span class="viz-slider-val" id="v6-p-val">$15</span>
+    <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs6" height="320"></canvas><div class="cvs-overlay" id="cvs6-ov"></div></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Base price P*: <span class="ctrl-value" id="v6-p-val">$15</span></span>
+        <input type="range" class="ctrl-track" id="v6-p" min="5" max="35" value="15" oninput="v6Update()" aria-label="Base price P*">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">New price P':</span>
-        <input type="range" class="viz-slider" id="v6-pn" min="5" max="45" value="25" oninput="v6Update()" aria-label="New price P prime">
-        <span class="viz-slider-val" id="v6-pn-val">$25</span>
+      <div class="ctrl">
+        <span class="ctrl-label">New price P': <span class="ctrl-value" id="v6-pn-val">$25</span></span>
+        <input type="range" class="ctrl-track" id="v6-pn" min="5" max="45" value="25" oninput="v6Update()" aria-label="New price P prime">
       </div>
-      <button class="viz-btn" onclick="v6ToggleCalc()">Show Calculation</button>
+      <button class="btn" onclick="v6ToggleCalc()">Show Calculation</button>
     </div>
-    <div id="v6-calc-box" style="display:none;background:#f8f9fb;border:1px solid var(--rule);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;font-size:0.84rem;line-height:2;font-family:var(--mono);color:var(--text);">
+    <div id="v6-calc-box" style="display:none;background:#f8f9fb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;font-size:0.84rem;line-height:2;font-family:var(--font-mono);color:var(--text);">
     </div>
-    <div class="viz-readout" id="v6-readout"></div>
+    <div class="fig-state" id="v6-readout"></div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.7 -->
-  <section class="fig-section" id="sec-4-7">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 4.7</span>
-      <span class="fig-title">Surge Pricing Simulator</span>
+  <section class="sec page" id="sec-4-7">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 4.7</span>
+      <h3>Surge Pricing Simulator</h3>
     </div>
     <p class="fig-intro">
       Ride-share surge pricing in action. As the surge multiplier rises, rider demand falls, consumer surplus shrinks, and
       Uber's revenue grows - up to a point. Riders priced out exit the market entirely.
       This illustrates the welfare trade-off between producer revenue and consumer surplus.
     </p>
-    <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs7" height="320"></canvas><div class="cvs-overlay" id="cvs7-ov"></div></div></div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Surge price:</span>
-        <input type="range" class="viz-slider" id="v7-p" min="5" max="18" value="5" step="any" oninput="v7Update()" aria-label="Surge price">
-        <span class="viz-slider-val" id="v7-p-val">$5.00</span>
+    <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs7" height="320"></canvas><div class="cvs-overlay" id="cvs7-ov"></div></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Surge price: <span class="ctrl-value" id="v7-p-val">$5.00</span></span>
+        <input type="range" class="ctrl-track" id="v7-p" min="5" max="18" value="5" step="any" oninput="v7Update()" aria-label="Surge price">
       </div>
     </div>
-    <div class="viz-readout" id="v7-readout"></div>
+    <div class="fig-state" id="v7-readout"></div>
     <!-- old / new / change readout, baseline is the normal (non-surge) price Pnorm -->
     <div id="v7-delta" class="delta-bar"></div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.8 -->
-  <section class="fig-section" id="sec-4-8">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 4.8</span>
-      <span class="fig-title">Market Demand: Horizontal Aggregation</span>
+  <section class="sec page" id="sec-4-8">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 4.8</span>
+      <h3>Market Demand: Horizontal Aggregation</h3>
     </div>
     <p class="fig-intro" style="font-size:1rem;">
       The market demand curve is the <em>horizontal sum</em> of individual demand curves. The animation below shows
@@ -331,49 +323,49 @@
       </video>
     </div>
     <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:1.2rem;flex-wrap:wrap;">
-      <span style="font-family:var(--mono);font-size:0.72rem;color:var(--muted);">Playback speed:</span>
-      <button class="v48-speed-btn" data-rate="0.5" onclick="v48SetRate(0.5)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
-      <button class="v48-speed-btn active-rate" data-rate="1" onclick="v48SetRate(1)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--accent);border-radius:5px;background:var(--accent-light);color:var(--accent);cursor:pointer;">1x</button>
-      <button class="v48-speed-btn" data-rate="2" onclick="v48SetRate(2)" style="font-family:var(--mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
+      <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--ink-faint);">Playback speed:</span>
+      <button class="v48-speed-btn" data-rate="0.5" onclick="v48SetRate(0.5)" style="font-family:var(--font-mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
+      <button class="v48-speed-btn active-rate" data-rate="1" onclick="v48SetRate(1)" style="font-family:var(--font-mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--unit-ink);border-radius:5px;background:var(--accent-light);color:var(--unit-ink);cursor:pointer;">1x</button>
+      <button class="v48-speed-btn" data-rate="2" onclick="v48SetRate(2)" style="font-family:var(--font-mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
     </div>
 
     <!-- Three-panel interactive -->
     <div style="margin-bottom:1.25rem;">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;">
-        <div class="cvs-wrap">
-          <div class="panel-label" style="color:var(--red);">Consumer 1 &nbsp; Q = 30 &minus; P</div>
+        <div class="fig-plot">
+          <div class="panel-label" style="color:var(--d-second);">Consumer 1 &nbsp; Q = 30 &minus; P</div>
           <div class="cvs-stack"><canvas id="cvs8a" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8a-ov"></div></div>
         </div>
-        <div class="cvs-wrap">
+        <div class="fig-plot">
           <div class="panel-label" style="color:var(--accent-2);">Consumer 2 &nbsp; Q = 24 &minus; 2P</div>
           <div class="cvs-stack"><canvas id="cvs8b" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8b-ov"></div></div>
         </div>
-        <div class="cvs-wrap">
-          <div class="panel-label" style="color:#1a56db;">Market Demand Q<sub>m</sub>(P)</div>
+        <div class="fig-plot">
+          <div class="panel-label" style="color:#1f6fb2;">Market Demand Q<sub>m</sub>(P)</div>
           <div class="cvs-stack"><canvas id="cvs8c" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8c-ov"></div></div>
         </div>
       </div>
-      <div class="viz-ctrl-row" style="margin-top:0.75rem;">
-        <span class="viz-slider-label">Price P:</span>
-        <input type="range" class="viz-slider" id="v8a-p" min="0" max="32" step="any" value="20" oninput="v8aUpdate()" style="width:220px;" aria-label="Market price P">
-        <span class="viz-slider-val" id="v8a-p-val">$20</span>
+      <div class="ctrl-row" style="margin-top:0.75rem;">
+        <span class="ctrl-label">Price P:</span>
+        <input type="range" class="ctrl-track" id="v8a-p" min="0" max="32" step="any" value="20" oninput="v8aUpdate()" style="width:220px;" aria-label="Market price P">
+        <span class="ctrl-value" id="v8a-p-val">$20</span>
       </div>
-      <div class="viz-readout" id="v8a-readout" style="margin-top:0.5rem;"></div>
+      <div class="fig-state" id="v8a-readout"></div>
     </div>
 
     <!-- Market demand formula box -->
-    <div style="background:var(--off-white);border:1px solid var(--rule);border-radius:9px;padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:0.88rem;line-height:1.95;">
-      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.55rem;">Market Demand Formula by Price Range</div>
-      <div style="display:flex;flex-direction:column;gap:0.3rem;font-family:var(--mono);">
-        <div><span style="display:inline-block;min-width:140px;color:var(--muted);">P &gt; $30:</span><strong style="color:var(--muted);">Q<sub>m</sub> = 0</strong> &nbsp;<span style="color:var(--muted);font-size:0.82rem;">(neither consumer buys; choke price of Consumer 1 not yet reached)</span></div>
-        <div><span style="display:inline-block;min-width:140px;color:var(--red);">$12 &lt; P &le; $30:</span><strong style="color:var(--red);">Q<sub>m</sub> = 30 &minus; P</strong> &nbsp;<span style="color:var(--muted);font-size:0.82rem;">(Consumer 1 only; Consumer 2's choke price $12 not yet reached)</span></div>
-        <div><span style="display:inline-block;min-width:140px;color:var(--green);">P &le; $12:</span><strong style="color:var(--green);">Q<sub>m</sub> = (30 &minus; P) + (24 &minus; 2P) = 54 &minus; 3P</strong> &nbsp;<span style="color:var(--muted);font-size:0.82rem;">(both consumers buy; sum of demand curves)</span></div>
+    <div style="background:var(--off-white);border:1px solid var(--rule-strong);border-radius:9px;padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:0.88rem;line-height:1.95;">
+      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:0.55rem;">Market Demand Formula by Price Range</div>
+      <div style="display:flex;flex-direction:column;gap:0.3rem;font-family:var(--font-mono);">
+        <div><span style="display:inline-block;min-width:140px;color:var(--ink-faint);">P &gt; $30:</span><strong style="color:var(--ink-faint);">Q<sub>m</sub> = 0</strong> &nbsp;<span style="color:var(--ink-faint);font-size:0.82rem;">(neither consumer buys; choke price of Consumer 1 not yet reached)</span></div>
+        <div><span style="display:inline-block;min-width:140px;color:var(--d-second);">$12 &lt; P &le; $30:</span><strong style="color:var(--d-second);">Q<sub>m</sub> = 30 &minus; P</strong> &nbsp;<span style="color:var(--ink-faint);font-size:0.82rem;">(Consumer 1 only; Consumer 2's choke price $12 not yet reached)</span></div>
+        <div><span style="display:inline-block;min-width:140px;color:var(--green);">P &le; $12:</span><strong style="color:var(--green);">Q<sub>m</sub> = (30 &minus; P) + (24 &minus; 2P) = 54 &minus; 3P</strong> &nbsp;<span style="color:var(--ink-faint);font-size:0.82rem;">(both consumers buy; sum of demand curves)</span></div>
       </div>
-      <div style="margin-top:0.6rem;font-size:0.8rem;color:var(--muted);">The <em>choke price</em> is the price at which a consumer's demand falls to zero. Consumer 1: choke price = $30 (sets 30 &minus; P = 0). Consumer 2: choke price = $12 (sets 24 &minus; 2P = 0).</div>
+      <div style="margin-top:0.6rem;font-size:0.8rem;color:var(--ink-faint);">The <em>choke price</em> is the price at which a consumer's demand falls to zero. Consumer 1: choke price = $30 (sets 30 &minus; P = 0). Consumer 2: choke price = $12 (sets 24 &minus; 2P = 0).</div>
     </div>
 
     <!-- Builder -->
-    <div style="border-top:1px dashed var(--rule);margin-top:2rem;padding-top:1.5rem;">
+    <div style="border-top:1px dashed var(--rule-strong);margin-top:2rem;padding-top:1.5rem;">
       <div class="fig-hdr" style="margin-bottom:0.4rem;">
         <span class="fig-label" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">Builder</span>
         <span class="fig-title" style="font-size:1rem;">Build Your Own Market Demand</span>
@@ -383,39 +375,39 @@
         The market demand curve builds itself as the horizontal sum. The functional form at different price ranges
         appears at the bottom.
       </p>
-      <div class="cvs-wrap"><div class="cvs-stack"><canvas id="cvs8" height="320"></canvas><div class="cvs-overlay" id="cvs8-ov"></div></div></div>
-      <div class="viz-ctrl-row" style="flex-direction:column;align-items:flex-start;gap:0.6rem;margin-top:0.75rem;">
+      <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs8" height="320"></canvas><div class="cvs-overlay" id="cvs8-ov"></div></div></div>
+      <div class="ctrl-row" style="flex-direction:column;align-items:flex-start;gap:0.6rem;margin-top:0.75rem;">
         <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
-          <span style="font-family:var(--mono);font-size:0.78rem;color:var(--red);font-weight:600;min-width:80px;">Consumer 1</span>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">Q =</span>
+          <span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--d-second);font-weight:600;min-width:80px;">Consumer 1</span>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);">Q =</span>
           <input type="number" id="v8-c1-a-in" value="30" min="1" max="80" step="1"
-            style="font-family:var(--mono);font-size:0.85rem;width:60px;border:1px solid #fcc;border-radius:5px;padding:0.2rem 0.4rem;background:#fff5f5;" oninput="v8Update()"/>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">&minus;</span>
+            style="font-family:var(--font-mono);font-size:0.85rem;width:60px;border:1px solid #fcc;border-radius:5px;padding:0.2rem 0.4rem;background:#fff5f5;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);">&minus;</span>
           <input type="number" id="v8-c1-b-in" value="1" min="0.1" max="10" step="0.5"
-            style="font-family:var(--mono);font-size:0.85rem;width:55px;border:1px solid #fcc;border-radius:5px;padding:0.2rem 0.4rem;background:#fff5f5;" oninput="v8Update()"/>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">P</span>
-          <span id="v8-c1-preview" style="font-family:var(--mono);font-size:0.78rem;color:var(--red);"></span>
+            style="font-family:var(--font-mono);font-size:0.85rem;width:55px;border:1px solid #fcc;border-radius:5px;padding:0.2rem 0.4rem;background:#fff5f5;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);">P</span>
+          <span id="v8-c1-preview" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--d-second);"></span>
         </div>
         <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
-          <span style="font-family:var(--mono);font-size:0.78rem;color:var(--accent-2);font-weight:600;min-width:80px;">Consumer 2</span>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">Q =</span>
+          <span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-2);font-weight:600;min-width:80px;">Consumer 2</span>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);">Q =</span>
           <input type="number" id="v8-c2-a-in" value="24" min="1" max="80" step="1"
-            style="font-family:var(--mono);font-size:0.85rem;width:60px;border:1px solid #bcd;border-radius:5px;padding:0.2rem 0.4rem;background:#f0f6ff;" oninput="v8Update()"/>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">&minus;</span>
+            style="font-family:var(--font-mono);font-size:0.85rem;width:60px;border:1px solid #bcd;border-radius:5px;padding:0.2rem 0.4rem;background:#f0f6ff;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);">&minus;</span>
           <input type="number" id="v8-c2-b-in" value="2" min="0.1" max="10" step="0.5"
-            style="font-family:var(--mono);font-size:0.85rem;width:55px;border:1px solid #bcd;border-radius:5px;padding:0.2rem 0.4rem;background:#f0f6ff;" oninput="v8Update()"/>
-          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">P</span>
-          <span id="v8-c2-preview" style="font-family:var(--mono);font-size:0.78rem;color:var(--accent-2);"></span>
+            style="font-family:var(--font-mono);font-size:0.85rem;width:55px;border:1px solid #bcd;border-radius:5px;padding:0.2rem 0.4rem;background:#f0f6ff;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);">P</span>
+          <span id="v8-c2-preview" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-2);"></span>
         </div>
       </div>
       <!-- Functional form display -->
-      <div id="v8-functional" style="margin-top:0.75rem;background:#f8f9fb;border:1px solid var(--rule);border-radius:8px;padding:0.75rem 1rem;font-family:var(--mono);font-size:0.82rem;line-height:2;color:var(--text);">
+      <div id="v8-functional" style="margin-top:0.75rem;background:#f8f9fb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.75rem 1rem;font-family:var(--font-mono);font-size:0.82rem;line-height:2;color:var(--text);">
       </div>
-      <div class="viz-readout" id="v8-readout"></div>
+      <div class="fig-state" id="v8-readout"></div>
     </div>
   </section>
 
-  <footer class="hub-footer">
+  <footer class="site-foot">
     <div class="hub-footer-left">
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
       &nbsp;·&nbsp; EC224 Intermediate Microeconomics
@@ -424,13 +416,14 @@
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
 
-</main>
+  </main>
+</div>
 
 <script>
 /* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
    resolve CSS var(), so their colours come from here; CSS and inline styles use
    var() directly. Fallbacks equal the token values. */
-var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
 
 // ══════════════════════════════════════════════════════════════════════
 // SHARED UTILITIES
@@ -565,9 +558,9 @@ function v48SetRate(r) {
   if (vid) vid.playbackRate = r;
   document.querySelectorAll('.v48-speed-btn').forEach(b => {
     const on = parseFloat(b.dataset.rate) === r;
-    b.style.borderColor = on ? 'var(--accent)' : 'var(--rule)';
+    b.style.borderColor = on ? 'var(--unit-ink)' : 'var(--rule-strong)';
     b.style.background  = on ? 'var(--accent-light)' : '#fff';
-    b.style.color       = on ? 'var(--accent)' : '';
+    b.style.color       = on ? 'var(--unit-ink)' : '';
   });
 }
 
@@ -599,7 +592,7 @@ function eColor(ed) {
   if (!isFinite(e) || e > 10) return EC.red;
   // neutral at unit-elastic = amber (#e6a817) - visible against white background
   if (e >= 1) return lerpColor('#e6a817', EC.red, Math.min((e-1)/2, 1));
-  return lerpColor('#1a56db', '#e6a817', e);
+  return lerpColor('#1f6fb2', '#e6a817', e);
 }
 
 function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
@@ -625,7 +618,7 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   ctx.lineTo(ML, H - MB);
   ctx.stroke();
 
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = 'var(--ink-faint)';
   ctx.font = '9px DM Sans, sans-serif';
   ctx.textAlign = 'center';
 
@@ -681,8 +674,8 @@ let v1Svg, v1Sim, v1Nodes, v1Lbl;
 
 function v1SetMode(m) {
   v1.mode = m;
-  document.getElementById('v1-btn-arc').classList.toggle('active', m==='arc');
-  document.getElementById('v1-btn-point').classList.toggle('active', m==='point');
+  document.getElementById('v1-btn-arc').classList.toggle('on', m==='arc');
+  document.getElementById('v1-btn-point').classList.toggle('on', m==='point');
   v1Draw();
 }
 
@@ -695,7 +688,7 @@ function v1Draw() {
 
   // demand curve
   ctx.beginPath();
-  ctx.strokeStyle = '#1a56db';
+  ctx.strokeStyle = '#1f6fb2';
   ctx.lineWidth = 2;
   const P0 = v1.a / v1.b, Q0 = 0;
   const [ax0, ay0] = toC(Q0, P0, W, H, xR1, yR1);
@@ -746,7 +739,7 @@ function v1Draw() {
         <div class="readout-col"><div class="readout-label">Point 1 (e)</div><div class="readout-val" style="color:${eColor(e1)}">${e1.toFixed(3)}</div></div>
         <div class="readout-col"><div class="readout-label">Point 2 (e)</div><div class="readout-val" style="color:${eColor(e2)}">${e2.toFixed(3)}</div></div>
       </div>
-      <p style="margin-top:0.5rem; font-size:0.83rem; color:var(--muted)">
+      <p style="margin-top:0.5rem; font-size:0.83rem; color:var(--ink-faint)">
         Point 1 is <strong>${ae1>1?'elastic':ae1<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae1.toFixed(2)});
         Point 2 is <strong>${ae2>1?'elastic':ae2<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae2.toFixed(2)}).
       </p>`;
@@ -962,7 +955,7 @@ function v2Init() {
     const xHi = Math.max(110, Math.ceil(a*1.12/10)*10);
     const yHi = Math.max(55, Math.ceil(Pmax*1.12/5)*5);
     const [ux,uy]=toC(a/2, Pmax/2, v2W, v2H, [0,xHi], [0,yHi]);
-    v2Nodes = [ d3LblNode('unitElastic', '#888', 'unit elastic midpoint', 118, ux, uy) ];
+    v2Nodes = [ d3LblNode('unitElastic', 'var(--ink-faint)', 'unit elastic midpoint', 118, ux, uy) ];
     v2Sim = d3LabelSim(v2Nodes);
     v2Lbl = d3LabelLayer(v2Svg, v2Nodes, ()=>v2Sim);
     v2Sim.on('tick', ()=>d3LabelTick(v2Nodes, v2Lbl.gs, v2Lbl.conns, v2W, v2H, ML, MR, MT, MB));
@@ -1022,7 +1015,7 @@ function v3Draw() {
 
   const [lx0,ly0]=toC(0,v3.a/b,W,H,xR3l,yR3l);
   const [lx1,ly1]=toC(v3.a,0,W,H,xR3l,yR3l);
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
   const [bx,by]=toC(Qb,Pb,W,H,xR3l,yR3l);
@@ -1054,7 +1047,7 @@ function v3Draw() {
     ctx.fillRect(ML, by, bx-ML, oy-by);
   }
 
-  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,by); ctx.lineTo(bx,by); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(bx,oy); ctx.lineTo(bx,by); ctx.stroke();
   if (Math.abs(P-Pb)>0.1) {
@@ -1064,7 +1057,7 @@ function v3Draw() {
   ctx.setLineDash([]);
 
   dot(ctx, bx, by, 7, '#555', '#fff');
-  dot(ctx, nx, ny, 8, '#1a56db', '#fff');
+  dot(ctx, nx, ny, 8, '#1f6fb2', '#fff');
 
   // D3 SVG force label for demand curve
   if (v3Nodes) d3MoveAnchor(v3Nodes[0], lx0, ly0);
@@ -1107,7 +1100,7 @@ function v3Init() {
     const xMax = Math.max(v3.a, 115);
     const xR3l=[0,xMax], yR3l=[0,Math.max(55, v3.a/b*1.1)];
     const [lx0,ly0]=toC(0, v3.a/b, v3W, v3H, xR3l, yR3l);
-    v3Nodes = [ d3LblNode('D', '#1a56db', 'D', 18, lx0, ly0) ];
+    v3Nodes = [ d3LblNode('D', '#1f6fb2', 'D', 18, lx0, ly0) ];
     v3Sim = d3LabelSim(v3Nodes);
     v3Lbl = d3LabelLayer(v3Svg, v3Nodes, ()=>v3Sim);
     v3Sim.on('tick', ()=>d3LabelTick(v3Nodes, v3Lbl.gs, v3Lbl.conns, v3W, v3H, ML, MR, MT, MB));
@@ -1303,7 +1296,7 @@ function v6Draw() {
   drawAxes(ctx, W, H, xR6, yR6);
 
   // demand line
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   const [lx0,ly0]=toC(0,Pchoke,W,H,xR6,yR6);
   const [lx1,ly1]=toC(v6.a,0,W,H,xR6,yR6);
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
@@ -1334,7 +1327,7 @@ function v6Draw() {
   }
 
   // dashed reference lines
-  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,py0); ctx.lineTo(qx,py0); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(qx,oy); ctx.lineTo(qx,py0); ctx.stroke();
   if (Pn>P) {
@@ -1343,19 +1336,19 @@ function v6Draw() {
   }
   ctx.setLineDash([]);
 
-  dot(ctx,qx,py0,7,'#1a56db','#fff');
+  dot(ctx,qx,py0,7,'#1f6fb2','#fff');
   if(Pn>P) dot(ctx,qnx,py0n,7,EC.green,'#fff');
 
   document.getElementById('v6-readout').innerHTML=
     `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">CS at P*=$${P}</div><div class="readout-val" style="color:#1a56db">$${CS.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">CS at P*=$${P}</div><div class="readout-val" style="color:#1f6fb2">$${CS.toFixed(1)}</div></div>
       ${Pn>P?`<div class="readout-col"><div class="readout-label">CS at P'=$${Pn}</div><div class="readout-val" style="color:#888">$${CSnew.toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">ΔCS</div><div class="readout-val" style="color:var(--red)">−$${(CS-CSnew).toFixed(1)}</div></div>` : ''}
+      <div class="readout-col"><div class="readout-label">ΔCS</div><div class="readout-val" style="color:var(--d-second)">−$${(CS-CSnew).toFixed(1)}</div></div>` : ''}
     </div>
-    ${Pn>P?`<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--muted)">
+    ${Pn>P?`<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-faint)">
       Lost CS = <span style="color:var(--green)">rectangle $${deltaRect.toFixed(1)}</span> (existing buyers overpay)
       + <span style="color:#c89500">triangle $${deltaTri.toFixed(1)}</span> (buyers who exit)
-    </div>`:'<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--muted)">Raise P\' above P* to see how CS decomposes.</div>'}`;
+    </div>`:'<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-faint)">Raise P\' above P* to see how CS decomposes.</div>'}`;
 }
 
 function v6Update() {
@@ -1397,7 +1390,7 @@ function v6ShowCalc() {
     &nbsp;&nbsp;Q* = ${v6.a} &minus; ${v6.b} &times; ${P} = <strong>${Q.toFixed(1)}</strong><br>
     &nbsp;&nbsp;CS = (1/2) &times; Q* &times; (P<sub>max</sub> &minus; P*)<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (1/2) &times; ${Q.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${P})<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong style="color:#1a56db;">$${CS.toFixed(2)}</strong>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong style="color:#1f6fb2;">$${CS.toFixed(2)}</strong>
     ${Pn>P?`<br><br><strong>At P' = $${Pn}:</strong><br>
     &nbsp;&nbsp;Q' = ${v6.a} &minus; ${v6.b} &times; ${Pn} = <strong>${Qn.toFixed(1)}</strong><br>
     &nbsp;&nbsp;CS' = (1/2) &times; ${Qn.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${Pn}) = <strong>$${CSnew.toFixed(2)}</strong><br><br>
@@ -1438,7 +1431,7 @@ function v7Draw() {
   drawAxes(ctx,W,H,xR7,yR7,'Rides','P ($/ride)');
 
   // demand line
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   const [lx0,ly0]=toC(0,Pchoke,W,H,xR7,yR7);
   const [lx1,ly1]=toC(v7.a,0,W,H,xR7,yR7);
   ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
@@ -1458,14 +1451,14 @@ function v7Draw() {
   ctx.fillRect(zerox, py, qx-zerox, oy-py);
 
   // dashed lines
-  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(qx,py); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(qx,oy); ctx.lineTo(qx,py); ctx.stroke();
   ctx.setLineDash([]);
 
   // normal price reference
   const [,pyn]=toC(0,Pnorm,W,H,xR7,yR7);
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1; ctx.setLineDash([3,3]);
   ctx.beginPath(); ctx.moveTo(ML,pyn); ctx.lineTo(W-MR,pyn); ctx.stroke();
   ctx.setLineDash([]);
 
@@ -1480,9 +1473,9 @@ function v7Draw() {
       <div class="readout-col"><div class="readout-label">Surge price</div><div class="readout-val">$${P.toFixed(2)} (${mult.toFixed(1)}×)</div></div>
       <div class="readout-col"><div class="readout-label">Riders</div><div class="readout-val">${Q.toFixed(0)} (was ${Qnorm})</div></div>
       <div class="readout-col"><div class="readout-label">Uber Revenue</div><div class="readout-val" style="color:var(--green)">$${TR.toFixed(0)}</div></div>
-      <div class="readout-col"><div class="readout-label">Consumer Surplus</div><div class="readout-val" style="color:#1a56db">$${CS.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Consumer Surplus</div><div class="readout-val" style="color:#1f6fb2">$${CS.toFixed(0)}</div></div>
     </div>
-    <div style="margin-top:0.4rem;font-size:0.83rem;color:var(--muted)">
+    <div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-faint)">
       ${Q<Qnorm?`<strong>${Qnorm-Q} riders priced out</strong> of the market.`:''}
       ${TR>TRnorm?`Revenue up $${(TR-TRnorm).toFixed(0)} vs normal.`:`Revenue down $${(TRnorm-TR).toFixed(0)} vs normal.`}
     </div>`;
@@ -1518,7 +1511,7 @@ function v7Init() {
     const [,pyn]=toC(0, v7.Pnorm, v7W, v7H, xR7, yR7);
     const normTxt='normal $'+v7.Pnorm;
     v7ctx.font='10px DM Sans,sans-serif';
-    v7Nodes = [ d3LblNode('normal', '#aaa', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn) ];
+    v7Nodes = [ d3LblNode('normal', '#9aa3b0', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn) ];
     v7Sim = d3LabelSim(v7Nodes);
     v7Lbl = d3LabelLayer(v7Svg, v7Nodes, ()=>v7Sim);
     v7Sim.on('tick', ()=>d3LabelTick(v7Nodes, v7Lbl.gs, v7Lbl.conns, v7W, v7H, ML, MR, MT, MB));
@@ -1572,7 +1565,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   const choke=a/b; // price where Q=0
 
   // Axes
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
   ctx.fillStyle='#bbb'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
@@ -1583,7 +1576,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   const clampedChoke=Math.min(choke,yR8a[1]);
   const [x0,y0]=toXY(0,clampedChoke);
   const [x1,y1]=toXY(a,0);
-  ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=3;
   ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
 
   // Choke price tick and label on y-axis
@@ -1591,7 +1584,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
     const [,cy]=toXY(0,choke);
     ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML2-4,cy); ctx.lineTo(ML2,cy); ctx.stroke();
-    ctx.fillStyle='#888'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+    ctx.fillStyle='var(--ink-faint)'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
     ctx.fillText(`Choke $${choke.toFixed(0)}`,ML2-5,cy+3);
   }
 
@@ -1618,7 +1611,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   const Q=Math.max(0,a-b*P);
   const [px,py]=toXY(0,P);
   const [qx,qy]=toXY(Q,P);
-  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
   if (Q>0) {
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(qx,py); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(qx,py); ctx.lineTo(qx,H-MB2); ctx.stroke();
@@ -1655,7 +1648,7 @@ function v8aMarketDraw(P) {
   const toXY=(q,p)=>[ML2+(q/xMmax)*pw, MT2+(1-p/yMmax)*ph];
 
   // Axes
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
   ctx.fillStyle='#bbb'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
@@ -1673,7 +1666,7 @@ function v8aMarketDraw(P) {
   ctx.stroke();
 
   // Active portion of curve up to current P
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   first=true;
   for(let p=yMmax;p>=P;p-=0.5){
     const q=v8aQmarket(p);
@@ -1686,7 +1679,7 @@ function v8aMarketDraw(P) {
   const [,cy30]=toXY(0,30);
   ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2-4,cy30); ctx.lineTo(ML2,cy30); ctx.stroke();
-  ctx.fillStyle='#888'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle='var(--ink-faint)'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
   ctx.fillText('Choke $30',ML2-2,cy30+3);  // slightly right
 
   // P=12: Consumer 2's choke price (kink)
@@ -1696,7 +1689,7 @@ function v8aMarketDraw(P) {
   ctx.fillText('Kink $12',ML2-2,cy12+3);  // slightly right
 
   // Kink dot
-  dot(ctx,kx,ky,5,'#888','#fff');
+  dot(ctx,kx,ky,5,'var(--ink-faint)','#fff');
 
   // D3 SVG draggable force labels: kink label + formula segments
   ctx.font='bold 8px DM Sans,sans-serif';
@@ -1707,9 +1700,9 @@ function v8aMarketDraw(P) {
     const ov = v8aGetOverlay('cvs8c', W, H);
     if (ov.svg && !ov.nodes) {
       ov.nodes = [
-        d3LblNode('kink', '#888', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky),
-        d3LblNode('upper', '#1a56db', upTxt, ctx.measureText(upTxt).width+8, ulx, uly),
-        d3LblNode('lower', '#1a56db', loTxt, ctx.measureText(loTxt).width+8, llx, lly),
+        d3LblNode('kink', 'var(--ink-faint)', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky),
+        d3LblNode('upper', '#1f6fb2', upTxt, ctx.measureText(upTxt).width+8, ulx, uly),
+        d3LblNode('lower', '#1f6fb2', loTxt, ctx.measureText(loTxt).width+8, llx, lly),
       ];
       ov.sim = d3LabelSim(ov.nodes);
       ov.lbl = d3LabelLayer(ov.svg, ov.nodes, ()=>ov.sim);
@@ -1727,16 +1720,16 @@ function v8aMarketDraw(P) {
   const Qm=v8aQmarket(P);
   const [px,py]=toXY(0,P);
   const [qx,qy]=toXY(Qm,P);
-  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(qx,py); ctx.stroke();
   if(Qm>0) { ctx.beginPath(); ctx.moveTo(qx,py); ctx.lineTo(qx,H-MB2); ctx.stroke(); }
   ctx.setLineDash([]);
 
-  ctx.fillStyle='#1a56db'; ctx.font='bold 9px DM Sans,sans-serif';
+  ctx.fillStyle='#1f6fb2'; ctx.font='bold 9px DM Sans,sans-serif';
   ctx.textAlign='right'; if(P>0.5 && Math.abs(P-30)>3 && Math.abs(P-12)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
   ctx.textAlign='center';
   if(Qm>0.5) ctx.fillText(`Q=${Qm.toFixed(0)}`,qx,H-MB2+12);
-  if(Qm>0) dot(ctx,qx,qy,5,'#1a56db','#fff');
+  if(Qm>0) dot(ctx,qx,qy,5,'#1f6fb2','#fff');
 
   ctx.setTransform(1,0,0,1,0,0);
 }
@@ -1770,11 +1763,11 @@ function v8aUpdate() {
 
   document.getElementById('v8a-readout').innerHTML=
     `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">Q<sub>1</sub> (Consumer 1)</div><div class="readout-val" style="color:var(--red)">${Q1.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Q<sub>1</sub> (Consumer 1)</div><div class="readout-val" style="color:var(--d-second)">${Q1.toFixed(0)}</div></div>
       <div class="readout-col"><div class="readout-label">Q<sub>2</sub> (Consumer 2)</div><div class="readout-val" style="color:var(--accent-2)">${Q2.toFixed(0)}</div></div>
-      <div class="readout-col"><div class="readout-label">Market Q</div><div class="readout-val" style="color:#1a56db">${Qm.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Market Q</div><div class="readout-val" style="color:#1f6fb2">${Qm.toFixed(0)}</div></div>
     </div>
-    <div style="margin-top:0.4rem;font-size:0.83rem;color:var(--muted)">${regime}</div>`;
+    <div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-faint)">${regime}</div>`;
 }
 
 function v8aInit() {
@@ -1838,7 +1831,7 @@ function v8Draw() {
     const Q=v8QmNew(P);
     if(Q>=0) pts.push([Q,P]);
   }
-  ctx.beginPath(); ctx.strokeStyle='#1a56db'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   pts.forEach(([Q,P],idx)=>{
     const [cx,cy]=toC(Q,P,W,H,xRl,yRl);
     idx===0?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);
@@ -1873,7 +1866,7 @@ function v8Draw() {
     ...kinkInfo,
     {id:'D1', color:EC.red, label:'D₁', lw:24, ax:c1ax, ay:c1ay},
     {id:'D2', color:EC.accent2, label:'D₂', lw:24, ax:c2ax, ay:c2ay},
-    {id:'mktD', color:'#1a56db', label:'Market D', lw:60, ax:mx, ay:my},
+    {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my},
   ];
   ctx.font='bold 10px DM Sans,sans-serif';
   labelSpec.forEach(s=>{ if(s.lw===undefined) s.lw = ctx.measureText(s.label).width+10; });
@@ -1928,9 +1921,9 @@ function v8Update() {
 
   document.getElementById('v8-readout').innerHTML=
     `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">Consumer 1 choke P</div><div class="readout-val" style="color:var(--red)">$${(c1.a/c1.b).toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Consumer 1 choke P</div><div class="readout-val" style="color:var(--d-second)">$${(c1.a/c1.b).toFixed(1)}</div></div>
       <div class="readout-col"><div class="readout-label">Consumer 2 choke P</div><div class="readout-val" style="color:var(--accent-2)">$${(c2.a/c2.b).toFixed(1)}</div></div>
-      <div class="readout-col"><div class="readout-label">Market Q at P=$10</div><div class="readout-val" style="color:#1a56db">${v8QmNew(10).toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Market Q at P=$10</div><div class="readout-val" style="color:#1f6fb2">${v8QmNew(10).toFixed(1)}</div></div>
     </div>`;
 }
 
@@ -1980,6 +1973,31 @@ window.addEventListener('DOMContentLoaded', () => {
     observeCanvasResize(id, redrawAll4);
   });
 });
+
+/* Section rail: mark the figure currently being read (DESIGN 2.2). Scrolls the
+   strip itself on mobile, never scrollIntoView, which walks up and drags the
+   whole page while the reader is scrolling it. */
+(function railTracking() {
+  const links = [...document.querySelectorAll('.rail a')];
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+    let best = 0, bestId = null;
+    for (const [id, r] of seen) if (r > best) { best = r; bestId = id; }
+    if (!bestId) return;
+    for (const a of links) a.classList.remove('on');
+    const hit = byId.get(bestId);
+    if (!hit) return;
+    hit.classList.add('on');
+    const strip = hit.closest('ol');
+    if (strip && strip.scrollWidth > strip.clientWidth) {
+      strip.scrollTo({ left: Math.max(0, hit.offsetLeft - (strip.clientWidth - hit.offsetWidth) / 2), behavior: 'smooth' });
+    }
+  }, { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+  document.querySelectorAll('section.sec[id]').forEach(x => io.observe(x));
+})();
 
 window.addEventListener('resize', redrawAll4);
 </script>

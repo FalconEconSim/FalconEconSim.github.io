@@ -1,73 +1,15 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u2);--unit-ink:var(--u2-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Week 5: Interactive Visualizations - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-  <style>
-    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule); position:relative; }
-    .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
-    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; position:relative; z-index:1; }
-    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
-    .viz-instructor { font-size:0.9rem; color:var(--muted); }
-    .toc { background:var(--off-white); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
-    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.6rem; }
-    .toc ol { margin:0; padding-left:0.5rem; display:flex; flex-direction:column; gap:0.28rem; }
-    .toc li { font-size:0.855rem; color:var(--muted); }
-    .toc a { color:var(--accent); text-decoration:none; }
-    .toc a:hover { text-decoration:underline; }
-    .fig-section { border-top:2px solid var(--rule); padding-top:2.5rem; margin-top:3rem; }
-    .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
-    .fig-label { font-family:var(--mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
-    .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
-    .fig-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; }
-    .cvs-wrap { border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:#fff; }
-    canvas { display:block; width:100%; cursor:default; }
-    /* square single-canvas figures cap at 480 wide (site standard for square figures) */
-    .cvs-wrap:has(#cvs53-host), .cvs-wrap:has(#cvs55-host), .cvs-wrap:has(#cvs56-host),
-    .cvs-wrap:has(#cvs58-host), .cvs-wrap:has(#cvs59-host) { max-width:482px; margin-left:auto; margin-right:auto; }
-    #cvs510-host { max-width:480px; margin:0 auto; }
-    .cvs-ovl-host { position:relative; }
-    .cvs-ovl-host > svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; font-family:'DM Sans',system-ui,sans-serif; }
-    .cvs-ovl-host > svg .draggable-label { cursor:grab; pointer-events:auto; }
-    .cvs-ovl-host > svg .draggable-label:active { cursor:grabbing; }
-    .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
-    .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
-    .viz-slider-label { font-family:var(--mono); font-size:0.75rem; color:var(--muted); white-space:nowrap; }
-    .viz-slider { width:130px; accent-color:var(--accent); }
-    .viz-slider:focus-visible { outline:3px solid var(--accent); outline-offset:3px; border-radius:3px; }
-    .viz-slider-val { font-family:var(--mono); font-size:0.82rem; color:var(--accent); min-width:36px; }
-    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
-    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
-    .viz-readout { background:var(--off-white); border:1px solid var(--rule); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
-    .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
-    .readout-col { flex:1; min-width:120px; }
-    .readout-label { font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
-    .readout-val { font-size:1.05rem; font-weight:600; color:var(--accent); font-family:var(--mono); }
-    .quiz-scenario { background:#fff; border:1px solid var(--rule); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.97rem; font-weight:500; margin-bottom:1rem; }
-    .quiz-btns { display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.75rem; }
-    .quiz-btn { padding:0.5rem 1rem; font-family:var(--font); font-size:0.82rem; font-weight:600; border:1px solid var(--rule); border-radius:8px; cursor:pointer; background:var(--off-white); color:var(--text); transition:all 0.15s; }
-    .quiz-btn:hover { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
-    .quiz-btn.correct { background:#dcfce7; border-color:#4ade80; color:#166534; }
-    .quiz-btn.incorrect { background:#fee2e2; border-color:#fc8181; color:#991b1b; }
-    .quiz-btn.revealed { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
-    .quiz-feedback { background:var(--off-white); border:1px solid var(--rule); border-radius:6px; padding:0.7rem 1rem; font-size:0.85rem; line-height:1.65; margin-bottom:0.75rem; }
-    .quiz-next { font-family:var(--font); font-size:0.82rem; font-weight:500; padding:0.35rem 1rem; border:1px solid var(--accent); border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
-    .hub-footer { border-top:1px solid var(--rule); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
-    .hub-footer-left { font-size:0.82rem; color:var(--muted); }
-    .hub-footer-left a { color:var(--muted); text-decoration:none; }
-    .hub-footer-left a:hover { color:var(--accent); }
-    .footer-logo { height:22px; opacity:0.5; }
-    .phase-badge { display:inline-block; font-family:var(--mono); font-size:0.75rem; font-weight:600; padding:0.2rem 0.65rem; border-radius:20px; background:var(--accent-light); color:var(--accent); border:1px solid rgba(26,86,219,0.2); }
-    .two-col-panels { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
-    @media(max-width:580px){ .two-col-panels { grid-template-columns:1fr; } }
-    .panel-label { font-family:var(--mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0.4rem 0.6rem; background:var(--off-white); border-bottom:1px solid var(--rule); }
-  </style>
+  <link rel="stylesheet" href="assets/vizpage.css" />
 </head>
 <body>
 
@@ -90,338 +32,337 @@
   </ul>
 </nav>
 
-<div class="top-bar">
-  <div class="top-bar-left">
-    <a href="index.html" aria-label="Course home">
-      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-    </a>
-    <div class="top-bar-divider"></div>
-    <div class="breadcrumb">
-      <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="week5.html">Week 5</a>
-      <span class="breadcrumb-sep">›</span>
-      <span>Visualizations</span>
-    </div>
-  </div>
-  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week5.html">Week 5</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end">
+    <button class="btn" onclick="openLN()">All weeks</button>
+  </span>
 </div>
 
-<main class="main" style="max-width:1400px;">
+<div class="layout">
 
-  <div class="viz-hero">
-    <div class="viz-ghost">05</div>
-    <p class="viz-week-label">Week 5 · Interactive Visualizations</p>
-    <h1 class="viz-title">Production Theory</h1>
-    <p class="viz-instructor">Prof. Naveen Sunder</p>
-    <nav class="toc">
-      <div class="toc-title">Ten Figures</div>
-      <ol>
-        <li><a href="#sec-5-1">Fig 5.1: Total Product &amp; Marginal Product Animator</a></li>
-        <li><a href="#sec-5-2">Fig 5.2: Isoquant &amp; Indifference Curve Explorer</a></li>
-        <li><a href="#sec-5-3">Fig 5.3: MRTS Live Calculator</a></li>
-        <li><a href="#sec-5-4">Fig 5.4: Diminishing MP vs Decreasing Returns to Scale</a></li>
-        <li><a href="#sec-5-5">Fig 5.5: Returns to Scale Isoquant Spacer</a></li>
-        <li><a href="#sec-5-6">Fig 5.6: Input Substitution vs Technological Change</a></li>
-        <li><a href="#sec-5-7">Fig 5.7: Consumer-Production Analogy</a></li>
-        <li><a href="#sec-5-8">Fig 5.8: Cobb-Douglas Production Function Lab</a></li>
-        <li><a href="#sec-5-9">Fig 5.9: Bakery / Factory Scenario Simulator</a></li>
-        <li><a href="#sec-5-10">Fig 5.10: Isoquant Shape Identifier Quiz</a></li>
-      </ol>
-    </nav>
-  </div>
+  <!-- Section rail: a table of contents for THIS page, with the section you are
+       in marked. Site-wide navigation lives behind "All weeks" in the top bar. -->
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-5-1"><span>5.1</span>Total &amp; marginal product</a></li>
+      <li><a href="#sec-5-2"><span>5.2</span>Isoquant explorer</a></li>
+      <li><a href="#sec-5-3"><span>5.3</span>MRTS calculator</a></li>
+      <li><a href="#sec-5-4"><span>5.4</span>Diminishing MP vs returns to scale</a></li>
+      <li><a href="#sec-5-5"><span>5.5</span>Isoquant spacer</a></li>
+      <li><a href="#sec-5-6"><span>5.6</span>Substitution vs technology</a></li>
+      <li><a href="#sec-5-7"><span>5.7</span>Consumer and firm side by side</a></li>
+      <li><a href="#sec-5-8"><span>5.8</span>Cobb-Douglas lab</a></li>
+      <li><a href="#sec-5-9"><span>5.9</span>Bakery simulator</a></li>
+      <li><a href="#sec-5-10"><span>5.10</span>Isoquant shape quiz</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">05</span>
+      <p class="eyebrow">Week 5 · Interactive figures</p>
+      <h1>Production Theory</h1>
+      <p class="lede">
+        Ten figures for the week, each answering one question. Throughout,
+        <span class="c-primary">blue</span> is the production relationship under
+        study, <span class="c-second">orange-red</span> is the marginal quantity
+        derived from it, and the <span style="color:var(--unit-ink);font-weight:500">dark green</span>
+        point is the bundle you control.
+      </p>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
 
   <!-- ═══ FIG 5.1 - TP / MP ANIMATOR ═══ -->
-  <section class="fig-section" id="sec-5-1">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.1</span>
-      <span class="fig-title">Total Product &amp; Marginal Product Animator</span>
+  <section class="sec page" id="sec-5-1">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.1</span>
+      <h3>Total Product &amp; Marginal Product Animator</h3>
     </div>
     <p class="fig-intro">
       Drag the worker slider to move simultaneously on both panels. The top panel draws a tangent line on the TP curve
       (whose slope is MPL); the bottom panel lights up the corresponding MPL point. This makes the
       "MPL = slope of TP" relationship viscerally clear. Notice that as you increase the number of workers, the marginal
-      product of labor falls -- this is the <strong>Law of Diminishing Marginal Product</strong>: each additional worker
+      product of labor falls. This is the <strong>Law of Diminishing Marginal Product</strong>: each additional worker
       adds less to total output than the previous one (assuming capital is held fixed).
     </p>
 
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;align-items:center;">
-      <span class="viz-slider-label" style="white-space:nowrap;">Production function:</span>
-      <select class="viz-select" id="v51-form" onchange="v51ChangeForm()" style="font-size:0.84rem;padding:4px 10px;">
+    <div class="ctrl-row" style="margin-bottom:0.75rem;align-items:center;">
+      <span class="ctrl-label" style="white-space:nowrap;">Production function:</span>
+      <select class="sel" id="v51-form" onchange="v51ChangeForm()" style="font-size:var(--t-body-sm);padding:4px 10px;">
         <option value="cobb">Cobb-Douglas: Q = K^0.5 &middot; L^0.5</option>
         <option value="scurve">S-Curve (Cubic): Q = 1.5L&#x00B2; &minus; 0.1L&#x00B3;</option>
         <option value="quad">Quadratic: Q = 3L &minus; 0.15L&#x00B2;</option>
         <option value="linear">Linear: Q = 2.5L</option>
       </select>
     </div>
-    <div id="v51-form-desc" style="background:var(--accent-light);border:1px solid #c7d9f8;border-radius:7px;padding:0.7rem 1rem;font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;line-height:1.65;">
+    <div id="v51-form-desc" class="callout" style="margin-bottom:var(--s-5)">
       <strong>Cobb-Douglas:</strong> Q = K<sup>0.5</sup> &middot; L<sup>0.5</sup>. Output is always positive and always increasing in L, but at a decreasing rate. This is the most common textbook production function. MPL falls as L rises (diminishing returns), but never reaches zero.
     </div>
 
-    <div class="cvs-wrap">
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Workers L: <span class="ctrl-value" id="v51-l-val">3.0</span></span>
+        <input type="range" class="ctrl-track" id="v51-l" min="0.1" max="9.9" step="any" value="3" oninput="v51Update()" style="width:200px;" aria-label="Number of workers L">
+      </div>
+      <div id="v51-k-group" class="ctrl">
+        <span class="ctrl-label">Capital K: <span class="ctrl-value" id="v51-k-val">4</span></span>
+        <input type="range" class="ctrl-track" id="v51-k" min="1" max="16" step="1" value="4" oninput="v51Update()" aria-label="Capital K (fixed in short run)">
+      </div>
+    </div>
+    <div class="fig-plot">
       <div class="panel-label">Total Product (TP)</div>
       <div class="cvs-ovl-host" id="cvs51a-host"><canvas id="cvs51a" height="200"></canvas><svg id="cvs51a-svg"></svg></div>
-      <div class="panel-label" style="border-top:1px solid var(--rule);">Marginal Product of Labor (MPL)</div>
+      <div class="panel-label" style="border-top:1px solid var(--rule-strong);">Marginal Product of Labor (MPL)</div>
       <div class="cvs-ovl-host" id="cvs51b-host"><canvas id="cvs51b" height="140"></canvas><svg id="cvs51b-svg"></svg></div>
     </div>
-    <div class="viz-ctrl-row">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Workers L:</span>
-        <input type="range" class="viz-slider" id="v51-l" min="0.1" max="9.9" step="any" value="3" oninput="v51Update()" style="width:200px;" aria-label="Number of workers L">
-        <span class="viz-slider-val" id="v51-l-val">3.0</span>
-      </div>
-      <div id="v51-k-group" class="viz-slider-group">
-        <span class="viz-slider-label">Capital K:</span>
-        <input type="range" class="viz-slider" id="v51-k" min="1" max="16" step="1" value="4" oninput="v51Update()" aria-label="Capital K (fixed in short run)">
-        <span class="viz-slider-val" id="v51-k-val">4</span>
-      </div>
-    </div>
-    <div class="viz-readout" id="v51-readout"></div>
+
+    <div class="fig-state" id="v51-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.2 - ISOQUANT EXPLORER ═══ -->
-  <section class="fig-section" id="sec-5-2">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.2</span>
-      <span class="fig-title">Isoquant &amp; Indifference Curve Explorer</span>
+  <section class="sec page" id="sec-5-2">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.2</span>
+      <h3>Isoquant &amp; Indifference Curve Explorer</h3>
     </div>
     <p class="fig-intro">
       Compare three production technologies side by side: Cobb-Douglas (smooth convex curves), Perfect Substitutes
       (straight lines), and Leontief / Perfect Complements (right-angle L-shapes). Toggle between
-      <strong>Isoquant mode</strong> (firm -- axes L and K) and <strong>Indifference Curve mode</strong>
-      (consumer -- axes X and Y). The math is identical; only the economic interpretation changes.
+      <strong>Isoquant mode</strong> (firm, with axes L and K) and <strong>Indifference Curve mode</strong>
+      (consumer, with axes X and Y). The math is identical; only the economic interpretation changes.
       Drag the red dot on the Cobb-Douglas panel to see how MRTS changes along a curve.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
-      <button class="viz-btn active" id="v52-mode-iq" onclick="v52SetMode('iq')">Isoquant (Firm)</button>
-      <button class="viz-btn" id="v52-mode-ic" onclick="v52SetMode('ic')">Indifference Curve (Consumer)</button>
+    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      <button class="btn on" id="v52-mode-iq" onclick="v52SetMode('iq')">Isoquant (Firm)</button>
+      <button class="btn" id="v52-mode-ic" onclick="v52SetMode('ic')">Indifference Curve (Consumer)</button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
-      <div class="cvs-wrap">
+    <div class="three-col-panels bleed-full">
+      <div class="fig-plot">
         <div class="panel-label">Cobb-Douglas</div>
         <div class="cvs-ovl-host" id="cvs52a-host"><canvas id="cvs52a" style="width:100%;"></canvas><svg id="cvs52a-svg"></svg></div>
       </div>
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Perfect Substitutes (Linear)</div>
         <div class="cvs-ovl-host" id="cvs52b-host"><canvas id="cvs52b" style="width:100%;"></canvas><svg id="cvs52b-svg"></svg></div>
       </div>
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Perfect Complements (Leontief)</div>
         <div class="cvs-ovl-host" id="cvs52c-host"><canvas id="cvs52c" style="width:100%;"></canvas><svg id="cvs52c-svg"></svg></div>
       </div>
     </div>
-    <div class="viz-readout" id="v52-readout" style="margin-top:0.75rem;"></div>
+    <div class="fig-state" id="v52-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.3 - MRTS LIVE CALCULATOR ═══ -->
-  <section class="fig-section" id="sec-5-3">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.3</span>
-      <span class="fig-title">MRTS Live Calculator</span>
+  <section class="sec page" id="sec-5-3">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.3</span>
+      <h3>MRTS Live Calculator</h3>
     </div>
     <p class="fig-intro">
       Drag the point along the isoquant Q = K<sup>0.5</sup>L<sup>0.5</sup>. As you move right (more L, less K),
       the annotation updates: "At this point, 1 worker replaces X machines." The tangent line redraws and MRTS = K/L
       updates in real time.
     </p>
-    <div class="cvs-wrap">
-      <div class="panel-label">Isoquant Q = 4 (K<sup>0.5</sup>L<sup>0.5</sup>) with Tangent (drag left/right)</div>
+    <div class="fig-plot square">
+      <div class="panel-label" style="color:var(--unit-ink)">Drag the green point left or right along the isoquant.</div>
       <div class="cvs-ovl-host" id="cvs53-host"><canvas id="cvs53" height="420" style="width:100%;"></canvas><svg id="cvs53-svg"></svg></div>
     </div>
-    <div class="viz-readout" id="v53-readout" style="margin-top:0.75rem;"></div>
+    <div class="fig-state" id="v53-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.4 - DIMINISHING MP VS DRS ═══ -->
-  <section class="fig-section" id="sec-5-4">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.4</span>
-      <span class="fig-title">Diminishing MP vs Decreasing Returns to Scale</span>
+  <section class="sec page" id="sec-5-4">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.4</span>
+      <h3>Diminishing MP vs Decreasing Returns to Scale</h3>
     </div>
     <p class="fig-intro">
       The same Cobb-Douglas function Q = K<sup>a</sup>L<sup>b</sup> can simultaneously exhibit diminishing MPL AND increasing returns to scale.
       Left panel: hold K fixed, vary L and watch MPL fall. Right panel: scale both K and L proportionally and watch output more than double.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">a (capital exponent):</span>
-        <input type="range" class="viz-slider" id="v54-a" min="0.1" max="0.9" step="any" value="0.6" oninput="v54Update()" aria-label="Capital exponent a">
-        <span class="viz-slider-val" id="v54-a-val">0.60</span>
+    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">a (capital exponent): <span class="ctrl-value" id="v54-a-val">0.60</span></span>
+        <input type="range" class="ctrl-track" id="v54-a" min="0.1" max="0.9" step="any" value="0.6" oninput="v54Update()" aria-label="Capital exponent a">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">b (labor exponent):</span>
-        <input type="range" class="viz-slider" id="v54-b" min="0.1" max="0.9" step="any" value="0.6" oninput="v54Update()" aria-label="Labor exponent b">
-        <span class="viz-slider-val" id="v54-b-val">0.60</span>
+      <div class="ctrl">
+        <span class="ctrl-label">b (labor exponent): <span class="ctrl-value" id="v54-b-val">0.60</span></span>
+        <input type="range" class="ctrl-track" id="v54-b" min="0.1" max="0.9" step="any" value="0.6" oninput="v54Update()" aria-label="Labor exponent b">
       </div>
     </div>
-    <div class="two-col-panels">
-      <div class="cvs-wrap">
+    <div class="two-col-panels bleed-full">
+      <div class="fig-plot">
         <div class="panel-label">MPL (K fixed = 4)</div>
         <div class="cvs-ovl-host" id="cvs54a-host"><canvas id="cvs54a" height="220"></canvas><svg id="cvs54a-svg"></svg></div>
       </div>
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Scale Both Inputs (L)</div>
         <div class="cvs-ovl-host" id="cvs54b-host"><canvas id="cvs54b" height="220"></canvas><svg id="cvs54b-svg"></svg></div>
       </div>
     </div>
-    <div class="viz-readout" id="v54-readout"></div>
+    <div class="fig-state" id="v54-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.5 - RTS ISOQUANT SPACER ═══ -->
-  <section class="fig-section" id="sec-5-5">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.5</span>
-      <span class="fig-title">Returns to Scale Isoquant Spacer</span>
+  <section class="sec page" id="sec-5-5">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.5</span>
+      <h3>Returns to Scale Isoquant Spacer</h3>
     </div>
     <p class="fig-intro">
       A ray from the origin cuts through three isoquants (Q = 1, 2, 4). Under CRS the intersection points are equally spaced; under IRS they bunch up; under DRS they spread out.
       Type in exponents a and b and watch the spacing animate live.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">a:</span>
-        <input type="number" id="v55-a" value="0.5" min="0.1" max="1.5" step="0.05" style="width:65px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v55Update()"/>
+    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">a:</span>
+        <input type="number" id="v55-a" value="0.5" min="0.1" max="1.5" step="0.05" style="width:65px;font-family:var(--font-mono);font-size:var(--t-body-sm);border:1px solid var(--rule-strong);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v55Update()"/>
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">b:</span>
-        <input type="number" id="v55-b" value="0.5" min="0.1" max="1.5" step="0.05" style="width:65px;font-family:var(--mono);font-size:0.85rem;border:1px solid var(--rule);border-radius:5px;padding:0.2rem 0.4rem;" oninput="v55Update()"/>
+      <div class="ctrl" style="min-width:0;flex:0 0 auto">
+        <span class="ctrl-label">b</span>
+        <input type="number" class="num-in" id="v55-b" value="0.5" min="0.1" max="1.5" step="0.05" oninput="v55Update()"/>
       </div>
-      <span id="v55-verdict" style="font-family:var(--mono);font-size:0.82rem;color:var(--accent);font-weight:600;"></span>
+      <span class="ctrl" style="min-width:0;flex:0 0 auto"><span class="ctrl-label">Returns to scale</span><span class="ctrl-value" id="v55-verdict"></span></span>
     </div>
-    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs55-host"><canvas id="cvs55" height="320"></canvas><svg id="cvs55-svg"></svg></div></div>
-    <div class="viz-readout" id="v55-readout"></div>
+    <div class="fig-plot square"><div class="cvs-ovl-host" id="cvs55-host"><canvas id="cvs55" height="320"></canvas><svg id="cvs55-svg"></svg></div></div>
+    <div class="fig-state" id="v55-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.6 - INPUT SUBSTITUTION VS TECH CHANGE ═══ -->
-  <section class="fig-section" id="sec-5-6">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.6</span>
-      <span class="fig-title">Input Substitution vs Technological Change</span>
+  <section class="sec page" id="sec-5-6">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.6</span>
+      <h3>Input Substitution vs Technological Change</h3>
     </div>
     <p class="fig-intro">
       Two fundamentally different actions can change how a firm produces. Pressing "Substitute Inputs" moves the production bundle along the existing isoquant - technology unchanged.
       Pressing "Improve Technology" shifts the entire isoquant inward - fewer inputs can now produce the same output.
     </p>
-    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs56-host"><canvas id="cvs56" height="320"></canvas><svg id="cvs56-svg"></svg></div></div>
-    <div class="viz-ctrl-row">
-      <button class="viz-btn" onclick="v56SubstituteInputs()">Substitute Inputs</button>
-      <button class="viz-btn" onclick="v56ImproveTechnology()">Improve Technology</button>
-      <button class="viz-btn" onclick="v56Reset()">Reset</button>
+    <div class="ctrl-row">
+      <button class="btn" onclick="v56SubstituteInputs()">Substitute Inputs</button>
+      <button class="btn" onclick="v56ImproveTechnology()">Improve Technology</button>
+      <button class="btn" onclick="v56Reset()">Reset</button>
     </div>
-    <div class="viz-readout" id="v56-readout"></div>
+    <div class="fig-plot square"><div class="cvs-ovl-host" id="cvs56-host"><canvas id="cvs56" height="320"></canvas><svg id="cvs56-svg"></svg></div></div>
+
+    <div class="fig-state" id="v56-readout"></div>
     <!-- old / new / change readout, baseline is v56Reset(): A=1, L=4, K=4 -->
-    <div id="v56-delta" class="delta-bar"></div>
+    <div id="v56-delta" class="delta-bar bleed-wide"></div>
   </section>
 
   <!-- ═══ FIG 5.7 - CONSUMER-PRODUCTION ANALOGY ═══ -->
-  <section class="fig-section" id="sec-5-7">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.7</span>
-      <span class="fig-title">Consumer-Production Analogy Side-by-Side</span>
+  <section class="sec page" id="sec-5-7">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.7</span>
+      <h3>Consumer-Production Analogy Side-by-Side</h3>
     </div>
     <p class="fig-intro">
       The consumer and the firm face mathematically identical optimisation problems. Left: indifference curve, MRS, budget line. Right: isoquant, MRTS, isocost line.
       Moving the slider shifts the reference curve on both sides simultaneously.
     </p>
-    <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Utility/Output level:</span>
-        <input type="range" class="viz-slider" id="v57-u" min="1" max="5" step="any" value="3" oninput="v57Update()" style="width:180px;" aria-label="Utility or output level">
-        <span class="viz-slider-val" id="v57-u-val">3.0</span>
+    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">Utility/Output level: <span class="ctrl-value" id="v57-u-val">3.0</span></span>
+        <input type="range" class="ctrl-track" id="v57-u" min="1" max="5" step="any" value="3" oninput="v57Update()" style="width:180px;" aria-label="Utility or output level">
       </div>
     </div>
-    <div class="two-col-panels">
-      <div class="cvs-wrap">
+    <div class="two-col-panels bleed-full">
+      <div class="fig-plot">
         <div class="panel-label">Consumer: Indifference Curve + Budget Line</div>
         <div class="cvs-ovl-host" id="cvs57a-host"><canvas id="cvs57a" height="240"></canvas><svg id="cvs57a-svg"></svg></div>
       </div>
-      <div class="cvs-wrap">
+      <div class="fig-plot">
         <div class="panel-label">Firm: Isoquant + Isocost Line</div>
         <div class="cvs-ovl-host" id="cvs57b-host"><canvas id="cvs57b" height="240"></canvas><svg id="cvs57b-svg"></svg></div>
       </div>
     </div>
-    <div class="viz-readout" id="v57-readout"></div>
+    <div class="fig-state" id="v57-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.8 - COBB-DOUGLAS LAB ═══ -->
-  <section class="fig-section" id="sec-5-8">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.8</span>
-      <span class="fig-title">Cobb-Douglas Production Function Lab</span>
+  <section class="sec page" id="sec-5-8">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.8</span>
+      <h3>Cobb-Douglas Production Function Lab</h3>
     </div>
     <p class="fig-intro">
       Set A, a, b using sliders. Live outputs: (1) isoquant map with spacing, (2) CRS/IRS/DRS verdict, (3) MPL and MPK evaluated at (K, L), (4) MRTS at that point.
       The scale-by-lambda slider directly tests the returns-to-scale definition.
     </p>
     <!-- Live LaTeX equation display -->
-    <div id="v58-eq-display" style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:8px;padding:0.6rem 1rem;margin-bottom:0.75rem;font-size:1rem;font-family:var(--mono);color:var(--accent);font-weight:600;text-align:center;">
+    <div id="v58-eq-display" class="callout" style="margin-bottom:var(--s-5);font-family:var(--font-mono);text-align:center">
       Q = 1.0 &times; K<sup>0.50</sup> &times; L<sup>0.50</sup>
     </div>
-    <div class="viz-ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">A:</span>
-        <input type="range" class="viz-slider" id="v58-A" min="0.5" max="4" step="any" value="1" oninput="v58Update()" aria-label="Total factor productivity A">
-        <span class="viz-slider-val" id="v58-A-val">1.0</span>
+    <div class="ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
+      <div class="ctrl">
+        <span class="ctrl-label">A: <span class="ctrl-value" id="v58-A-val">1.0</span></span>
+        <input type="range" class="ctrl-track" id="v58-A" min="0.5" max="4" step="any" value="1" oninput="v58Update()" aria-label="Total factor productivity A">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">a (K exponent):</span>
-        <input type="range" class="viz-slider" id="v58-a" min="0.1" max="0.9" step="any" value="0.5" oninput="v58Update()" aria-label="Capital exponent a in Cobb-Douglas">
-        <span class="viz-slider-val" id="v58-a-val">0.50</span>
+      <div class="ctrl">
+        <span class="ctrl-label">a (K exponent): <span class="ctrl-value" id="v58-a-val">0.50</span></span>
+        <input type="range" class="ctrl-track" id="v58-a" min="0.1" max="0.9" step="any" value="0.5" oninput="v58Update()" aria-label="Capital exponent a in Cobb-Douglas">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">b (L exponent):</span>
-        <input type="range" class="viz-slider" id="v58-b" min="0.1" max="0.9" step="any" value="0.5" oninput="v58Update()" aria-label="Labor exponent b in Cobb-Douglas">
-        <span class="viz-slider-val" id="v58-b-val">0.50</span>
+      <div class="ctrl">
+        <span class="ctrl-label">b (L exponent): <span class="ctrl-value" id="v58-b-val">0.50</span></span>
+        <input type="range" class="ctrl-track" id="v58-b" min="0.1" max="0.9" step="any" value="0.5" oninput="v58Update()" aria-label="Labor exponent b in Cobb-Douglas">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">K point:</span>
-        <input type="range" class="viz-slider" id="v58-K" min="1" max="8" step="any" value="4" oninput="v58Update()" aria-label="Capital input K at evaluation point">
-        <span class="viz-slider-val" id="v58-K-val">4.0</span>
+      <div class="ctrl">
+        <span class="ctrl-label">K point: <span class="ctrl-value" id="v58-K-val">4.0</span></span>
+        <input type="range" class="ctrl-track" id="v58-K" min="1" max="8" step="any" value="4" oninput="v58Update()" aria-label="Capital input K at evaluation point">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">L point:</span>
-        <input type="range" class="viz-slider" id="v58-L" min="1" max="8" step="any" value="4" oninput="v58Update()" aria-label="Labor input L at evaluation point">
-        <span class="viz-slider-val" id="v58-L-val">4.0</span>
+      <div class="ctrl">
+        <span class="ctrl-label">L point: <span class="ctrl-value" id="v58-L-val">4.0</span></span>
+        <input type="range" class="ctrl-track" id="v58-L" min="1" max="8" step="any" value="4" oninput="v58Update()" aria-label="Labor input L at evaluation point">
       </div>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Scale &lambda;:</span>
-        <input type="range" class="viz-slider" id="v58-lam" min="0.5" max="3" step="any" value="1" oninput="v58Update()" aria-label="Scale factor lambda for returns to scale test">
-        <span class="viz-slider-val" id="v58-lam-val">1.0</span>
+      <div class="ctrl">
+        <span class="ctrl-label">Scale &lambda;: <span class="ctrl-value" id="v58-lam-val">1.0</span></span>
+        <input type="range" class="ctrl-track" id="v58-lam" min="0.5" max="3" step="any" value="1" oninput="v58Update()" aria-label="Scale factor lambda for returns to scale test">
       </div>
     </div>
-    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs58-host"><canvas id="cvs58" height="320"></canvas><svg id="cvs58-svg"></svg></div></div>
-    <div class="viz-readout" id="v58-readout"></div>
+    <div class="fig-plot square"><div class="cvs-ovl-host" id="cvs58-host"><canvas id="cvs58" height="320"></canvas><svg id="cvs58-svg"></svg></div></div>
+    <div class="fig-state" id="v58-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.9 - BAKERY SIMULATOR ═══ -->
-  <section class="fig-section" id="sec-5-9">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.9</span>
-      <span class="fig-title">Bakery / Factory Scenario Simulator</span>
+  <section class="sec page" id="sec-5-9">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.9</span>
+      <h3>Bakery / Factory Scenario Simulator</h3>
     </div>
     <p class="fig-intro">
       A bakery has a fixed number of machines (K fixed). Hire workers one at a time and watch TP, MPL, and running wage cost update.
       At some point MPL turns negative and the simulator refuses the hire. Optionally buy a new machine to shift the TP curve upward.
     </p>
-    <div class="cvs-wrap"><div class="cvs-ovl-host" id="cvs59-host"><canvas id="cvs59" height="240"></canvas><svg id="cvs59-svg"></svg></div></div>
-    <div class="viz-ctrl-row">
-      <button class="viz-btn" onclick="v59HireWorker()">+ Hire Worker</button>
-      <button class="viz-btn" onclick="v59FireWorker()">- Fire Worker</button>
-      <button class="viz-btn" onclick="v59BuyMachine()">Buy Machine (K+1)</button>
-      <button class="viz-btn" onclick="v59Reset()">Reset</button>
-      <div class="viz-slider-group">
-        <span class="viz-slider-label">Wage w:</span>
-        <input type="range" class="viz-slider" id="v59-w" min="5" max="50" step="any" value="15" oninput="v59Update()" aria-label="Wage w per worker">
-        <span class="viz-slider-val" id="v59-w-val">$15</span>
+    <div class="ctrl-row">
+      <button class="btn" onclick="v59HireWorker()">+ Hire Worker</button>
+      <button class="btn" onclick="v59FireWorker()">- Fire Worker</button>
+      <button class="btn" onclick="v59BuyMachine()">Buy Machine (K+1)</button>
+      <button class="btn" onclick="v59Reset()">Reset</button>
+      <div class="ctrl">
+        <span class="ctrl-label">Wage w: <span class="ctrl-value" id="v59-w-val">$15</span></span>
+        <input type="range" class="ctrl-track" id="v59-w" min="5" max="50" step="any" value="15" oninput="v59Update()" aria-label="Wage w per worker">
       </div>
     </div>
-    <div class="viz-readout" id="v59-readout"></div>
+    <div class="fig-plot square"><div class="cvs-ovl-host" id="cvs59-host"><canvas id="cvs59" height="240"></canvas><svg id="cvs59-svg"></svg></div></div>
+
+    <div class="fig-state" id="v59-readout"></div>
   </section>
 
   <!-- ═══ FIG 5.10 - ISOQUANT SHAPE QUIZ ═══ -->
-  <section class="fig-section" id="sec-5-10">
-    <div class="fig-hdr">
-      <span class="fig-label">Fig 5.10</span>
-      <span class="fig-title">Isoquant Shape Identifier Quiz</span>
+  <section class="sec page" id="sec-5-10">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 5.10</span>
+      <h3>Isoquant Shape Identifier Quiz</h3>
     </div>
     <p class="fig-intro">
       A production function appears. Predict the isoquant shape before it renders, then check if you are right.
@@ -430,8 +371,8 @@
     <div id="quiz510-root"></div>
   </section>
 
-  <footer class="hub-footer">
-    <div class="hub-footer-left">
+  <footer class="site-foot">
+    <div>
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
       &nbsp;·&nbsp; EC224 Intermediate Microeconomics
       &nbsp;·&nbsp; <a href="week5.html">Back to Week 5</a>
@@ -439,18 +380,19 @@
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
 
-</main>
+  </main>
+</div>
 
 <script>
 /* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
    resolve CSS var(), so their colours come from here; CSS and inline styles use
    var() directly. Fallbacks equal the token values. */
-var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--red","#c0392b"),green:g("--green","#2e8b57"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
 
 // ══════════════════════════════════════════════════════════════════════
 // SHARED CANVAS UTILITIES
 // ══════════════════════════════════════════════════════════════════════
-const ML=44, MR=16, MT=16, MB=32;
+const ML=52, MR=20, MT=20, MB=44;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
 function resolveLabels(items, linePts=[], iter=150, pad=6) {
@@ -481,7 +423,7 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
   }
 }
 function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#444',fontSize=9,bold=false} = lbl;
+  const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false} = lbl;
   ctx.save();
   if (Math.hypot(x-ax,y-ay)>5) {
     ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]); ctx.globalAlpha=0.55;
@@ -513,7 +455,7 @@ function setupCvs(id) {
   const cvs = document.getElementById(id);
   if (!cvs) return {ctx:null, W:300, H:300};
   const dpr = window.devicePixelRatio || 1;
-  const W = Math.min(cvs.clientWidth || 400, 480);
+  const W = Math.min(cvs.clientWidth || 400, 560);
   const H = W;
   cvs.width = W * dpr;
   cvs.height = H * dpr;
@@ -534,25 +476,34 @@ function fromC(px, py, W, H, xR, yR) {
 }
 
 function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
+  /* Record the range actually used on the canvas element. Tick numbers are
+     painted pixels, so a test cannot read them back as text; this lets
+     review/axis-fixed.js assert exactly that no control changes an axis,
+     instead of pixel-diffing the gutter and mistaking a moving guide line for
+     a rescale. Two attributes, no behaviour. */
+  if (ctx.canvas && ctx.canvas.dataset) {
+    ctx.canvas.dataset.xr = xR[0] + ',' + xR[1];
+    ctx.canvas.dataset.yr = yR[0] + ',' + yR[1];
+  }
   ctx.save();
   // horizontal grid lines
-  ctx.strokeStyle='#f0f0f0'; ctx.lineWidth=1;
+  ctx.strokeStyle="rgba(28,36,51,0.07)"; ctx.lineWidth=1;
   const yStepG=(yR[1]-yR[0])/4;
   for(let i=1;i<=4;i++){
     const v=yR[0]+i*yStepG;
     const [,py]=toC(xR[0],v,W,H,xR,yR);
     ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(W-MR,py); ctx.stroke();
   }
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
-  ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle="#8b95a5"; ctx.font="12px DM Sans,sans-serif"; ctx.textAlign='center';
   const xStep=(xR[1]-xR[0])/4;
   for(let i=0;i<=4;i++){
     const v=xR[0]+i*xStep;
     const [px]=toC(v,yR[0],W,H,xR,yR);
-    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+13);
-    ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+17);
+    ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,H-MB); ctx.lineTo(px,H-MB+4); ctx.stroke();
   }
   const yStep=(yR[1]-yR[0])/4;
@@ -560,12 +511,12 @@ function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
     const v=yR[0]+i*yStep;
     const [,py]=toC(xR[0],v,W,H,xR,yR);
     ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-4,py+3);
-    ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+    ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(ML-4,py); ctx.stroke();
   }
-  ctx.fillStyle='#666'; ctx.font='10px DM Sans,sans-serif';
-  ctx.textAlign='center'; ctx.fillText(xLbl||'L',W/2,H-2);
-  ctx.save(); ctx.translate(10,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle="#4a5566"; ctx.font="13px DM Sans,sans-serif";
+  ctx.textAlign='center'; ctx.fillText(xLbl||'L',W/2,H-6);
+  ctx.save(); ctx.translate(13,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'K',0,0); ctx.restore();
   ctx.restore();
 }
@@ -577,6 +528,42 @@ function dot5(ctx, x, y, r, fill, stroke) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
+// MOTION (DESIGN 6)
+// A button that moves a curve tweens it. A slider does not: nothing animates
+// during a drag, because a transition fights the pointer (DESIGN 6.3).
+// This is the fix for AUDIT V-7: the "move along the isoquant" vs "shift the
+// isoquant" distinction is the whole point of Fig 5.6, and it can only be seen
+// as movement.
+// ══════════════════════════════════════════════════════════════════════
+const EC_DUR_VALUE = 450;   // --dur-value
+const EC_DUR_STEP  = 700;   // --dur-step
+// Polynomial stand-ins for the CSS beziers; canvas cannot use a CSS easing.
+const ecEaseInOut = t => (t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2);
+const ecEaseOut   = t => 1 - Math.pow(1 - t, 3);
+const ecReduced = () => window.matchMedia &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Drives `onStep(p)` with p going 0 -> 1 over `dur` ms, then once more at
+   exactly 1 so the final state is never a rounding error. Returns a cancel
+   handle; `key` makes a second press of the same button supersede the first
+   instead of running two tweens over one variable. */
+const _ecTweens = new Map();
+function ecTween(key, dur, onStep, ease) {
+  const prev = _ecTweens.get(key);
+  if (prev) cancelAnimationFrame(prev);
+  if (ecReduced()) { onStep(1); return; }
+  const e = ease || ecEaseInOut;
+  const t0 = performance.now();
+  const frame = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    onStep(e(p));
+    if (p < 1) _ecTweens.set(key, requestAnimationFrame(frame));
+    else { _ecTweens.delete(key); onStep(1); }
+  };
+  _ecTweens.set(key, requestAnimationFrame(frame));
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // D3 SVG LABEL-OVERLAY SYSTEM (canvas + SVG hybrid, gold-standard S6/S8 pattern)
 // Each canvas figure gets a sibling <svg> sized to the canvas's CSS-pixel W/H
 // (the same coordinate space used by toC()). Descriptive curve/region/point
@@ -584,7 +571,15 @@ function dot5(ctx, x, y, r, fill, stroke) {
 // exactly like testing.html S6/S8, instead of being painted onto the canvas.
 // Axis-tick labels stay on canvas (drawn by drawAxesSt) and are untouched.
 // ══════════════════════════════════════════════════════════════════════
-const D5_LABEL_H = 15;
+/* DESIGN 4.3: in-plot labels are haloed text, not outlined boxes, and they are
+   readable. The figures compute each label's width `lw` assuming the old 9px
+   type, so D5_K rescales those numbers rather than making us edit fifteen
+   width formulas. 13px against our 512-736px plots is the same optical size as
+   MLU's 16px against its 790-1100px plots. */
+const D5_FS = 13;
+const D5_K = D5_FS / 9;
+const D5_LABEL_H = D5_FS + 5;
+const d5w = d => d.lw * D5_K;
 
 // Returns (creating once) the d3 selection for the overlay <svg id="...-svg">,
 // sized via viewBox to the canvas's current CSS-pixel W×H. Safe to call every
@@ -601,15 +596,149 @@ function d5Svg(svgId, W, H) {
 }
 
 // Build a label node in the S6/S8 shape: {id,color,label,lw,ax,ay,fx_anchor,fy_anchor,x,y}
+// (d.x, d.y) is the label's CENTRE, not its top-left corner. That used to be the
+// corner, which meant forceCollide's circle sat off to one side of the box it
+// was meant to represent, so wide labels shoved each other asymmetrically and
+// never found a stable arrangement. Rendering and clamping both offset by half
+// the box now, so the physics and the pixels agree.
+// x/y start at the anchor and are moved to the preferred offset by d5Seed once
+// the plot size is known. Nothing is random: a figure must look the same on
+// every load.
 function d5Node(id, color, label, lw, ax, ay) {
   return { id, color, label, lw, ax, ay, fx_anchor:ax, fy_anchor:ay,
-           x: ax+(Math.random()-0.5)*50, y: ay+(Math.random()-0.5)*50 };
+           ox:0, oy:0, x:ax, y:ay };
 }
 
-// Append connector-lines + draggable label groups (white rounded-rect boxes,
-// font-size 9 / weight 600 / 'DM Sans', dashed connectors, NO anchor dot):
-// returns {gs, conns} so the caller can wire a tick handler.
+/* The preferred resting place for a label, relative to its anchor.
+   Deterministic and readable rather than scattered: a label sits clear of its
+   anchor on the side with more room, so it never covers the point it names and
+   never starts off the edge of the plot. The force sim pulls it back here, and
+   only collisions move it away. */
+function d5Seed(nodes, W, H) {
+  for (const d of nodes) {
+    const toRight = d.fx_anchor < W * 0.55;   // anchor left of centre: label right
+    const toBelow = d.fy_anchor < H * 0.42;   // anchor high in the plot: label below
+    d.ox = (toRight ? 1 : -1) * (d5w(d) / 2 + 14);
+    d.oy = (toBelow ? 1 : -1) * 22;
+  }
+  /* Labels that share an anchor (Fig 5.1's "TP = ..." and "slope = MPL = ..."
+     both point at the same moving dot) would otherwise be given the same
+     preferred spot, collide forever, and shove each other back and forth for
+     as long as the slider is held. Stack a cluster vertically instead, so each
+     one has a resting place of its own and collide has nothing left to do. */
+  const CLUSTER = 44, STEP = D5_LABEL_H + 8;
+  const done = new Set();
+  for (let i = 0; i < nodes.length; i++) {
+    if (done.has(i)) continue;
+    const group = [i];
+    for (let j = i + 1; j < nodes.length; j++) {
+      if (done.has(j)) continue;
+      if (Math.hypot(nodes[i].fx_anchor - nodes[j].fx_anchor,
+                     nodes[i].fy_anchor - nodes[j].fy_anchor) < CLUSTER) group.push(j);
+    }
+    group.forEach(k => done.add(k));
+    if (group.length > 1) {
+      // Centre the stack on the shared offset so the group stays balanced
+      // around its anchor rather than drifting off to one side.
+      const mid = (group.length - 1) / 2;
+      group.forEach((k, n) => { nodes[k].oy = nodes[i].oy + (n - mid) * STEP; });
+    }
+  }
+  for (const d of nodes) {
+    d.x = d.fx_anchor + d.ox;
+    d.y = d.fy_anchor + d.oy;
+    d.vx = 0; d.vy = 0;
+  }
+}
+
+/* How much drawn ink sits under a rectangle of the plot, weighted by darkness
+   so a 3px curve counts heavily and a 7%-opacity gridline barely counts. */
+function d5Ink(ctx, dpr, x, y, w, h) {
+  const X = Math.max(0, Math.round(x * dpr)), Y = Math.max(0, Math.round(y * dpr));
+  const W = Math.max(1, Math.round(w * dpr)), H = Math.max(1, Math.round(h * dpr));
+  let data;
+  try { data = ctx.getImageData(X, Y, W, H).data; } catch (_) { return 0; }
+  let ink = 0;
+  for (let i = 0; i < data.length; i += 16) {          // sample every 4th pixel
+    if (data[i + 3] === 0) continue;
+    const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+    if (lum < 250) ink += (250 - lum) / 250;
+  }
+  return ink;
+}
+
+/* Re-seed labels onto the emptiest nearby spot.
+
+   The geometric rule in d5Seed keeps a label clear of its own anchor, but it
+   knows nothing about the curve the anchor sits on, so a label could still be
+   laid straight over the line it is naming. This looks at what was actually
+   painted and picks, from eight directions at two distances, the placement
+   with the least ink under it, penalising anything that would overlap a label
+   already placed. Deterministic: same drawing in, same placement out.
+
+   Runs once per overlay, after the figure has drawn at least once, and again
+   after a resize, so it is never a source of movement during interaction. */
+function d5SeedFromCanvas(nodes, cvs) {
+  const dpr = window.devicePixelRatio || 1;
+  let ctx; try { ctx = cvs.getContext('2d'); } catch (_) { return; }
+  const W = cvs.width / dpr, H = cvs.height / dpr;
+  const DIRS = [[1,-1],[1,1],[-1,-1],[-1,1],[1,0],[-1,0],[0,-1],[0,1]];
+  const placed = [];
+  for (const d of nodes) {
+    const hw = d5w(d) / 2, hh = D5_LABEL_H / 2;
+    let best = null;
+    for (const [sx, sy] of DIRS) {
+      for (const reach of [1, 1.7]) {
+        const ox = sx * (hw + 16) * reach;
+        const oy = sy * (hh + 16) * reach;
+        const cx = d.fx_anchor + ox, cy = d.fy_anchor + oy;
+        if (cx - hw < ML || cx + hw > W - MR || cy - hh < MT || cy + hh > H - MB) continue;
+        let score = d5Ink(ctx, dpr, cx - hw, cy - hh, d5w(d), D5_LABEL_H);
+        for (const p of placed) {
+          if (Math.abs(p.x - cx) < (p.hw + hw) && Math.abs(p.y - cy) < D5_LABEL_H + 6) score += 400;
+        }
+        // All else equal, prefer the shorter leader.
+        score += Math.hypot(ox, oy) * 0.05;
+        if (!best || score < best.score) best = { score, ox, oy, cx, cy };
+      }
+    }
+    if (!best) continue;
+    d.ox = best.ox; d.oy = best.oy;
+    d.x = best.cx;  d.y = best.cy;
+    d.vx = 0; d.vy = 0;
+    placed.push({ x: best.cx, y: best.cy, hw });
+  }
+}
+
+/* One-shot pass over every overlay whose canvas has been drawn. */
+function d5PolishSeeds() {
+  for (const s of _d5AllSims) {
+    if (s._d5seeded || !s._d5svg || !s._d5nodes) continue;
+    const host = s._d5svg.node() && s._d5svg.node().parentElement;
+    const cvs = host && host.querySelector('canvas');
+    if (!cvs || !cvs.width) continue;
+    d5SeedFromCanvas(s._d5nodes, cvs);
+    s._d5seeded = true;
+    if (s._d5tick) s._d5tick();
+    s.alpha(0.25).restart();
+  }
+}
+function d5ResetSeeds() { for (const s of _d5AllSims) s._d5seeded = false; }
+
+// Append connector-lines + draggable label groups. DESIGN 4.3: the label is
+// haloed text, not an outlined white box. A paint-order stroke in the plot's
+// own background colour is what keeps MLU's in-chart text legible over data
+// (decision-tree .dt-text / .entropy-values), and it removes an outlined
+// rectangle from inside every plot. Connectors and the no-anchor-dot rule are
+// unchanged from the S6/S8 standard.
+// Returns {gs, conns} so the caller can wire a tick handler.
 function d5AddLabels(svg, nodes, sim) {
+  // Put every label at its preferred offset before the first frame, so the
+  // figure paints in its resting arrangement instead of settling into one.
+  const vb = (svg.attr('viewBox') || '0 0 500 500').split(/\s+/);
+  d5Seed(nodes, +vb[2] || 500, +vb[3] || 500);
+  // Kept so d5PolishSeeds can find this overlay's canvas once it has drawn.
+  sim._d5svg = svg; sim._d5nodes = nodes;
   const conns = svg.append('g').selectAll('line').data(nodes).enter()
     .append('line')
     .attr('stroke', d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
@@ -620,51 +749,193 @@ function d5AddLabels(svg, nodes, sim) {
       .on('drag', (e,d)=>{ d.fx=e.x; d.fy=e.y; })
       .on('end',  (e,d)=>{ sim.alphaTarget(0); d.fx=null; d.fy=null; })
     );
-  gs.append('rect').attr('width',d=>d.lw).attr('height',D5_LABEL_H).attr('rx',3)
-    .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
-  gs.append('text').attr('x',d=>d.lw/2).attr('y',D5_LABEL_H-4)
-    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+  // A transparent hit-rect keeps the label draggable: haloed text alone gives
+  // the pointer only the glyphs to grab.
+  gs.append('rect').attr('width',d=>d5w(d)).attr('height',D5_LABEL_H)
+    .attr('fill','transparent');
+  gs.append('text').attr('x',d=>d5w(d)/2).attr('y',D5_LABEL_H-5)
+    .attr('text-anchor','middle')
+    .attr('fill',d=>d.color)
+    .attr('stroke','var(--paper-raised)').attr('stroke-width',3)
+    .attr('stroke-linejoin','round').attr('paint-order','stroke fill')
+    .attr('font-size',D5_FS).attr('font-weight',500)
     .text(d=>d.label);
   return { gs, conns };
 }
 
-// Standard collide + anchor-spring force sim (S6/S8 spec)
+/* Collide + anchor-spring force sim.
+   Three changes from the original S6/S8 parameters, all aimed at stopping the
+   labels oscillating while a slider is held:
+   - the spring targets anchor + preferred offset, not the anchor itself, so a
+     label has somewhere to return to instead of trying to sit on the point it
+     labels and being pushed off it again;
+   - the spring is nearly 4x stiffer (0.04 -> 0.15) so it returns promptly;
+   - velocityDecay goes from d3's default 0.4 to 0.82. This is the single
+     biggest anti-oscillation lever: labels glide to rest rather than carrying
+     momentum through their target and swinging back.
+   Collide is also gentler (0.85 -> 0.55) and its radius smaller, because the
+   label boxes got 1.44x wider when the type went from 9px to 13px and the old
+   radius was over-separating them. */
 function d5MakeSim(nodes) {
   return d3.forceSimulation(nodes)
-    .force('collide', d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-    .force('x', d3.forceX(d=>d.fx_anchor).strength(0.04))
-    .force('y', d3.forceY(d=>d.fy_anchor).strength(0.04));
+    .velocityDecay(0.82)
+    .force('collide', d3.forceCollide(d=>d5w(d)*0.42+3).strength(0.55))
+    .force('x', d3.forceX(d=>d.fx_anchor+d.ox).strength(0.15))
+    .force('y', d3.forceY(d=>d.fy_anchor+d.oy).strength(0.15));
 }
 
 // Tick handler: clamp into plot bounds [PAD..W-PAD]/[PAD..H-PAD], position
 // label groups + connector lines. PAD here is the canvas ML/MR/MT/MB margin box.
 function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
-  nodes.forEach(d=>{
-    d.x = Math.max(padL-4, Math.min(W-d.lw-4, d.x));
-    d.y = Math.max(padT,   Math.min(H-padB-D5_LABEL_H, d.y));
-  });
-  gs.attr('transform', d=>`translate(${d.x},${d.y})`);
+  const clamp = d => {
+    // Clamp the CENTRE, keeping the whole box inside the plot's margin box.
+    // padR was accepted but never used, so a wide label could sit flush against
+    // the right edge and read as clipped.
+    const hw = d5w(d)/2, hh = D5_LABEL_H/2;
+    d.x = Math.max(padL+hw, Math.min(W-padR-hw, d.x));
+    d.y = Math.max(padT+hh, Math.min(H-padB-hh, d.y));
+  };
+  nodes.forEach(clamp);
+
+  /* Hard de-overlap, run where positions are finalised.
+     forceCollide models each label as a circle and works on averages over many
+     ticks, so in a tight corner (an anchor at the far right, where every
+     outward offset is clamped back inward) two labels can come to rest on top
+     of each other and simply stay there once the simulation cools. This is a
+     direct, deterministic separation on the real rectangles: push the smaller
+     penetration axis apart, then re-clamp. Three passes is enough for the
+     label counts here, and because it is monotone it cannot oscillate. */
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = false;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const minX = (d5w(a) + d5w(b)) / 2 + 4, minY = D5_LABEL_H + 4;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const ox = minX - Math.abs(dx), oy = minY - Math.abs(dy);
+        if (ox <= 0 || oy <= 0) continue;                 // not overlapping
+        moved = true;
+        // Separate along whichever axis needs the smaller nudge.
+        if (oy <= ox) {
+          const s = (dy >= 0 ? 1 : -1) * oy / 2;
+          a.y -= s; b.y += s;
+        } else {
+          const s = (dx >= 0 ? 1 : -1) * ox / 2;
+          a.x -= s; b.x += s;
+        }
+        clamp(a); clamp(b);
+      }
+    }
+    if (!moved) break;
+  }
+  gs.attr('transform', d=>`translate(${d.x-d5w(d)/2},${d.y-D5_LABEL_H/2})`);
+  // The connector runs from the anchor to the label's centre, and is hidden
+  // when the label is close enough that a leader line would be noise.
   conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor)
-       .attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+D5_LABEL_H/2);
+       .attr('x2',d=>d.x).attr('y2',d=>d.y)
+       .attr('opacity',d=>Math.hypot(d.x-d.fx_anchor,d.y-d.fy_anchor) > 26 ? 0.55 : 0);
 }
 
 // Reposition a node's anchor (e.g. after a slider/drag changes curve position)
 // while translating its current x/y by the same delta, avoids drift, the S6 pattern.
+/* Move a label's anchor, carrying the label with it.
+
+   Repainting matters here. d3 only calls the tick handler while a simulation
+   is warm; once it cools below alphaMin it stops ticking entirely. So moving
+   an anchor updated d.x/d.y but nothing rewrote the SVG transform, and the
+   labels sat still while the point moved out from under them, until you
+   happened to click one, which reheated the simulation and made them all
+   snap into place at once. Sliders hid the bug because they reheat on
+   mousedown; dragging a point on the canvas did not.
+
+   Rather than reheat on every anchor move, which would reintroduce the
+   bouncing, this schedules one repaint on the next frame. Positions are
+   already correct, they just need to be drawn. */
+let _d5RepaintQueued = false;
+function d5Repaint() {
+  if (_d5RepaintQueued) return;
+  _d5RepaintQueued = true;
+  requestAnimationFrame(() => {
+    _d5RepaintQueued = false;
+    for (const s of _d5AllSims) if (s._d5tick) s._d5tick();
+  });
+}
 function d5MoveAnchor(node, newAx, newAy) {
   const dx = newAx - node.fx_anchor, dy = newAy - node.fy_anchor;
   node.x += dx; node.y += dy;
   node.vx = 0; node.vy = 0;
   node.fx_anchor = newAx; node.fy_anchor = newAy;
+  d5Repaint();
+}
+
+/* Register the tick handler AND keep a reference so d5Repaint can call it
+   directly when the simulation is asleep. */
+function d5OnTick(sim, fn) {
+  sim._d5tick = fn;
+  sim.on('tick', fn);
+  fn();
+  return sim;
 }
 
 // Wire mousedown/touchstart -> alphaTarget(0.3).restart() and a shared
 // window mouseup/touchend -> alphaTarget(0) for slider-driven smoothness,
 // exactly like the S6/S8 slider wiring. Call once per slider element.
+/* Wire a draggable point on a canvas.
+   The figures used to listen for mousemove/mouseup on the canvas itself. That
+   breaks as soon as the pointer crosses one of the SVG labels drawn over the
+   canvas, because the label sits on top and has pointer-events:auto:
+     - the canvas stops receiving mousemove, so the point freezes;
+     - the canvas fires mouseleave, so the drag is cancelled outright;
+     - and the label's own d3.drag takes over, so the student ends up dragging
+       the label off its anchor while trying to move the point, which is why
+       labels appeared to "stop pointing at" the thing they name.
+   Fixing it takes two things: track the drag on window, and make the label
+   layer transparent to the pointer for the duration of the drag.
+   Touch already behaves, because the element that receives touchstart keeps
+   receiving touchmove and touchend wherever the finger goes. */
+function d5CanvasDrag(cvs, onMove) {
+  if (!cvs || cvs._d5Drag) return;
+  cvs._d5Drag = true;
+  const host = cvs.closest('.cvs-ovl-host');
+  const at = e => {
+    const r = cvs.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    return [(e.clientX - r.left) * (cvs.width / r.width) / dpr,
+            (e.clientY - r.top)  * (cvs.height / r.height) / dpr];
+  };
+  let on = false;
+  const move = e => { if (on) onMove(...at(e)); };
+  const end  = () => {
+    if (!on) return;
+    on = false;
+    if (host) host.classList.remove('dragging');
+    window.removeEventListener('mousemove', move);
+    window.removeEventListener('mouseup', end);
+  };
+  cvs.addEventListener('mousedown', e => {
+    e.preventDefault();
+    on = true;
+    if (host) host.classList.add('dragging');
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    onMove(...at(e));
+  });
+  const tAt = e => at(e.touches[0] || e.changedTouches[0]);
+  cvs.addEventListener('touchstart', e => { e.preventDefault(); on = true; onMove(...tAt(e)); }, { passive: false });
+  cvs.addEventListener('touchmove',  e => { if (!on) return; e.preventDefault(); onMove(...tAt(e)); }, { passive: false });
+  cvs.addEventListener('touchend',   () => { on = false; });
+  cvs.addEventListener('touchcancel',() => { on = false; });
+}
+
 function d5WireSliderSmoothness(el, sim) {
   if (!el || !sim || el._d5Wired) return;
   el._d5Wired = true;
-  el.addEventListener('mousedown', ()=>sim.alphaTarget(0.3).restart());
-  el.addEventListener('touchstart', ()=>sim.alphaTarget(0.3).restart(), {passive:true});
+  // 0.3 kept the simulation permanently hot for as long as the slider was
+  // held, so labels were being flung around by collide the whole time. 0.05 is
+  // enough to keep collisions resolving as the anchors move, without the
+  // energy to overshoot.
+  el.addEventListener('mousedown', ()=>sim.alphaTarget(0.05).restart());
+  el.addEventListener('touchstart', ()=>sim.alphaTarget(0.05).restart(), {passive:true});
 }
 let _d5GlobalUpHooked = false;
 const _d5AllSims = [];
@@ -678,14 +949,16 @@ function d5RegisterSim(sim) {
   return sim;
 }
 
-// Reset a label-overlay simulation: scatter nodes back near their anchors and reheat.
+// Reset a label-overlay simulation: put nodes back at their preferred offsets.
+// This used to scatter them randomly, which is why a figure looked different
+// every time it was reset or reloaded.
 function d5ResetSim(nodes, sim) {
   nodes.forEach(d=>{
-    d.x = d.fx_anchor + (Math.random()-0.5)*60;
-    d.y = d.fy_anchor + (Math.random()-0.5)*60;
+    d.x = d.fx_anchor + d.ox;
+    d.y = d.fy_anchor + d.oy;
     d.vx = 0; d.vy = 0; d.fx = null; d.fy = null;
   });
-  sim.alpha(0.5).restart();
+  sim.alpha(0.35).restart();
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -700,12 +973,12 @@ function v51EnsureOverlayA(W,H) {
   if(v51OvlA && v51OvlA.W===W && v51OvlA.H===H) return v51OvlA;
   svg.selectAll('*').remove();
   const nodes=[
-    d5Node('tp','#1a56db','TP',46,W/2,H/2),
+    d5Node('tp','#1f6fb2','TP',46,W/2,H/2),
     d5Node('slope',EC.red,'slope',70,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v51OvlA={W,H,nodes,sim,gs,conns};
   return v51OvlA;
@@ -717,7 +990,7 @@ function v51EnsureOverlayB(W,H) {
   const nodes=[ d5Node('mpl',EC.red,'MPL',60,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v51OvlB={W,H,nodes,sim,gs,conns};
   return v51OvlB;
@@ -732,7 +1005,7 @@ const V51_FORMS = {
   cobb: {
     tp:  (L,K)=>Math.pow(K,0.5)*Math.pow(Math.max(0.001,L),0.5),
     mpl: (L,K)=>0.5*Math.pow(K,0.5)*Math.pow(Math.max(0.001,L),-0.5),
-    yRA: [0,5], yRB: [-0.1,1.3],
+    yRA: [0,13], yRB: [-0.1,3.2],
     desc: '<strong>Cobb-Douglas:</strong> Q = K<sup>0.5</sup> &middot; L<sup>0.5</sup>. Output always increases in L but at a decreasing rate. MPL falls as L rises (diminishing returns), never reaching zero. The most common textbook production function.',
     phase: (mpl,L)=>mpl>0.6?'Rapid diminishing returns':mpl>0.25?'Moderate diminishing':mpl>0.05?'Slow diminishing':'Near-zero MPL',
     showK: true,
@@ -740,7 +1013,7 @@ const V51_FORMS = {
   scurve: {
     tp:  (L,K)=>Math.max(0, 1.5*L*L - 0.1*L*L*L),
     mpl: (L,K)=>Math.max(0, 3*L - 0.3*L*L),
-    yRA: [0,14], yRB: [-0.5,8],
+    yRA: [0,52], yRB: [-0.5,8.5],
     desc: '<strong>S-Curve (Cubic):</strong> Q = 1.5L<sup>2</sup> &minus; 0.1L<sup>3</sup>. The classic S-shaped total product curve. MPL first rises (increasing returns), then falls after reaching a maximum (diminishing returns), and eventually reaches zero. This matches the standard textbook diagram.',
     phase: (mpl,L)=>L<5?'Increasing returns (MPL rising)':L<5.5?'Peak MPL':L<10?'Diminishing returns (MPL falling)':'Zero / Negative MP',
     showK: false,
@@ -811,25 +1084,17 @@ function v51Draw() {
   const tpBase = l=>form.tp(l, V51_K_BASE);
   const mplBase = l=>form.mpl(l, V51_K_BASE);
 
-  // Dynamic y-ranges so the curves span the full L domain and the current
-  // dot stays visible at every slider position (fixed per-form ranges clipped
-  // the TP curve and lost the dot at extremes).
-  let tpMax=0.001, mplCap=0.001, mplMin=0;
-  for(let l=0.1;l<=10.001;l+=0.05){
-    tpMax=Math.max(tpMax,tp(l));
-    const m=mpl(l);
-    if(l>=0.8) mplCap=Math.max(mplCap,m);
-    mplMin=Math.min(mplMin,m);
-    if(kShifted){
-      tpMax=Math.max(tpMax,tpBase(l));
-      const mb=mplBase(l);
-      if(l>=0.8) mplCap=Math.max(mplCap,mb);
-      mplMin=Math.min(mplMin,mb);
-    }
-  }
-  const yRA=[0, Math.max(tpMax, tp(L))*1.08];
-  const yTopB=Math.max(mplCap, mpl(L))*1.12;
-  const yRB=[Math.min(mplMin*1.1, -yTopB*0.08), yTopB];
+  /* FIXED y-ranges, taken from the production function's own declaration.
+     They used to be recomputed from the current slider values on every draw,
+     which meant the axis rescaled under the curve as you dragged. That is
+     disorienting, and on this figure it actively hid the lesson: raising K
+     lifts the whole TP curve, but because the axis grew with it the curve
+     looked identical at K=1 and K=16. The ranges are sized to the reachable
+     extremes of each function (Cobb-Douglas tops out at 12.59 with K=16 and
+     L=9.9, so the axis is 13), so a slider can never push a curve off the top.
+     Only choosing a different production function changes the scale. */
+  const yRA = form.yRA;
+  const yRB = form.yRB;
 
   // ─ TOP PANEL (TP) ─
   ctxA.clearRect(0,0,W,HA);
@@ -839,7 +1104,7 @@ function v51Draw() {
   // K has been moved off baseline so the shift is visible against the original.
   if(kShifted){
     ctxA.save();
-    ctxA.setLineDash([5,4]); ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=1.4; ctxA.globalAlpha=0.45;
+    ctxA.setLineDash([5,4]); ctxA.strokeStyle='#1f6fb2'; ctxA.lineWidth=1.4; ctxA.globalAlpha=0.45;
     ctxA.beginPath(); let gfirst=true;
     for(let l=0.1;l<=10;l+=0.05){
       const [gx,gy]=toC(l,tpBase(l),W,HA,xR,yRA);
@@ -849,7 +1114,7 @@ function v51Draw() {
     ctxA.stroke();
     ctxA.restore();
     const gL=9.3, [glx,gly]=toC(gL,tpBase(gL),W,HA,xR,yRA);
-    ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1a56db';
+    ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1f6fb2';
     ctxA.font='9px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
     ctxA.fillText('TP', glx+3, gly);
     ctxA.restore();
@@ -862,10 +1127,10 @@ function v51Draw() {
     if(cy2<MT-5||cy2>HA-MB+5){first=true;continue;}
     first?(ctxA.moveTo(cx2,cy2),first=false):ctxA.lineTo(cx2,cy2);
   }
-  ctxA.strokeStyle='#1a56db'; ctxA.lineWidth=2; ctxA.stroke();
+  ctxA.strokeStyle='#1f6fb2'; ctxA.lineWidth=3; ctxA.stroke();
   {
     const idL=9.3, [ilx,ily]=toC(idL,tp(idL),W,HA,xR,yRA);
-    ctxA.save(); ctxA.fillStyle='#1a56db'; ctxA.font='bold 10px DM Sans,sans-serif';
+    ctxA.save(); ctxA.fillStyle='#1f6fb2'; ctxA.font='bold 10px DM Sans,sans-serif';
     ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
     ctxA.fillText(kShifted?'TP′':'TP', ilx+3, ily);
     ctxA.restore();
@@ -881,7 +1146,7 @@ function v51Draw() {
   const [tx1,ty1]=toC(Math.min(10,x1),y1,W,HA,xR,yRA);
   ctxA.beginPath(); ctxA.setLineDash([5,4]); ctxA.strokeStyle=EC.red; ctxA.lineWidth=1.5;
   ctxA.moveTo(tx0,ty0); ctxA.lineTo(tx1,ty1); ctxA.stroke(); ctxA.setLineDash([]);
-  dot5(ctxA,cx,cy,7,'#1a56db','#fff');
+  dot5(ctxA,cx,cy,7,'#1f6fb2','#fff');
 
   // D3 SVG overlay labels for TP value + slope annotation (draggable, force-sim)
   const ovlA=v51EnsureOverlayA(W,HA);
@@ -893,18 +1158,18 @@ function v51Draw() {
     nTP.lw=Math.max(40,tpTxt.length*5.6+10); nSlope.lw=Math.max(40,slopeTxt.length*5.6+10);
     d5MoveAnchor(nTP,cx,cy);
     d5MoveAnchor(nSlope,cx,cy);
-    ovlA.gs.select('rect').attr('width',d=>d.lw);
-    ovlA.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+    ovlA.gs.select('rect').attr('width',d=>d5w(d));
+    ovlA.gs.select('text').attr('x',d=>d5w(d)/2).text(d=>d.label);
   }
 
-  // Phase label (corner -- fixed, no collision)
+  // Phase label (corner, fixed, no collision)
   const phaseLabel=form.phase(mplL,L);
   ctxA.fillStyle=EC.purple; ctxA.font='bold 10px DM Sans,sans-serif'; ctxA.textAlign='right'; ctxA.textBaseline='alphabetic';
   ctxA.fillText(phaseLabel,W-MR-4,HA-MB-6);
 
   // Drop line
   const [axL]=toC(L,0,W,HA,xR,yRA);
-  ctxA.setLineDash([3,3]); ctxA.strokeStyle='#aaa'; ctxA.lineWidth=1;
+  ctxA.setLineDash([3,3]); ctxA.strokeStyle='#9aa3b0'; ctxA.lineWidth=1;
   ctxA.beginPath(); ctxA.moveTo(cx,cy); ctxA.lineTo(axL,HA-MB); ctxA.stroke();
   ctxA.setLineDash([]);
 
@@ -944,7 +1209,7 @@ function v51Draw() {
     if(cy2<MT-5||cy2>HB-MB+5){first=true;continue;}
     first?(ctxB.moveTo(cx2,cy2),first=false):ctxB.lineTo(cx2,cy2);
   }
-  ctxB.strokeStyle=EC.red; ctxB.lineWidth=2; ctxB.stroke();
+  ctxB.strokeStyle=EC.red; ctxB.lineWidth=3; ctxB.stroke();
   {
     const idLb=9.3, [ilbx,ilby]=toC(idLb,mpl(idLb),W,HB,xR,yRB);
     ctxB.save(); ctxB.fillStyle=EC.red; ctxB.font='bold 10px DM Sans,sans-serif';
@@ -963,13 +1228,13 @@ function v51Draw() {
     const nMPL=ovlB.nodes.find(n=>n.id==='mpl');
     nMPL.label=mplTxt; nMPL.lw=Math.max(50,mplTxt.length*5.6+10);
     d5MoveAnchor(nMPL,mx,my);
-    ovlB.gs.select('rect').attr('width',d=>d.lw);
-    ovlB.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+    ovlB.gs.select('rect').attr('width',d=>d5w(d));
+    ovlB.gs.select('text').attr('x',d=>d5w(d)/2).text(d=>d.label);
   }
 
   // Zero line
   const [,zy]=toC(0,0,W,HB,xR,yRB);
-  ctxB.strokeStyle='#ddd'; ctxB.lineWidth=1;
+  ctxB.strokeStyle='#c9c2b6'; ctxB.lineWidth=1;
   ctxB.beginPath(); ctxB.moveTo(ML,zy); ctxB.lineTo(W-MR,zy); ctxB.stroke();
 
   v51WireSliders();
@@ -984,14 +1249,14 @@ function v51Update() {
   const tp=form.tp(L,K);
   const mpl=form.mpl(L,K);
   const phase=form.phase(mpl,L);
-  const showK=form.showK;
   document.getElementById('v51-readout').innerHTML=
+    // L and K are not repeated here: they are already on their own slider
+    // labels directly above the plot (DESIGN 4.4). Only quantities the student
+    // cannot read off a control appear in the state row.
     `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val">${L.toFixed(1)}</div></div>
-      ${showK?`<div class="readout-col"><div class="readout-label">K (fixed)</div><div class="readout-val">${K}</div></div>`:''}
       <div class="readout-col"><div class="readout-label">TP (output)</div><div class="readout-val">${tp.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">MPL = slope of TP</div><div class="readout-val" style="color:var(--red)">${mpl.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Phase</div><div class="readout-val" style="color:var(--purple);font-size:0.82rem;">${phase}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL = slope of TP</div><div class="readout-val" style="color:var(--d-second)">${mpl.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Phase</div><div class="readout-val" style="color:var(--unit-ink);font-size:var(--t-small);">${phase}</div></div>
     </div>`;
   v51Draw();
 }
@@ -1003,13 +1268,13 @@ let v52Mode = 'iq';
 
 function v52SetMode(m) {
   v52Mode = m;
-  document.getElementById('v52-mode-iq').classList.toggle('active', m==='iq');
-  document.getElementById('v52-mode-ic').classList.toggle('active', m==='ic');
+  document.getElementById('v52-mode-iq').classList.toggle('on', m==='iq');
+  document.getElementById('v52-mode-ic').classList.toggle('on', m==='ic');
   v52DrawAll();
 }
 
 // Draggable point state for Fig 5.2 (Cobb-Douglas panel only)
-let v52DragL = 4, v52DragK = 4, v52Dragging = false;
+let v52DragL = 4, v52DragK = 4;
 
 // D3 SVG label-overlay state, one per panel (cvs52a/b/c). Each overlay holds
 // up to 3 curve labels (Q=2/4/6) plus, on the Cobb-Douglas panel only, the
@@ -1027,8 +1292,8 @@ function v52EnsureOverlay(canvasId, W, H, withDragLabels) {
   if(ovl && ovl.W===W && ovl.H===H && ovl.withDrag===withDragLabels) return ovl;
   svg.selectAll('*').remove();
   const nodes=[
-    d5Node('q0','#1a56db','Q',34,W/2,H/2),
-    d5Node('q1','#2e8b57','Q',34,W/2,H/2),
+    d5Node('q0','#1f6fb2','Q',34,W/2,H/2),
+    d5Node('q1','#2f5c3a','Q',34,W/2,H/2),
     d5Node('q2',EC.red,'Q',34,W/2,H/2),
   ];
   if(withDragLabels){
@@ -1037,7 +1302,7 @@ function v52EnsureOverlay(canvasId, W, H, withDragLabels) {
   }
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   ovl={W,H,withDrag:withDragLabels,nodes,sim,gs,conns};
   v52Ovl[key]=ovl;
@@ -1050,8 +1315,8 @@ function v52SetCurveLabel(ovl, idx, text, color, ax, ay) {
   d5MoveAnchor(n,ax,ay);
 }
 function v52RefreshOverlayDom(ovl) {
-  ovl.gs.select('rect').attr('width',d=>d.lw).attr('stroke',d=>d.color);
-  ovl.gs.select('text').attr('x',d=>d.lw/2).attr('fill',d=>d.color).text(d=>d.label);
+  ovl.gs.select('rect').attr('width',d=>d5w(d));
+  ovl.gs.select('text').attr('x',d=>d5w(d)/2).attr('fill',d=>d.color).text(d=>d.label);
   ovl.conns.attr('stroke',d=>d.color);
   // Hide empty labels entirely (a zero-width stroked rect + connector would
   // otherwise leave a stray tick mark, e.g. fig 5.6 before "Improve Technology")
@@ -1075,13 +1340,13 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
 
   const label=mode==='iq'?'Q':'U';
   const tangLabel=mode==='iq'?'MRTS':'MRS';
-  const colors=['#1a56db','#2e8b57',EC.red];
+  const colors=['#9dc0dc','#4e93c2','#1f6fb2'];
   // D3 SVG overlay: curve labels (+ drag-point labels on the CD panel)
   const isDragPanel = (canvasId==='cvs52a' && type==='cd');
   const ovl = v52EnsureOverlay(canvasId, W, H, isDragPanel);
   const curveAnchors=[]; // {ax,ay,text,color} per curve, fed to overlay nodes after the loop
   qLevels.forEach((q,qi)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=colors[qi]||'#888'; ctx.lineWidth=2;
+    ctx.beginPath(); let first=true; ctx.strokeStyle=colors[qi]||'var(--ink-faint)'; ctx.lineWidth=3;
     if(type==='cd'){
       for(let l=0.3;l<=10;l+=0.05){
         const k=q*q/l; if(k>10||k<0.1){first=true;continue;}
@@ -1119,7 +1384,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
       const kk=2*q;
       if(q<=xR[1]&&kk<=yR[1]) [ax,ay]=toC(Math.min(q+0.4,9),kk,W,H,xR,yR);
     }
-    if(ax!==null) curveAnchors.push({ax,ay,text:`${label}=${q}`,color:colors[qi]||'#888'});
+    if(ax!==null) curveAnchors.push({ax,ay,text:`${label}=${q}`,color:colors[qi]||'var(--ink-faint)'});
   });
 
   // Push curve-label anchors into the D3 SVG overlay nodes (q0/q1/q2)
@@ -1145,7 +1410,7 @@ function v52DrawPanel(canvasId, type, qLevels, mode) {
     ctx.setLineDash([4,3]); ctx.strokeStyle=EC.red; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
     // Dot P (canvas, kept; SVG overlay carries only the draggable text labels)
-    dot5(ctx,px,py,8,EC.red,'#fff');
+    dot5(ctx,px,py,8,'#2f5c3a','#fff');
     // D3 SVG overlay: track the P / MRTS labels to the live drag position
     if(ovl){
       const pNode=ovl.nodes.find(n=>n.id==='P'), mrtsNode=ovl.nodes.find(n=>n.id==='mrts');
@@ -1181,11 +1446,6 @@ function v52DrawAll() {
 
 function v52InitDrag() {
   const cvs=document.getElementById('cvs52a'); if(!cvs) return;
-  function getCanvasXY(e) {
-    const r=cvs.getBoundingClientRect();
-    const dpr=window.devicePixelRatio||1;
-    return [(e.clientX-r.left)*(cvs.width/r.width)/dpr,(e.clientY-r.top)*(cvs.height/r.height)/dpr];
-  }
   function closestLOnIsoquant(px,py) {
     const dpr=window.devicePixelRatio||1;
     const W=cvs.width/dpr, H=cvs.height/dpr;
@@ -1198,19 +1458,13 @@ function v52InitDrag() {
     }
     return Math.max(0.5,Math.min(9.5,bestL));
   }
-  cvs.addEventListener('mousedown',e=>{const [px,py]=getCanvasXY(e);v52Dragging=true;v52DragL=closestLOnIsoquant(px,py);v52DrawAll();});
-  cvs.addEventListener('mousemove',e=>{if(!v52Dragging)return;const [px,py]=getCanvasXY(e);v52DragL=closestLOnIsoquant(px,py);v52DrawAll();});
-  cvs.addEventListener('mouseup',()=>v52Dragging=false);
-  cvs.addEventListener('mouseleave',()=>v52Dragging=false);
-  cvs.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v52Dragging=true;v52DragL=closestLOnIsoquant(px,py);v52DrawAll();},{passive:false});
-  cvs.addEventListener('touchmove',e=>{e.preventDefault();if(!v52Dragging)return;const t=e.touches[0];const [px,py]=getCanvasXY(t);v52DragL=closestLOnIsoquant(px,py);v52DrawAll();},{passive:false});
-  cvs.addEventListener('touchend',()=>v52Dragging=false);
+  d5CanvasDrag(cvs, (px, py) => { v52DragL = closestLOnIsoquant(px, py); v52DrawAll(); });
 }
 
 // ══════════════════════════════════════════════════════════════════════
 // FIG 5.3 - MRTS LIVE CALCULATOR
 // ══════════════════════════════════════════════════════════════════════
-let v53L=4, v53drag=false, v53W, v53H;
+let v53L=4, v53W, v53H;
 
 function v53Q0() { return 4; } // Fixed Q level: Q=K^0.5*L^0.5=4 => K=16/L
 function v53K(L) { return v53Q0()*v53Q0()/L; }
@@ -1224,14 +1478,14 @@ function v53EnsureOverlay(W,H) {
   if(v53Ovl && v53Ovl.W===W && v53Ovl.H===H) return v53Ovl;
   svg.selectAll('*').remove();
   const nodes=[
-    d5Node('q','#1a56db','Q',40,W/2,H/2),
-    d5Node('lk','#2e8b57','L,K',70,W/2,H/2),
+    d5Node('q','#1f6fb2','Q',40,W/2,H/2),
+    d5Node('lk','#2f5c3a','L,K',70,W/2,H/2),
     d5Node('mrts',EC.red,'MRTS',80,W/2,H/2),
     d5Node('repl',EC.red,'replaces',110,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v53Ovl={W,H,nodes,sim,gs,conns};
   return v53Ovl;
@@ -1253,7 +1507,7 @@ function v53Draw() {
   drawAxesSt(ctx,W,H,xR,yR,'L (workers)','K (machines)');
 
   // Isoquant
-  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   for(let l=0.5;l<=17;l+=0.1){
     const k=v53K(l); if(k>17||k<0.1){first=true;continue;}
     const [cx2,cy2]=toC(l,k,W,H,xR,yR);
@@ -1284,10 +1538,10 @@ function v53Draw() {
   const [tx1,ty1]=toC(tanX1, tanK(tanX1), W,H,xR,yR);
   ctx.save();
   ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
-  ctx.setLineDash([6,4]); ctx.strokeStyle=EC.red; ctx.lineWidth=2;
+  ctx.setLineDash([6,4]); ctx.strokeStyle=EC.red; ctx.lineWidth=3;
   ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
-  dot5(ctx,cx,cy,9,'#2e8b57','#fff');
+  dot5(ctx,cx,cy,9,'#2f5c3a','#fff');
 
   // D3 SVG overlay labels: Q label (fixed anchor on the curve) + the
   // draggable point's L,K / MRTS / interpretation labels (track live drag pos)
@@ -1308,15 +1562,17 @@ function v53Draw() {
     d5MoveAnchor(nLK,cx,cy);
     d5MoveAnchor(nMRTS,cx,cy);
     d5MoveAnchor(nRepl,cx,cy);
-    ovl.gs.select('rect').attr('width',d=>d.lw);
-    ovl.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+    ovl.gs.select('rect').attr('width',d=>d5w(d));
+    ovl.gs.select('text').attr('x',d=>d5w(d)/2).text(d=>d.label);
   }
 
   document.getElementById('v53-readout').innerHTML=
-    `<div class="readout-col"><div class="readout-label">L (workers)</div><div class="readout-val" style="color:#2e8b57">${L.toFixed(2)}</div></div>
-    <div class="readout-col"><div class="readout-label">K (machines)</div><div class="readout-val" style="color:#2e8b57">${K.toFixed(2)}</div></div>
-    <div class="readout-col" style="margin-top:0.75rem;"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:var(--red)">${mrts.toFixed(3)}</div></div>
-    <div style="margin-top:0.75rem;font-size:0.88rem;line-height:1.7;color:var(--muted);">
+    // L and K are drawn on the point itself, so the state row carries only
+    // MRTS, which is the quantity the figure exists to explain (DESIGN 4.4).
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:var(--d-second)">${mrts.toFixed(3)}</div></div>
+    </div>
+    <div style="margin-top:var(--s-3);font-size:var(--t-body-sm);line-height:1.7;color:var(--ink-soft);">
       At this point, <strong>1 additional worker</strong> can replace <strong>${mrts.toFixed(2)} machines</strong>.<br>
       The MRTS diminishes as L rises because each additional worker adds less marginal product as K/L falls.
     </div>`;
@@ -1337,25 +1593,7 @@ function v53Init() {
     }
     return Math.max(0.4,Math.min(16,bestL));
   }
-  function getCanvasXY(e) {
-    const r=cvs.getBoundingClientRect();
-    const dpr=window.devicePixelRatio||1;
-    return [(e.clientX-r.left)*(cvs.width/r.width)/dpr, (e.clientY-r.top)*(cvs.height/r.height)/dpr];
-  }
-  cvs.addEventListener('mousedown',e=>{
-    const [px,py]=getCanvasXY(e);
-    v53drag=true; v53L=closestLOnCurve(px,py); v53Draw();
-  });
-  cvs.addEventListener('mousemove',e=>{
-    if(!v53drag)return;
-    const [px,py]=getCanvasXY(e);
-    v53L=closestLOnCurve(px,py); v53Draw();
-  });
-  cvs.addEventListener('mouseup',()=>v53drag=false);
-  cvs.addEventListener('mouseleave',()=>v53drag=false);
-  cvs.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v53drag=true;v53L=closestLOnCurve(px,py);v53Draw();},{passive:false});
-  cvs.addEventListener('touchmove',e=>{if(!v53drag)return;e.preventDefault();const t=e.touches[0];const [px,py]=getCanvasXY(t);v53L=closestLOnCurve(px,py);v53Draw();},{passive:false});
-  cvs.addEventListener('touchend',()=>v53drag=false);
+  d5CanvasDrag(cvs, (px, py) => { v53L = closestLOnCurve(px, py); v53Draw(); });
   v53Draw();
 }
 
@@ -1374,7 +1612,7 @@ function v54EnsureOverlayA(W,H) {
   const nodes=[ d5Node('cap',EC.red,'MPL falls as L rises',120,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v54OvlA={W,H,nodes,sim,gs,conns};
   return v54OvlA;
@@ -1384,12 +1622,12 @@ function v54EnsureOverlayB(W,H) {
   if(v54OvlB && v54OvlB.W===W && v54OvlB.H===H) return v54OvlB;
   svg.selectAll('*').remove();
   const nodes=[
-    d5Node('q1','#2e8b57','Q(λ=1)',60,W/2,H/2),
-    d5Node('q2','#2e8b57','Q(λ=2)',60,W/2,H/2),
+    d5Node('q1','#2f5c3a','Q(λ=1)',60,W/2,H/2),
+    d5Node('q2','#2f5c3a','Q(λ=2)',60,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v54OvlB={W,H,nodes,sim,gs,conns};
   return v54OvlB;
@@ -1413,11 +1651,11 @@ function v54Draw() {
   if(cvA.width!==Math.round(W*dpr)||cvA.height!==Math.round(H54*dpr)){cvA.width=Math.round(W*dpr);cvA.height=Math.round(H54*dpr);cvA.style.height=H54+'px';}
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   ctxA.clearRect(0,0,W,H54);
-  const mplAt1=b*v54CD(Kfix,1,a,b)/1;
-  const yMaxMPL=Math.ceil(mplAt1*1.2*2)/2;
-  const xRa=[0,12],yRa=[0,yMaxMPL];
+  // Fixed: MPL at L=1 reaches 2.76 at a=b=0.9, so 4 never clips the curve,
+  // and the axis no longer rescales under the curve as the exponents change.
+  const xRa=[0,12],yRa=[0,4];
   drawAxesSt(ctxA,W,H54,xRa,yRa,'L (workers)','MPL');
-  ctxA.beginPath(); let first=true; ctxA.strokeStyle=EC.red; ctxA.lineWidth=2;
+  ctxA.beginPath(); let first=true; ctxA.strokeStyle=EC.red; ctxA.lineWidth=3;
   for(let l=0.2;l<=12;l+=0.1){
     const mpl=b*v54CD(Kfix,l,a,b)/l;
     const [cx,cy]=toC(l,mpl,W,H54,xRa,yRa);
@@ -1434,8 +1672,8 @@ function v54Draw() {
     const nCap=ovlA.nodes[0];
     nCap.label=mplLblTxt; nCap.lw=Math.max(60,mplLblTxt.length*5.2+10);
     d5MoveAnchor(nCap,mplax,mpaly);
-    ovlA.gs.select('rect').attr('width',d=>d.lw);
-    ovlA.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+    ovlA.gs.select('rect').attr('width',d=>d5w(d));
+    ovlA.gs.select('text').attr('x',d=>d5w(d)/2).text(d=>d.label);
   }
 
   // Right panel: scale both inputs
@@ -1444,12 +1682,14 @@ function v54Draw() {
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
   ctxB.clearRect(0,0,W,H54);
   const Lbase=4, Kbase=4;
-  const q_lam4=v54CD(4*Kbase,4*Lbase,a,b);
-  const yMaxB=Math.ceil(Math.max(q_lam4*1.2, 8));
-  const xRb=[0.5,4], yRb=[0,yMaxB];
+  // Fixed. Q at lambda=4 spans 1.7 to 111 over the exponent range; an axis
+  // that fitted 111 would flatten every ordinary case, so it is pinned at 40
+  // and the curve leaves the top under strong increasing returns, which is
+  // exactly what the panel is there to show. The plot is already clipped.
+  const xRb=[0.5,4], yRb=[0,40];
   drawAxesSt(ctxB,W,H54,xRb,yRb,'Scale λ (lambda)','Output Q');
   ctxB.save(); ctxB.beginPath(); ctxB.rect(ML,MT,W-ML-MR,H54-MT-MB); ctxB.clip();
-  ctxB.beginPath(); first=true; ctxB.strokeStyle='#1a56db'; ctxB.lineWidth=2;
+  ctxB.beginPath(); first=true; ctxB.strokeStyle='#1f6fb2'; ctxB.lineWidth=3;
   for(let lam=0.5;lam<=4;lam+=0.05){
     const q=v54CD(lam*Kbase,lam*Lbase,a,b);
     const [cx,cy]=toC(lam,q,W,H54,xRb,yRb);
@@ -1461,8 +1701,8 @@ function v54Draw() {
   const q2_d=v54CD(2*Kbase,2*Lbase,a,b);
   const [dx1,dy1]=toC(1,q1_d,W,H54,xRb,yRb);
   const [dx2,dy2]=toC(2,q2_d,W,H54,xRb,yRb);
-  dot5(ctxB,dx1,dy1,7,'#2e8b57','#fff');
-  dot5(ctxB,dx2,dy2,7,'#2e8b57','#fff');
+  dot5(ctxB,dx1,dy1,7,'#2f5c3a','#fff');
+  dot5(ctxB,dx2,dy2,7,'#2f5c3a','#fff');
   // D3 SVG overlay: Q(λ=1) / Q(λ=2) point labels track the dots
   const ovlB=v54EnsureOverlayB(W,H54);
   if(ovlB){
@@ -1472,8 +1712,8 @@ function v54Draw() {
     n2.label=t2; n2.lw=Math.max(60,t2.length*5.6+10);
     d5MoveAnchor(n1,dx1,dy1);
     d5MoveAnchor(n2,dx2,dy2);
-    ovlB.gs.select('rect').attr('width',d=>d.lw);
-    ovlB.gs.select('text').attr('x',d=>d.lw/2).text(d=>d.label);
+    ovlB.gs.select('rect').attr('width',d=>d5w(d));
+    ovlB.gs.select('text').attr('x',d=>d5w(d)/2).text(d=>d.label);
   }
 
   const rts=a+b;
@@ -1481,11 +1721,11 @@ function v54Draw() {
   document.getElementById('v54-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(a+b).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?EC.red:'#888'}">${rtsLabel}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2f5c3a':rts<1?EC.red:'var(--ink-faint)'}">${rtsLabel}</div></div>
       <div class="readout-col"><div class="readout-label">MPL (diminishing?)</div><div class="readout-val">Yes: b&lt;1</div></div>
       <div class="readout-col"><div class="readout-label">Q doubles when scale=2</div><div class="readout-val">${(q2_d/q1_d).toFixed(2)}x</div></div>
     </div>
-    <div style="margin-top:0.5rem;font-size:0.84rem;color:var(--muted)">
+    <div style="margin-top:0.5rem;font-size:var(--t-body-sm);color:var(--ink-faint)">
       With a=${a.toFixed(2)}, b=${b.toFixed(2)}: Both panels use the same Q = K<sup>${a.toFixed(2)}</sup>L<sup>${b.toFixed(2)}</sup>.
       MPL falls as L rises (left) yet output scales by 2<sup>${(a+b).toFixed(2)}</sup>=${Math.pow(2,a+b).toFixed(2)} when both inputs double (right). These are not contradictory.
     </div>`;
@@ -1510,13 +1750,13 @@ function v55EnsureOverlay(W,H) {
   if(v55Ovl && v55Ovl.W===W && v55Ovl.H===H) return v55Ovl;
   svg.selectAll('*').remove();
   const nodes=[
-    d5Node('q0','#2e8b57','Q',32,W/2,H/2),
-    d5Node('q1','#1a56db','Q',32,W/2,H/2),
+    d5Node('q0','#2f5c3a','Q',32,W/2,H/2),
+    d5Node('q1','#1f6fb2','Q',32,W/2,H/2),
     d5Node('q2',EC.red,'Q',32,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v55Ovl={W,H,nodes,sim,gs,conns};
   return v55Ovl;
@@ -1536,7 +1776,7 @@ function v55Draw() {
 
   // Q = A*K^a*L^b with A=1
   const qLevels=[1,2,4];
-  const cols=['#2e8b57','#1a56db',EC.red];
+  const cols=['#9dc0dc','#4e93c2','#1f6fb2'];
   const rayPts=[];
   const curveAnchors=[]; // {text,color,ax,ay} for ray-intersection "Q=…" labels (0-3 entries)
 
@@ -1545,7 +1785,7 @@ function v55Draw() {
   ctx.beginPath(); ctx.rect(ML,MT,W-ML-MR,H-MT-MB); ctx.clip();
 
   qLevels.forEach((q,qi)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2;
+    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=3;
     for(let l=0.05;l<=10.05;l+=0.04){
       const K=Math.pow(q/Math.pow(Math.max(l,0.01),b),1/a);
       if(K>10||K<0.01){first=true;continue;}
@@ -1566,7 +1806,7 @@ function v55Draw() {
   ctx.restore(); // end clip
 
   // Draw the 45-degree ray
-  ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
   const [r0x,r0y]=toC(0,0,W,H,xR,yR);
   const [r1x,r1y]=toC(9,9,W,H,xR,yR);
   ctx.beginPath(); ctx.moveTo(r0x,r0y); ctx.lineTo(r1x,r1y); ctx.stroke(); ctx.setLineDash([]);
@@ -1592,9 +1832,9 @@ function v55Draw() {
   document.getElementById('v55-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(a+b).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?EC.red:'#888'}">${rts>1?'IRS':rts<1?'DRS':'CRS'}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2f5c3a':rts<1?EC.red:'var(--ink-faint)'}">${rts>1?'IRS':rts<1?'DRS':'CRS'}</div></div>
     </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">${verdict}. Q = K<sup>${a}</sup>L<sup>${b}</sup>. Spacing along ray L=K: Q=1 at L=${rayPts[0]?rayPts[0].l.toFixed(2):'?'}, Q=2 at L=${rayPts[1]?rayPts[1].l.toFixed(2):'?'}, Q=4 at L=${rayPts[2]?rayPts[2].l.toFixed(2):'?'}.</div>`;
+    <div style="margin-top:0.4rem;font-size:var(--t-body-sm);color:var(--ink-faint)">${verdict}. Q = K<sup>${a}</sup>L<sup>${b}</sup>. Spacing along ray L=K: Q=1 at L=${rayPts[0]?rayPts[0].l.toFixed(2):'?'}, Q=2 at L=${rayPts[1]?rayPts[1].l.toFixed(2):'?'}, Q=4 at L=${rayPts[2]?rayPts[2].l.toFixed(2):'?'}.</div>`;
 
   if(ovl55){
     d5WireSliderSmoothness(document.getElementById('v55-a'),ovl55.sim);
@@ -1625,13 +1865,13 @@ function v56EnsureOverlay(W,H) {
   if(v56Ovl && v56Ovl.W===W && v56Ovl.H===H) return v56Ovl;
   svg.selectAll('*').remove();
   const nodes=[
-    d5Node('iq','#1a56db','Q = 4',60,W/2,H/2),
-    d5Node('bundle','#2e8b57','L=4, K=4',60,W/2,H/2),
+    d5Node('iq','#1f6fb2','Q = 4',60,W/2,H/2),
+    d5Node('bundle','#2f5c3a','L=4, K=4',60,W/2,H/2),
     d5Node('tech',EC.red,'Technology improved',110,ML+4,MT+28),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v56Ovl={W,H,nodes,sim,gs,conns};
   return v56Ovl;
@@ -1648,7 +1888,7 @@ function v56Draw() {
   drawAxesSt(ctx,W,H,xR,yR,'L (labor)','K (capital)');
 
   // Show faded original isoquant (A=1, Q=4) for reference
-  ctx.globalAlpha=0.25; ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=1.5;
+  ctx.globalAlpha=0.25; ctx.beginPath(); let first=true; ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=1.5;
   for(let l=0.3;l<=10;l+=0.1){
     const k=V56_Q_TARGET*V56_Q_TARGET/l; if(k>10||k<0.1){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
@@ -1658,7 +1898,7 @@ function v56Draw() {
 
   // Active isoquant
   const A=v56TechLevel;
-  ctx.beginPath(); first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); first=true; ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   for(let l=0.2;l<=10;l+=0.08){
     const k=Math.pow(V56_Q_TARGET/(A*Math.pow(l,0.5)),2);
     if(k>10||k<0.1){first=true;continue;}
@@ -1669,7 +1909,7 @@ function v56Draw() {
 
   // Current bundle dot
   const [bx,by]=toC(v56L,v56K,W,H,xR,yR);
-  dot5(ctx,bx,by,9,'#2e8b57','#fff');
+  dot5(ctx,bx,by,9,'#2f5c3a','#fff');
 
   // D3 SVG label overlay: isoquant label, bundle label, optional tech label
   const iqAnchorL=Math.max(0.3,V56_Q_TARGET/A*0.6);
@@ -1709,32 +1949,48 @@ function v56Draw() {
   }
 }
 
+/* K on the active isoquant at a given L, for A*K^0.5*L^0.5 = Q_TARGET. */
+function v56KAt(L, A) { return Math.pow(V56_Q_TARGET / (A * Math.pow(L, 0.5)), 2); }
+
 function v56SubstituteInputs() {
-  // Move ALONG the active isoquant (A*K^0.5*L^0.5 = Q_TARGET):
-  // K = (Q_TARGET / (A * L^0.5))^2
-  v56L = Math.min(8.5, v56L + 0.5);
-  v56K = Math.pow(V56_Q_TARGET / (v56TechLevel * Math.pow(v56L, 0.5)), 2);
-  v56Draw();
+  // Move ALONG the active isoquant. L is interpolated and K is re-derived from
+  // the isoquant equation every frame, so the bundle visibly slides down the
+  // curve it is already on and never leaves it. The curve itself does not move.
+  const L0 = v56L, L1 = Math.min(8.5, v56L + 0.5), A = v56TechLevel;
+  ecTween('v56', EC_DUR_VALUE, p => {
+    v56L = L0 + (L1 - L0) * p;
+    v56K = v56KAt(v56L, A);
+    v56Draw();
+  });
   document.getElementById('v56-readout').innerHTML=
-    `<strong>Substituting inputs:</strong> Moving along the existing isoquant. L increased, K decreased proportionally. Output remains Q = ${V56_Q_TARGET}. Technology (A = ${v56TechLevel.toFixed(2)}) unchanged.`;
+    `<strong>Substituting inputs:</strong> Moving along the existing isoquant. L increased, K decreased proportionally. Output remains Q = ${V56_Q_TARGET}. Technology (A = ${A.toFixed(2)}) unchanged.`;
 }
 
 function v56ImproveTechnology() {
-  // Improve A by factor 1.4. The SAME target Q = Q_TARGET now requires FEWER inputs.
-  // At same L, new K = (Q_TARGET / (A_new * L^0.5))^2 < old K.
-  const A_new = v56TechLevel * 1.4;
-  v56TechLevel = Math.min(v56TechLevel * 5, A_new); // cap at 5x improvement
-  // Move dot to new isoquant at the same L
-  const K_new = Math.pow(V56_Q_TARGET / (v56TechLevel * Math.pow(v56L, 0.5)), 2);
-  const K_old = v56K;
-  v56K = Math.max(0.1, K_new);
-  v56Draw();
+  // Shift the isoquant INWARD. A is interpolated, so the whole curve sweeps
+  // toward the origin with the bundle riding it. That is the opposite motion to
+  // substitution, and the distinction is the entire point of this figure.
+  const A0 = v56TechLevel;
+  const A1 = Math.min(A0 * 5, A0 * 1.4);      // cap at 5x improvement
+  const K_old = v56K, L = v56L;
+  ecTween('v56', EC_DUR_VALUE, p => {
+    v56TechLevel = A0 + (A1 - A0) * p;
+    v56K = Math.max(0.1, v56KAt(L, v56TechLevel));
+    v56Draw();
+  });
+  const K_new = Math.max(0.1, v56KAt(L, A1));
   document.getElementById('v56-readout').innerHTML=
-    `<strong>Technology improved:</strong> A increased to ${v56TechLevel.toFixed(2)}. The isoquant shifted INWARD - the same output Q = ${V56_Q_TARGET} now requires less capital. K fell from ${K_old.toFixed(2)} to ${v56K.toFixed(2)} at L = ${v56L.toFixed(1)}. The dot moves UP and LEFT onto the new, closer isoquant.`;
+    `<strong>Technology improved:</strong> A increased to ${A1.toFixed(2)}. The isoquant shifted inward, so the same output Q = ${V56_Q_TARGET} now needs less capital. K fell from ${K_old.toFixed(2)} to ${K_new.toFixed(2)} at L = ${L.toFixed(1)}. The bundle rides the curve down onto the new, closer isoquant.`;
 }
 
 function v56Reset() {
-  v56TechLevel=1.0; v56L=4; v56K=4; v56Draw();
+  const A0 = v56TechLevel, L0 = v56L, K0 = v56K;
+  ecTween('v56', EC_DUR_VALUE, p => {
+    v56TechLevel = A0 + (1.0 - A0) * p;
+    v56L = L0 + (4 - L0) * p;
+    v56K = K0 + (4 - K0) * p;
+    v56Draw();
+  });
   document.getElementById('v56-readout').innerHTML='Use the buttons to substitute inputs (move along the isoquant) or improve technology (shift the isoquant inward toward the origin).';
 }
 
@@ -1750,13 +2006,13 @@ function v57EnsureOverlay(canvasId, key, W, H) {
   if(cur && cur.W===W && cur.H===H) return cur;
   svg.selectAll('*').remove();
   const nodes=[
-    d5Node('opt','#2e8b57','Optimum',54,W/2,H/2),
+    d5Node('opt','#2f5c3a','Optimum',54,W/2,H/2),
     d5Node('line',EC.red,'Budget',46,W/2,H/2),
-    d5Node('curve','#1a56db','IC',28,W/2,H/2),
+    d5Node('curve','#1f6fb2','IC',28,W/2,H/2),
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   const ovl={W,H,nodes,sim,gs,conns};
   v57Ovl[key]=ovl;
@@ -1784,7 +2040,7 @@ function v57Draw() {
       if(q<=0) return;
       const alpha=qi===1?1:0.4;
       ctx.globalAlpha=alpha;
-      ctx.beginPath(); let first=true; ctx.strokeStyle=qi===1?'#1a56db':'#aac';  ctx.lineWidth=qi===1?2.5:1.5;
+      ctx.beginPath(); let first=true; ctx.strokeStyle=qi===1?'#1f6fb2':'#9dc0dc';  ctx.lineWidth=qi===1?2.5:1.5;
       for(let x=0.3;x<=10;x+=0.1){
         const y=q*q/x; if(y>10||y<0.1){first=true;continue;}
         const [cx,cy]=toC(x,y,W,H,xR,yR);
@@ -1798,12 +2054,12 @@ function v57Draw() {
     const intercept=2*level;
     const [lx0,ly0]=toC(0,intercept,W,H,xR,yR);
     const [lx1,ly1]=toC(intercept,0,W,H,xR,yR);
-    ctx.beginPath(); ctx.strokeStyle=EC.red; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.strokeStyle=EC.red; ctx.lineWidth=3;
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
 
     // Optimal point
     const [ox,oy]=toC(level,level,W,H,xR,yR);
-    dot5(ctx,ox,oy,7,'#2e8b57','#fff');
+    dot5(ctx,ox,oy,7,'#2f5c3a','#fff');
     const curveLabel=type==='ic'?'IC':'Isoquant';
     const lineLabel=type==='ic'?'Budget':'Isocost';
     // Anchor isoquant label at a point near x=level*0.6
@@ -1829,10 +2085,10 @@ function v57Draw() {
 
   document.getElementById('v57-readout').innerHTML=
     `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">Consumer optimum</div><div class="readout-val" style="font-size:0.78rem;">MRS = P<sub>X</sub>/P<sub>Y</sub></div></div>
-      <div class="readout-col"><div class="readout-label">Firm optimum</div><div class="readout-val" style="font-size:0.78rem;">MRTS = w/v</div></div>
+      <div class="readout-col"><div class="readout-label">Consumer optimum</div><div class="readout-val" style="font-size:var(--t-small);">MRS = P<sub>X</sub>/P<sub>Y</sub></div></div>
+      <div class="readout-col"><div class="readout-label">Firm optimum</div><div class="readout-val" style="font-size:var(--t-small);">MRTS = w/v</div></div>
     </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">Both problems have identical structure: maximise utility/output subject to a budget/cost constraint. The tangency condition in both cases equates the marginal rate of substitution to the price ratio.</div>`;
+    <div style="margin-top:0.4rem;font-size:var(--t-body-sm);color:var(--ink-faint)">Both problems have identical structure: maximise utility/output subject to a budget/cost constraint. The tangency condition in both cases equates the marginal rate of substitution to the price ratio.</div>`;
 }
 
 function v57Update() { v57Draw(); }
@@ -1852,7 +2108,7 @@ function v58EnsureOverlay(W,H) {
   const nodes=[ d5Node('lam',EC.red,'λ = 1.0 (scaled inputs)',110,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v58Ovl={W,H,nodes,sim,gs,conns};
   return v58Ovl;
@@ -1878,7 +2134,7 @@ function v58Draw() {
   // Isoquant map
   const qBase=v58Q(Kpt,Lpt,A,a,b);
   [qBase*0.5,qBase,qBase*2].forEach((q,qi)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=['#aac','#1a56db','#aac'][qi]; ctx.lineWidth=qi===1?2.5:1.5;
+    ctx.beginPath(); let first=true; ctx.strokeStyle=['#9dc0dc','#1f6fb2','#9dc0dc'][qi]; ctx.lineWidth=qi===1?3:2;
     for(let l=0.2;l<=10;l+=0.05){
       const K=Math.pow(q/(A*Math.pow(l,b)),1/a);
       if(K>10||K<0.1){first=true;continue;}
@@ -1890,12 +2146,12 @@ function v58Draw() {
 
   // Current point and scaled point
   const [px,py]=toC(Lpt,Kpt,W,H,xR,yR);
-  dot5(ctx,px,py,7,'#2e8b57','#fff');
+  dot5(ctx,px,py,7,'#2f5c3a','#fff');
   const ovl58=v58EnsureOverlay(W,H);
   if(Math.abs(lam-1)>0.05){
     const [spx,spy]=toC(Lpt*lam,Kpt*lam,W,H,xR,yR);
     dot5(ctx,spx,spy,7,EC.red,'#fff');
-    ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(spx,spy); ctx.stroke(); ctx.setLineDash([]);
     if(ovl58){
       const lamTxt=`λ = ${lam.toFixed(1)} (scaled inputs)`;
@@ -1919,15 +2175,15 @@ function v58Draw() {
   document.getElementById('v58-readout').innerHTML=
     `<div class="readout-row" style="flex-wrap:wrap;">
       <div class="readout-col"><div class="readout-label">Q(K,L)</div><div class="readout-val">${q0.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">Q(λK, λL)</div><div class="readout-val" style="color:var(--red)">${qLam.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">Q(λK, λL)</div><div class="readout-val" style="color:var(--d-second)">${qLam.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">Ratio = λ^(a+b)</div><div class="readout-val">${(qLam/q0).toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">MPL at point</div><div class="readout-val">${MPL.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">MPK at point</div><div class="readout-val">${MPK.toFixed(3)}</div></div>
-      <div class="readout-col"><div class="readout-label">MRTS = MPL/MPK</div><div class="readout-val" style="color:var(--red)">${MRTS.toFixed(3)}</div></div>
+      <div class="readout-col"><div class="readout-label">MRTS = MPL/MPK</div><div class="readout-val" style="color:var(--d-second)">${MRTS.toFixed(3)}</div></div>
       <div class="readout-col"><div class="readout-label">a + b</div><div class="readout-val">${(rts).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2e8b57':rts<1?EC.red:'#888'}">${rts>1.01?'IRS':rts<0.99?'DRS':'CRS'}</div></div>
+      <div class="readout-col"><div class="readout-label">Returns to Scale</div><div class="readout-val" style="color:${rts>1?'#2f5c3a':rts<1?EC.red:'var(--ink-faint)'}">${rts>1.01?'IRS':rts<0.99?'DRS':'CRS'}</div></div>
     </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+    <div style="margin-top:0.4rem;font-size:var(--t-body-sm);color:var(--ink-faint)">
       Q = ${A.toFixed(1)} &times; K<sup>${a.toFixed(2)}</sup> &times; L<sup>${b.toFixed(2)}</sup>. Scaling inputs by λ=${lam.toFixed(1)} scales output by ${(qLam/q0).toFixed(3)} = λ<sup>${rts.toFixed(2)}</sup>.
     </div>`;
 
@@ -1970,10 +2226,10 @@ function v59EnsureOverlay(W,H) {
   const svg=d5Svg('cvs59-svg',W,H); if(!svg) return null;
   if(v59Ovl && v59Ovl.W===W && v59Ovl.H===H) return v59Ovl;
   svg.selectAll('*').remove();
-  const nodes=[ d5Node('k','#1a56db','K = 2 machines',82,W/2,H/2) ];
+  const nodes=[ d5Node('k','#1f6fb2','K = 2 machines',82,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v59Ovl={W,H,nodes,sim,gs,conns};
   return v59Ovl;
@@ -1996,7 +2252,7 @@ function v59Draw() {
   const kShifted59 = v59K !== V59_K_BASE;
   if(kShifted59){
     ctx.save();
-    ctx.setLineDash([5,4]); ctx.strokeStyle='#1a56db'; ctx.lineWidth=1.4; ctx.globalAlpha=0.45;
+    ctx.setLineDash([5,4]); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=1.4; ctx.globalAlpha=0.45;
     ctx.beginPath(); let gfirst59=true;
     for(let l=0;l<=Lmax;l+=0.1){
       const [gx,gy]=toC(l,v59TP(l,V59_K_BASE),W,H,xR,yR);
@@ -2005,14 +2261,14 @@ function v59Draw() {
     ctx.stroke();
     ctx.restore();
     const gL59=Lmax*0.4, [glx59,gly59]=toC(gL59,v59TP(gL59,V59_K_BASE),W,H,xR,yR);
-    ctx.save(); ctx.globalAlpha=0.55; ctx.fillStyle='#1a56db';
+    ctx.save(); ctx.globalAlpha=0.55; ctx.fillStyle='#1f6fb2';
     ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
     ctx.fillText('TP', glx59, gly59-6);
     ctx.restore();
   }
 
   // TP curve
-  ctx.beginPath(); let first=true; ctx.strokeStyle='#1a56db'; ctx.lineWidth=2;
+  ctx.beginPath(); let first=true; ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
   for(let l=0;l<=Lmax;l+=0.1){
     const tp=v59TP(l,v59K);
     const [cx,cy]=toC(l,tp,W,H,xR,yR);
@@ -2021,7 +2277,7 @@ function v59Draw() {
   ctx.stroke();
   {
     const idL59=Lmax*0.4, [ilx59,ily59]=toC(idL59,v59TP(idL59,v59K),W,H,xR,yR);
-    ctx.save(); ctx.fillStyle='#1a56db'; ctx.font='bold 10px DM Sans,sans-serif';
+    ctx.save(); ctx.fillStyle='#1f6fb2'; ctx.font='bold 10px DM Sans,sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='alphabetic';
     ctx.fillText(kShifted59?'TP′':'TP', ilx59, ily59-6);
     ctx.restore();
@@ -2030,7 +2286,7 @@ function v59Draw() {
   const [tpax,tpay]=toC(tpMidL,v59TP(tpMidL,v59K),W,H,xR,yR);
   const ovl59=v59EnsureOverlay(W,H);
   if(ovl59){
-    const kTxt=`K = ${v59K} machines`;
+    const kTxt=`K = ${Math.round(v59K)} machines`;
     const n=ovl59.nodes[0];
     n.label=kTxt; n.lw=Math.max(60,kTxt.length*6+10);
     d5MoveAnchor(n,tpax,tpay);
@@ -2042,11 +2298,11 @@ function v59Draw() {
   if(v59L>0){
     const tp=v59TP(v59L,v59K);
     const [px,py]=toC(v59L,tp,W,H,xR,yR);
-    dot5(ctx,px,py,7,'#2e8b57','#fff');
+    dot5(ctx,px,py,7,'#2f5c3a','#fff');
     const [ax]=toC(v59L,0,W,H,xR,yR);
-    ctx.setLineDash([3,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+    ctx.setLineDash([3,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ax,H-MB); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle='#2e8b57'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='#2f5c3a'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
     ctx.fillText(`L=${v59L}`,ax,H-MB+12);
   }
 }
@@ -2054,7 +2310,7 @@ function v59Draw() {
 function v59HireWorker() {
   const mpl=v59MPL(v59L+1,v59K);
   if(mpl<=0){
-    document.getElementById('v59-readout').innerHTML=`<strong style="color:var(--red)">Hire refused!</strong> MPL is negative at L=${v59L+1}. Adding another worker would reduce output. This worker makes the team worse.`;
+    document.getElementById('v59-readout').innerHTML=`<strong style="color:var(--d-second)">Hire refused!</strong> MPL is negative at L=${v59L+1}. Adding another worker would reduce output. This worker makes the team worse.`;
     return;
   }
   v59L++;
@@ -2066,7 +2322,11 @@ function v59FireWorker() {
 }
 
 function v59BuyMachine() {
-  v59K++; v59Update();
+  // Buying a machine lifts the whole TP curve, so it is a curve-moving button
+  // and it tweens (DESIGN 6.2). Hiring and firing move along the curve one
+  // discrete worker at a time, which is already legible as a step.
+  const K0 = v59K, K1 = v59K + 1;
+  ecTween('v59', EC_DUR_VALUE, p => { v59K = K0 + (K1 - K0) * p; v59Update(); });
 }
 
 function v59Reset() {
@@ -2087,13 +2347,13 @@ function v59Update() {
       <div class="readout-col"><div class="readout-label">Workers L</div><div class="readout-val">${v59L}</div></div>
       <div class="readout-col"><div class="readout-label">Machines K</div><div class="readout-val">${v59K}</div></div>
       <div class="readout-col"><div class="readout-label">Output TP</div><div class="readout-val">${tp.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">MPL (current)</div><div class="readout-val" style="color:${mpl>0?'#2e8b57':EC.red}">${v59L>0?mpl.toFixed(3):'n/a'}</div></div>
+      <div class="readout-col"><div class="readout-label">MPL (current)</div><div class="readout-val" style="color:${mpl>0?'#2f5c3a':EC.red}">${v59L>0?mpl.toFixed(3):'n/a'}</div></div>
       <div class="readout-col"><div class="readout-label">Total Wage Bill</div><div class="readout-val">$${totalWage}</div></div>
     </div>
-    <div style="margin-top:0.4rem;font-size:0.84rem;color:var(--muted)">
+    <div style="margin-top:0.4rem;font-size:var(--t-body-sm);color:var(--ink-faint)">
       ${shouldHire
-        ?`Next worker's MPL = ${nextMPL.toFixed(3)} > 0. <strong style="color:#2e8b57">Safe to hire (output rises).</strong>`
-        :`Next worker's MPL = ${nextMPL.toFixed(3)} &le; 0. <strong style="color:var(--red)">Do NOT hire - output would fall.</strong>`}
+        ?`Next worker's MPL = ${nextMPL.toFixed(3)} > 0. <strong style="color:#2f5c3a">Safe to hire (output rises).</strong>`
+        :`Next worker's MPL = ${nextMPL.toFixed(3)} &le; 0. <strong style="color:var(--d-second)">Do NOT hire - output would fall.</strong>`}
       Wage w = $${w}/worker. Total wage bill = $${totalWage}. Note: the TP curve shows physical output and does not depend on the wage - the wage affects costs and profits, not the production function itself. Use "Buy Machine" to raise K and restart diminishing returns.
     </div>`;
 }
@@ -2128,14 +2388,14 @@ function quiz510NewRound() {
     <div class="quiz-scenario">
       Given the production function <strong>${quizFnHtml(fn.fn)}</strong>, what shape are the isoquants?
     </div>
-    <div class="quiz-score" style="font-family:var(--mono);font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Score: ${q510Score} / ${q510Total}</div>
+    <div class="quiz-score" style="font-family:var(--font-mono);font-size:var(--t-small);color:var(--ink-faint);margin-bottom:0.5rem;">Score: ${q510Score} / ${q510Total}</div>
     <div class="quiz-btns">
       <button class="quiz-btn" onclick="quiz510Answer('cd')">Smooth Convex (Cobb-Douglas)</button>
       <button class="quiz-btn" onclick="quiz510Answer('linear')">Straight Line (Linear / Perfect Substitutes)</button>
       <button class="quiz-btn" onclick="quiz510Answer('leontief')">L-Shaped (Leontief / Fixed Proportions)</button>
     </div>
     <div id="q510-fb" class="quiz-feedback" style="display:none;"></div>
-    <div id="q510-canvas-wrap" style="display:none;margin-bottom:0.75rem;">
+    <div id="q510-canvas-wrap" class="fig-plot square" style="display:none;margin-bottom:var(--s-4);">
       <div class="panel-label">Isoquant rendered:</div>
       <div class="cvs-ovl-host" id="cvs510-host"><canvas id="cvs510" height="200"></canvas><svg id="cvs510-svg"></svg></div>
     </div>
@@ -2160,7 +2420,7 @@ function v510BuildOverlay(W,H) {
   delete svgEl.dataset.vb; // allow d5Svg to (re)size this fresh node
   const svg=d5Svg('cvs510-svg',W,H); if(!svg) return null;
   svg.selectAll('*').remove();
-  const cols=['#2e8b57','#1a56db',EC.red];
+  const cols=['#9dc0dc','#4e93c2','#1f6fb2'];
   const nodes=[
     d5Node('q0',cols[0],'Q=2',28,W/2,H/2),
     d5Node('q1',cols[1],'Q=4',28,W/2,H/2),
@@ -2168,7 +2428,7 @@ function v510BuildOverlay(W,H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v510Ovl={W,H,nodes,sim,gs,conns};
   return v510Ovl;
@@ -2185,10 +2445,10 @@ function quiz510DrawResult(type) {
   ctx.clearRect(0,0,W,H);
   const xR=[0,10],yR=[0,10];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
-  const cols=['#2e8b57','#1a56db',EC.red];
+  const cols=['#9dc0dc','#4e93c2','#1f6fb2'];
   const ovl510=v510BuildOverlay(W,H);
   [2,4,6].forEach((q,qi)=>{
-    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=2;
+    ctx.beginPath(); let first=true; ctx.strokeStyle=cols[qi]; ctx.lineWidth=3;
     let ax=0,ay=0;
     if(type==='cd'){
       for(let l=0.3;l<=10;l+=0.1){
@@ -2235,11 +2495,14 @@ function quiz510Answer(ans) {
   });
   const fb=document.getElementById('q510-fb');
   fb.style.display='block';
-  fb.innerHTML=`${correct?'✅ Correct!':'❌ Incorrect.'} ${fn.desc}`;
+  // Typographic marks in the semantic colours rather than emoji (AG-3): emoji
+  // render differently on every OS and carry none of the palette's meaning.
+  fb.innerHTML=`<strong style="color:var(--${correct?'d-gain':'d-loss'})">`+
+               `${correct?'&#10003; Correct.':'&#10007; Incorrect.'}</strong> ${fn.desc}`;
   quiz510DrawResult(fn.type);
   const nextBtn=document.getElementById('q510-next');
   nextBtn.style.display='inline-block';
-  nextBtn.style.cssText='font-family:var(--font);font-size:0.88rem;font-weight:600;padding:0.45rem 1.4rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;margin-top:0.5rem;';
+  nextBtn.style.cssText='font-family:var(--font-body);font-size:var(--t-body-sm);font-weight:600;padding:0.45rem 1.4rem;border:1px solid var(--unit-ink);border-radius:6px;background:var(--unit-ink);color:#fff;cursor:pointer;margin-top:0.5rem;';
   // Auto-scroll so student sees the next button
   setTimeout(()=>nextBtn.scrollIntoView({behavior:'smooth',block:'nearest'}),150);
 }
@@ -2267,6 +2530,10 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   v58Update();
   v59Update();
   quiz510NewRound();
+  // Labels are seeded geometrically at construction; now that every figure
+  // has actually painted, move them onto the emptiest spot near their anchor
+  // so none of them starts sitting on the curve it names.
+  setTimeout(d5PolishSeeds, 120);
   // ResizeObserver for zoom-level changes
   if (window.ResizeObserver) {
     const obs = new ResizeObserver(redrawAll5);
@@ -2278,7 +2545,44 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   }
 }));
 
-window.addEventListener('resize', redrawAll5);
+window.addEventListener('resize', () => {
+  redrawAll5();
+  // Anchors all moved, so the emptiest-spot choice is re-evaluated once.
+  d5ResetSeeds();
+  setTimeout(d5PolishSeeds, 120);
+});
+
+/* Section rail: mark the figure you are currently reading (DESIGN 2.2, after
+   MLU's sticky #toc .selected). The rail is the page's own table of contents,
+   so it has to say where in the page you are or it is just a link list.
+   rootMargin pins the "current" band to the upper third of the viewport, which
+   is where a figure's heading sits while you are working with it. */
+(function railTracking() {
+  const links = [...document.querySelectorAll('.rail a')];
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+    let bestId = null, best = 0;
+    for (const [id, ratio] of seen) if (ratio > best) { best = ratio; bestId = id; }
+    if (!bestId) return;
+    for (const a of links) a.classList.remove('on');
+    const hit = byId.get(bestId);
+    if (!hit) return;
+    hit.classList.add('on');
+    // Keep the active item visible in the horizontal mobile strip by scrolling
+    // the strip itself. scrollIntoView() must NOT be used here: it walks up and
+    // scrolls ancestors too, so it drags the whole page while the reader is
+    // scrolling it, and the page effectively cannot be scrolled at all.
+    const strip = hit.closest('ol');
+    if (strip && strip.scrollWidth > strip.clientWidth) {
+      const want = hit.offsetLeft - (strip.clientWidth - hit.offsetWidth) / 2;
+      strip.scrollTo({ left: Math.max(0, want), behavior: 'smooth' });
+    }
+  }, { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+  document.querySelectorAll('section.sec[id]').forEach(s => io.observe(s));
+})();
 </script>
   <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>

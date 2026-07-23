@@ -1,0 +1,86 @@
+/* covers.css - the landing page's week cards (DESIGN 5.2, AUDIT L-1..L-7).
+ *
+ * The old card was a bordered box carrying a mono week number, a PUBLISHED
+ * pill and three or four tag chips: twelve of them put roughly 66 outlined
+ * shapes on one screen, and nothing distinguished any week from any other.
+ *
+ * This is MLU's article card: no border, no radius, no shadow, no padding, no
+ * background. The identity lives in the cover, which is the week's own
+ * signature diagram drawn on its unit tint, so the grid is legible at a glance
+ * with zero badges or metadata.
+ */
+
+.wk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: var(--s-8) var(--s-7);
+}
+
+.unit-band {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-4);
+  margin: var(--s-8) 0 0;
+  font-size: var(--t-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.unit-band:first-child { margin-top: 0; }
+.unit-band::after { content: ''; flex: 1; height: 1px; background: var(--rule2); }
+
+/* The card itself is not a card. */
+.wk {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--ink) !important;
+}
+
+.wk-cover {
+  position: relative;
+  aspect-ratio: 8 / 5;
+  background: var(--c);
+  border: 1px solid var(--rule2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  /* One property pair on hover, not seven (AUDIT L-6, H-6). */
+  transition: transform var(--dur-state) var(--ease-out),
+              border-color var(--dur-state) var(--ease-out);
+}
+.wk:hover .wk-cover { transform: translateY(-2px); border-color: var(--c-ink); }
+.wk-cover svg { display: block; width: 100%; height: 100%; }
+
+.wk-n {
+  position: absolute;
+  left: 0.7rem; bottom: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  line-height: 1;
+  color: var(--c-ink);
+  opacity: 0.28;
+}
+
+.wk-title {
+  font-family: var(--font-display);
+  font-size: var(--t-h3);
+  line-height: 1.2;
+  margin: var(--s-4) 0 var(--s-2);
+  transition: color var(--dur-state) var(--ease-out);
+}
+.wk:hover .wk-title { color: var(--c-ink); }
+.wk-desc { font-size: var(--t-body-sm); line-height: 1.5; color: var(--ink-soft); }
+
+/* Upcoming weeks: expressed as absence, not as a "COMING SOON" chip. */
+.wk.soon { pointer-events: none; }
+.wk.soon .wk-cover { opacity: 0.4; }
+.wk.soon .wk-title, .wk.soon .wk-desc { opacity: 0.5; }
+
+@media (max-width: 560px) {
+  .wk-grid { grid-template-columns: 1fr; gap: var(--s-7); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wk-cover, .wk-title { transition: none; }
+  .wk:hover .wk-cover { transform: none; }
+}

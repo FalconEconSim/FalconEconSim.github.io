@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" data-ds="v2" style="--unit:var(--u2);--unit-ink:var(--u2-ink)">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Week 7: Flashcards - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <script>
     window.MathJax = {
@@ -23,34 +23,47 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
   <style>
-    body { background: #f4f7fb; }
-    .fc-wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    
+    .fc-wrap { max-width: 40rem; margin: 0 auto; padding: var(--s-7) var(--s-4) var(--s-9);
+               display: flex; flex-direction: column; gap: var(--s-5);
+               min-height: calc(100vh - 3rem - var(--s-9)); justify-content: center; }
     .fc-hdr { display: flex; align-items: center; justify-content: space-between; }
-    .fc-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; color: #0077C8; }
-    .fc-ctr { font-size: 13px; color: #999; font-weight: 500; }
-    .fc-prog { width: 100%; height: 4px; background: #E8EFF8; border-radius: 99px; overflow: hidden; }
-    .fc-prog-fill { height: 100%; background: #0077C8; border-radius: 99px; transition: width 0.4s ease; }
+    .fc-title { font-family: var(--font-display); font-size: var(--t-h3); color: var(--unit-ink); }
+    .fc-ctr { font-size: var(--t-small); color: var(--ink-faint); font-weight: 500; }
+    .fc-prog { width: 100%; height: 4px; background: var(--rule2); border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: var(--unit-ink); border-radius: 99px; transition: width 0.4s ease; }
     .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
-    .fc-ftag { border: 1px solid #E2EAF4; border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 500; cursor: pointer; background: #fff; color: #666; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
-    .fc-ftag.active { background: #0077C8; color: #fff; border-color: #0077C8; }
-    .fc-badge { display: inline-flex; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 99px; width: fit-content; }
+    .fc-ftag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 5px 13px;
+              font-size: var(--t-small); font-weight: 500; cursor: pointer;
+              background: var(--paper-raised); color: var(--ink-soft);
+              font-family: var(--font-body);
+              transition: background var(--dur-state) var(--ease-out),
+                          border-color var(--dur-state) var(--ease-out),
+                          color var(--dur-state) var(--ease-out); }
+    .fc-ftag.active { background: var(--unit-ink); color: var(--paper-raised); border-color: var(--unit-ink); }
+    .fc-badge { display: inline-flex; width: fit-content; padding: 0;
+               font-size: var(--t-caption); font-weight: 400; letter-spacing: 0.06em;
+               text-transform: uppercase; border-radius: 0;
+               /* AG-3: not a coloured pill. The inline background and colour the
+                  deck JS emits are overridden here rather than chased per deck. */
+               background: none !important; color: var(--ink-faint) !important; }
     .fc-scene { perspective: 1000px; }
     .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
     .fc-card-inner.flipped { transform: rotateY(180deg); }
-    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
-    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: #CBD8EC; }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: var(--rule-strong); }
     .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
     .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
-    .fc-q { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.5; color: #111; flex: 1; display: flex; align-items: center; }
-    .fc-q-sm { font-size: 0.88rem; color: #666; font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid #EEF3FA; margin-bottom: 0.65rem; line-height: 1.45; }
-    .fc-a { font-size: 0.88rem; line-height: 1.75; color: #333; white-space: pre-line; flex: 1; }
-    .fc-hint { font-size: 12px; color: #BCC8D8; text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
-    .fc-kbd { display: inline-block; background: #F0F4FA; border: 1px solid #DDE6F0; border-radius: 4px; padding: 0 5px; font-size: 10px; color: #888; }
-    .fc-rate-label { font-size: 12px; color: #BCC8D8; text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-q { font-family: var(--font-display); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink); flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid var(--rule2); margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: var(--t-body); line-height: 1.75; color: var(--ink); white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: var(--paper-sunk); border: 1px solid var(--rule2); border-radius: 4px; padding: 0 5px; font-size: var(--t-caption); color: var(--ink-faint); }
+    .fc-rate-label { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
     .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--paper-raised); font-family: var(--font-body); transition: opacity 0.15s, transform 0.1s; }
     .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
-    .fc-rbtn .kh { font-size: 10px; opacity: 0.55; margin-top: 1px; }
+    .fc-rbtn .kh { font-size: var(--t-caption); opacity: 0.55; margin-top: 1px; }
     .fc-reveal { animation: fc-ri 0.22s ease both; }
     @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     #fc-card-zone { will-change: transform, opacity; }
@@ -58,19 +71,19 @@
     @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
     .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
     .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
-    .fc-summary { background: #fff; border: 1px solid #E2EAF4; border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
-    .fc-sum-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: #0077C8; }
+    .fc-summary { background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: var(--font-display); font-size: var(--t-h2); color: var(--unit-ink); }
     .fc-stat-row { display: flex; gap: 10px; width: 100%; }
     .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
-    .fc-stat-n { font-size: 1.5rem; font-weight: 500; }
-    .fc-stat-l { font-size: 11px; font-weight: 500; opacity: 0.7; }
-    .fc-bar-track { width: 100%; height: 10px; background: #F0F4FA; border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-stat-n { font-size: var(--t-h2); font-weight: 500; }
+    .fc-stat-l { font-size: var(--t-caption); font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: var(--paper-sunk); border-radius: 99px; overflow: hidden; display: flex; }
     .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
     .fc-btn-row { display: flex; gap: 8px; width: 100%; }
-    .fc-btn-primary { flex: 1; background: #0077C8; color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; }
+    .fc-btn-primary { flex: 1; background: var(--unit-ink); color: var(--paper-raised); border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; font-family: var(--font-body); transition: opacity 0.2s; }
     .fc-btn-primary:hover { opacity: 0.88; }
-    .fc-btn-outline { flex: 1; border: 1px solid #E2EAF4; border-radius: 12px; padding: 0.65rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; font-family: 'DM Sans', sans-serif; color: #0077C8; transition: background 0.15s; }
-    .fc-btn-outline:hover { background: #E6F1FB; }
+    .fc-btn-outline { flex: 1; border: 1px solid var(--rule2); border-radius: 12px; padding: 0.65rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; background: var(--paper-raised); font-family: var(--font-body); color: var(--unit-ink); transition: background 0.15s; }
+    .fc-btn-outline:hover { background: var(--brand-wash); }
   </style>
 </head>
 <body>
@@ -94,21 +107,12 @@
   </ul>
 </nav>
 
-<div class="top-bar">
-  <div class="top-bar-left">
-    <a href="index.html" aria-label="Course home">
-      <img src="assets/bentleylogo.png" alt="Bentley University" class="bentley-logo" />
-    </a>
-    <div class="top-bar-divider"></div>
-    <div class="breadcrumb">
-      <a href="index.html">EC224</a>
-      <span class="breadcrumb-sep">&#x203A;</span>
-      <a href="week7.html">Week 7</a>
-      <span class="breadcrumb-sep">&#x203A;</span>
-      <span>Flashcards</span>
-    </div>
-  </div>
-  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week7.html">Week 7</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Flashcards</span>
 </div>
 
 <main>
@@ -200,19 +204,19 @@ const CARDS = [
 
 // engine
 const TYPES = [...new Set(CARDS.map(c=>c.type))];
-const COL = {Def:'#0077C8',Eq:'#7C3AED',Graph:'#065F46',Mistake:'#B45309'};
-const BG  = {Def:'#EFF8FF',Eq:'#F5F3FF',Graph:'#ECFDF5',Mistake:'#FFFBEB'};
+const COL = {Def:'var(--unit-ink)',Eq:'var(--ink-faint)',Graph:'var(--d-gain)',Mistake:'var(--d-loss)'};
+const BG  = {Def:'var(--paper-raised)',Eq:'var(--paper-raised)',Graph:'var(--paper-raised)',Mistake:'var(--paper-raised)'};
 let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All',ratings={};
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};}
 function render(){
   const root=document.getElementById('fc-root');
   if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
-  const c=deck[idx];const col=COL[c.type]||'#0077C8';const bg=BG[c.type]||'#EFF8FF';
+  const c=deck[idx];const col=COL[c.type]||'var(--unit-ink)';const bg=BG[c.type]||'var(--paper-raised)';
   const total=deck.length;
   root.innerHTML=`
     <div class="fc-hdr">
-      <span class="fc-title">EC224 &middot; Week 7 &middot; Profit Maximization</span>
+      <h1 class="fc-title">EC224 &middot; Week 7 &middot; Profit Maximization</h1>
       <span class="fc-ctr">${idx+1} / ${total}</span>
     </div>
     <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
@@ -224,7 +228,6 @@ function render(){
         <div class="fc-front" onclick="flipCard()">
           <div class="fc-q-sm">
             <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
-            &nbsp;Card ${idx+1}
           </div>
           <div class="fc-q">${c.q}</div>
           <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
@@ -234,13 +237,13 @@ function render(){
           <div class="fc-a fc-reveal">${c.a}</div>
           <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
           <div class="fc-rate-row">
-            <button class="fc-rbtn" style="color:#B45309;border-color:#FDE68A" onclick="rate('Hard')">
+            <button class="fc-rbtn" style="color:var(--d-loss);border-color:var(--d-transfer)" onclick="rate('Hard')">
               Again<div class="kh"><span class="fc-kbd">1</span></div>
             </button>
-            <button class="fc-rbtn" style="color:#0077C8;border-color:#BFDBFE" onclick="rate('Good')">
+            <button class="fc-rbtn" style="color:var(--unit-ink);border-color:var(--unit-ink)" onclick="rate('Good')">
               Good<div class="kh"><span class="fc-kbd">2</span></div>
             </button>
-            <button class="fc-rbtn" style="color:#065F46;border-color:#A7F3D0" onclick="rate('Easy')">
+            <button class="fc-rbtn" style="color:var(--d-gain);border-color:var(--d-gain)" onclick="rate('Easy')">
               Easy<div class="kh"><span class="fc-kbd">3</span></div>
             </button>
           </div>
@@ -254,14 +257,14 @@ function summary(){
   return `<div class="fc-summary">
     <div class="fc-sum-title">Deck complete!</div>
     <div class="fc-stat-row">
-      <div class="fc-stat" style="background:#ECFDF5"><div class="fc-stat-n" style="color:#065F46">${stats.Easy}</div><div class="fc-stat-l" style="color:#065F46">Easy</div></div>
-      <div class="fc-stat" style="background:#EFF8FF"><div class="fc-stat-n" style="color:#0077C8">${stats.Good}</div><div class="fc-stat-l" style="color:#0077C8">Good</div></div>
-      <div class="fc-stat" style="background:#FFFBEB"><div class="fc-stat-n" style="color:#B45309">${stats.Hard}</div><div class="fc-stat-l" style="color:#B45309">Again</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-gain)">${stats.Easy}</div><div class="fc-stat-l" style="color:var(--d-gain)">Easy</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--unit-ink)">${stats.Good}</div><div class="fc-stat-l" style="color:var(--unit-ink)">Good</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-loss)">${stats.Hard}</div><div class="fc-stat-l" style="color:var(--d-loss)">Again</div></div>
     </div>
     <div class="fc-bar-track">
-      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:#34D399"></div>
-      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:#60A5FA"></div>
-      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:#FBBF24"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:var(--d-gain)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:var(--unit-ink)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:var(--d-transfer)"></div>
     </div>
     <div class="fc-btn-row">
       <button class="fc-btn-primary" onclick="restart()">Study again</button>
