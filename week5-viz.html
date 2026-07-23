@@ -599,6 +599,15 @@ function fromC(px, py, W, H, xR, yR) {
 }
 
 function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
+  /* Record the range actually used on the canvas element. Tick numbers are
+     painted pixels, so a test cannot read them back as text; this lets
+     review/axis-fixed.js assert exactly that no control changes an axis,
+     instead of pixel-diffing the gutter and mistaking a moving guide line for
+     a rescale. Two attributes, no behaviour. */
+  if (ctx.canvas && ctx.canvas.dataset) {
+    ctx.canvas.dataset.xr = xR[0] + ',' + xR[1];
+    ctx.canvas.dataset.yr = yR[0] + ',' + yR[1];
+  }
   ctx.save();
   // horizontal grid lines
   ctx.strokeStyle="rgba(28,36,51,0.07)"; ctx.lineWidth=1;
@@ -765,6 +774,80 @@ function d5Seed(nodes, W, H) {
   }
 }
 
+/* How much drawn ink sits under a rectangle of the plot, weighted by darkness
+   so a 3px curve counts heavily and a 7%-opacity gridline barely counts. */
+function d5Ink(ctx, dpr, x, y, w, h) {
+  const X = Math.max(0, Math.round(x * dpr)), Y = Math.max(0, Math.round(y * dpr));
+  const W = Math.max(1, Math.round(w * dpr)), H = Math.max(1, Math.round(h * dpr));
+  let data;
+  try { data = ctx.getImageData(X, Y, W, H).data; } catch (_) { return 0; }
+  let ink = 0;
+  for (let i = 0; i < data.length; i += 16) {          // sample every 4th pixel
+    if (data[i + 3] === 0) continue;
+    const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+    if (lum < 250) ink += (250 - lum) / 250;
+  }
+  return ink;
+}
+
+/* Re-seed labels onto the emptiest nearby spot.
+
+   The geometric rule in d5Seed keeps a label clear of its own anchor, but it
+   knows nothing about the curve the anchor sits on, so a label could still be
+   laid straight over the line it is naming. This looks at what was actually
+   painted and picks, from eight directions at two distances, the placement
+   with the least ink under it, penalising anything that would overlap a label
+   already placed. Deterministic: same drawing in, same placement out.
+
+   Runs once per overlay, after the figure has drawn at least once, and again
+   after a resize, so it is never a source of movement during interaction. */
+function d5SeedFromCanvas(nodes, cvs) {
+  const dpr = window.devicePixelRatio || 1;
+  let ctx; try { ctx = cvs.getContext('2d'); } catch (_) { return; }
+  const W = cvs.width / dpr, H = cvs.height / dpr;
+  const DIRS = [[1,-1],[1,1],[-1,-1],[-1,1],[1,0],[-1,0],[0,-1],[0,1]];
+  const placed = [];
+  for (const d of nodes) {
+    const hw = d5w(d) / 2, hh = D5_LABEL_H / 2;
+    let best = null;
+    for (const [sx, sy] of DIRS) {
+      for (const reach of [1, 1.7]) {
+        const ox = sx * (hw + 16) * reach;
+        const oy = sy * (hh + 16) * reach;
+        const cx = d.fx_anchor + ox, cy = d.fy_anchor + oy;
+        if (cx - hw < ML || cx + hw > W - MR || cy - hh < MT || cy + hh > H - MB) continue;
+        let score = d5Ink(ctx, dpr, cx - hw, cy - hh, d5w(d), D5_LABEL_H);
+        for (const p of placed) {
+          if (Math.abs(p.x - cx) < (p.hw + hw) && Math.abs(p.y - cy) < D5_LABEL_H + 6) score += 400;
+        }
+        // All else equal, prefer the shorter leader.
+        score += Math.hypot(ox, oy) * 0.05;
+        if (!best || score < best.score) best = { score, ox, oy, cx, cy };
+      }
+    }
+    if (!best) continue;
+    d.ox = best.ox; d.oy = best.oy;
+    d.x = best.cx;  d.y = best.cy;
+    d.vx = 0; d.vy = 0;
+    placed.push({ x: best.cx, y: best.cy, hw });
+  }
+}
+
+/* One-shot pass over every overlay whose canvas has been drawn. */
+function d5PolishSeeds() {
+  for (const s of _d5AllSims) {
+    if (s._d5seeded || !s._d5svg || !s._d5nodes) continue;
+    const host = s._d5svg.node() && s._d5svg.node().parentElement;
+    const cvs = host && host.querySelector('canvas');
+    if (!cvs || !cvs.width) continue;
+    d5SeedFromCanvas(s._d5nodes, cvs);
+    s._d5seeded = true;
+    if (s._d5tick) s._d5tick();
+    s.alpha(0.25).restart();
+  }
+}
+function d5ResetSeeds() { for (const s of _d5AllSims) s._d5seeded = false; }
+
 // Append connector-lines + draggable label groups. DESIGN 4.3: the label is
 // haloed text, not an outlined white box. A paint-order stroke in the plot's
 // own background colour is what keeps MLU's in-chart text legible over data
@@ -777,6 +860,8 @@ function d5AddLabels(svg, nodes, sim) {
   // figure paints in its resting arrangement instead of settling into one.
   const vb = (svg.attr('viewBox') || '0 0 500 500').split(/\s+/);
   d5Seed(nodes, +vb[2] || 500, +vb[3] || 500);
+  // Kept so d5PolishSeeds can find this overlay's canvas once it has drawn.
+  sim._d5svg = svg; sim._d5nodes = nodes;
   const conns = svg.append('g').selectAll('line').data(nodes).enter()
     .append('line')
     .attr('stroke', d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
@@ -825,14 +910,47 @@ function d5MakeSim(nodes) {
 // Tick handler: clamp into plot bounds [PAD..W-PAD]/[PAD..H-PAD], position
 // label groups + connector lines. PAD here is the canvas ML/MR/MT/MB margin box.
 function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
-  nodes.forEach(d=>{
+  const clamp = d => {
     // Clamp the CENTRE, keeping the whole box inside the plot's margin box.
     // padR was accepted but never used, so a wide label could sit flush against
     // the right edge and read as clipped.
     const hw = d5w(d)/2, hh = D5_LABEL_H/2;
     d.x = Math.max(padL+hw, Math.min(W-padR-hw, d.x));
     d.y = Math.max(padT+hh, Math.min(H-padB-hh, d.y));
-  });
+  };
+  nodes.forEach(clamp);
+
+  /* Hard de-overlap, run where positions are finalised.
+     forceCollide models each label as a circle and works on averages over many
+     ticks, so in a tight corner (an anchor at the far right, where every
+     outward offset is clamped back inward) two labels can come to rest on top
+     of each other and simply stay there once the simulation cools. This is a
+     direct, deterministic separation on the real rectangles: push the smaller
+     penetration axis apart, then re-clamp. Three passes is enough for the
+     label counts here, and because it is monotone it cannot oscillate. */
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = false;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const minX = (d5w(a) + d5w(b)) / 2 + 4, minY = D5_LABEL_H + 4;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const ox = minX - Math.abs(dx), oy = minY - Math.abs(dy);
+        if (ox <= 0 || oy <= 0) continue;                 // not overlapping
+        moved = true;
+        // Separate along whichever axis needs the smaller nudge.
+        if (oy <= ox) {
+          const s = (dy >= 0 ? 1 : -1) * oy / 2;
+          a.y -= s; b.y += s;
+        } else {
+          const s = (dx >= 0 ? 1 : -1) * ox / 2;
+          a.x -= s; b.x += s;
+        }
+        clamp(a); clamp(b);
+      }
+    }
+    if (!moved) break;
+  }
   gs.attr('transform', d=>`translate(${d.x-d5w(d)/2},${d.y-D5_LABEL_H/2})`);
   // The connector runs from the anchor to the label's centre, and is hidden
   // when the label is close enough that a leader line would be noise.
@@ -843,11 +961,43 @@ function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
 
 // Reposition a node's anchor (e.g. after a slider/drag changes curve position)
 // while translating its current x/y by the same delta, avoids drift, the S6 pattern.
+/* Move a label's anchor, carrying the label with it.
+
+   Repainting matters here. d3 only calls the tick handler while a simulation
+   is warm; once it cools below alphaMin it stops ticking entirely. So moving
+   an anchor updated d.x/d.y but nothing rewrote the SVG transform, and the
+   labels sat still while the point moved out from under them, until you
+   happened to click one, which reheated the simulation and made them all
+   snap into place at once. Sliders hid the bug because they reheat on
+   mousedown; dragging a point on the canvas did not.
+
+   Rather than reheat on every anchor move, which would reintroduce the
+   bouncing, this schedules one repaint on the next frame. Positions are
+   already correct, they just need to be drawn. */
+let _d5RepaintQueued = false;
+function d5Repaint() {
+  if (_d5RepaintQueued) return;
+  _d5RepaintQueued = true;
+  requestAnimationFrame(() => {
+    _d5RepaintQueued = false;
+    for (const s of _d5AllSims) if (s._d5tick) s._d5tick();
+  });
+}
 function d5MoveAnchor(node, newAx, newAy) {
   const dx = newAx - node.fx_anchor, dy = newAy - node.fy_anchor;
   node.x += dx; node.y += dy;
   node.vx = 0; node.vy = 0;
   node.fx_anchor = newAx; node.fy_anchor = newAy;
+  d5Repaint();
+}
+
+/* Register the tick handler AND keep a reference so d5Repaint can call it
+   directly when the simulation is asleep. */
+function d5OnTick(sim, fn) {
+  sim._d5tick = fn;
+  sim.on('tick', fn);
+  fn();
+  return sim;
 }
 
 // Wire mousedown/touchstart -> alphaTarget(0.3).restart() and a shared
@@ -951,7 +1101,7 @@ function v51EnsureOverlayA(W,H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v51OvlA={W,H,nodes,sim,gs,conns};
   return v51OvlA;
@@ -963,7 +1113,7 @@ function v51EnsureOverlayB(W,H) {
   const nodes=[ d5Node('mpl',EC.red,'MPL',60,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v51OvlB={W,H,nodes,sim,gs,conns};
   return v51OvlB;
@@ -978,7 +1128,7 @@ const V51_FORMS = {
   cobb: {
     tp:  (L,K)=>Math.pow(K,0.5)*Math.pow(Math.max(0.001,L),0.5),
     mpl: (L,K)=>0.5*Math.pow(K,0.5)*Math.pow(Math.max(0.001,L),-0.5),
-    yRA: [0,5], yRB: [-0.1,1.3],
+    yRA: [0,13], yRB: [-0.1,3.2],
     desc: '<strong>Cobb-Douglas:</strong> Q = K<sup>0.5</sup> &middot; L<sup>0.5</sup>. Output always increases in L but at a decreasing rate. MPL falls as L rises (diminishing returns), never reaching zero. The most common textbook production function.',
     phase: (mpl,L)=>mpl>0.6?'Rapid diminishing returns':mpl>0.25?'Moderate diminishing':mpl>0.05?'Slow diminishing':'Near-zero MPL',
     showK: true,
@@ -986,7 +1136,7 @@ const V51_FORMS = {
   scurve: {
     tp:  (L,K)=>Math.max(0, 1.5*L*L - 0.1*L*L*L),
     mpl: (L,K)=>Math.max(0, 3*L - 0.3*L*L),
-    yRA: [0,14], yRB: [-0.5,8],
+    yRA: [0,52], yRB: [-0.5,8.5],
     desc: '<strong>S-Curve (Cubic):</strong> Q = 1.5L<sup>2</sup> &minus; 0.1L<sup>3</sup>. The classic S-shaped total product curve. MPL first rises (increasing returns), then falls after reaching a maximum (diminishing returns), and eventually reaches zero. This matches the standard textbook diagram.',
     phase: (mpl,L)=>L<5?'Increasing returns (MPL rising)':L<5.5?'Peak MPL':L<10?'Diminishing returns (MPL falling)':'Zero / Negative MP',
     showK: false,
@@ -1057,25 +1207,17 @@ function v51Draw() {
   const tpBase = l=>form.tp(l, V51_K_BASE);
   const mplBase = l=>form.mpl(l, V51_K_BASE);
 
-  // Dynamic y-ranges so the curves span the full L domain and the current
-  // dot stays visible at every slider position (fixed per-form ranges clipped
-  // the TP curve and lost the dot at extremes).
-  let tpMax=0.001, mplCap=0.001, mplMin=0;
-  for(let l=0.1;l<=10.001;l+=0.05){
-    tpMax=Math.max(tpMax,tp(l));
-    const m=mpl(l);
-    if(l>=0.8) mplCap=Math.max(mplCap,m);
-    mplMin=Math.min(mplMin,m);
-    if(kShifted){
-      tpMax=Math.max(tpMax,tpBase(l));
-      const mb=mplBase(l);
-      if(l>=0.8) mplCap=Math.max(mplCap,mb);
-      mplMin=Math.min(mplMin,mb);
-    }
-  }
-  const yRA=[0, Math.max(tpMax, tp(L))*1.08];
-  const yTopB=Math.max(mplCap, mpl(L))*1.12;
-  const yRB=[Math.min(mplMin*1.1, -yTopB*0.08), yTopB];
+  /* FIXED y-ranges, taken from the production function's own declaration.
+     They used to be recomputed from the current slider values on every draw,
+     which meant the axis rescaled under the curve as you dragged. That is
+     disorienting, and on this figure it actively hid the lesson: raising K
+     lifts the whole TP curve, but because the axis grew with it the curve
+     looked identical at K=1 and K=16. The ranges are sized to the reachable
+     extremes of each function (Cobb-Douglas tops out at 12.59 with K=16 and
+     L=9.9, so the axis is 13), so a slider can never push a curve off the top.
+     Only choosing a different production function changes the scale. */
+  const yRA = form.yRA;
+  const yRB = form.yRB;
 
   // ─ TOP PANEL (TP) ─
   ctxA.clearRect(0,0,W,HA);
@@ -1283,7 +1425,7 @@ function v52EnsureOverlay(canvasId, W, H, withDragLabels) {
   }
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   ovl={W,H,withDrag:withDragLabels,nodes,sim,gs,conns};
   v52Ovl[key]=ovl;
@@ -1466,7 +1608,7 @@ function v53EnsureOverlay(W,H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v53Ovl={W,H,nodes,sim,gs,conns};
   return v53Ovl;
@@ -1593,7 +1735,7 @@ function v54EnsureOverlayA(W,H) {
   const nodes=[ d5Node('cap',EC.red,'MPL falls as L rises',120,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v54OvlA={W,H,nodes,sim,gs,conns};
   return v54OvlA;
@@ -1608,7 +1750,7 @@ function v54EnsureOverlayB(W,H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v54OvlB={W,H,nodes,sim,gs,conns};
   return v54OvlB;
@@ -1632,9 +1774,9 @@ function v54Draw() {
   if(cvA.width!==Math.round(W*dpr)||cvA.height!==Math.round(H54*dpr)){cvA.width=Math.round(W*dpr);cvA.height=Math.round(H54*dpr);cvA.style.height=H54+'px';}
   const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
   ctxA.clearRect(0,0,W,H54);
-  const mplAt1=b*v54CD(Kfix,1,a,b)/1;
-  const yMaxMPL=Math.ceil(mplAt1*1.2*2)/2;
-  const xRa=[0,12],yRa=[0,yMaxMPL];
+  // Fixed: MPL at L=1 reaches 2.76 at a=b=0.9, so 4 never clips the curve,
+  // and the axis no longer rescales under the curve as the exponents change.
+  const xRa=[0,12],yRa=[0,4];
   drawAxesSt(ctxA,W,H54,xRa,yRa,'L (workers)','MPL');
   ctxA.beginPath(); let first=true; ctxA.strokeStyle=EC.red; ctxA.lineWidth=3;
   for(let l=0.2;l<=12;l+=0.1){
@@ -1663,9 +1805,11 @@ function v54Draw() {
   const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
   ctxB.clearRect(0,0,W,H54);
   const Lbase=4, Kbase=4;
-  const q_lam4=v54CD(4*Kbase,4*Lbase,a,b);
-  const yMaxB=Math.ceil(Math.max(q_lam4*1.2, 8));
-  const xRb=[0.5,4], yRb=[0,yMaxB];
+  // Fixed. Q at lambda=4 spans 1.7 to 111 over the exponent range; an axis
+  // that fitted 111 would flatten every ordinary case, so it is pinned at 40
+  // and the curve leaves the top under strong increasing returns, which is
+  // exactly what the panel is there to show. The plot is already clipped.
+  const xRb=[0.5,4], yRb=[0,40];
   drawAxesSt(ctxB,W,H54,xRb,yRb,'Scale λ (lambda)','Output Q');
   ctxB.save(); ctxB.beginPath(); ctxB.rect(ML,MT,W-ML-MR,H54-MT-MB); ctxB.clip();
   ctxB.beginPath(); first=true; ctxB.strokeStyle='#1f6fb2'; ctxB.lineWidth=3;
@@ -1735,7 +1879,7 @@ function v55EnsureOverlay(W,H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v55Ovl={W,H,nodes,sim,gs,conns};
   return v55Ovl;
@@ -1850,7 +1994,7 @@ function v56EnsureOverlay(W,H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v56Ovl={W,H,nodes,sim,gs,conns};
   return v56Ovl;
@@ -1991,7 +2135,7 @@ function v57EnsureOverlay(canvasId, key, W, H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   const ovl={W,H,nodes,sim,gs,conns};
   v57Ovl[key]=ovl;
@@ -2087,7 +2231,7 @@ function v58EnsureOverlay(W,H) {
   const nodes=[ d5Node('lam',EC.red,'λ = 1.0 (scaled inputs)',110,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v58Ovl={W,H,nodes,sim,gs,conns};
   return v58Ovl;
@@ -2208,7 +2352,7 @@ function v59EnsureOverlay(W,H) {
   const nodes=[ d5Node('k','#1f6fb2','K = 2 machines',82,W/2,H/2) ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v59Ovl={W,H,nodes,sim,gs,conns};
   return v59Ovl;
@@ -2407,7 +2551,7 @@ function v510BuildOverlay(W,H) {
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
-  sim.on('tick',()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
+  d5OnTick(sim,()=>d5TickClamp(nodes,gs,conns,W,H,ML,MR,MT,MB));
   d5RegisterSim(sim);
   v510Ovl={W,H,nodes,sim,gs,conns};
   return v510Ovl;
@@ -2509,6 +2653,10 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   v58Update();
   v59Update();
   quiz510NewRound();
+  // Labels are seeded geometrically at construction; now that every figure
+  // has actually painted, move them onto the emptiest spot near their anchor
+  // so none of them starts sitting on the curve it names.
+  setTimeout(d5PolishSeeds, 120);
   // ResizeObserver for zoom-level changes
   if (window.ResizeObserver) {
     const obs = new ResizeObserver(redrawAll5);
@@ -2520,7 +2668,12 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
   }
 }));
 
-window.addEventListener('resize', redrawAll5);
+window.addEventListener('resize', () => {
+  redrawAll5();
+  // Anchors all moved, so the emptiest-spot choice is re-evaluated once.
+  d5ResetSeeds();
+  setTimeout(d5PolishSeeds, 120);
+});
 
 /* Section rail: mark the figure you are currently reading (DESIGN 2.2, after
    MLU's sticky #toc .selected). The rail is the page's own table of contents,
