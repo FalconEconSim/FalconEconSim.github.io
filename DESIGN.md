@@ -723,3 +723,65 @@ Any change to the site is checked against this list, with screenshots at
 10. Does anything animate during a drag? (6.3, must be no)
 11. Does it hold at 390px with type unchanged? (Section 7)
 12. Screenshot pass run and read, not inferred from code?
+
+---
+
+## 9. Rollout status and known remaining work
+
+The design system was rolled onto all 36 student-facing pages in July 2026.
+Every page reports clean from `review/check.js` at 1440px and 390px (opt-in,
+old chrome removed, prose measure, heading face, emoji including numeric
+entities, horizontal overflow, blank canvases, JS errors), and the figure pages
+report clean from `review/exercise.js`, which drives every control in
+combination and checks the result.
+
+What is **not** finished, stated plainly rather than left to be discovered:
+
+1. **The label system is week5-only.** `d5*` (deterministic seeding, the
+   canvas-ink placement pass, haloed text instead of outlined boxes, the
+   window-level canvas drag, the repaint-on-anchor-move fix) exists only in
+   `week5-viz.html`. Weeks 2 and 3 are JSXGraph, weeks 4, 6 and 7 use a canvas
+   `resolveLabels` / `drawForceLabel` pair, and week 8 is pure d3. They all got
+   the shell, measure, type, palette and chart ink, but they still render
+   labels as white boxes with coloured borders. Porting `d5*` to the canvas
+   pages is the single highest-value follow-up.
+
+2. **Fixed axes are week5-only.** `review/axis-fixed.js` passes on week5. The
+   other canvas pages were not audited for dynamic ranges; `drawAxesSt` records
+   `data-xr` / `data-yr` wherever it exists, so the guard can be pointed at them
+   as soon as someone wants to do that pass.
+
+3. **Motion is week5-only.** `ecTween` and the 6.2 table are implemented there.
+   Buttons that move a curve on weeks 4, 6, 7 and 8 still jump.
+
+4. **week6-viz Fig 6.1**: at the extreme corner (w at minimum, v at maximum)
+   the draggable bundle can be dragged to L above the x-axis maximum, so the
+   dot renders half outside the plot. Pre-existing, cosmetic, only reachable at
+   a slider extreme.
+
+5. **AUDIT S-1 stands.** The six slides pages and three videos pages still
+   exist as separate pages carrying three links each. Folding them into the
+   hub remains right, and was not done because it changes URLs that both the
+   hubs and the chatbot's Pinecone index point at.
+
+### The review tooling
+
+Built during the rollout, all in `C:\MicroSite\review`, all outside the repo:
+
+| Script | What it is for |
+|---|---|
+| `check.js` | per-page health report; the workhorse of the rollout |
+| `exercise.js` | exhaustive interaction sweep with automated defect checks |
+| `label-jitter.js` | label start spread across loads, and motion during a drag |
+| `label-overlap.js` | ink under each label, and whether labels follow the point |
+| `drag-through.js` | can a point be dragged through its own labels |
+| `axis-fixed.js` | does any control change an axis |
+| `measure-ref.js` | computed measure and type scale off a live page |
+| `refsnap.js`, `refslice.js`, `drag-video.js` | captures |
+| `palette-sweep.js`, `type-sweep.js` | token migration, reporting what they cannot place |
+
+Every one of these checks was validated by reintroducing the defect it looks
+for and confirming it fires. That is not ceremony: doing it caught a NaN check
+that only scanned HTML while the NaN surfaced in an SVG label, a CLIP check
+that counted 7%-opacity gridlines as cut text, and a drag test measuring
+absolute label movement rather than displacement from the anchor.

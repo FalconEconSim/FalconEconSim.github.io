@@ -43,7 +43,7 @@
     .viz-readout { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
     .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
     .readout-col { flex:1; min-width:110px; }
-    .readout-label { font-family:var(--font-mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-faint); }
+    .readout-label { font-size: var(--t-caption); color: var(--ink-faint); }
     .readout-val { font-size:1.05rem; font-weight:600; color:var(--unit-ink); font-family:var(--font-mono); }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
     .panel-label { font-family:var(--font-mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-faint); padding:0.4rem 0.6rem; background:var(--off-white); border-bottom:1px solid var(--rule-strong); }
@@ -536,7 +536,7 @@ function v61Draw(Lcur,Kcur){
   ];
 
   // Resolve and draw static curve labels (isoquant + isocost)
-  resolveLabels(lbls61,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
+  resolveLabels(lbls61,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
   lbls61.forEach(l=>drawForceLabel(ctx,l));
 
   // If optimal is shown, draw the green dot at the optimal location
@@ -552,7 +552,7 @@ function v61Draw(Lcur,Kcur){
       {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
       {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
     ];
-    resolveLabels(optLbls,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
+    resolveLabels(optLbls,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
     optLbls.forEach(l=>drawForceLabel(ctx,l));
     document.getElementById('v61-readout').innerHTML=
       '<div class="readout-row">' +
@@ -581,7 +581,7 @@ function v61Draw(Lcur,Kcur){
   if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false});
   else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'var(--ink-faint)',fontSize:9,bold:false});
   else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'var(--ink-faint)',fontSize:9,bold:false});
-  resolveLabels(dragLbls,linePts61,60,5,{x0:2,y0:2,x1:W-2,y1:H-2});
+  resolveLabels(dragLbls,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
   dragLbls.forEach(l=>drawForceLabel(ctx,l));
 
   const TC=w*Lcur+v*Kcur;
