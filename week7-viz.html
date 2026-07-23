@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/figkit.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     .demo-svg-wrap{padding:0;}
@@ -396,31 +397,31 @@ function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
   }
 }
 function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false} = lbl;
+  /* DESIGN 4.3: haloed text, not an outlined box. The halo is a stroke in the
+     plot's own background colour painted under the glyphs, which is what keeps
+     MLU's in-chart labels legible over data without a container. 13px, not 9px:
+     at our plot sizes that is the same optical size as MLU's 16px at theirs. */
+  const {x,y,ax,ay,text,color='#4a5566',w,h} = lbl;
+  const FS = 13;
+  const bw = w || ctx.measureText(text).width*1.45+10;
+  const bh = h || FS + 5;
+  const cx = x + bw / 2, cy = y + bh / 2;
   ctx.save();
-
-  // Connector line
-  if (Math.hypot(x-ax,y-ay)>5) {
-    ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]);ctx.globalAlpha=0.55;
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
-    ctx.setLineDash([]);ctx.globalAlpha=1;
+  // Connector only when the label has actually been pushed clear of its anchor;
+  // below that a leader line is noise.
+  if (Math.hypot(cx - ax, cy - ay) > 26) {
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = color; ctx.lineWidth = 0.9; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx, cy); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
-  // Label box
-  ctx.font=(bold?'bold ':'')+fontSize+"px 'DM Sans',sans-serif";
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  const tw=ctx.measureText(text).width;
-  const bw=tw+10, bh=15, rx=3;
-  const bx=x-bw/2, by=y-bh/2;
-  ctx.fillStyle='white';
-  ctx.beginPath();
-  ctx.moveTo(bx+rx,by);ctx.lineTo(bx+bw-rx,by);ctx.arcTo(bx+bw,by,bx+bw,by+rx,rx);
-  ctx.lineTo(bx+bw,by+bh-rx);ctx.arcTo(bx+bw,by+bh,bx+bw-rx,by+bh,rx);
-  ctx.lineTo(bx+rx,by+bh);ctx.arcTo(bx,by+bh,bx,by+bh-rx,rx);
-  ctx.lineTo(bx,by+rx);ctx.arcTo(bx,by,bx+rx,by,rx);
-  ctx.closePath();ctx.fill();
-  ctx.strokeStyle=color;ctx.lineWidth=0.8;ctx.stroke();
-  ctx.fillStyle=color;
-  ctx.fillText(text,x,y);
+  ctx.font = '500 ' + FS + 'px "DM Sans",system-ui,sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3.5;
+  ctx.strokeText(text, cx, cy);
+  ctx.fillStyle = color;
+  ctx.fillText(text, cx, cy);
   ctx.restore();
 }
 
@@ -661,9 +662,10 @@ function v71Update(){
   v71Draw();
 }
 function v71Reset(){
-  document.getElementById('v71-p').value=10;
-  document.getElementById('v71-tfc').value=5;
-  document.getElementById('v71-ms').value=0;
+  // DESIGN 6.2: a button that moves a value tweens it, so the reader sees
+  // which way the figure travels rather than it snapping.
+  ecSetSliders('v71reset', { 'v71-p': 10, 'v71-tfc': 5, 'v71-ms': 0 }, v71Update);
+  return;
   v71Update();
 }
 

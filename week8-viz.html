@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/figkit.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
@@ -849,6 +850,9 @@ function v81ParamUpdate(){
 }
 function v81Reset(){
   V81.a=20;V81.b=4;
+  ecSetSliders('v81reset', { 'v81-a': 20, 'v81-b': 4, 'v81-p': 12 }, v81Rebuild);
+  document.getElementById('v81-p-text').value=12;
+  return;
   document.getElementById('v81-a').value=20;document.getElementById('v81-b').value=4;
   document.getElementById('v81-a-val').textContent=20;document.getElementById('v81-b-val').textContent=4;
   document.getElementById('v81-p').value=12;document.getElementById('v81-p-text').value=12;
@@ -1762,12 +1766,11 @@ function v811BreakEven(){
   if(disc<0){alert('No real break-even P_A at this P_R. Try a lower P_R.');return;}
   const PA_lo=(-B-Math.sqrt(disc))/2;  // smaller root = lower premium required
   const PA=Math.max(5,Math.min(18,PA_lo>PR+0.5?PA_lo:(-B+Math.sqrt(disc))/2));
-  document.getElementById('v811-pa').value=PA.toFixed(1);
-  v811Draw();
+  ecSetSliders('v811solve', { 'v811-pa': PA.toFixed(1) }, v811Draw);
 }
 function v811Reset(){
-  document.getElementById('v811-pa').value=9;
-  document.getElementById('v811-pr').value=2;
+  ecSetSliders('v811reset', { 'v811-pa': 9, 'v811-pr': 2 }, v811Draw);
+  return;
   v811Draw();
 }
 

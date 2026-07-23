@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/figkit.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     .demo-svg-wrap { padding: 0; }
@@ -372,39 +373,31 @@ function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
   }
 }
 function drawForceLabel(ctx, lbl) {
-  const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false,w,h} = lbl;
-  const LH=15;
-  const bw=w||ctx.measureText(text).width+10;
-  const bh=h||LH;
+  /* DESIGN 4.3: haloed text, not an outlined box. The halo is a stroke in the
+     plot's own background colour painted under the glyphs, which is what keeps
+     MLU's in-chart labels legible over data without a container. 13px, not 9px:
+     at our plot sizes that is the same optical size as MLU's 16px at theirs. */
+  const {x,y,ax,ay,text,color='#4a5566',w,h} = lbl;
+  const FS = 13;
+  const bw = w || ctx.measureText(text).width*1.45+10;
+  const bh = h || FS + 5;
+  const cx = x + bw / 2, cy = y + bh / 2;
   ctx.save();
-  // Connector line: colored, dashed, opacity 0.55
-  if (Math.hypot(x-ax,y-ay)>5) {
-    ctx.globalAlpha=0.55;
-    ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]);
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x+bw/2,y+bh/2); ctx.stroke();
-    ctx.setLineDash([]); ctx.globalAlpha=1;
+  // Connector only when the label has actually been pushed clear of its anchor;
+  // below that a leader line is noise.
+  if (Math.hypot(cx - ax, cy - ay) > 26) {
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = color; ctx.lineWidth = 0.9; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx, cy); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
-  // Label box: white fill, colored stroke 0.8px, rx=3 (approximate with rect)
-  ctx.fillStyle='white';
-  ctx.strokeStyle=color; ctx.lineWidth=0.8;
-  // Rounded rect approximation
-  const rx=3, bx=x, by=y;
-  ctx.beginPath();
-  ctx.moveTo(bx+rx,by); ctx.lineTo(bx+bw-rx,by);
-  ctx.quadraticCurveTo(bx+bw,by,bx+bw,by+rx);
-  ctx.lineTo(bx+bw,by+bh-rx);
-  ctx.quadraticCurveTo(bx+bw,by+bh,bx+bw-rx,by+bh);
-  ctx.lineTo(bx+rx,by+bh);
-  ctx.quadraticCurveTo(bx,by+bh,bx,by+bh-rx);
-  ctx.lineTo(bx,by+rx);
-  ctx.quadraticCurveTo(bx,by,bx+rx,by);
-  ctx.closePath();
-  ctx.fill(); ctx.stroke();
-  // Text: 9px bold DM Sans, colored
-  ctx.font=(bold?'bold ':'bold ')+fontSize+'px DM Sans,sans-serif';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillStyle=color;
-  ctx.fillText(text,bx+bw/2,by+bh/2);
+  ctx.font = '500 ' + FS + 'px "DM Sans",system-ui,sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3.5;
+  ctx.strokeText(text, cx, cy);
+  ctx.fillStyle = color;
+  ctx.fillText(text, cx, cy);
   ctx.restore();
 }
 
@@ -474,6 +467,12 @@ function v61Opt(w,v,q){
 }
 
 function v61Draw(Lcur,Kcur){
+  /* Clamp what is DRAWN, not just what is dragged: at an extreme w/v the
+     computed optimum falls outside the axes and the marker rendered half
+     off the plot. */
+  const AXIS_MAX_61 = 16;
+  if (Lcur != null) Lcur = Math.max(0.1, Math.min(AXIS_MAX_61, Lcur));
+  if (Kcur != null) Kcur = Math.max(0.1, Math.min(AXIS_MAX_61, Kcur));
   const w=parseFloat(document.getElementById('v61-w').value);
   const v=parseFloat(document.getElementById('v61-v').value);
   const q=parseFloat(document.getElementById('v61-q').value);
@@ -532,8 +531,8 @@ function v61Draw(Lcur,Kcur){
   const iqL=AXIS_MAX*0.7, iqK=q*q/iqL;
   const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
   const lbls61=[
-    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width+8,h:12,text:'Isoquant Q = '+q,color:'#1f6fb2',fontSize:9,bold:false},
-    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
+    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width*1.45+8,h:12,text:'Isoquant Q = '+q,color:'#1f6fb2',fontSize:9,bold:false},
+    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width*1.45+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
   ];
 
   // Resolve and draw static curve labels (isoquant + isocost)
@@ -550,8 +549,8 @@ function v61Draw(Lcur,Kcur){
     ctx.setLineDash([]);
     ctx.font='9px DM Sans,sans-serif';
     const optLbls=[
-      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
-      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
     ];
     resolveLabels(optLbls,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
     optLbls.forEach(l=>drawForceLabel(ctx,l));
@@ -577,11 +576,11 @@ function v61Draw(Lcur,Kcur){
   ctx.font='9px DM Sans,sans-serif';
   const dotCol=atOpt?'#2f5c3a':EC.red;
   const dragLbls=[
-    {ax:bx,ay:by,x:bx+12,y:by-10,w:ctx.measureText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')').width+8,h:12,text:'(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')',color:dotCol,fontSize:9,bold:false},
+    {ax:bx,ay:by,x:bx+12,y:by-10,w:ctx.measureText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')').width*1.45+8,h:12,text:'(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')',color:dotCol,fontSize:9,bold:false},
   ];
-  if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false});
-  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width+8,h:12,text:'Not on isoquant yet',color:'#8b95a5',fontSize:9,bold:false});
-  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#8b95a5',fontSize:9,bold:false});
+  if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false});
+  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width*1.45+8,h:12,text:'Not on isoquant yet',color:'#8b95a5',fontSize:9,bold:false});
+  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width*1.45+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#8b95a5',fontSize:9,bold:false});
   resolveLabels(dragLbls,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
   dragLbls.forEach(l=>drawForceLabel(ctx,l));
 
@@ -653,16 +652,28 @@ function v61Init(){
     const K=Math.max(0.1,Math.min(AXIS_MAX,AXIS_MAX-(py-MT)/ph*AXIS_MAX));
     return {L,K};
   }
+  /* Tracked on window, not on the canvas. The SVG labels sit over the canvas
+     with pointer-events:auto, so crossing one used to stop the canvas
+     receiving mousemove AND fire mouseleave, cancelling the drag, while the
+     label's own handler took over. */
+  const host61 = cvs.closest('.cvs-ovl-host');
+  const move61 = e => { if(!drag||v61OptimalShown) return; const {L,K}=getBundle(e); v61Draw(L,K); };
+  const end61  = () => {
+    if(!drag) return;
+    drag=false;
+    if(host61) host61.classList.remove('dragging');
+    window.removeEventListener('mousemove',move61);
+    window.removeEventListener('mouseup',end61);
+  };
   cvs.addEventListener('mousedown',e=>{
     if(v61OptimalShown) return;
-    drag=true; const {L,K}=getBundle(e); v61Draw(L,K);
-  });
-  cvs.addEventListener('mousemove',e=>{
-    if(!drag||v61OptimalShown) return;
+    e.preventDefault();
+    drag=true;
+    if(host61) host61.classList.add('dragging');
+    window.addEventListener('mousemove',move61);
+    window.addEventListener('mouseup',end61);
     const {L,K}=getBundle(e); v61Draw(L,K);
   });
-  cvs.addEventListener('mouseup',()=>drag=false);
-  cvs.addEventListener('mouseleave',()=>drag=false);
   // Touch support
   cvs.addEventListener('touchstart',e=>{
     if(v61OptimalShown) return;
