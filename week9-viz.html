@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u3);--unit-ink:var(--u3-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 9 Visualizations: Non-Linear Pricing, Natural Monopoly &amp; Game Theory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/theme.js"></script>
+  <script src="assets/figkit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    .demo-svg-wrap { padding: 0; }
+    .demo-svg-wrap svg { display: block; width: 100%; }
+    /* Payoff-matrix figure (game theory) */
+    .gm-wrap { display:flex; flex-direction:column; gap:var(--s-4); align-items:flex-start; }
+    .gm-grid { border-collapse:collapse; font-family:var(--font-body); }
+    .gm-grid th, .gm-grid td { border:1px solid var(--rule-strong); text-align:center; }
+    .gm-corner { border:none !important; }
+    .gm-colhd, .gm-rowhd { background:var(--paper-sunk); font-weight:600; font-size:var(--t-small); padding:.4rem .8rem; color:var(--ink); }
+    .gm-cell { width:120px; height:64px; position:relative; background:var(--paper-raised); transition:background .2s; }
+    .gm-cell.nash { background:color-mix(in srgb, var(--d-gain) 15%, white); }
+    .gm-pay { display:inline-flex; gap:.15rem; font-family:var(--font-mono); font-size:1.05rem; }
+    .gm-a, .gm-b { padding:0 1px; }
+    .gm-a.br { text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; color:var(--d-primary); font-weight:700; }
+    .gm-b.br { text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; color:var(--d-second); font-weight:700; }
+    .gm-cell input { width:38px; border:1px solid var(--rule2); border-radius:4px; padding:1px 2px; font-family:var(--font-mono); font-size:.9rem; text-align:center; color:var(--ink); background:#fff; }
+    .gm-presets { display:flex; flex-wrap:wrap; gap:.4rem; }
+    .gm-legend { font-size:var(--t-small); color:var(--ink-soft); line-height:1.6; }
+    .gm-legend b.a { color:var(--d-primary); } .gm-legend b.b { color:var(--d-second); }
+    .gm-verdict { font-size:var(--t-body-sm); color:var(--ink); font-weight:500; }
+    .seg-btns { display:flex; flex-wrap:wrap; gap:.4rem; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published active"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week9.html">Week 9</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+</div>
+
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-91"><span>9.1</span>Two-Part Pricing Benchmark</a></li>
+      <li><a href="#sec-92"><span>9.2</span>Natural Monopoly Regimes</a></li>
+      <li><a href="#sec-93"><span>9.3</span>Game Theory: The Circle Method</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">09</span>
+      <p class="eyebrow">Week 9 &middot; Interactive Visualizations</p>
+      <h1>Non-Linear Pricing, Natural Monopoly &amp; Game Theory</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
+
+  <div class="sec-divider">Section 1 &middot; Pricing with Market Power</div>
+
+  <!-- FIG 9.1 -->
+  <section class="sec page" id="sec-91">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 9.1</span>
+      <h3>Two-Part Pricing Benchmark</h3>
+    </div>
+    <p class="fig-intro">
+      A monopolist can capture the entire consumer-surplus triangle with a two-part tariff: a per-unit charge \(p\)
+      plus a fixed access fee \(F\). Slide the usage charge. At \(p = MC = \$1\) the firm sells the efficient quantity
+      and sets the fixed fee equal to the whole surplus, doubling uniform-monopoly profit and leaving zero deadweight
+      loss. Raise \(p\) above marginal cost and both the surplus pie and the firm&rsquo;s total profit shrink.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs91-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Per-unit charge p: <span class="ctrl-value" id="v91-p-val">$1.00</span></span>
+        <input type="range" id="v91-p" min="1" max="3" step="0.05" value="1" oninput="v91Draw()">
+      </div>
+      <button class="btn" onclick="document.getElementById('v91-p').value=1;v91Draw()">Reset (p = MC)</button>
+    </div>
+    <div class="fig-state" id="v91-readout"></div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; Regulating a Natural Monopoly</div>
+
+  <!-- FIG 9.2 -->
+  <section class="sec page" id="sec-92">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 9.2</span>
+      <h3>Natural Monopoly: Four Regulatory Regimes</h3>
+    </div>
+    <p class="fig-intro">
+      With large fixed cost and low marginal cost, average cost declines across the whole market, so \(MC &lt; AC\)
+      everywhere. Demand is \(P = 60 - Q\); the firm has \(TC = 200 + 5Q\). Switch between regimes to see the trade-off
+      the regulator faces: the unregulated monopolist restricts output for profit, marginal-cost pricing is efficient but
+      loses money, and average-cost pricing breaks even at a small efficiency cost.
+    </p>
+    <div class="seg-btns" style="margin-bottom:var(--s-4)">
+      <button class="quiz-btn revealed" id="v92-b-unreg" onclick="v92Set('unreg')">Unregulated (MR = MC)</button>
+      <button class="quiz-btn" id="v92-b-mc" onclick="v92Set('mc')">MC pricing (P = MC)</button>
+      <button class="quiz-btn" id="v92-b-ac" onclick="v92Set('ac')">AC pricing (P = AC)</button>
+    </div>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs92-wrap"></div></div>
+    <div class="fig-state" id="v92-readout"></div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; Strategic Interaction</div>
+
+  <!-- FIG 9.3 -->
+  <section class="sec page" id="sec-93">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 9.3</span>
+      <h3>Game Theory: The Circle (Best-Response) Method</h3>
+    </div>
+    <p class="fig-intro">
+      Every cell shows the payoffs (Player&nbsp;A, Player&nbsp;B). For each column, A&rsquo;s best response is underlined;
+      for each row, B&rsquo;s best response is underlined. Any cell with <em>both</em> payoffs underlined is a Nash
+      equilibrium, shaded green. Edit any payoff, or load a classic game, and watch the equilibrium update. The
+      prisoner&rsquo;s dilemma has one bad equilibrium; the coordination game has two.
+    </p>
+    <div class="fig-plot">
+      <div class="gm-wrap">
+        <div class="gm-presets">
+          <button class="quiz-btn revealed" onclick="gmPreset('pd',this)">Prisoner&rsquo;s Dilemma</button>
+          <button class="quiz-btn" onclick="gmPreset('opec',this)">OPEC (Restrict/Overproduce)</button>
+          <button class="quiz-btn" onclick="gmPreset('coord',this)">Coordination (Standards)</button>
+          <button class="quiz-btn" onclick="gmPreset('adv',this)">Advertising Arms Race</button>
+        </div>
+        <table class="gm-grid">
+          <tr>
+            <td class="gm-corner"></td><td class="gm-corner"></td>
+            <th class="gm-colhd" colspan="2" id="gm-bname">Player B</th>
+          </tr>
+          <tr>
+            <td class="gm-corner"></td><td class="gm-corner"></td>
+            <th class="gm-colhd" id="gm-c0">Left</th><th class="gm-colhd" id="gm-c1">Right</th>
+          </tr>
+          <tr>
+            <th class="gm-rowhd" rowspan="2" id="gm-aname">Player A</th>
+            <th class="gm-rowhd" id="gm-r0">Top</th>
+            <td class="gm-cell" id="gm-00"></td><td class="gm-cell" id="gm-01"></td>
+          </tr>
+          <tr>
+            <th class="gm-rowhd" id="gm-r1">Bottom</th>
+            <td class="gm-cell" id="gm-10"></td><td class="gm-cell" id="gm-11"></td>
+          </tr>
+        </table>
+        <p class="gm-legend"><b class="a">Blue underline</b> = A&rsquo;s best response in that column. <b class="b">Orange underline</b> = B&rsquo;s best response in that row. Green cell = Nash equilibrium.</p>
+        <p class="gm-verdict" id="gm-verdict"></p>
+      </div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<script src="assets/vizkit.js"></script>
+<script>
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+// ── FIG 9.1: two-part pricing (P = 3 - Q/10, MC = 1) ────────────────────────
+function v91Draw() {
+  var p = parseFloat(document.getElementById('v91-p').value);
+  var MC = 1, a = 3, b = 0.1;            // P = a - b·Q  → Q = (a-P)/b
+  var Q = function (P) { return (a - P) / b; };
+  var Qp = Q(p), Qeff = Q(MC);
+  document.getElementById('v91-p-val').textContent = '$' + p.toFixed(2);
+
+  var scX = d3.scaleLinear().domain([0, 32]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 3.2]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs91-wrap');
+  d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
+
+  // Fixed fee F = CS at price p (blue triangle above p, under demand, 0..Qp)
+  d3Poly(svg, scX, scY, [[0, p], [0, a], [Qp, p]], FILL_CS, STROKE_CS);
+  // Usage profit rectangle (p - MC) × Qp (gold)
+  if (p > MC) d3Poly(svg, scX, scY, [[0, MC], [0, p], [Qp, p], [Qp, MC]], FILL_PS, STROKE_PS);
+  // DWL triangle from Qp to Qeff (red)
+  if (p > MC) d3Poly(svg, scX, scY, [[Qp, p], [Qp, MC], [Qeff, MC]], FILL_DWL, STROKE_DWL);
+
+  d3Seg(svg, scX, scY, 0, a, 32, a - b * 32, EC.primary, 3);            // demand
+  d3Seg(svg, scX, scY, 0, MC, 32, MC, EC.slate, 2, '6,4');              // MC = AC
+  d3Seg(svg, scX, scY, Qp, 0, Qp, p, EC.indicator, 1.5, '3,3');        // qty guide
+
+  d3Halo(svg, scX(3), scY(2.55), 'Fixed fee F = CS', { color: STROKE_CS, anchor: 'start' });
+  if (p > MC) d3Halo(svg, scX(Qp / 2), scY((p + MC) / 2), 'usage π', { color: STROKE_PS, size: 10 });
+  if (p > MC) d3Halo(svg, scX((Qp + Qeff) / 2 + 1), scY(MC + 0.12), 'DWL', { color: STROKE_DWL, size: 10 });
+  d3Halo(svg, scX(30), scY(MC + 0.12), 'MC = AC = $1', { color: EC.slate, anchor: 'end', size: 10 });
+
+  var CS = 0.5 * (a - p) * Qp;                 // = F
+  var usage = (p - MC) * Qp;
+  var total = CS + usage;
+  var dwl = 0.5 * (p - MC) * (Qeff - Qp);
+  document.getElementById('v91-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Fixed fee F</div><div class="readout-val">$' + CS.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Usage profit</div><div class="readout-val">$' + usage.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Total profit</div><div class="readout-val">$' + total.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Deadweight loss</div><div class="readout-val">$' + dwl.toFixed(1) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (Math.abs(p - MC) < 1e-6 ? EC.gain : EC.second) + '">' +
+    (Math.abs(p - MC) < 1e-6
+      ? 'At p = MC: total profit $20 is exactly twice uniform-monopoly profit ($10), and DWL = 0.'
+      : 'Above MC the pie shrinks: total profit has fallen below the $20 two-part optimum and a DWL triangle appears.') +
+    '</p>';
+}
+
+// ── FIG 9.2: natural monopoly (P = 60 - Q, TC = 200 + 5Q) ───────────────────
+var V92 = 'unreg';
+function v92Set(r) {
+  V92 = r;
+  ['unreg', 'mc', 'ac'].forEach(function (k) {
+    document.getElementById('v92-b-' + k).classList.toggle('revealed', k === r);
+  });
+  v92Draw();
+}
+function v92Draw() {
+  var MC = 5, FC = 200;
+  var scX = d3.scaleLinear().domain([0, 60]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 62]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs92-wrap');
+  d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
+
+  // AC = 200/Q + 5 (declining curve)
+  var acPts = [];
+  for (var q = 4; q <= 60; q += 0.5) acPts.push('' + (acPts.length ? 'L' : 'M') + scX(q) + ' ' + scY(FC / q + MC));
+  svg.append('path').attr('d', acPts.join(' ')).attr('fill', 'none').attr('stroke', EC.transfer).attr('stroke-width', 2.5);
+  d3Seg(svg, scX, scY, 0, 60, 60, 0, EC.primary, 3);          // demand P = 60 - Q
+  d3Seg(svg, scX, scY, 0, 60, 30, 0, EC.second, 2, '5,4');    // MR = 60 - 2Q
+  d3Seg(svg, scX, scY, 0, MC, 60, MC, EC.slate, 2);           // MC = 5
+
+  d3Halo(svg, scX(52), scY(60 - 52 + 2), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(24), scY(60 - 2 * 24 + 2), 'MR', { color: EC.second, size: 10 });
+  d3Halo(svg, scX(54), scY(FC / 54 + MC + 2.5), 'AC', { color: EC.transfer, size: 10 });
+  d3Halo(svg, scX(50), scY(MC + 2), 'MC = $5', { color: EC.slate, anchor: 'end', size: 10 });
+
+  var Q, P, verdict, col;
+  if (V92 === 'unreg') { Q = 27.5; P = 32.5; }
+  else if (V92 === 'mc') { Q = 55; P = 5; }
+  else { Q = (55 + Math.sqrt(55 * 55 - 4 * 200)) / 2; P = 60 - Q; }   // P = AC, larger root
+  var AC = FC / Q + MC, profit = (P - AC) * Q;
+
+  // profit / loss rectangle between P and AC over 0..Q
+  var top = Math.max(P, AC), bot = Math.min(P, AC);
+  d3Poly(svg, scX, scY, [[0, bot], [0, top], [Q, top], [Q, bot]],
+    profit >= 0 ? FILL_GAIN : FILL_DWL, profit >= 0 ? STROKE_GAIN : STROKE_DWL);
+  d3Seg(svg, scX, scY, Q, 0, Q, P, EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(Q), scY(P), EC.indicator);
+  d3Halo(svg, scX(Q), scY(P) - 12, 'P = $' + P.toFixed(1), { color: EC.indicator, size: 10 });
+
+  if (V92 === 'unreg') { verdict = 'Unregulated: output is restricted to Q = 27.5, price is highest ($32.5), and the firm earns a large profit (green). Efficient but for whom? Consumers lose.'; col = EC.transfer; }
+  else if (V92 === 'mc') { verdict = 'MC pricing: efficient output Q = 55 at P = $5, but price is below average cost, so the firm makes a $200 loss (red) and needs a subsidy to survive.'; col = EC.loss; }
+  else { verdict = 'AC pricing: the firm breaks even (P = AC, zero profit) at Q ≈ ' + Q.toFixed(1) + '. A small deadweight loss remains versus MC pricing, but no subsidy is required. This is the usual real-world choice.'; col = EC.gain; }
+  document.getElementById('v92-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Quantity</div><div class="readout-val">' + Q.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Avg cost</div><div class="readout-val">$' + AC.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Profit</div><div class="readout-val">$' + profit.toFixed(0) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
+}
+
+// ── FIG 9.3: prisoner's dilemma / circle method ─────────────────────────────
+var GM = {
+  labels: { a: 'Player A', b: 'Player B', r: ['Top', 'Bottom'], c: ['Left', 'Right'] },
+  pay: [[[-3, -3], [-1, -10]], [[-10, -1], [-2, -2]]]   // [row][col] = [A,B]
+};
+var GM_PRESETS = {
+  pd:    { labels: { a: 'Prisoner A', b: 'Prisoner B', r: ['Confess', 'Silent'], c: ['Confess', 'Silent'] }, pay: [[[-3, -3], [-1, -10]], [[-10, -1], [-2, -2]]] },
+  opec:  { labels: { a: 'Country A', b: 'Country B', r: ['Restrict', 'Overproduce'], c: ['Restrict', 'Overproduce'] }, pay: [[[900, 900], [300, 1200]], [[1200, 300], [600, 600]]] },
+  coord: { labels: { a: 'Apple', b: 'Samsung', r: ['Standard A', 'Standard B'], c: ['Standard A', 'Standard B'] }, pay: [[[8, 8], [2, 3]], [[3, 2], [6, 6]]] },
+  adv:   { labels: { a: 'Coca-Cola', b: 'Pepsi', r: ['Advertise', "Don't"], c: ['Advertise', "Don't"] }, pay: [[[3, 3], [8, 1]], [[1, 8], [5, 5]]] }
+};
+function gmPreset(k, btn) {
+  GM = JSON.parse(JSON.stringify(GM_PRESETS[k]));
+  document.querySelectorAll('.gm-presets .quiz-btn').forEach(function (b) { b.classList.remove('revealed'); });
+  if (btn) btn.classList.add('revealed');
+  gmRender();
+}
+function gmRead() {
+  for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) {
+    var ia = document.getElementById('gm-in-' + i + j + '-a'), ib = document.getElementById('gm-in-' + i + j + '-b');
+    if (ia && ib) { GM.pay[i][j][0] = parseFloat(ia.value) || 0; GM.pay[i][j][1] = parseFloat(ib.value) || 0; }
+  }
+  gmAnalyse();
+}
+function gmRender() {
+  document.getElementById('gm-aname').textContent = GM.labels.a;
+  document.getElementById('gm-bname').textContent = GM.labels.b;
+  document.getElementById('gm-r0').textContent = GM.labels.r[0];
+  document.getElementById('gm-r1').textContent = GM.labels.r[1];
+  document.getElementById('gm-c0').textContent = GM.labels.c[0];
+  document.getElementById('gm-c1').textContent = GM.labels.c[1];
+  for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) {
+    document.getElementById('gm-' + i + j).innerHTML =
+      '<span class="gm-pay"><span class="gm-a" id="gm-a-' + i + j + '">' +
+      '<input id="gm-in-' + i + j + '-a" type="number" value="' + GM.pay[i][j][0] + '" oninput="gmRead()"></span>' +
+      '<span style="color:var(--ink-faint)">,</span><span class="gm-b" id="gm-b-' + i + j + '">' +
+      '<input id="gm-in-' + i + j + '-b" type="number" value="' + GM.pay[i][j][1] + '" oninput="gmRead()"></span></span>';
+  }
+  gmAnalyse();
+}
+function gmAnalyse() {
+  // A's best response per column j; B's best response per row i.
+  var aBR = [ GM.pay[0][0][0] >= GM.pay[1][0][0] ? 0 : 1, GM.pay[0][1][0] >= GM.pay[1][1][0] ? 0 : 1 ];
+  var aTie = [ GM.pay[0][0][0] === GM.pay[1][0][0], GM.pay[0][1][0] === GM.pay[1][1][0] ];
+  var bBR = [ GM.pay[0][0][1] >= GM.pay[0][1][1] ? 0 : 1, GM.pay[1][0][1] >= GM.pay[1][1][1] ? 0 : 1 ];
+  var bTie = [ GM.pay[0][0][1] === GM.pay[0][1][1], GM.pay[1][0][1] === GM.pay[1][1][1] ];
+  var nash = [];
+  for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) {
+    var aStar = document.getElementById('gm-a-' + i + j), bStar = document.getElementById('gm-b-' + i + j);
+    var cell = document.getElementById('gm-' + i + j);
+    var aIsBR = (aBR[j] === i) || aTie[j];
+    var bIsBR = (bBR[i] === j) || bTie[i];
+    aStar.classList.toggle('br', aIsBR);
+    bStar.classList.toggle('br', bIsBR);
+    var isNash = aIsBR && bIsBR;
+    cell.classList.toggle('nash', isNash);
+    if (isNash) nash.push('(' + GM.labels.r[i] + ', ' + GM.labels.c[j] + ')');
+  }
+  var v = document.getElementById('gm-verdict');
+  if (nash.length === 0) v.textContent = 'No pure-strategy Nash equilibrium in this game.';
+  else if (nash.length === 1) v.innerHTML = 'One Nash equilibrium: <b>' + nash[0] + '</b>. A dominant-strategy prisoner’s-dilemma type.';
+  else v.innerHTML = nash.length + ' Nash equilibria: <b>' + nash.join(' and ') + '</b>. A coordination game &mdash; the problem is choosing which one.';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  v91Draw();
+  v92Draw();
+  GM = JSON.parse(JSON.stringify(GM_PRESETS.pd));   // match the active preset
+  gmRender();
+});
+</script>
+  <!-- Ask the Course AI, floating assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

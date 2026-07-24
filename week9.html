@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u1);--unit-ink:var(--u1-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 9: Non-Linear Pricing, Natural Monopoly &amp; Game Theory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+  <link rel="stylesheet" href="shared.css" />
+  <script src="assets/theme.js"></script>
+  <style>
+    .layout-solo { max-width: calc(var(--measure-wide) + var(--s-5) * 2); }
+    .eyebrow { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase;
+               color: var(--unit-ink); margin-bottom: var(--s-3); }
+    html[data-ds="v2"] .byline { font-size: var(--t-body); color: var(--ink-faint); margin-top: var(--s-3); }
+    .page-hd { margin-bottom: var(--s-7); position: relative; max-width: var(--measure-wide); }
+    .page-hd .numeral { position: absolute; left: -4.75rem; top: -0.45rem; }
+    @media (max-width: 1200px) { .page-hd .numeral { display: none; } }
+    .site-foot { margin-top: var(--s-9); padding-top: var(--s-5); border-top: 1px solid var(--rule2);
+                 display: flex; align-items: center; justify-content: space-between;
+                 flex-wrap: wrap; gap: var(--s-3); font-size: var(--t-small); color: var(--ink-faint); }
+    .site-foot a { color: var(--ink-soft) !important; text-decoration: none; }
+    .site-foot a:hover { color: var(--unit-ink) !important; }
+    .footer-logo { height: 22px; opacity: 0.5; }
+    @media (max-width: 560px) {
+      .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
+      .topbar > a:not(.wordmark), .topbar > .crumb-sep:first-of-type { display: none; }
+      .topbar .btn { padding: 0.4rem 0.6rem; white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published active"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="sidebar-title">On this page</span>
+    <button class="sidebar-close" onclick="closeSidebar()">&#x2715;</button>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="#objectives" onclick="closeSidebar()">Learning Objectives</a></li>
+    <li><a href="#topics"     onclick="closeSidebar()">Chapter Sections</a></li>
+    <li><a href="#toolkit"    onclick="closeSidebar()">Pricing Toolkit</a></li>
+    <li><a href="#regimes"    onclick="closeSidebar()">Regulatory Regimes</a></li>
+    <li><a href="#game"       onclick="closeSidebar()">Game Theory Kit</a></li>
+    <li><a href="#equations"  onclick="closeSidebar()">Equations</a></li>
+    <li><a href="#mistakes"   onclick="closeSidebar()">Exam Prep</a></li>
+    <li><a href="#questions"  onclick="closeSidebar()">Questions</a></li>
+    <li><a href="#videos"     onclick="closeSidebar()">Videos</a></li>
+  </ul>
+</aside>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week9.html">Week 9</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Week 9</span>
+  <span class="topbar-end">
+    <a class="btn" href="week9-viz.html">Visualizations</a>
+    <button class="btn" onclick="openLN()">All weeks</button>
+  </span>
+</div>
+
+<main class="layout-solo" id="main-content">
+
+  <header class="page-hd">
+    <span class="numeral">09</span>
+    <p class="eyebrow">Week 9 &middot; Intermediate Microeconomics</p>
+    <h1>Non-Linear Pricing, Natural Monopoly &amp; Game Theory</h1>
+    <p class="byline">Prof. Naveen Sunder</p>
+  </header>
+
+  <div class="download-row">
+    <a class="dl-btn" href="week9-viz.html">Interactive Visualizations</a>
+    <a class="dl-btn" href="https://brightspace.bentley.edu" target="_blank">Homework</a>
+  </div>
+  <div class="note" style="margin:var(--s-5) 0 var(--s-7)">
+    <strong>Note:&nbsp;</strong>This page is a structured summary of the Week 9 chapter. It complements, and does not replace, the full textbook reading. Week 9 extends the monopoly pricing of Week 8 in three directions: non-linear (two-part) pricing, the natural-monopoly regulatory dilemma, and a first course in game theory.
+  </div>
+
+  <section class="section" id="objectives">
+    <p class="section-label">Learning Objectives</p>
+    <h2>What You Will Be Able to Do</h2>
+    <ul class="lo-list">
+      <li class="lo-item"><span class="lo-badge">LO1</span><span>Distinguish linear from non-linear pricing; identify the fixed fee and usage charge in real pricing schedules.</span></li>
+      <li class="lo-item"><span class="lo-badge">LO2</span><span>Apply the optimal two-part pricing rule: set \(p^{*}=MC\) and \(F^{*}=CS(p=MC)\); prove that profit doubles relative to uniform monopoly under linear demand.</span></li>
+      <li class="lo-item"><span class="lo-badge">LO3</span><span>Explain why a natural monopoly faces a regulatory dilemma; compare unregulated, MC-pricing, AC-pricing, and two-part outcomes.</span></li>
+      <li class="lo-item"><span class="lo-badge">LO4</span><span>Explain how cross-subsidisation lets a regulated natural monopoly break even without a government subsidy.</span></li>
+      <li class="lo-item"><span class="lo-badge">LO5</span><span>Identify players, strategies, and payoffs; solve for Nash equilibria and dominant strategies using the best-response (circle) method.</span></li>
+      <li class="lo-item"><span class="lo-badge">LO6</span><span>Explain why the prisoner&rsquo;s dilemma produces a collectively suboptimal Nash equilibrium; apply it to pricing, advertising, and arms races.</span></li>
+    </ul>
+  </section>
+
+  <section class="section" id="topics">
+    <p class="section-label">Chapter Sections</p>
+    <h2>Topics</h2>
+    <div class="accordion-list">
+
+      <div class="accordion">
+        <button class="accordion-header" onclick="toggleAcc(this)">
+          <div class="acc-left"><span class="acc-title">&sect;9.2: Non-Linear Pricing</span><span class="acc-tag">LO1</span></div>
+          <span class="acc-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-body">
+          <p><strong>Linear pricing</strong> sets \(T(q)=p\cdot q\): the total bill is exactly proportional to quantity, so the per-unit price is constant. <strong>Non-linear pricing</strong> makes \(T(q)/q\) vary with quantity, so the schedule can track the shape of the demand curve more closely than any single flat price.</p>
+          <p>A coffee shop that charges $1.60 for an 8&nbsp;oz cup ($0.20/oz) and $2.00 for 16&nbsp;oz ($0.125/oz) is pricing non-linearly: the larger cup is not twice the price. Charging high prices for early units (where willingness to pay is highest) and lower prices for later units extracts more total surplus than a flat price.</p>
+          <div class="app-box"><strong>Course Thread</strong>Week 8 showed a uniform monopolist leaves a triangle of consumer surplus on the table and destroys a triangle of deadweight loss. Non-linear pricing is the firm&rsquo;s way to reach into that surplus without observing each buyer&rsquo;s exact willingness to pay.</div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <button class="accordion-header" onclick="toggleAcc(this)">
+          <div class="acc-left"><span class="acc-title">&sect;9.3: Two-Part Pricing</span><span class="acc-tag">LO2</span></div>
+          <span class="acc-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-body">
+          <p>A two-part tariff splits the price into a <strong>fixed fee</strong> \(F\) to gain access and a <strong>per-unit charge</strong> \(p\) for each unit consumed: \(T(q)=F+p\cdot q\). The optimal rule is two steps: set \(p^{*}=MC\) (this maximises the quantity sold and therefore the total surplus available), then set \(F^{*}=CS(p=MC)\) (this transfers that entire surplus to the firm as a lump sum).</p>
+          <p>For linear demand this <strong>exactly doubles</strong> uniform monopoly profit: the monopoly profit rectangle is exactly half the consumer-surplus triangle, and two-part pricing captures both halves. Amazon Prime is the textbook example: a fixed annual fee (\(F\approx\$139\)) plus a $0 per-order shipping charge (\(p=MC\)) that encourages maximum usage.</p>
+          <div class="app-box"><strong>Common Trap</strong>&ldquo;Setting \(p=0\) maximises two-part profit.&rdquo; No: \(p&lt;MC\) forces the firm to lose money on every unit sold, and that loss more than offsets the larger fixed fee. The optimum is \(p^{*}=MC\), not zero.</div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <button class="accordion-header" onclick="toggleAcc(this)">
+          <div class="acc-left"><span class="acc-title">&sect;9.3.3: Heterogeneous Consumers</span><span class="acc-tag">LO2</span></div>
+          <span class="acc-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-body">
+          <p>When consumers differ and types are unobservable, the firm chooses between a <strong>type-specific fee</strong> (if types are observable), a <strong>uniform fee</strong> that retains both types, or <strong>excluding</strong> low-demand consumers. With the gym example (Fitness Nuts \(CS=\$162\), Casual Exercisers \(CS=\$50\)), observing types is most profitable ($212); a uniform fee that keeps both types earns $100 but leaves the high type an <em>information rent</em> of $112.</p>
+          <div class="app-box"><strong>Business Insight</strong>This is why firms invest so heavily in loyalty programmes, usage data, and tiered memberships (Gold/Silver/Basic): any information that helps identify high-demand users lets the firm shift toward the more profitable type-specific pricing.</div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <button class="accordion-header" onclick="toggleAcc(this)">
+          <div class="acc-left"><span class="acc-title">&sect;9.4: Natural Monopolies</span><span class="acc-tag">LO3</span></div>
+          <span class="acc-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-body">
+          <p>A <strong>natural monopoly</strong> is a market where average cost declines over the entire relevant range of output, so a single firm supplies at lower total cost than two or more. The cause is the cost structure: large fixed cost \(FC\) plus low marginal cost \(c\) gives \(AC=FC/Q+c&gt;c=MC\) for all \(Q&gt;0\). Because \(MC&lt;AC\) everywhere, any price equal to marginal cost lies below average cost, so the firm cannot survive on MC pricing without a subsidy.</p>
+          <p>This is the regulator&rsquo;s core dilemma. Electricity grids, water pipes, broadband backbones, railway track, and gas pipelines all share enormous fixed infrastructure and near-zero marginal cost per extra user.</p>
+          <div class="app-box"><strong>Not a Market Failure</strong>A natural monopoly is not a failure in the usual sense: it is a consequence of the technology. It is genuinely cheaper for society to have one firm operate the infrastructure than two firms each building their own. The problem is what to do with that monopolist once it exists.</div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <button class="accordion-header" onclick="toggleAcc(this)">
+          <div class="acc-left"><span class="acc-title">&sect;9.4.3: Cross-Subsidisation</span><span class="acc-tag">LO4</span></div>
+          <span class="acc-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-body">
+          <p>When the regulator permits a natural monopoly to charge different prices to different groups, profits from a high-price group can cover losses on a low-price group with no government subsidy. A railway with \(MC=\$20\) and \(FC=\$4{,}000\) can charge business travellers (inelastic) \(P_B=\$110,\,Q_B=45\), earning variable profit \((110-20)(45)=\$4{,}050\); leisure travellers pay near \(MC=\$20\) at zero variable profit. The business profit covers the fixed cost.</p>
+          <div class="app-box"><strong>Third-Degree, In a Regulatory Suit</strong>This is third-degree price discrimination applied in a regulatory context: the regulator <em>requires</em> above-cost pricing for one group precisely so the firm can afford near-MC pricing for another. The business traveller effectively pays for the network&rsquo;s fixed infrastructure.</div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <button class="accordion-header" onclick="toggleAcc(this)">
+          <div class="acc-left"><span class="acc-title">&sect;9.5: Game Theory &amp; the Prisoner&rsquo;s Dilemma</span><span class="acc-tag">LO5&nbsp;&middot;&nbsp;LO6</span></div>
+          <span class="acc-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-body">
+          <p>In competition and monopoly each agent optimises taking prices as given. That breaks down in <strong>oligopoly</strong>, where each firm&rsquo;s profit depends directly on rivals&rsquo; choices. A game has three elements: <strong>players</strong>, <strong>strategies</strong>, and <strong>payoffs</strong>. A <strong>Nash equilibrium</strong> is a strategy profile where each player&rsquo;s choice is a best response to the other&rsquo;s, so no one can gain by deviating unilaterally. A <strong>dominant strategy</strong> is a best response to <em>every</em> strategy of the opponent.</p>
+          <p>In the <strong>prisoner&rsquo;s dilemma</strong>, Confess is dominant for both, so the unique Nash equilibrium is (Confess, Confess) = \((-3,-3)\) even though (Silent, Silent) = \((-2,-2)\) is better for both. Individual rationality produces a collectively irrational outcome. The same structure drives price wars, advertising wars, arms races, and the tragedy of the commons.</p>
+          <div class="app-box"><strong>The Circle Method</strong>For each column, underline the row player&rsquo;s best payoff; for each row, underline the column player&rsquo;s best payoff. Any cell with <em>both</em> payoffs underlined is a Nash equilibrium. This best-response test is the workhorse for the whole of Weeks 9&ndash;10.</div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <button class="accordion-header" onclick="toggleAcc(this)">
+          <div class="acc-left"><span class="acc-title">&sect;9.5.6: Coordination Games</span><span class="acc-tag">LO5</span></div>
+          <span class="acc-chevron">&#9660;</span>
+        </button>
+        <div class="accordion-body">
+          <p>Not every strategic game is a prisoner&rsquo;s dilemma. A <strong>coordination game</strong> has <em>multiple</em> Nash equilibria, and the challenge is that players must coordinate on the <em>same</em> one without being able to communicate. In the technology-standard game, (Standard A, Standard A) = \((8,8)\) and (Standard B, Standard B) = \((6,6)\) are both Nash equilibria; A Pareto-dominates B, but if each firm expects the other to pick B, B is a best response too.</p>
+          <div class="app-box"><strong>Coordination Failure</strong>When the Pareto-superior equilibrium is not reached, we call it coordination failure: VHS vs Betamax, QWERTY vs Dvorak, AC vs DC current. Once a standard achieves critical mass the network effect locks it in, so &ldquo;first-mover advantage&rdquo; can decide which equilibrium the market coordinates on.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section" id="toolkit">
+    <p class="section-label">Quick Reference</p>
+    <h2>The Pricing Toolkit: From Week 8 to Week 9</h2>
+    <table class="rules-table">
+      <thead><tr><th>Strategy</th><th>Information needed</th><th>Profit</th><th>CS &amp; DWL</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rule-name">Uniform monopoly</span></td><td><span class="rule-example">None</span></td><td><span class="rule-formula">\(\pi_M\)</span></td><td><span class="rule-example">CS &gt; 0, DWL &gt; 0</span></td></tr>
+        <tr><td><span class="rule-name">Market separation (3rd degree)</span></td><td><span class="rule-example">Observe group</span></td><td><span class="rule-formula">\(&gt;\pi_M\)</span></td><td><span class="rule-example">CS &gt; 0, DWL reduced</span></td></tr>
+        <tr><td><span class="rule-name">Two-part pricing</span></td><td><span class="rule-example">Aggregate demand</span></td><td><span class="rule-formula">\(2\pi_M\)</span></td><td><span class="rule-example">CS = 0, DWL = 0</span></td></tr>
+        <tr><td><span class="rule-name">Perfect price discrimination</span></td><td><span class="rule-example">Individual WTP</span></td><td><span class="rule-formula">\(CS_{PC}+\pi_M\)</span></td><td><span class="rule-example">CS = 0, DWL = 0</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:var(--t-small);color:var(--ink-soft);margin-top:var(--s-3)">Two-part pricing is the week&rsquo;s centrepiece: it doubles profit using only aggregate demand information, with no need to observe individual types.</p>
+  </section>
+
+  <section class="section" id="regimes">
+    <p class="section-label">Quick Reference</p>
+    <h2>Natural Monopoly: Four Regulatory Regimes</h2>
+    <table class="rules-table">
+      <thead><tr><th>Regime</th><th>Rule</th><th>Output &amp; Price</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rule-name">Unregulated</span></td><td><span class="rule-formula">MR = MC</span></td><td><span class="rule-example">Low \(Q\), high \(P\)</span></td><td><span class="rule-example">Profitable but inefficient</span></td></tr>
+        <tr><td><span class="rule-name">MC pricing</span></td><td><span class="rule-formula">P = MC</span></td><td><span class="rule-example">Efficient \(Q\), \(P&lt;AC\)</span></td><td><span class="rule-example">Efficient but loss-making; needs a subsidy</span></td></tr>
+        <tr><td><span class="rule-name">AC pricing (Ramsey)</span></td><td><span class="rule-formula">P = AC</span></td><td><span class="rule-example">Break-even \(Q_{AC}\)</span></td><td><span class="rule-example">Nearly efficient; self-financing (most common)</span></td></tr>
+        <tr><td><span class="rule-name">Two-part</span></td><td><span class="rule-formula">p = MC, F = CS</span></td><td><span class="rule-example">Efficient \(Q\), MC + fee</span></td><td><span class="rule-example">Efficient &amp; viable, but CS = 0</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:var(--t-small);color:var(--ink-soft);margin-top:var(--s-3)">The regulator&rsquo;s dilemma: MC pricing is most efficient but needs a subsidy; AC pricing is self-financing but slightly inefficient; two-part is both efficient and self-financing but extracts all consumer surplus.</p>
+  </section>
+
+  <section class="section" id="game">
+    <p class="section-label">Quick Reference</p>
+    <h2>Game Theory in Four Ideas</h2>
+    <div class="assumptions-grid">
+      <div class="assump-card">
+        <div class="assump-name">Nash Equilibrium</div>
+        <div class="assump-def">A strategy profile where each player&rsquo;s choice is a best response to the other&rsquo;s. No one gains by deviating alone. It is self-enforcing.</div>
+      </div>
+      <div class="assump-card">
+        <div class="assump-name">Dominant Strategy</div>
+        <div class="assump-def">A best response to <em>every</em> strategy of the opponent. A rational player always plays it. Every dominant-strategy profile is a Nash equilibrium.</div>
+      </div>
+      <div class="assump-card">
+        <div class="assump-name">Prisoner&rsquo;s Dilemma</div>
+        <div class="assump-def">One Nash equilibrium, Pareto-dominated by the cooperative outcome. Individual rationality yields a collectively bad result.</div>
+      </div>
+      <div class="assump-card">
+        <div class="assump-name">Coordination Game</div>
+        <div class="assump-def">Multiple Nash equilibria. The problem is selecting the good one, not escaping a bad one. Communication or a focal point helps.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="equations">
+    <p class="section-label">Equations</p>
+    <h2>Key Equations</h2>
+    <div class="eq-list">
+      <div class="eq-row"><span class="eq-label">Two-part tariff</span><span>\(T(q) = F + p\cdot q\)</span></div>
+      <div class="eq-row"><span class="eq-label">Optimal two-part</span><span>\(p^{*} = MC,\quad F^{*} = CS(p=MC)\)</span></div>
+      <div class="eq-row"><span class="eq-label">Two-part profit (linear demand)</span><span>\(\pi_{2P} = 2\pi_{M}\)</span></div>
+      <div class="eq-row"><span class="eq-label">Natural-monopoly cost</span><span>\(TC = FC + cQ,\quad AC = FC/Q + c &gt; c = MC\)</span></div>
+      <div class="eq-row"><span class="eq-label">Nash equilibrium</span><span>\(\pi_A(s_A^{*}, s_B^{*}) \ge \pi_A(s_A, s_B^{*})\;\text{ for all } s_A\)</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="mistakes">
+    <p class="section-label">Exam Prep</p>
+    <h2>Five Common Mistakes</h2>
+    <div class="warning-box">
+      <h3>Watch out for these</h3>
+      <ul class="warning-list">
+        <li><strong>Setting the two-part usage charge below MC.</strong> The optimum is \(p^{*}=MC\), not \(p=0\). A below-cost usage charge loses money on every unit and shrinks total profit.</li>
+        <li><strong>Forgetting the fixed fee equals CS at \(p=MC\), not CS at the monopoly price.</strong> First set \(p=MC\) so the surplus pie is as large as possible, <em>then</em> measure the consumer surplus you will take as \(F\).</li>
+        <li><strong>Claiming MC pricing is always best for a natural monopoly.</strong> It maximises total surplus but loses money because \(MC&lt;AC\); without a subsidy the firm exits. AC pricing is the usual practical choice.</li>
+        <li><strong>Calling (Silent, Silent) a Nash equilibrium.</strong> It is Pareto-superior but not stable: each player can improve by deviating to Confess, so it is not a Nash equilibrium.</li>
+        <li><strong>Assuming a Nash equilibrium is efficient.</strong> A Nash equilibrium only means no unilateral deviation helps. The prisoner&rsquo;s dilemma shows a Nash outcome can be worse for everyone than an unreachable cooperative one.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="questions">
+    <p class="section-label">Practice</p>
+    <h2>Practice Questions</h2>
+    <div class="pq-filters">
+      <button class="pq-filter active" onclick="filterQ('all',this)">All (12)</button>
+      <button class="pq-filter" onclick="filterQ('1',this)">&#8902; Level 1</button>
+      <button class="pq-filter" onclick="filterQ('2',this)">&#8902;&#8902; Level 2</button>
+      <button class="pq-filter" onclick="filterQ('3',this)">&#8902;&#8902;&#8902; Level 3</button>
+    </div>
+    <div class="pq-list">
+
+      <div class="pq-item" data-level="1">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q1</span>
+          <span class="pq-text">Linear or non-linear? A gym charges $50/month plus $5/class. (a) Is this linear or non-linear pricing? (b) What is \(F\)? (c) What is \(p\)?</span>
+          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p><strong>(a)</strong> Non-linear: the average price per class \(T(q)/q = 50/q + 5\) falls as \(q\) rises. <strong>(b)</strong> \(F=\$50\) (the fixed access fee). <strong>(c)</strong> \(p=\$5\) per class (the usage charge). This is a two-part tariff \(T(q)=50+5q\).</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="1">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q2</span>
+          <span class="pq-text">Per-unit price. 500&nbsp;g of flour costs $2.00; 1&nbsp;kg costs $3.60. (a) Per-gram price for each. (b) Is this linear pricing?</span>
+          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p><strong>(a)</strong> $2.00/500&nbsp;g = $0.0040/g; $3.60/1000&nbsp;g = $0.0036/g. <strong>(b)</strong> No: the per-gram price falls with size, so this is non-linear (a quantity discount).</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="1">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q3</span>
+          <span class="pq-text">Two-part vocabulary. Amazon Prime charges roughly $139/year for free two-day shipping. (a) Identify \(F\) and \(p\). (b) Why does the $0 shipping charge encourage efficient usage?</span>
+          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p><strong>(a)</strong> \(F\approx\$139\) (annual access fee); \(p=\$0\) per eligible order. <strong>(b)</strong> With \(p=MC\approx 0\), members order up to the point where their marginal value equals marginal cost, so no mutually beneficial order is deterred: quantity, and thus the surplus available to skim through \(F\), is maximised.</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="1">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q4</span>
+          <span class="pq-text">Natural monopoly basics. Why does a natural monopoly have \(MC&lt;AC\) at every level of output? What does this imply about MC pricing?</span>
+          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p>With \(TC=FC+cQ\), average cost \(AC=FC/Q+c\) always exceeds marginal cost \(c\) because the fixed cost is spread over units but never disappears. Since \(MC&lt;AC\) everywhere, a price set equal to \(MC\) lies below \(AC\), so the firm loses money on every unit and cannot survive without a subsidy.</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="2">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q5</span>
+          <span class="pq-text">The doubling result. Inverse demand \(P=3-Q/10\), constant \(MC=AC=\$1\). (a) Find uniform monopoly \(Q_M,P_M,\pi_M\). (b) Find the perfectly competitive \(Q\) and \(CS\). (c) Find the optimal two-part \(p^{*},F^{*},\pi_{2P}\) and confirm \(\pi_{2P}=2\pi_M\).</span>
+          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p><strong>(a)</strong> \(MR=3-Q/5=1\Rightarrow Q_M=10,\ P_M=2,\ \pi_M=(2-1)(10)=\$10\).</p>
+            <p><strong>(b)</strong> \(P=MC\Rightarrow Q_{PC}=20\); \(CS_{PC}=\tfrac12(3-1)(20)=\$20\).</p>
+            <p><strong>(c)</strong> \(p^{*}=MC=\$1,\ Q=20,\ F^{*}=CS(p=MC)=\$20,\ \pi_{2P}=\$20=2\pi_M\). &#10003; The monopoly rectangle ($10) is exactly half the CS triangle ($20); two-part captures both.</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="2">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q6</span>
+          <span class="pq-text">A pricing mistake. Using \(P=3-Q/10,\,MC=\$1\): the firm mistakenly sets \(p=\$1.50\). Compute quantity, the largest fixed fee \(F\) it can charge, and total profit. Confirm profit &lt; $20.</span>
+          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p>At \(p=1.5\): \(1.5=3-Q/10\Rightarrow Q=15\). \(CS=\tfrac12(3-1.5)(15)=\$11.25=F\). Usage profit \(=(1.5-1)(15)=\$7.50\). Total \(=11.25+7.50=\$18.75&lt;\$20\). Raising \(p\) above MC shrinks the surplus pie faster than it adds usage margin. &#10003;</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="2">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q7</span>
+          <span class="pq-text">Heterogeneous consumers. A gym faces Type H (\(P_H=20-Q_H\)) and Type L (\(P_L=12-Q_L\)), each half the town, \(MC=\$2\), types unobservable. Compare a uniform fee that keeps both types (Option B) with excluding the low type (Option C).</span>
+          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p>At \(p=MC=2\): \(CS_H=\tfrac12(20-2)(18)=\$162\); \(CS_L=\tfrac12(12-2)(10)=\$50\).</p>
+            <p><strong>Option B (uniform \(F=\$50\), keep both):</strong> per-pair profit \(=2\times50=\$100\); Type H keeps a $112 information rent. <strong>Option C (\(F=\$162\), exclude low):</strong> per-pair profit \(=1\times162=\$81\). Option B is more profitable and also more efficient (both types participate).</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="2">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q8</span>
+          <span class="pq-text">AC pricing. A broadband provider has \(TC=40+2Q\) and faces \(P=20-Q\). Under \(P=AC\) regulation, what price does it charge and what quantity does it serve? (Hint: set \(20-Q=40/Q+2\).)</span>
+          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p>\(20-Q=40/Q+2\Rightarrow 18Q-Q^2=40\Rightarrow Q^2-18Q+40=0\Rightarrow Q=\dfrac{18\pm\sqrt{324-160}}{2}=\dfrac{18\pm\sqrt{164}}{2}\). So \(Q\approx 15.4\) or \(Q\approx 2.6\). The regulator picks the larger break-even quantity \(Q\approx15.4\), giving \(P=20-15.4\approx\$4.6\). (The firm breaks even; a small DWL remains versus MC pricing.)</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="2">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q9</span>
+          <span class="pq-text">Circle method. In the game below (row = A), find every Nash equilibrium and any dominant strategies.<br>&nbsp;&nbsp;A-Top vs (Left, Right): (3, 9), (2, 8).<br>&nbsp;&nbsp;A-Bottom vs (Left, Right): (0, 2), (1, 1).</span>
+          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p>A&rsquo;s best responses: vs Left, Top (3&gt;0); vs Right, Top (2&gt;1). <strong>Top is dominant for A.</strong> B&rsquo;s best responses: vs Top, Left (9&gt;8); vs Bottom, Left (2&gt;1). <strong>Left is dominant for B.</strong> Both underlined at (Top, Left): <strong>NE = (Top, Left) with payoffs (3, 9)</strong>, the unique Nash equilibrium.</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="3">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q10</span>
+          <span class="pq-text">OPEC as a prisoner&rsquo;s dilemma. Payoffs ($M/day): both Restrict (900, 900); one Overproduces while other Restricts (1200, 300); both Overproduce (600, 600). (a) Find the Nash equilibrium by the circle method. (b) Which outcome is Pareto-superior? (c) Why are OPEC agreements fragile?</span>
+          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p><strong>(a)</strong> Overproduce is dominant for each (1200&gt;900 vs Restrict; 600&gt;300 vs Overproduce), so <strong>NE = (Overproduce, Overproduce) = (600, 600)</strong>. <strong>(b)</strong> (Restrict, Restrict) = (900, 900) Pareto-dominates it. <strong>(c)</strong> The cartel outcome is collectively best but individually unstable: each member can earn more by cheating, so agreements need monitoring and credible punishment to survive.</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="3">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q11</span>
+          <span class="pq-text">Natural monopoly, full solve. \(P=60-Q\), \(TC=200+5Q\). (a) Unregulated \(Q_A,P_A\), and profit. (b) Under \(P=MC\), the regulated \(Q_R,P_R\), and profit or loss. (c) Which regime maximises total surplus, and why is it not the one usually chosen?</span>
+          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p><strong>(a)</strong> \(MR=60-2Q=5\Rightarrow Q_A=27.5,\ P_A=\$32.5\); profit \(=(32.5)(27.5)-[200+5(27.5)]=893.75-337.5=\$556.25\).</p>
+            <p><strong>(b)</strong> \(P=MC=5\Rightarrow Q_R=55,\ P_R=\$5\); revenue \(=275\), cost \(=200+275=475\), <strong>loss \(=-\$200\)</strong> (the fixed cost is unrecovered).</p>
+            <p><strong>(c)</strong> MC pricing maximises total surplus (efficient \(Q\)) but loses money, so it needs a taxpayer subsidy. Regulators usually pick AC pricing instead: slightly inefficient, but self-financing.</p>
+          </div></div></div>
+
+      <div class="pq-item" data-level="3">
+        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q12</span>
+          <span class="pq-text">Coordination vs dilemma. (a) Distinguish a prisoner&rsquo;s dilemma from a coordination game by the number of Nash equilibria and whether the NE is Pareto optimal. (b) Name a real market where coordination failure locked in an inferior standard. (c) What would have been required to reach the Pareto-superior outcome?</span>
+          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
+        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
+          <div class="pq-solution">
+            <p><strong>(a)</strong> A prisoner&rsquo;s dilemma has <em>one</em> Nash equilibrium that is Pareto-dominated by an unreachable cooperative outcome. A coordination game has <em>multiple</em> Nash equilibria; each is stable once reached, but there is no guarantee players land on the Pareto-superior one. <strong>(b)</strong> QWERTY vs Dvorak, VHS vs Betamax, or AC vs DC current are all defensible answers. <strong>(c)</strong> Early communication, a shared standard-setting body, or a credible focal point to coordinate expectations on the superior equilibrium before network effects locked in the inferior one.</p>
+          </div></div></div>
+
+    </div>
+  </section>
+
+  <section class="section" id="videos">
+    <p class="section-label">Videos</p>
+    <h2>Recommended Viewing</h2>
+    <div class="video-list">
+
+      <a class="video-item" href="https://www.youtube.com/watch?v=BOvYjTB6qmM" target="_blank" rel="noopener" aria-label="Prisoner's Dilemma and Nash Equilibrium, Khan Academy">
+        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">10 min</span></div>
+        <div class="video-details">
+          <div class="video-title-text">Prisoner&rsquo;s Dilemma and Nash Equilibrium</div>
+          <div class="video-uploader">Khan Academy</div>
+          <div class="video-desc">Builds the payoff matrix and the best-response logic step by step. Ideal before the circle-method questions in &sect;9.5.</div>
+        </div>
+      </a>
+
+      <a class="video-item" href="https://www.youtube.com/watch?v=3Y1WpytiHKE" target="_blank" rel="noopener" aria-label="Game Theory and Oligopoly, ACDC Economics">
+        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">11 min</span></div>
+        <div class="video-details">
+          <div class="video-title-text">Game Theory, Dominant Strategy &amp; Nash Equilibrium</div>
+          <div class="video-uploader">ACDC Economics (Jacob Clifford)</div>
+          <div class="video-desc">A clear walkthrough of finding dominant strategies and Nash equilibria in 2&times;2 games, with oligopoly pricing examples that mirror &sect;9.5.</div>
+        </div>
+      </a>
+
+      <a class="video-item" href="https://www.youtube.com/watch?v=UfSm-Cf1Wje" target="_blank" rel="noopener" aria-label="Natural Monopoly and Regulation, Marginal Revolution University">
+        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">7 min</span></div>
+        <div class="video-details">
+          <div class="video-title-text">Natural Monopoly</div>
+          <div class="video-uploader">Marginal Revolution University</div>
+          <div class="video-desc">Explains why declining average cost creates a natural monopoly and why MC pricing cannot be self-financing. Reinforces &sect;9.4 and the four-regime table.</div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <div class="week-nav">
+    <a class="week-nav-link" href="week8.html">
+      <span class="wnl-label">&larr; Previous</span>
+      <span class="wnl-title">Week 8: Welfare, Monopoly &amp; Price Discrimination</span>
+    </a>
+    <a class="week-nav-link" style="text-align:right" href="week10.html">
+      <span class="wnl-label">Next &rarr;</span>
+      <span class="wnl-title">Week 10: Oligopoly &amp; Strategic Competition</span>
+    </a>
+  </div>
+
+</main>
+
+<script>
+  function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+  function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+  function toggleAcc(btn) {
+    const body = btn.nextElementSibling;
+    const isOpen = body.classList.contains('open');
+    document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.accordion-header').forEach(b => b.classList.remove('open'));
+    if (!isOpen) { body.classList.add('open'); btn.classList.add('open'); }
+  }
+  function togglePQ(btn) { const b = btn.nextElementSibling; b.classList.toggle('open'); btn.classList.toggle('open'); }
+  function toggleSol(btn) { const s = btn.nextElementSibling; s.classList.toggle('open'); btn.textContent = s.classList.contains('open') ? 'Hide Solution' : 'Show Solution'; }
+  function filterQ(level, btn) {
+    document.querySelectorAll('.pq-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.pq-item').forEach(item => { item.dataset.hidden = (level !== 'all' && item.dataset.level !== level); });
+  }
+</script>
+  <!-- Ask the Course AI, floating assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+  <script src="assets/polish.js"></script>
+</body>
+</html>
