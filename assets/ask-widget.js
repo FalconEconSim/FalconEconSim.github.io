@@ -18,12 +18,15 @@
   var FULL_PAGE = "ask.html";
 
   // supply & demand cross in a chat bubble: white, for the round button
+  // A little supply-and-demand cross, matching the week covers on the landing
+  // page rather than the old chat bubble. White line art on the blue button.
   var FAB_ICON =
-    '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.6" ' +
+    '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" ' +
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path d="M7 9.5a3 3 0 0 1 3-3h20a3 3 0 0 1 3 3v12.5a3 3 0 0 1-3 3H17l-6 5.5v-5.5h-1a3 3 0 0 1-3-3z"/>' +
-    '<path d="M13.5 13l13 9"/><path d="M13.5 22l13-9"/>' +
-    '<circle cx="20" cy="17.6" r="1.7" fill="currentColor" stroke="none"/></svg>';
+    '<path d="M11 7 V29 H33" stroke-opacity="0.85"/>' +
+    '<path d="M14.5 12 L30 26.5"/>' +
+    '<path d="M14.5 26.5 L30 12"/>' +
+    '<circle cx="22.25" cy="19.25" r="2.4" fill="currentColor" stroke="none"/></svg>';
 
   // chevron-down, shown while the popover is open
   var CLOSE_ICON =
@@ -31,12 +34,15 @@
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
   // colored logo for the popover header
+  // The same diagram in the site's data palette (blue demand, orange-red
+  // supply) on a tinted card, matching the week covers.
   var MINI_LOGO =
     '<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path d="M7 11a4 4 0 0 1 4-4h26a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H20l-8 7v-7h-1a4 4 0 0 1-4-4z" fill="#eff4ff" stroke="#1a56db" stroke-width="2.2"/>' +
-    '<path d="M16 25V13" stroke="#9aa3b2" stroke-width="1.6"/><path d="M16 25h15" stroke="#9aa3b2" stroke-width="1.6"/>' +
-    '<path d="M17 14l13 10" stroke="#e11d48" stroke-width="2.6"/><path d="M17 24l13 -10" stroke="#16a34a" stroke-width="2.6"/>' +
-    '<circle cx="23.5" cy="19" r="2.1" fill="#1a56db"/></svg>';
+    '<rect x="3" y="3" width="42" height="42" rx="9" fill="#eaf2f8"/>' +
+    '<path d="M14 11 V34 H37" stroke="#1c2433" stroke-opacity="0.35" stroke-width="1.8"/>' +
+    '<path d="M17 15 L34 31" stroke="#c85a3c" stroke-width="2.6"/>' +
+    '<path d="M17 31 L34 15" stroke="#1f6fb2" stroke-width="2.6"/>' +
+    '<circle cx="25.5" cy="23" r="2.4" fill="#2f5c3a"/></svg>';
 
   var EXPAND_ICON =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
