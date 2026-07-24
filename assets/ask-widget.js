@@ -1,5 +1,5 @@
 /* ============================================================================
- * EC224: floating "Ask the Course AI" button (24/7).
+ * EC224: floating "Ask the Course AI" button, an AI study assistant.
  *
  * Drops a quirky, econ-themed floating button (a supply & demand cross inside a
  * chat bubble) into the bottom-right of any page it's loaded on. Click it for a
@@ -18,15 +18,25 @@
   var FULL_PAGE = "ask.html";
 
   // supply & demand cross in a chat bubble: white, for the round button
-  // A little supply-and-demand cross, matching the week covers on the landing
-  // page rather than the old chat bubble. White line art on the blue button.
+  // The button is a small week cover (see the landing page): a tinted card with
+  // a supply-and-demand cross in the data palette, not white line art on a
+  // saturated blue circle. Colours are hardcoded because the diagram is
+  // full-colour like the covers, not tinted by the button's text colour.
   var FAB_ICON =
-    '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" ' +
-    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path d="M11 7 V29 H33" stroke-opacity="0.85"/>' +
-    '<path d="M14.5 12 L30 26.5"/>' +
-    '<path d="M14.5 26.5 L30 12"/>' +
-    '<circle cx="22.25" cy="19.25" r="2.4" fill="currentColor" stroke="none"/></svg>';
+    '<svg viewBox="0 0 40 40" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M11 7 V31 H35" stroke="#1c2433" stroke-opacity="0.30" stroke-width="2"/>' +
+    '<path d="M15 13 L31 28" stroke="#c85a3c" stroke-width="3"/>' +
+    '<path d="M15 28 L31 13" stroke="#1f6fb2" stroke-width="3"/>' +
+    '<circle cx="23" cy="20.5" r="2.7" fill="#2f5c3a"/></svg>';
+
+  // The four-point sparkle is the standard "AI" signal (Gemini, Copilot,
+  // Notion AI all use it). It replaces the old "24/7" pill, which read as a
+  // third-party support widget rather than a course AI.
+  var SPARKLE =
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<path d="M12 2c.4 5.2.8 6.6 2.2 7.9C15.5 11.2 16.8 11.6 22 12c-5.2.4-6.5.8-7.8 2.1' +
+    'C12.8 15.4 12.4 16.8 12 22c-.4-5.2-.8-6.6-2.1-7.9C8.6 12.8 7.2 12.4 2 12' +
+    'c5.2-.4 6.5-.8 7.9-2.1C11.2 8.6 11.6 7.2 12 2z"/></svg>';
 
   // chevron-down, shown while the popover is open
   var CLOSE_ICON =
@@ -51,16 +61,19 @@
 
   function injectCss() {
     var css =
-".ecfab-btn{position:fixed;right:22px;bottom:22px;z-index:9998;width:60px;height:60px;border-radius:50%;border:none;" +
-"cursor:pointer;color:#fff;background:linear-gradient(135deg,#2563eb,#0b3aa0);box-shadow:0 10px 26px rgba(26,86,219,.42);" +
+// The button is a week-cover chip: tinted card, brand ring, soft shadow,
+// with the colour diagram inside. No saturated-blue circle, no pulsing ring
+// (both read as a third-party support widget rather than part of the course).
+".ecfab-btn{position:fixed;right:22px;bottom:22px;z-index:9998;width:62px;height:62px;border-radius:18px;" +
+"cursor:pointer;background:#eaf2f8;border:1.5px solid #0b4f8f;box-shadow:0 8px 22px rgba(11,79,143,.20);" +
 "display:flex;align-items:center;justify-content:center;transition:transform .16s,box-shadow .16s;-webkit-tap-highlight-color:transparent;}" +
-".ecfab-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 14px 32px rgba(26,86,219,.5);}" +
-".ecfab-btn svg{width:32px;height:32px;}" +
-".ecfab-btn::after{content:'';position:absolute;inset:0;border-radius:50%;animation:ecfabpulse 2.8s infinite;}" +
-"@keyframes ecfabpulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,.45);}70%{box-shadow:0 0 0 15px rgba(37,99,235,0);}100%{box-shadow:0 0 0 0 rgba(37,99,235,0);}}" +
-".ecfab-seen .ecfab-btn::after,.ecfab-open .ecfab-btn::after{animation:none;}" +
-".ecfab-badge{position:absolute;top:-3px;right:-4px;background:#16a34a;color:#fff;font-size:.56rem;font-weight:800;" +
-"padding:2px 5px;border-radius:999px;border:2px solid #fff;letter-spacing:.02em;pointer-events:none;}" +
+".ecfab-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(11,79,143,.30);}" +
+".ecfab-btn svg{width:38px;height:38px;}" +
+// The AI sparkle sits in the corner where the "24/7" pill used to be.
+".ecfab-badge{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;" +
+"background:#0b4f8f;color:#fff;border:2px solid #fbf9f6;display:flex;align-items:center;justify-content:center;" +
+"box-shadow:0 2px 7px rgba(11,79,143,.35);pointer-events:none;}" +
+".ecfab-badge svg{width:13px;height:13px;}" +
 ".ecfab-open .ecfab-badge{display:none;}" +
 ".ecfab-label{position:fixed;right:92px;bottom:37px;z-index:9998;background:#111827;color:#fff;font-size:.78rem;font-weight:600;" +
 "padding:7px 12px;border-radius:10px;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.22);opacity:0;transform:translateX(8px);" +
@@ -93,6 +106,9 @@
 /* Dark mode for the popup chrome (the inner .ecbot themes itself in
    chatbot.js). Without this the popup was a white card on a near-black page.
    Colours match shared.css dark tokens. */
+// Dark mode: the cover chip uses the dark accent tint and a light blue ring.
+'html[data-theme="dark"] .ecfab-btn{background:#1b2740;border-color:#6ea0ff;box-shadow:0 8px 22px rgba(0,0,0,.5);}' +
+'html[data-theme="dark"] .ecfab-badge{background:#6ea0ff;color:#0b1220;border-color:#15171c;}' +
 'html[data-theme="dark"] .ecfab-pop{background:#15171c;border-color:#2c313a;box-shadow:0 18px 50px rgba(0,0,0,.6);}' +
 'html[data-theme="dark"] .ecfab-head{background:linear-gradient(180deg,#1d2027,#15171c);border-bottom-color:#2c313a;}' +
 'html[data-theme="dark"] .ecfab-title{color:#e7e9ee;}' +
@@ -128,9 +144,9 @@
     var wrap = document.createElement("div");
     wrap.className = "ecfab-wrap";
     wrap.innerHTML =
-      '<div class="ecfab-label">Stuck? Ask the Econ&nbsp;AI (24/7)</div>' +
-      '<button class="ecfab-btn" type="button" aria-label="Ask the Course AI" aria-expanded="false">' +
-      '<span class="ecfab-badge">24/7</span><span class="ecfab-ico">' + FAB_ICON + '</span></button>' +
+      '<div class="ecfab-label">Ask the Course&nbsp;AI</div>' +
+      '<button class="ecfab-btn" type="button" aria-label="Ask the Course AI, an AI study assistant" aria-expanded="false">' +
+      '<span class="ecfab-badge">' + SPARKLE + '</span><span class="ecfab-ico">' + FAB_ICON + '</span></button>' +
       '<div class="ecfab-pop" role="dialog" aria-label="Ask the Course AI">' +
         '<div class="ecfab-head">' +
           '<span class="ecfab-mini">' + MINI_LOGO + '</span>' +
