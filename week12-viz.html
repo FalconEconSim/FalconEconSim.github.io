@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u4);--unit-ink:var(--u4-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 12 Visualizations: Adverse Selection &amp; Moral Hazard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/theme.js"></script>
+  <script src="assets/figkit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    .demo-svg-wrap { padding: 0; }
+    .demo-svg-wrap svg { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published active"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week12.html">Week 12</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+</div>
+
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-121"><span>12.1</span>The Market for Lemons</a></li>
+      <li><a href="#sec-122"><span>12.2</span>Spence Signalling</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">12</span>
+      <p class="eyebrow">Week 12 &middot; Interactive Visualizations</p>
+      <h1>Adverse Selection &amp; Moral Hazard</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
+
+  <div class="sec-divider">Section 1 &middot; Hidden Quality</div>
+
+  <!-- FIG 12.1 -->
+  <section class="sec page" id="sec-121">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 12.1</span>
+      <h3>The Market for Lemons: When Do Peaches Survive?</h3>
+    </div>
+    <p class="fig-intro">
+      Buyers cannot tell a peach from a lemon, so they offer the average value \(\mathbb{E}[WTP] = 1{,}200 + 1{,}200p\),
+      where \(p\) is the fraction of peaches. Peach sellers will only sell if that average clears their $2,000 reserve
+      price. Slide the peach fraction: above the knife-edge \(p^{*} = 2/3\) the market pools and both types trade; below
+      it, the average is too low, peaches exit, and only lemons are left.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs121-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Fraction of peaches p: <span class="ctrl-value" id="v121-p-val">0.50</span></span>
+        <input type="range" id="v121-p" min="0" max="1" step="0.01" value="0.50" oninput="v121Draw()">
+      </div>
+      <button class="btn" onclick="document.getElementById('v121-p').value=0.667;v121Draw()">Knife-edge (p* = ⅔)</button>
+    </div>
+    <div class="fig-state" id="v121-readout"></div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; Credible Signals</div>
+
+  <!-- FIG 12.2 -->
+  <section class="sec page" id="sec-122">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 12.2</span>
+      <h3>Spence Signalling: The Separating Range</h3>
+    </div>
+    <p class="fig-intro">
+      High-productivity workers earn \(y_H = \$100k\), low types \(y_L = \$40k\); education costs the high type \(c_H = s\)
+      but the low type \(c_L = 3s\) (single crossing). An employer pays the high wage only above an education threshold
+      \(s^{*}\). Slide it: the threshold separates the types only when it is high enough that the low type will not mimic
+      (\(s^{*} \ge 20\)) yet low enough that the high type still bothers (\(s^{*} \le 60\)). The green band is the whole
+      separating range; \(s^{*} = 20\) is the least-wasteful one.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs122-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Education threshold s*: <span class="ctrl-value" id="v122-s-val">20</span></span>
+        <input type="range" id="v122-s" min="0" max="80" step="1" value="20" oninput="v122Draw()">
+      </div>
+      <button class="btn" onclick="document.getElementById('v122-s').value=20;v122Draw()">Least-cost (s* = 20)</button>
+    </div>
+    <div class="fig-state" id="v122-readout"></div>
+  </section>
+
+  </main>
+</div>
+
+<script src="assets/vizkit.js"></script>
+<script>
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+// ── FIG 12.1: lemons market ─────────────────────────────────────────────────
+function v121Draw() {
+  var p = parseFloat(document.getElementById('v121-p').value);
+  document.getElementById('v121-p-val').textContent = p.toFixed(2);
+  var EWTP = 1200 + 1200 * p, reserve = 2000, pstar = 2 / 3;
+  var pooling = EWTP >= reserve;
+
+  var scX = d3.scaleLinear().domain([0, 1]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([1000, 2600]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs121-wrap');
+  d3AddAxes(svg, scX, scY, 'Fraction of peaches  p', 'Dollars', function (d) { return d.toFixed(1); }, function (d) { return '$' + (d / 1000).toFixed(1) + 'k'; });
+
+  // shaded pooling (p >= p*) vs separating (p < p*) regions
+  svg.append('rect').attr('x', scX(0)).attr('y', D3PAD.top).attr('width', scX(pstar) - scX(0)).attr('height', (D3H - D3PAD.bottom) - D3PAD.top).attr('fill', FILL_DWL).attr('opacity', 0.5);
+  svg.append('rect').attr('x', scX(pstar)).attr('y', D3PAD.top).attr('width', scX(1) - scX(pstar)).attr('height', (D3H - D3PAD.bottom) - D3PAD.top).attr('fill', FILL_GAIN).attr('opacity', 0.6);
+  d3Halo(svg, scX(pstar / 2), scY(2450), 'Separating: peaches exit', { color: STROKE_DWL, size: 10 });
+  d3Halo(svg, scX((pstar + 1) / 2), scY(2450), 'Pooling: both trade', { color: STROKE_GAIN, size: 10 });
+
+  // E[WTP] line and peach reserve
+  d3Seg(svg, scX, scY, 0, 1200, 1, 2400, EC.primary, 3);
+  d3Seg(svg, scX, scY, 0, reserve, 1, reserve, EC.second, 2, '6,4');
+  d3Halo(svg, scX(0.12), scY(1200 + 1200 * 0.12 + 60), 'E[WTP]', { color: EC.primary, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(0.9), scY(reserve + 55), 'Peach reserve $2,000', { color: EC.second, anchor: 'end', size: 10 });
+  // knife-edge marker
+  d3Seg(svg, scX, scY, pstar, 1000, pstar, 2600, EC.slate, 1, '2,3');
+  d3Halo(svg, scX(pstar), scY(1080), 'p* = ⅔', { color: EC.slate, size: 10 });
+  // current p
+  d3Dot(svg, scX(p), scY(EWTP), EC.indicator, 6);
+  d3Halo(svg, scX(p), scY(EWTP) - 12, '$' + EWTP.toFixed(0), { color: EC.indicator, size: 10 });
+
+  document.getElementById('v121-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">E[WTP]</div><div class="readout-val">$' + EWTP.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Peach reserve</div><div class="readout-val">$2,000</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Outcome</div><div class="readout-val">' + (pooling ? 'Pooling' : 'Separating') + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (pooling ? EC.gain : EC.loss) + '">' +
+    (pooling
+      ? 'E[WTP] = $' + EWTP.toFixed(0) + ' clears the $2,000 reserve, so peach sellers stay: both types trade (pooling). Buyers of lemons overpay a little.'
+      : 'E[WTP] = $' + EWTP.toFixed(0) + ' is below the $2,000 reserve, so peach sellers exit. Only lemons trade, and the $400 gain from every peach sale is destroyed.') +
+    '</p>';
+}
+
+// ── FIG 12.2: Spence signalling ─────────────────────────────────────────────
+function v122Draw() {
+  var s = parseFloat(document.getElementById('v122-s').value);
+  document.getElementById('v122-s-val').textContent = s;
+  var yH = 100, yL = 40;   // $000
+  // low type mimic payoff = yH - 3s; high type signal payoff = yH - s; outside = yL
+  var lowMimic = yH - 3 * s, highSignal = yH - s;
+  var valid = s >= 20 && s <= 60;
+
+  var scX = d3.scaleLinear().domain([0, 80]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 110]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs122-wrap');
+  d3AddAxes(svg, scX, scY, 'Education threshold  s*', 'Net payoff ($000)', null, function (d) { return '$' + d + 'k'; });
+
+  // valid separating band [20, 60]
+  svg.append('rect').attr('x', scX(20)).attr('y', D3PAD.top).attr('width', scX(60) - scX(20)).attr('height', (D3H - D3PAD.bottom) - D3PAD.top).attr('fill', FILL_GAIN).attr('opacity', 0.55);
+  d3Halo(svg, scX(40), scY(104), 'Separating range 20 ≤ s* ≤ 60', { color: STROKE_GAIN, size: 10 });
+
+  d3Seg(svg, scX, scY, 0, yL, 80, yL, EC.slate, 2, '6,4');                 // outside option yL = 40
+  d3Seg(svg, scX, scY, 0, yH, 80, yH - 80, EC.primary, 3);                 // high type signals: 100 - s
+  d3Seg(svg, scX, scY, 0, yH, 80 / 3, 0, EC.second, 3);                    // low type mimics: 100 - 3s
+  d3Halo(svg, scX(70), scY(yH - 70 + 4), 'High type: 100 − s', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(20), scY(yH - 3 * 20 + 5), 'Low type mimic: 100 − 3s', { color: EC.second, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(72), scY(yL + 5), 'Outside option $40k', { color: EC.slate, anchor: 'end', size: 10 });
+
+  // threshold marker
+  d3Seg(svg, scX, scY, s, 0, s, 108, EC.indicator, 1.4, '3,3');
+  d3Dot(svg, scX(s), scY(Math.max(0, lowMimic)), EC.second, 5);
+  d3Dot(svg, scX(s), scY(highSignal), EC.primary, 5);
+
+  document.getElementById('v122-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">High type nets</div><div class="readout-val">$' + highSignal + 'k</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Low type if mimics</div><div class="readout-val">$' + lowMimic + 'k</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Outside option</div><div class="readout-val">$40k</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Separating?</div><div class="readout-val">' + (valid ? 'Yes' : 'No') + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (valid ? EC.gain : EC.loss) + '">' +
+    (valid
+      ? 'Valid signal. The low type would net $' + lowMimic + 'k by faking it, below its $40k outside option, so it does not; the high type nets $' + highSignal + 'k, above $40k, so it does. The types separate.'
+      : (s < 20
+        ? 'Threshold too low: the low type nets $' + lowMimic + 'k by mimicking, above its $40k outside option, so it copies the high type and the signal fails.'
+        : 'Threshold too high: the high type nets only $' + highSignal + 'k, below its $40k outside option, so even the high type skips education. No separation.')) +
+    '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v121Draw(); v122Draw(); });
+</script>
+  <!-- Ask the Course AI, floating assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

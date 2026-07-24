@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u4);--unit-ink:var(--u4-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 11 Visualizations: Public Goods &amp; Externalities</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/theme.js"></script>
+  <script src="assets/figkit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    .demo-svg-wrap { padding: 0; }
+    .demo-svg-wrap svg { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published active"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week11.html">Week 11</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+</div>
+
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-111"><span>11.1</span>Externality &amp; the Pigouvian Tax</a></li>
+      <li><a href="#sec-112"><span>11.2</span>Cap-and-Trade: Equalising MAC</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">11</span>
+      <p class="eyebrow">Week 11 &middot; Interactive Visualizations</p>
+      <h1>Public Goods &amp; Externalities</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
+
+  <div class="sec-divider">Section 1 &middot; The Externality Wedge</div>
+
+  <!-- FIG 11.1 -->
+  <section class="sec page" id="sec-111">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 11.1</span>
+      <h3>Negative Externality &amp; the Pigouvian Tax</h3>
+    </div>
+    <p class="fig-intro">
+      Demand is \(P = 100 - Q\) and private marginal cost is \(PMC = 10 + Q\). Each unit also dumps a marginal external
+      cost \(MEC\) on third parties, so social marginal cost is \(SMC = PMC + MEC\). The market produces where
+      \(PMC = MB\) (too much); the optimum is where \(SMC = MB\). The red triangle is the deadweight loss. Apply the
+      Pigouvian tax \(t^{*} = MEC\) to lift private cost onto the social-cost curve and erase it.
+    </p>
+    <div class="seg-btns" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:var(--s-4)">
+      <button class="quiz-btn revealed" id="v111-b-off" onclick="v111Tax(false)">Unregulated</button>
+      <button class="quiz-btn" id="v111-b-on" onclick="v111Tax(true)">Apply Pigouvian tax</button>
+    </div>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs111-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Marginal external cost MEC: <span class="ctrl-value" id="v111-mec-val">$20</span></span>
+        <input type="range" id="v111-mec" min="0" max="50" step="2" value="20" oninput="v111Draw()">
+      </div>
+    </div>
+    <div class="fig-state" id="v111-readout"></div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; Least-Cost Abatement</div>
+
+  <!-- FIG 11.2 -->
+  <section class="sec page" id="sec-112">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 11.2</span>
+      <h3>Cap-and-Trade: Equalising Marginal Abatement Cost</h3>
+    </div>
+    <p class="fig-intro">
+      Two firms must together abate a total amount of pollution. Firm A cleans up cheaply (\(MAC_A = 2e_A\)); Firm B is
+      expensive (\(MAC_B = 8e_B\)). A permit market makes every firm abate up to the same permit price, so the low-cost
+      firm does more of the work. The result meets the target at least cost, far below forcing both firms to abate
+      equally. Slide the total cap to see the permit price and the saving move.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs112-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Total abatement required: <span class="ctrl-value" id="v112-t-val">100</span></span>
+        <input type="range" id="v112-t" min="20" max="150" step="5" value="100" oninput="v112Draw()">
+      </div>
+    </div>
+    <div class="fig-state" id="v112-readout"></div>
+  </section>
+
+  </main>
+</div>
+
+<script src="assets/vizkit.js"></script>
+<script>
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+// ── FIG 11.1: externality + Pigouvian tax ───────────────────────────────────
+var V111TAX = false;
+function v111Tax(on) {
+  V111TAX = on;
+  document.getElementById('v111-b-off').classList.toggle('revealed', !on);
+  document.getElementById('v111-b-on').classList.toggle('revealed', on);
+  v111Draw();
+}
+function v111Draw() {
+  var MEC = parseFloat(document.getElementById('v111-mec').value);
+  document.getElementById('v111-mec-val').textContent = '$' + MEC;
+  // MB = 100 - Q, PMC = 10 + Q, SMC = 30... = PMC + MEC
+  var QE = 45;                       // PMC = MB: 10+Q = 100-Q
+  var Qs = (90 - MEC) / 2;           // SMC = MB: 10+Q+MEC = 100-Q
+  var eqQ = V111TAX ? Qs : QE;
+  var eqP = 100 - eqQ;
+
+  var scX = d3.scaleLinear().domain([0, 100]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 105]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs111-wrap');
+  d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
+
+  // DWL triangle between SMC and MB over [Qs, QE] (present whenever untaxed)
+  if (!V111TAX && MEC > 0)
+    d3Poly(svg, scX, scY, [[Qs, 100 - Qs], [QE, 100 - QE], [QE, 10 + QE + MEC]], FILL_DWL, STROKE_DWL);
+
+  d3Seg(svg, scX, scY, 0, 100, 100, 0, EC.primary, 3);           // MB (demand)
+  d3Seg(svg, scX, scY, 0, 10, 90, 100, EC.gain, 2.5);            // PMC (supply)
+  if (MEC > 0) d3Seg(svg, scX, scY, 0, 10 + MEC, 90 - MEC, 100, EC.loss, 2.5, V111TAX ? '' : '6,4');  // SMC
+
+  d3Halo(svg, scX(82), scY(100 - 82 + 3), 'MB', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(78), scY(10 + 78 - 3), 'PMC = supply', { color: EC.gain, anchor: 'end', size: 10 });
+  if (MEC > 0) d3Halo(svg, scX(60), scY(10 + 60 + MEC + 3), V111TAX ? 'PMC + tax = SMC' : 'SMC', { color: EC.loss, size: 10 });
+  if (!V111TAX && MEC > 0) d3Halo(svg, scX((Qs + QE) / 2 + 3), scY(100 - QE + 4), 'DWL', { color: STROKE_DWL, size: 10 });
+
+  d3Seg(svg, scX, scY, eqQ, 0, eqQ, eqP, EC.indicator, 1.4, '3,3');
+  d3Dot(svg, scX(eqQ), scY(eqP), EC.indicator, 6);
+  d3Halo(svg, scX(eqQ), scY(eqP) - 12, (V111TAX ? 'Q* = ' : 'Q_E = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10 });
+
+  var dwl = 0.5 * (QE - Qs) * MEC;
+  document.getElementById('v111-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Market Q_E</div><div class="readout-val">' + QE + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Social optimum Q*</div><div class="readout-val">' + Qs.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Pigouvian tax t*</div><div class="readout-val">$' + MEC + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">DWL if unregulated</div><div class="readout-val">$' + dwl.toFixed(0) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (V111TAX ? EC.gain : EC.loss) + '">' +
+    (V111TAX
+      ? 'With the tax t* = $' + MEC + ', private cost rises onto SMC and the market lands at Q* = ' + Qs.toFixed(1) + '. Deadweight loss is eliminated.'
+      : 'The market overproduces at Q_E = 45, past the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between costs society more than it is worth: a $' + dwl.toFixed(0) + ' deadweight loss.') +
+    '</p>';
+}
+
+// ── FIG 11.2: cap-and-trade MAC equalisation ────────────────────────────────
+function v112Draw() {
+  var T = parseFloat(document.getElementById('v112-t').value);
+  document.getElementById('v112-t-val').textContent = T;
+  // MAC_A = 2 eA, MAC_B = 8 eB.  Equalise: 2eA = 8eB → eA = 4 eB; eA+eB = T
+  var eB = T / 5, eA = 4 * T / 5, lam = 2 * eA;
+  var costCT = 0.5 * 2 * eA * eA + 0.5 * 8 * eB * eB;
+  var eEq = T / 2, costEq = 0.5 * 2 * eEq * eEq + 0.5 * 8 * eEq * eEq;
+  var saving = costEq - costCT;
+
+  var maxE = 130, maxY = 8 * (maxE) * 0.35;
+  var scX = d3.scaleLinear().domain([0, maxE]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, Math.max(lam * 1.6, 260)]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs112-wrap');
+  d3AddAxes(svg, scX, scY, 'Abatement by a firm (units)', '$ per unit abated', null, function (d) { return '$' + d; });
+
+  var yTop = scY.domain()[1];
+  var eAmaxLine = yTop / 2, eBmaxLine = yTop / 8;
+  d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eAmaxLine), Math.min(2 * maxE, yTop), EC.primary, 3);   // MAC_A = 2e
+  d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eBmaxLine), Math.min(8 * maxE, yTop), EC.second, 3);    // MAC_B = 8e
+  d3Halo(svg, scX(eAmaxLine * 0.85), scY(2 * eAmaxLine * 0.85 + 8), 'MAC_A = 2e (cheap)', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(eBmaxLine * 0.9), scY(8 * eBmaxLine * 0.9 + 8), 'MAC_B = 8e (dear)', { color: EC.second, anchor: 'start', size: 10 });
+
+  // permit price line + firm abatement points
+  d3Seg(svg, scX, scY, 0, lam, maxE, lam, EC.transfer, 1.6, '5,4');
+  d3Halo(svg, scX(maxE) - 4, scY(lam) - 8, 'permit price λ* = $' + lam.toFixed(0), { color: EC.transfer, anchor: 'end', size: 10 });
+  d3Seg(svg, scX, scY, eA, 0, eA, lam, EC.primary, 1.2, '3,3');
+  d3Seg(svg, scX, scY, eB, 0, eB, lam, EC.second, 1.2, '3,3');
+  d3Dot(svg, scX(eA), scY(lam), EC.primary, 6); d3Halo(svg, scX(eA), scY(0) + 14, 'e_A = ' + eA.toFixed(0), { color: EC.primary, size: 10 });
+  d3Dot(svg, scX(eB), scY(lam), EC.second, 6); d3Halo(svg, scX(eB), scY(0) + 14, 'e_B = ' + eB.toFixed(0), { color: EC.second, size: 10 });
+
+  document.getElementById('v112-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Firm A abates</div><div class="readout-val">' + eA.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Firm B abates</div><div class="readout-val">' + eB.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Permit price λ*</div><div class="readout-val">$' + lam.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Cap-and-trade cost</div><div class="readout-val">$' + costCT.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Equal-regulation cost</div><div class="readout-val">$' + costEq.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Saving</div><div class="readout-val">$' + saving.toFixed(0) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.gain + '">Trading lets the cheap firm (A) do most of the cleanup, hitting the target for $' + costCT.toFixed(0) + ' instead of $' + costEq.toFixed(0) + ' under equal shares: a saving of $' + saving.toFixed(0) + ' (' + (100 * saving / costEq).toFixed(0) + '%).</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v111Draw(); v112Draw(); });
+</script>
+  <!-- Ask the Course AI, floating assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

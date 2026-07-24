@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u3);--unit-ink:var(--u3-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 10 Visualizations: Oligopoly &amp; Spatial Competition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/theme.js"></script>
+  <script src="assets/figkit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    .demo-svg-wrap { padding: 0; }
+    .demo-svg-wrap svg { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published active"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week10.html">Week 10</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+</div>
+
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-101"><span>10.1</span>Cournot &amp; Stackelberg Best Responses</a></li>
+      <li><a href="#sec-102"><span>10.2</span>Hotelling Beach</a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">10</span>
+      <p class="eyebrow">Week 10 &middot; Interactive Visualizations</p>
+      <h1>Oligopoly &amp; Spatial Competition</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
+
+  <div class="sec-divider">Section 1 &middot; Quantity Competition</div>
+
+  <!-- FIG 10.1 -->
+  <section class="sec page" id="sec-101">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 10.1</span>
+      <h3>Cournot &amp; Stackelberg on the Best-Response Diagram</h3>
+    </div>
+    <p class="fig-intro">
+      Market demand is \(P = 120 - Q\) with \(MC = 0\). Each firm&rsquo;s reaction curve gives its profit-maximising output
+      as a function of the rival&rsquo;s. Slide Firm A&rsquo;s output and watch Firm B best-respond along its reaction curve.
+      Where the two curves cross, both are simultaneously best-responding: the Cournot&ndash;Nash equilibrium \((40, 40)\).
+      Push A to 60 and B falls to 30: the Stackelberg point, where committing first raises A&rsquo;s profit.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs101-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Firm A&rsquo;s output q<sub>A</sub>: <span class="ctrl-value" id="v101-qa-val">40</span></span>
+        <input type="range" id="v101-qa" min="0" max="90" step="1" value="40" oninput="v101Draw()">
+      </div>
+      <button class="btn" onclick="document.getElementById('v101-qa').value=40;v101Draw()">Cournot (40)</button>
+      <button class="btn" onclick="document.getElementById('v101-qa').value=60;v101Draw()">Stackelberg (60)</button>
+    </div>
+    <div class="fig-state" id="v101-readout"></div>
+  </section>
+
+  <div class="sec-divider">Section 2 &middot; Location Competition</div>
+
+  <!-- FIG 10.2 -->
+  <section class="sec page" id="sec-102">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 10.2</span>
+      <h3>The Hotelling Beach: Why Competitors Cluster</h3>
+    </div>
+    <p class="fig-intro">
+      Two vendors sit on a one-mile beach; sunbathers are spread evenly and always walk to the nearer vendor. The dashed
+      line is the midpoint that splits the market. Move either vendor: whoever slides toward the centre captures a bigger
+      slice, so both keep creeping inward until they sit side by side at \(0.5\), the principle of minimum differentiation.
+      The socially efficient spread (the quarter-points) minimises walking, but it is not a Nash equilibrium.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs102-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Vendor A location: <span class="ctrl-value" id="v102-a-val">0.30</span></span>
+        <input type="range" id="v102-a" min="0" max="1" step="0.01" value="0.30" oninput="v102Draw()">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Vendor B location: <span class="ctrl-value" id="v102-b-val">0.70</span></span>
+        <input type="range" id="v102-b" min="0" max="1" step="0.01" value="0.70" oninput="v102Draw()">
+      </div>
+      <button class="btn" onclick="v102Preset(0.25,0.75)">Efficient (¼, ¾)</button>
+      <button class="btn" onclick="v102Preset(0.5,0.5)">Nash (½, ½)</button>
+    </div>
+    <div class="fig-state" id="v102-readout"></div>
+  </section>
+
+  </main>
+</div>
+
+<script src="assets/vizkit.js"></script>
+<script>
+function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
+function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
+
+// ── FIG 10.1: Cournot / Stackelberg best-response diagram ───────────────────
+function v101Draw() {
+  var qA = parseFloat(document.getElementById('v101-qa').value);
+  var qB = (120 - qA) / 2;                       // B's best response
+  var P = Math.max(0, 120 - qA - qB), piA = P * qA, piB = P * qB;
+  document.getElementById('v101-qa-val').textContent = qA;
+
+  var scX = d3.scaleLinear().domain([0, 122]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 122]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs101-wrap');
+  d3AddAxes(svg, scX, scY, 'Firm A output  qₐ', 'Firm B output  q_B');
+
+  // BR_A: qB = 120 - 2qA  (from (0,120) to (60,0))
+  d3Seg(svg, scX, scY, 0, 120, 60, 0, EC.primary, 3);
+  // BR_B: qB = (120 - qA)/2  (from (0,60) to (120,0))
+  d3Seg(svg, scX, scY, 0, 60, 120, 0, EC.second, 3);
+  d3Halo(svg, scX(18), scY(120 - 2 * 18), 'BRₐ (Firm A reacts)', { color: EC.primary, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(84), scY((120 - 84) / 2 + 4), 'BR_B (Firm B reacts)', { color: EC.second, anchor: 'start', size: 10 });
+
+  // reference points
+  d3Dot(svg, scX(40), scY(40), EC.slate, 5);
+  d3Halo(svg, scX(40), scY(40) - 12, 'Cournot (40, 40)', { color: EC.slate, size: 10 });
+  d3Dot(svg, scX(60), scY(30), EC.gain, 5);
+  d3Halo(svg, scX(60) + 4, scY(30) + 14, 'Stackelberg (60, 30)', { color: EC.gain, anchor: 'start', size: 10 });
+
+  // current chosen point riding along BR_B
+  d3Seg(svg, scX, scY, qA, 0, qA, qB, EC.indicator, 1.2, '3,3');
+  d3Seg(svg, scX, scY, 0, qB, qA, qB, EC.indicator, 1.2, '3,3');
+  d3Dot(svg, scX(qA), scY(qB), EC.indicator, 6);
+
+  var note = Math.abs(qA - 40) < 1e-6
+    ? 'Both firms best-respond to each other: this is the Cournot&ndash;Nash equilibrium, each earning $1,600.'
+    : (Math.abs(qA - 60) < 1e-6
+      ? 'Firm A commits to 60; Firm B best-responds with 30. A earns $1,800 (up from $1,600), B only $900. First-mover advantage.'
+      : 'Firm B is best-responding to A&rsquo;s choice, but A is not on its own reaction curve, so this is not an equilibrium unless A commits.');
+  document.getElementById('v101-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">q_A</div><div class="readout-val">' + qA + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">q_B (best response)</div><div class="readout-val">' + qB.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Profit A</div><div class="readout-val">$' + piA.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Profit B</div><div class="readout-val">$' + piB.toFixed(0) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.slate + '">' + note + '</p>';
+}
+
+// ── FIG 10.2: Hotelling beach ───────────────────────────────────────────────
+function v102Preset(a, b) {
+  document.getElementById('v102-a').value = a;
+  document.getElementById('v102-b').value = b;
+  v102Draw();
+}
+function v102Draw() {
+  var a = parseFloat(document.getElementById('v102-a').value);
+  var b = parseFloat(document.getElementById('v102-b').value);
+  document.getElementById('v102-a-val').textContent = a.toFixed(2);
+  document.getElementById('v102-b-val').textContent = b.toFixed(2);
+  var lo = Math.min(a, b), hi = Math.max(a, b), mid = (a + b) / 2;
+  var shareLo = mid, shareHi = 1 - mid;   // share of the left vendor vs right vendor
+
+  var W = D3W, H = 260, padX = 60, y = 150;
+  var sx = d3.scaleLinear().domain([0, 1]).range([padX, W - padX]);
+  var svg = d3MakeSvgWH('cvs102-wrap', W, H);
+
+  // market-share bands under the beach line
+  svg.append('rect').attr('x', sx(0)).attr('y', y - 26).attr('width', sx(mid) - sx(0)).attr('height', 26)
+    .attr('fill', FILL_CS).attr('stroke', 'none');
+  svg.append('rect').attr('x', sx(mid)).attr('y', y - 26).attr('width', sx(1) - sx(mid)).attr('height', 26)
+    .attr('fill', FILL_PS).attr('stroke', 'none');
+  // beach line
+  svg.append('line').attr('x1', sx(0)).attr('y1', y).attr('x2', sx(1)).attr('y2', y).attr('stroke', EC.slate).attr('stroke-width', 2);
+  [0, 0.25, 0.5, 0.75, 1].forEach(function (t) {
+    svg.append('line').attr('x1', sx(t)).attr('y1', y - 5).attr('x2', sx(t)).attr('y2', y + 5).attr('stroke', '#bbb');
+    svg.append('text').attr('x', sx(t)).attr('y', y + 22).attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#8a8a8a').text(t);
+  });
+  // midpoint splitter
+  svg.append('line').attr('x1', sx(mid)).attr('y1', y - 46).attr('x2', sx(mid)).attr('y2', y + 8).attr('stroke', EC.indicator).attr('stroke-width', 1.5).attr('stroke-dasharray', '4,3');
+  d3Halo(svg, sx(mid), y - 52, 'midpoint', { color: EC.indicator, size: 10 });
+  // vendors
+  var av = a <= b ? { x: a, c: STROKE_CS, n: 'A' } : { x: a, c: STROKE_CS, n: 'A' };
+  d3Dot(svg, sx(a), y, STROKE_CS, 9); d3Halo(svg, sx(a), y - 16, 'Vendor A', { color: STROKE_CS, size: 10 });
+  d3Dot(svg, sx(b), y, STROKE_PS, 9); d3Halo(svg, sx(b), y + 40, 'Vendor B', { color: STROKE_PS, size: 10 });
+
+  var aShare = (a <= b) ? mid : (1 - mid);
+  var bShare = 1 - aShare;
+  var atNash = Math.abs(a - 0.5) < 0.02 && Math.abs(b - 0.5) < 0.02;
+  var note = atNash
+    ? 'Both at the centre: neither can gain by moving. This is the unique Nash equilibrium (minimum differentiation), though it doubles average walking distance.'
+    : 'Whoever moves toward the centre steals share from the other. Both have that incentive, so they slide inward until they meet at ½. The efficient spread (¼, ¾) is unstable.';
+  document.getElementById('v102-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Vendor A share</div><div class="readout-val">' + (aShare * 100).toFixed(0) + '%</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Vendor B share</div><div class="readout-val">' + (bShare * 100).toFixed(0) + '%</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Market split at</div><div class="readout-val">' + mid.toFixed(2) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (atNash ? EC.gain : EC.second) + '">' + note + '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v101Draw(); v102Draw(); });
+</script>
+  <!-- Ask the Course AI, floating assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>
