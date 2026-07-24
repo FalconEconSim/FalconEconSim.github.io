@@ -149,14 +149,14 @@ function v101Draw() {
   var scX = d3.scaleLinear().domain([0, 122]).range([D3PAD.left, D3W - D3PAD.right]);
   var scY = d3.scaleLinear().domain([0, 122]).range([D3H - D3PAD.bottom, D3PAD.top]);
   var svg = d3MakeSvg('cvs101-wrap');
-  d3AddAxes(svg, scX, scY, 'Firm A output  qₐ', 'Firm B output  q_B');
+  d3AddAxes(svg, scX, scY, 'Firm A output', 'Firm B output');
 
   // BR_A: qB = 120 - 2qA  (from (0,120) to (60,0))
   d3Seg(svg, scX, scY, 0, 120, 60, 0, EC.primary, 3);
   // BR_B: qB = (120 - qA)/2  (from (0,60) to (120,0))
   d3Seg(svg, scX, scY, 0, 60, 120, 0, EC.second, 3);
-  d3Halo(svg, scX(18), scY(120 - 2 * 18), 'BRₐ (Firm A reacts)', { color: EC.primary, anchor: 'start', size: 10 });
-  d3Halo(svg, scX(84), scY((120 - 84) / 2 + 4), 'BR_B (Firm B reacts)', { color: EC.second, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(18), scY(120 - 2 * 18), 'Firm A reacts', { color: EC.primary, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(84), scY((120 - 84) / 2 + 4), 'Firm B reacts', { color: EC.second, anchor: 'start', size: 10 });
 
   // reference points
   d3Dot(svg, scX(40), scY(40), EC.slate, 5);
@@ -176,8 +176,8 @@ function v101Draw() {
       : 'Firm B is best-responding to A&rsquo;s choice, but A is not on its own reaction curve, so this is not an equilibrium unless A commits.');
   document.getElementById('v101-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">q_A</div><div class="readout-val">' + qA + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">q_B (best response)</div><div class="readout-val">' + qB.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">q<sub>A</sub></div><div class="readout-val">' + qA + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">q<sub>B</sub> (best response)</div><div class="readout-val">' + qB.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Profit A</div><div class="readout-val">$' + piA.toFixed(0) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Profit B</div><div class="readout-val">$' + piB.toFixed(0) + '</div></div>' +

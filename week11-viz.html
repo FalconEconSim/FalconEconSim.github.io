@@ -172,19 +172,20 @@ function v111Draw() {
 
   d3Seg(svg, scX, scY, eqQ, 0, eqQ, eqP, EC.indicator, 1.4, '3,3');
   d3Dot(svg, scX(eqQ), scY(eqP), EC.indicator, 6);
-  d3Halo(svg, scX(eqQ), scY(eqP) - 12, (V111TAX ? 'Q* = ' : 'Q_E = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10 });
+  // Label sits at the foot of the guide line so it never collides with the DWL wedge.
+  d3Halo(svg, scX(eqQ) + 5, scY(6), (V111TAX ? 'Q* = ' : 'Qₑ = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10, anchor: 'start' });
 
   var dwl = 0.5 * (QE - Qs) * MEC;
   document.getElementById('v111-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">Market Q_E</div><div class="readout-val">' + QE + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Market Q<sub>E</sub></div><div class="readout-val">' + QE + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Social optimum Q*</div><div class="readout-val">' + Qs.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Pigouvian tax t*</div><div class="readout-val">$' + MEC + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">DWL if unregulated</div><div class="readout-val">$' + dwl.toFixed(0) + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + (V111TAX ? EC.gain : EC.loss) + '">' +
     (V111TAX
       ? 'With the tax t* = $' + MEC + ', private cost rises onto SMC and the market lands at Q* = ' + Qs.toFixed(1) + '. Deadweight loss is eliminated.'
-      : 'The market overproduces at Q_E = 45, past the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between costs society more than it is worth: a $' + dwl.toFixed(0) + ' deadweight loss.') +
+      : 'The market overproduces at Q<sub>E</sub> = 45, past the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between costs society more than it is worth: a $' + dwl.toFixed(0) + ' deadweight loss.') +
     '</p>';
 }
 
@@ -208,16 +209,16 @@ function v112Draw() {
   var eAmaxLine = yTop / 2, eBmaxLine = yTop / 8;
   d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eAmaxLine), Math.min(2 * maxE, yTop), EC.primary, 3);   // MAC_A = 2e
   d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eBmaxLine), Math.min(8 * maxE, yTop), EC.second, 3);    // MAC_B = 8e
-  d3Halo(svg, scX(eAmaxLine * 0.85), scY(2 * eAmaxLine * 0.85 + 8), 'MAC_A = 2e (cheap)', { color: EC.primary, anchor: 'end', size: 10 });
-  d3Halo(svg, scX(eBmaxLine * 0.9), scY(8 * eBmaxLine * 0.9 + 8), 'MAC_B = 8e (dear)', { color: EC.second, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(eAmaxLine * 0.85), scY(2 * eAmaxLine * 0.85 + 8), 'Firm A MAC = 2e (cheap)', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(eBmaxLine * 0.9), scY(8 * eBmaxLine * 0.9 + 8), 'Firm B MAC = 8e (dear)', { color: EC.second, anchor: 'start', size: 10 });
 
   // permit price line + firm abatement points
   d3Seg(svg, scX, scY, 0, lam, maxE, lam, EC.transfer, 1.6, '5,4');
   d3Halo(svg, scX(maxE) - 4, scY(lam) - 8, 'permit price λ* = $' + lam.toFixed(0), { color: EC.transfer, anchor: 'end', size: 10 });
   d3Seg(svg, scX, scY, eA, 0, eA, lam, EC.primary, 1.2, '3,3');
   d3Seg(svg, scX, scY, eB, 0, eB, lam, EC.second, 1.2, '3,3');
-  d3Dot(svg, scX(eA), scY(lam), EC.primary, 6); d3Halo(svg, scX(eA), scY(0) + 14, 'e_A = ' + eA.toFixed(0), { color: EC.primary, size: 10 });
-  d3Dot(svg, scX(eB), scY(lam), EC.second, 6); d3Halo(svg, scX(eB), scY(0) + 14, 'e_B = ' + eB.toFixed(0), { color: EC.second, size: 10 });
+  d3Dot(svg, scX(eA), scY(lam), EC.primary, 6); d3Halo(svg, scX(eA), scY(0) + 14, 'Firm A: ' + eA.toFixed(0), { color: EC.primary, size: 10 });
+  d3Dot(svg, scX(eB), scY(lam), EC.second, 6); d3Halo(svg, scX(eB), scY(0) + 14, 'Firm B: ' + eB.toFixed(0), { color: EC.second, size: 10 });
 
   document.getElementById('v112-readout').innerHTML =
     '<div class="readout-row">' +
