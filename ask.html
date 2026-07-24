@@ -76,6 +76,12 @@
     .sv-cite:hover, .sv-cite.active { background:var(--unit-ink); color:#fff; }
     .sv-cite-book { color:var(--ink-soft); background:var(--paper-sunk); border-color:var(--rule2); cursor:default; }
     .sv-cite-book:hover { background:var(--paper-sunk); color:var(--ink-soft); }
+    /* Suggested follow-up questions: a lighter, outlined chip so they read as
+       "next steps" rather than sources. */
+    .sv-follow { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.5rem; }
+    .sv-chip { font-size: var(--t-caption); color:var(--ink-soft); background:transparent; border:1px solid var(--rule-strong);
+      border-radius:999px; padding:3px 10px; cursor:pointer; font-family:inherit; text-align:left; line-height:1.3; transition:color .15s, border-color .15s, background .15s; }
+    .sv-chip:hover { color:var(--unit-ink); border-color:var(--unit-ink); background:var(--brand-wash); }
     .sv-form { display:flex; gap:.5rem; padding:.7rem; border-top:1px solid #eee; }
     .sv-input { flex:1; border:1px solid #ddd; border-radius:8px; padding:.55rem .8rem; font:inherit; font-size: var(--t-small); outline:none; color:var(--ink); }
     .sv-input:focus { border-color:var(--unit-ink); }
@@ -277,8 +283,14 @@
     // formula like $U_1$ renders instead of showing raw LaTeX. Everything else
     // (the student's own question, notes, errors) is plain text.
     if (cls === "bot" && window.EC224Bot && EC224Bot.renderRich) {
-      el.textContent = text;   // safe fallback shown until KaTeX loads
-      EC224Bot.renderRich(el, text, function () { svLog.scrollTop = svLog.scrollHeight; });
+      // Render into a child, not the bubble itself: renderRich rewrites innerHTML
+      // asynchronously (after KaTeX loads) and would otherwise wipe the source
+      // chips and follow-up chips appended to the bubble right after this call.
+      var body = document.createElement("div");
+      body.className = "sv-body";
+      body.textContent = text;   // safe fallback shown until KaTeX loads
+      el.appendChild(body);
+      EC224Bot.renderRich(body, text, function () { svLog.scrollTop = svLog.scrollHeight; });
     } else {
       el.textContent = text;
     }
@@ -345,6 +357,29 @@
     bubble.appendChild(wrap);
     svLog.scrollTop = svLog.scrollHeight;
   }
+  function svFollowups(bubble, q, suggestions) {
+    var actions;
+    if (suggestions && suggestions.length) {
+      actions = suggestions.slice(0, 3);
+    } else {
+      actions = ["Explain more simply, for a beginner: " + q,
+                 "Give a concrete worked example for: " + q,
+                 "What is the key formula or definition for: " + q];
+    }
+    var labels = (suggestions && suggestions.length)
+      ? actions
+      : ["Explain more simply", "Give an example", "Show the formula"];
+    var wrap = document.createElement("div");
+    wrap.className = "sv-follow";
+    actions.forEach(function (a, i) {
+      var c = document.createElement("button");
+      c.type = "button"; c.className = "sv-chip"; c.textContent = labels[i];
+      c.addEventListener("click", function () { svAsk(a); });
+      wrap.appendChild(c);
+    });
+    bubble.appendChild(wrap);
+    svLog.scrollTop = svLog.scrollHeight;
+  }
   async function svAsk(q) {
     svMsg(q, "user"); svInput.value = "";
     svInput.disabled = svSend.disabled = true;
@@ -353,7 +388,7 @@
       var data = await EC224Bot.ask(WORKER, q);
       typing.remove();
       var bubble = svMsg(data.answer, data.answered ? "bot" : "note");
-      if (data.answered) svCites(bubble, data.matches);
+      if (data.answered) { svCites(bubble, data.matches); svFollowups(bubble, q, data.suggestions); }
       else {
         pvFrame.hidden = true; pvFrame.src = "about:blank";
         pvEmpty.style.display = "flex";

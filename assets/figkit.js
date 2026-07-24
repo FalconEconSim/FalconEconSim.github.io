@@ -87,3 +87,96 @@
   window.EC_DUR_VALUE = DUR_VALUE;
   window.EC_DUR_STEP = DUR_STEP;
 })();
+
+/* ── figure pop-out ─────────────────────────────────────────────────────────
+ * An "Expand" control on each figure header blows that figure up into a
+ * full-window overlay so students on a small window can read it (Naveen's
+ * request). We move the whole <section> into the overlay rather than cloning
+ * it, so its sliders, drag handles and readouts stay wired up and fully
+ * interactive at the larger size; the d3 figures are viewBox SVGs, so they
+ * scale up crisply. On close the section slides back to exactly where it was.
+ */
+(function () {
+  'use strict';
+
+  var EXPAND_ICON =
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M9 3H3v6M3 3l7 7M15 21h6v-6M21 21l-7-7"/></svg>';
+  var CLOSE_ICON =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M18 6 6 18M6 6l12 12"/></svg>';
+
+  var modal, stage, placeholder = null, activeSec = null;
+
+  function buildModal() {
+    modal = document.createElement('div');
+    modal.className = 'figzoom-modal';
+    modal.innerHTML =
+      '<div class="figzoom-panel" role="dialog" aria-modal="true" aria-label="Expanded figure">' +
+      '<button class="figzoom-close" type="button" aria-label="Close expanded figure">' +
+      CLOSE_ICON + '<span>Close</span></button>' +
+      '<div class="figzoom-stage"></div></div>';
+    document.body.appendChild(modal);
+    stage = modal.querySelector('.figzoom-stage');
+    modal.querySelector('.figzoom-close').addEventListener('click', close);
+    modal.addEventListener('mousedown', function (e) { if (e.target === modal) close(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal.classList.contains('open')) close();
+    });
+  }
+
+  function open(sec) {
+    if (!modal) buildModal();
+    if (activeSec) close();
+    activeSec = sec;
+    placeholder = document.createComment('figzoom-slot');
+    sec.parentNode.insertBefore(placeholder, sec);
+    stage.appendChild(sec);
+    document.documentElement.classList.add('figzoom-lock');
+    modal.classList.add('open');
+    stage.scrollTop = 0;
+    // Some figures redraw to fit their container; nudge them to the new width.
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  function close() {
+    if (!activeSec) return;
+    if (placeholder && placeholder.parentNode) {
+      placeholder.parentNode.insertBefore(activeSec, placeholder);
+      placeholder.remove();
+    }
+    modal.classList.remove('open');
+    document.documentElement.classList.remove('figzoom-lock');
+    activeSec = null; placeholder = null;
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  function hasFigure(sec) {
+    return !!sec.querySelector(
+      '.fig-plot, .two-col-panels, .three-col-panels, .demo-svg-wrap, canvas, svg');
+  }
+
+  function addButtons() {
+    var heads = document.querySelectorAll('.sec .fig-hd');
+    for (var i = 0; i < heads.length; i++) {
+      var hd = heads[i];
+      var sec = hd.closest('.sec');
+      if (!sec || !hasFigure(sec) || hd.querySelector('.figzoom-btn')) continue;
+      var btn = document.createElement('button');
+      btn.className = 'figzoom-btn';
+      btn.type = 'button';
+      btn.title = 'Expand this figure';
+      btn.setAttribute('aria-label', 'Expand this figure');
+      btn.innerHTML = EXPAND_ICON + '<span>Expand</span>';
+      (function (s) {
+        btn.addEventListener('click', function () { open(s); });
+      })(sec);
+      hd.appendChild(btn);
+    }
+  }
+
+  if (document.readyState !== 'loading') addButtons();
+  else document.addEventListener('DOMContentLoaded', addButtons);
+})();

@@ -379,8 +379,14 @@
       var el = document.createElement("div");
       el.className = "ecbot-msg " + cls;
       if (cls === "bot") {
-        el.textContent = text;   // safe fallback shown until KaTeX is ready
-        renderRich(el, text);
+        // Render prose into a dedicated child, not the bubble itself: renderRich
+        // rewrites innerHTML asynchronously (after KaTeX loads), which would wipe
+        // any cites/follow-up chips appended to the bubble right after this call.
+        var body = document.createElement("div");
+        body.className = "ecbot-body";
+        body.textContent = text;   // safe fallback shown until KaTeX is ready
+        el.appendChild(body);
+        renderRich(body, text);
       } else {
         el.textContent = text;
       }
@@ -418,12 +424,19 @@
       parent.appendChild(wrap);
       log.scrollTop = log.scrollHeight;
     }
-    function addFollowups(parent, q) {
-      var actions = [
-        ["Explain more simply", "Explain more simply, for a beginner: " + q],
-        ["Give an example", "Give a concrete worked example for: " + q],
-        ["Show the formula", "What is the key formula or definition for: " + q],
-      ];
+    function addFollowups(parent, q, suggestions) {
+      // Prefer the model's own contextual follow-ups (from the worker); fall back
+      // to the generic three when it didn't return any.
+      var actions;
+      if (suggestions && suggestions.length) {
+        actions = suggestions.slice(0, 3).map(function (s) { return [s, s]; });
+      } else {
+        actions = [
+          ["Explain more simply", "Explain more simply, for a beginner: " + q],
+          ["Give an example", "Give a concrete worked example for: " + q],
+          ["Show the formula", "What is the key formula or definition for: " + q],
+        ];
+      }
       var wrap = document.createElement("div");
       wrap.className = "ecbot-follow";
       actions.forEach(function (a) {
@@ -448,7 +461,7 @@
         var bubble = addMsg(data.answer, cls);
         if (data.answered) {
           addCites(bubble, data.matches);   // sources ONLY when actually answered
-          addFollowups(bubble, question);
+          addFollowups(bubble, question, data.suggestions);
         }
       } catch (err) {
         typing.remove();
