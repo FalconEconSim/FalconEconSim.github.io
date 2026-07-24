@@ -62,7 +62,12 @@
     .sv-log { height:440px; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.65rem; background:var(--paper-sunk); }
     .sv-msg { padding:.6rem .85rem; border-radius:12px; font-size: var(--t-small); line-height:1.5; max-width:92%; white-space:pre-wrap; word-wrap:break-word; color:var(--ink); }
     .sv-msg.user { align-self:flex-end; background:var(--unit-ink); color:#fff; border-bottom-right-radius:4px; }
-    .sv-msg.bot { align-self:flex-start; background:#fff; border:1px solid var(--rule2); border-bottom-left-radius:4px; }
+    .sv-msg.bot { align-self:flex-start; background:#fff; border:1px solid var(--rule2); border-bottom-left-radius:4px; white-space:normal; }
+    /* Rendered answer internals: section headings, code, and display math. */
+    .sv-msg.bot .ecbot-h { display:block; font-weight:700; font-size:1.02em; margin:.6em 0 .18em; }
+    .sv-msg.bot .ecbot-h:first-child { margin-top:0; }
+    .sv-msg.bot code { background:var(--paper-sunk); padding:.05em .3em; border-radius:4px; font-family:var(--font-mono); font-size:.92em; }
+    .sv-msg.bot .katex-display { overflow-x:auto; overflow-y:hidden; margin:.5em 0; }
     .sv-msg.note { align-self:flex-start; background:var(--paper-raised); border:1px solid var(--d-transfer); color:var(--d-transfer); }
     .sv-msg.error { align-self:flex-start; background:var(--paper-raised); border:1px solid var(--d-loss); color:var(--d-loss); }
     .sv-cites { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.55rem; }
@@ -207,9 +212,9 @@
 <script>
   function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
   function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
-  window.addEventListener('scroll', () => {
-    document.querySelector('.top-bar').classList.toggle('scrolled', window.scrollY > 8);
-  }, { passive: true });
+  // The v2 top bar is .topbar and needs no scroll-shadow toggle. The old
+  // handler queried .top-bar (which no longer exists here) and threw
+  // "null.classList" on every scroll event; removed.
 </script>
 
 <script src="assets/chatbot.js"></script>
@@ -268,7 +273,15 @@
   function svMsg(text, cls) {
     var el = document.createElement("div");
     el.className = "sv-msg " + cls;
-    el.textContent = text;
+    // Bot answers are Markdown + math and go through the shared renderer, so a
+    // formula like $U_1$ renders instead of showing raw LaTeX. Everything else
+    // (the student's own question, notes, errors) is plain text.
+    if (cls === "bot" && window.EC224Bot && EC224Bot.renderRich) {
+      el.textContent = text;   // safe fallback shown until KaTeX loads
+      EC224Bot.renderRich(el, text, function () { svLog.scrollTop = svLog.scrollHeight; });
+    } else {
+      el.textContent = text;
+    }
     svLog.appendChild(el); svLog.scrollTop = svLog.scrollHeight;
     return el;
   }
@@ -288,6 +301,10 @@
     pvOpen.href = match.url; pvOpen.style.display = "inline";
     pvStatus.textContent = "loading…";
     pvFrame.onload = function () {
+      // Declutter first, and independently of the highlight: the preview is a
+      // reading pane, so it drops the source page's chrome and its own chat
+      // widget whether or not we manage to pinpoint the exact line.
+      try { EC224Bot.injectFrameStyles(pvFrame.contentDocument); } catch (e) {}
       try {
         var found = EC224Bot.locateInFrame(pvFrame, match.text || "");
         pvStatus.textContent = found ? " highlighted the relevant passage" : "loaded (couldn't pinpoint the exact line)";

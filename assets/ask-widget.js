@@ -198,7 +198,12 @@
         setTimeout(function () { if (handle && handle.focus) handle.focus(); }, 60);
       }
     }
-    btn.addEventListener("click", function () { setOpen(!open); });
+    // stopPropagation matters: setOpen swaps the button's inner SVG, which
+    // detaches whatever <path> the pointer landed on. Without this, the
+    // outside-click handler below then sees that detached node as "outside the
+    // widget" and closes the popover in the same click that opened it, so the
+    // button appeared dead when clicked on the diagram itself.
+    btn.addEventListener("click", function (e) { e.stopPropagation(); setOpen(!open); });
     closeBtn.addEventListener("click", function () { setOpen(false); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && open) setOpen(false); });
     // click outside closes (but not clicks inside the citation lightbox)

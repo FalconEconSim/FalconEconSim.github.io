@@ -54,6 +54,86 @@
     return path;
   }
 
+  // ---- shared answer renderer: Markdown + KaTeX -----------------------------
+  /* The model returns Markdown plus math in mixed delimiters ($...$, $...$,
+     \\(...\\), \\[...\\]). Both the floating widget and ask.html render answers
+     through this, so a formula like $U_1$ renders instead of showing raw.
+
+     Currency vs math: a $...$ span is math only when the opening $ is NOT
+     followed by a space or a digit, so $I$ and $P_X$ render while "$5.99" and
+     "between $5 and $10" stay plain text. */
+  function _ensureKatex() {
+    if (window.__ecKatexReady) return window.__ecKatexReady;
+    window.__ecKatexReady = new Promise(function (resolve) {
+      if (window.katex && window.katex.renderToString) { resolve(); return; }
+      var base = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/";
+      if (!document.querySelector('link[data-ec-katex]')) {
+        var css = document.createElement("link");
+        css.rel = "stylesheet"; css.href = base + "katex.min.css";
+        css.setAttribute("data-ec-katex", "1");
+        document.head.appendChild(css);
+      }
+      var core = document.createElement("script");
+      core.src = base + "katex.min.js";
+      core.onload = function () { resolve(); };
+      core.onerror = function () { resolve(); };
+      document.head.appendChild(core);
+    });
+    return window.__ecKatexReady;
+  }
+
+  function _escHtml(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+
+  // Lightweight Markdown for the prose between math spans (already math-free).
+  function _proseToHtml(s) {
+    s = _escHtml(s);
+    s = s.replace(/\*\*([^*]+?)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/`([^`]+?)`/g, "<code>$1</code>");
+    s = s.replace(/(^|[\s(>])\*([^*\s][^*]*?)\*(?=[\s).,;:<]|$)/g, "$1<em>$2</em>");
+    s = s.replace(/(^|[\s(>])_([^_\s][^_]*?)_(?=[\s).,;:<]|$)/g, "$1<em>$2</em>");
+    return s.split("\n").map(function (ln) {
+      // Headings: ###, ####, ## -> a bold lead line (chat bubbles are small).
+      var h = ln.match(/^\s*(#{1,4})\s+(.*)$/);
+      if (h) return '<span class="ecbot-h">' + h[2] + '</span>';
+      // Bullets: "* item" / "- item"
+      var b = ln.match(/^\s*[\*\-]\s+(.*)$/);
+      if (b) return "&bull;&nbsp;" + b[1];
+      return ln;   // numbered "1." lines pass through with their number intact
+    }).join("<br>");
+  }
+
+  function _richToHtml(text) {
+    if (!window.katex || !window.katex.renderToString) return _proseToHtml(text);
+    var re = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\$(?![\s\d])([^$\n]*?[^\s])\$|\\\(([\s\S]+?)\\\)/g;
+    var out = "", last = 0, m;
+    while ((m = re.exec(text))) {
+      out += _proseToHtml(text.slice(last, m.index));
+      var display = m[1] !== undefined || m[2] !== undefined;
+      var latex = m[1] || m[2] || m[3] || m[4] || "";
+      try {
+        out += window.katex.renderToString(latex, {
+          displayMode: display, throwOnError: false, errorColor: "#c0392b"
+        });
+      } catch (e) { out += _escHtml(m[0]); }
+      last = re.lastIndex;
+    }
+    out += _proseToHtml(text.slice(last));
+    return out;
+  }
+
+  // el: target element. text: raw answer. onDone: optional callback after paint.
+  function renderRich(el, text, onDone) {
+    _ensureKatex().then(function () {
+      try { el.innerHTML = _richToHtml(text); }
+      catch (e) { el.textContent = text; }
+      if (onDone) onDone();
+    });
+  }
+
   // ---- locate + highlight a passage inside a same-origin iframe -------------
   function injectFrameStyles(doc) {
     if (doc.getElementById("ec224-hl-style")) return;
@@ -61,7 +141,15 @@
     s.id = "ec224-hl-style";
     s.textContent =
       ".ec224-hl{background:#fde68a !important;box-shadow:0 0 0 4px #fde68a;border-radius:3px;" +
-      "transition:background .4s;} ::selection{background:#fde68a;color:#1a1a1a;}";
+      "transition:background .4s;} ::selection{background:#fde68a;color:#1a1a1a;}" +
+      /* Declutter the live preview: it is a reading pane, not a working page.
+         Hide the site chrome (top bar, the figure/section rail, the week-nav
+         overlay, the footer) and the floating chat widget, and give the content
+         the full width, so the reader sees just the passage in context. */
+      ".topbar,.top-bar,.rail,.left-nav,.left-nav-overlay,.left-nav-toggle," +
+      ".site-foot,.home-foot,.hub-footer,.site-footer,.ecfab-wrap{display:none !important;}" +
+      ".layout{display:block !important;max-width:none !important;padding:1.25rem 1.5rem 3rem !important;}" +
+      "body{padding-top:0 !important;}";
     (doc.head || doc.documentElement).appendChild(s);
   }
 
@@ -131,7 +219,11 @@
 ".ecbot-log{height:330px;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.65rem;background:#fafafa;}" +
 ".ecbot-msg{padding:.6rem .85rem;border-radius:12px;font-size:.9rem;line-height:1.5;max-width:90%;white-space:pre-wrap;word-wrap:break-word;}" +
 ".ecbot-msg.user{align-self:flex-end;background:var(--ec);color:#fff;border-bottom-right-radius:4px;}" +
-".ecbot-msg.bot{align-self:flex-start;background:#fff;border:1px solid #e8e8e8;border-bottom-left-radius:4px;}" +
+".ecbot-msg.bot{align-self:flex-start;background:#fff;border:1px solid #e8e8e8;border-bottom-left-radius:4px;white-space:normal;}" +
+".ecbot-msg.bot .ecbot-h{display:block;font-weight:700;font-size:1.02em;margin:.6em 0 .18em;}" +
+".ecbot-msg.bot .ecbot-h:first-child{margin-top:0;}" +
+".ecbot-msg.bot code{background:#f3f4f6;padding:.05em .3em;border-radius:4px;font-size:.92em;}" +
+".ecbot-msg.bot .katex-display{overflow-x:auto;overflow-y:hidden;margin:.5em 0;}" +
 ".ecbot-msg.note{align-self:flex-start;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.86rem;}" +
 ".ecbot-msg.error{align-self:flex-start;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;}" +
 ".ecbot-cites{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem;}" +
@@ -278,73 +370,9 @@
        Currency vs math: a $...$ span counts as math only when the opening $ is
        NOT followed by a space or a digit. That renders variables like $I$ or
        $P_X$ while leaving "$5.99" and "between $5 and $10" as plain text. */
-    var KATEX_VER = "0.16.11";
-
-    function ensureKatex() {
-      if (window.__ecKatexReady) return window.__ecKatexReady;
-      window.__ecKatexReady = new Promise(function (resolve) {
-        if (window.katex && window.katex.renderToString) { resolve(); return; }
-        var base = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/";
-        if (!document.querySelector('link[data-ec-katex]')) {
-          var css = document.createElement("link");
-          css.rel = "stylesheet"; css.href = base + "katex.min.css";
-          css.setAttribute("data-ec-katex", "1");
-          document.head.appendChild(css);
-        }
-        var core = document.createElement("script");
-        core.src = base + "katex.min.js";
-        core.onload = function () { resolve(); };
-        core.onerror = function () { resolve(); };
-        document.head.appendChild(core);
-      });
-      return window.__ecKatexReady;
-    }
-
-    function escHtml(s) {
-      return s.replace(/[&<>]/g, function (c) {
-        return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
-      });
-    }
-
-    // Lightweight Markdown for the prose between math spans (already math-free).
-    function proseToHtml(s) {
-      s = escHtml(s);
-      s = s.replace(/\*\*([^*]+?)\*\*/g, "<strong>$1</strong>");
-      s = s.replace(/`([^`]+?)`/g, "<code>$1</code>");
-      s = s.replace(/(^|[\s(>])\*([^*\s][^*]*?)\*(?=[\s).,;:<]|$)/g, "$1<em>$2</em>");
-      s = s.replace(/(^|[\s(>])_([^_\s][^_]*?)_(?=[\s).,;:<]|$)/g, "$1<em>$2</em>");
-      return s.split("\n").map(function (ln) {
-        var m = ln.match(/^\s*[\*\-]\s+(.*)$/);   // "* item" / "- item"
-        return m ? "&bull;&nbsp;" + m[1] : ln;
-      }).join("<br>");
-    }
-
-    // Split into math spans (rendered by KaTeX) and prose (escaped + Markdown).
-    function richToHtml(text) {
-      var re = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\$(?![\s\d])([^$\n]*?[^\s])\$|\\\(([\s\S]+?)\\\)/g;
-      var out = "", last = 0, m;
-      while ((m = re.exec(text))) {
-        out += proseToHtml(text.slice(last, m.index));
-        var display = m[1] !== undefined || m[2] !== undefined;
-        var latex = m[1] || m[2] || m[3] || m[4] || "";
-        try {
-          out += window.katex.renderToString(latex, {
-            displayMode: display, throwOnError: false, errorColor: "#c0392b"
-          });
-        } catch (e) { out += escHtml(m[0]); }
-        last = re.lastIndex;
-      }
-      out += proseToHtml(text.slice(last));
-      return out;
-    }
 
     function renderRich(el, text) {
-      ensureKatex().then(function () {
-        if (!window.katex || !window.katex.renderToString) { el.textContent = text; return; }
-        try { el.innerHTML = richToHtml(text); }
-        catch (e) { el.textContent = text; }
-        log.scrollTop = log.scrollHeight;
-      });
+      window.EC224Bot.renderRich(el, text, function () { log.scrollTop = log.scrollHeight; });
     }
 
     function addMsg(text, cls) {
@@ -453,5 +481,7 @@
     injectFrameStyles: injectFrameStyles,
     openPreview: openPreview,
     mountCompact: mountCompact,
+    renderRich: renderRich,
+    richToHtml: _richToHtml,
   };
 })();
