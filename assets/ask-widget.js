@@ -197,7 +197,12 @@
       setTimeout(function () {
         if (open) return;
         label.classList.add("peek");
-        setTimeout(function () { label.classList.remove("peek"); }, 4200);
+        var drop = function () { label.classList.remove("peek"); window.removeEventListener("scroll", drop); };
+        // Dismiss the nudge the moment the reader starts scrolling, so it never
+        // lingers over a figure they have scrolled to. Otherwise it clears on
+        // its own after a few seconds.
+        window.addEventListener("scroll", drop, { passive: true, once: true });
+        setTimeout(drop, 4200);
       }, 1400);
     }
   }
