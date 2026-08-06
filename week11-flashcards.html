@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u4);--unit-ink:var(--u4-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 11: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+
+    .fc-wrap { max-width: 40rem; margin: 0 auto; padding: var(--s-7) var(--s-4) var(--s-9);
+               display: flex; flex-direction: column; gap: var(--s-5);
+               min-height: calc(100vh - 3rem - var(--s-9)); justify-content: center; }
+    .fc-hdr { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+    html[data-ds="v2"] .fc-title { font-family: var(--font-display); font-size: var(--t-h3); color: var(--unit-ink); min-width: 0; line-height: 1.2; }
+    .fc-ctr { font-size: var(--t-small); color: var(--ink-faint); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+    .fc-prog { width: 100%; height: 4px; background: var(--rule2); border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: var(--unit-ink); border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 5px 13px;
+              font-size: var(--t-small); font-weight: 500; cursor: pointer;
+              background: var(--paper-raised); color: var(--ink-soft);
+              font-family: var(--font-body);
+              transition: background var(--dur-state) var(--ease-out),
+                          border-color var(--dur-state) var(--ease-out),
+                          color var(--dur-state) var(--ease-out); }
+    .fc-ftag.active { background: var(--unit-ink); color: var(--paper-raised); border-color: var(--unit-ink); }
+    .fc-badge { display: inline-flex; width: fit-content; padding: 0;
+               font-size: var(--t-caption); font-weight: 400; letter-spacing: 0.06em;
+               text-transform: uppercase; border-radius: 0;
+               background: none !important; color: var(--ink-faint) !important; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: var(--rule-strong); }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: var(--font-display); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink); flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid var(--rule2); margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: var(--t-body); line-height: 1.75; color: var(--ink); white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: var(--paper-sunk); border: 1px solid var(--rule2); border-radius: 4px; padding: 0 5px; font-size: var(--t-caption); color: var(--ink-faint); }
+    .fc-rate-label { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--paper-raised); font-family: var(--font-body); transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: var(--t-caption); opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: var(--font-display); font-size: var(--t-h2); color: var(--unit-ink); }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: var(--t-h2); font-weight: 500; }
+    .fc-stat-l { font-size: var(--t-caption); font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: var(--paper-sunk); border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: var(--unit-ink); color: var(--paper-raised); border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; font-family: var(--font-body); transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid var(--rule2); border-radius: 12px; padding: 0.65rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; background: var(--paper-raised); font-family: var(--font-body); color: var(--unit-ink); transition: background 0.15s; }
+    .fc-btn-outline:hover { background: var(--brand-wash); }
+    @media (max-width: 560px) { html[data-ds="v2"] .fc-title { font-size: var(--t-body-sm); } }
+    @media (max-height: 680px) {
+      .fc-wrap { justify-content: flex-start; min-height: 0; padding-top: var(--s-5); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published active"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week11.html">Week 11</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Flashcards</span>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"Define the four-quadrant goods taxonomy using rivalry and excludability. Give an example of each.",
+    a:"Goods are classified by two properties: rival (does one person's use reduce availability?) and excludable (can non-payers be shut out?).\n\n- Private (rival, excludable): food, clothing, airline seats. The market works, the seller can price and exclude.\n- Club (non-rival, excludable): Netflix, toll roads, gyms. A firm can charge an access fee even though MC is near zero.\n- Common-pool (rival, non-excludable): fisheries, aquifers, congested roads. Tragedy of the commons, over-exploitation.\n- Pure public (non-rival, non-excludable): national defence, broadcast radio, public health. Free-rider problem, under-provision.\n\nKey point: NON-EXCLUDABILITY is what makes the market fail. Non-rivalry only removes the efficiency reason to charge." },
+
+  { id:2, type:"Def",
+    q:"What is a pure public good, and why does the free-rider problem arise?",
+    a:"A pure public good is non-excludable (once provided, no one can be prevented from consuming it) AND non-rival (one person's use does not reduce availability, so the marginal cost of serving an extra consumer is zero). National defence and broadcast radio are classic examples.\n\nFree-rider problem: because non-payers cannot be excluded, each person waits for someone else to pay and then enjoys the benefit for free. In the extreme, the good is never provided even though everyone would benefit, the public-goods version of the prisoner's dilemma.\n\nCommon trap: non-rival does NOT mean free to produce. Non-rivalry sets the efficient MARGINAL charge to zero, but the fixed cost (defence still costs hundreds of billions) must still be covered, usually through taxation." },
+
+  { id:3, type:"Def",
+    q:"When is a public good worth providing, and how do partial contributions change the game?",
+    a:"Provision is socially desirable when total willingness to pay exceeds cost:\n\\[r_A + r_B > c\\]\neven if no single person's WTP covers the cost alone.\n\nIn the binary 'pay the full cost or not' game, Free-ride strictly dominates Contribute, so the unique Nash equilibrium is (Free-ride, Free-ride) and the good is not provided, a prisoner's dilemma.\n\nAllowing PARTIAL contributions (each pays a share) transforms it into a COORDINATION game with two Nash equilibria: the efficient one (both contribute their share) and the zero-provision one. The question shifts from 'will it be provided?' to 'can we coordinate on the good equilibrium?'\n\nKickstarter implements this: backers are only charged if the target is met, so contributing becomes weakly dominant and the all-or-nothing threshold coordinates expectations on the efficient outcome." },
+
+  { id:4, type:"Def",
+    q:"Define a negative and a positive externality. Which way does each distort the market quantity?",
+    a:"An externality is a cost or benefit imposed on a third party, not reflected in market prices.\n\nNegative externality (factory pollution): social marginal cost exceeds private,\n\\[SMC = PMC + MEC > PMC\\]\nThe market equates PMC = MB and OVERPRODUCES: Q^E > Q^*.\n\nPositive externality (vaccination, education, network goods): social marginal benefit exceeds private,\n\\[SMB = MB + MEB > MB\\]\nThe market UNDERPRODUCES: Q^E < Q^*.\n\nMechanism: the decision-maker weighs only their own (private) costs and benefits, ignoring the spillover. A negative externality means they ignore harm they cause, so they do too much; a positive externality means they ignore benefit they confer, so they do too little." },
+
+  { id:5, type:"Def",
+    q:"State the Coase theorem, its three conditions, and when it breaks down.",
+    a:"The Coase theorem: if property rights are well-defined, transaction costs are zero, and parties can bargain freely, the market reaches an efficient allocation REGARDLESS of who holds the right. Only the distribution of the gains changes, not the efficient pollution level.\n\nThree conditions:\n1. Well-defined property rights.\n2. Zero (or low) transaction costs.\n3. Free bargaining.\n\nBreakdowns (common in practice):\n- High transaction costs when millions are affected.\n- Hold-up after sunk investments.\n- Information asymmetry about true costs and damages.\n- Free-riding among many victims.\n\nA single factory and a single downstream fishery with clear rights will bargain to efficiency on their own. But global carbon (hundreds of millions affected across countries) fails all conditions, so government intervention (a tax or cap) is the only path to the optimum." },
+
+  { id:6, type:"Def",
+    q:"State the Pigouvian tax rule. Why is it evaluated at Q* and not at Q^E?",
+    a:"A Pigouvian tax sets a per-unit tax equal to the marginal external cost AT THE SOCIAL OPTIMUM:\n\\[t^{*} = MEC(Q^{*})\\]\n\nThe tax shifts the effective supply curve from PMC up to PMC + t* = SMC, moving the equilibrium to Q* and eliminating the deadweight loss.\n\nWhy Q* and not Q^E: the tax should equal the external cost at the DESTINATION quantity you want to reach, not at the (larger) uncorrected market quantity. When MEC is constant, MEC(Q*) = MEC(Q^E) and it doesn't matter; but when MEC depends on Q, you must first solve for Q*, then evaluate MEC there. Taxing at MEC(Q^E) would over-tax and push output below the optimum.\n\nNote: the tax does not stop pollution entirely, it moves output to the efficient level, where some pollution remains because its marginal benefit still exceeds its full social cost." },
+
+  { id:7, type:"Def",
+    q:"How does cap-and-trade minimise the cost of hitting a pollution target?",
+    a:"The regulator sets a total pollution cap, issues permits equal to it, and lets firms buy and sell. At equilibrium every firm equates its marginal abatement cost to the permit price:\n\\[MAC_A(e_A^{*}) = MAC_B(e_B^{*}) = \\lambda^{*}\\]\n\nFirms with LOW abatement costs clean up more and sell permits; firms with HIGH costs buy them. Trading reallocates abatement to whoever can do it cheapest, so the environmental target is met at MINIMUM total cost.\n\nWhy equalising MAC is optimal: if two firms had different marginal abatement costs, you could shift a unit of cleanup from the high-cost firm to the low-cost firm and cut total cost with the same total abatement. Only when all MACs are equal is no such improvement possible.\n\nThis is exactly why equal regulation (forcing every firm to abate the same amount) is wasteful: it ignores cost differences." },
+
+  { id:8, type:"Eq",
+    q:"Externality benchmark. P = 100 - Q, PMC = 10 + Q, MEC = 20. Find Q^E, Q*, and the deadweight loss.",
+    a:"Market equilibrium (PMC = MB):\n10 + Q = 100 - Q, so 2Q = 90, Q^E = 45, P^E = $55.\n\nSocial optimum (SMC = MB), with SMC = PMC + MEC = 30 + Q:\n30 + Q = 100 - Q, so 2Q = 70, Q^* = 35, P^* = $65.\n\nDeadweight loss (triangle between SMC and MB over the overproduced units):\n\\[DWL = \\tfrac12(Q^E - Q^*)[SMC(Q^E) - MB(Q^E)]\\]\nAt Q^E = 45: SMC = 30 + 45 = 75, MB = 100 - 45 = 55, gap = 20.\nDWL = (1/2)(45 - 35)(20) = (1/2)(10)(20) = $100.\n\nThe market overproduces 10 units, each with social cost exceeding its benefit, destroying $100 of surplus." },
+
+  { id:9, type:"Eq",
+    q:"Pigouvian tax with varying MEC. P = 200 - 3Q, PMC = 20 + Q, MEC = 2Q. Find Q*, the correct tax, and explain why MEC(Q^E) would over-tax.",
+    a:"Social optimum: SMC = PMC + MEC = 20 + Q + 2Q = 20 + 3Q. Set = MB:\n20 + 3Q = 200 - 3Q, so 6Q = 180, Q^* = 30.\n\nCorrect tax:\n\\[t^{*} = MEC(Q^{*}) = 2(30) = \\$60\\]\n\nWhy MEC(Q^E) over-taxes: the uncorrected market quantity is larger. PMC = MB: 20 + Q = 200 - 3Q, so 4Q = 180, Q^E = 45. Then MEC(Q^E) = 2(45) = $90 > $60.\n\nTaxing at $90 would push output BELOW the optimum (over-correction), because $90 is the external cost at a quantity we are not trying to reach. The tax must equal marginal external cost at the destination Q*, not at the starting point Q^E." },
+
+  { id:10, type:"Eq",
+    q:"Cap-and-trade cost saving. MAC_A = 2e_A, MAC_B = 8e_B, total abatement = 100. Find the efficient allocation, permit price, and cost vs equal regulation.",
+    a:"Equalise marginal abatement costs: 2e_A = 8e_B, so e_A = 4e_B. With e_A + e_B = 100:\n4e_B + e_B = 100, e_B^{*} = 20, e_A^{*} = 80.\n\nPermit price: lambda^{*} = 2(80) = 8(20) = $160.\n\nTotal cost (area under each MAC) = (1/2)(2)(80^2) + (1/2)(8)(20^2) = 6,400 + 1,600 = $8,000.\n\nEqual regulation (e_A = e_B = 50):\n(1/2)(2)(50^2) + (1/2)(8)(50^2) = 2,500 + 10,000 = $12,500.\n\nSaving = $4,500, about 36%. The low-cost firm A does most of the cleanup (80 vs 20). Equal regulation wastes firm A's cost advantage by forcing the high-cost firm B to over-abate." },
+
+  { id:11, type:"Eq",
+    q:"Free-rider game. Three neighbours can jointly fund a $300/month guard; each values it at $120/month, deciding alone. Is it optimal? Will anyone pay? What surplus is missed?",
+    a:"Socially optimal? Total WTP = 3 x $120 = $360 > $300 cost. Net social surplus = $60. Yes, it should be provided.\n\nWill anyone pay (deciding independently, full-cost contribution)? No. Each neighbour reasons: 'if the other two pay, I benefit for free; if they don't, my $300 alone is wasted.' Free-riding is the dominant choice, so the guard is not hired.\n\nMissed net surplus = $60.\n\nThis is the free-rider problem: individually rational free-riding produces a collectively irrational outcome (no guard, despite $360 of value for $300 of cost). Fixing it needs a mechanism, mandatory cost-sharing, a coordinating threshold (Kickstarter-style), or government provision funded by taxes." },
+
+  { id:12, type:"Mistake",
+    q:"Common mistake: computing the externality deadweight loss from the MEC curve alone. What is the correct measurement?",
+    a:"Wrong. The DWL triangle is NOT the area under MEC by itself.\n\nThe correct triangle uses the VERTICAL GAP between the social marginal cost (SMC) and the demand curve (MB), measured at the market quantity Q^E, over the overproduced range from Q* to Q^E:\n\\[DWL = \\tfrac12(Q^E - Q^*)[SMC(Q^E) - MB(Q^E)]\\]\n\nWhy: the loss on each excess unit is how much its social cost exceeds the benefit consumers get, i.e. SMC minus MB, not the external cost MEC in isolation. At Q^E the private market has set PMC = MB, so the SMC-minus-MB gap equals the MEC there, but you must anchor the triangle on the gap between the social-cost and demand curves, then shrink it to zero at Q*.\n\nAlways draw SMC and MB and read the wedge between them." }
+];
+
+// engine
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'var(--unit-ink)',Eq:'var(--ink-faint)',Graph:'var(--d-gain)',Mistake:'var(--d-loss)'};
+const BG  = {Def:'var(--paper-raised)',Eq:'var(--paper-raised)',Graph:'var(--paper-raised)',Mistake:'var(--paper-raised)'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All',ratings={};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
+  const c=deck[idx];const col=COL[c.type]||'var(--unit-ink)';const bg=BG[c.type]||'var(--paper-raised)';
+  const total=deck.length;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <h1 class="fc-title">EC224 &middot; Week 11 &middot; Public Goods &amp; Externalities</h1>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:var(--d-loss);border-color:var(--d-transfer)" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--unit-ink);border-color:var(--unit-ink)" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--d-gain);border-color:var(--d-gain)" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-gain)">${stats.Easy}</div><div class="fc-stat-l" style="color:var(--d-gain)">Easy</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--unit-ink)">${stats.Good}</div><div class="fc-stat-l" style="color:var(--unit-ink)">Good</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-loss)">${stats.Hard}</div><div class="fc-stat-l" style="color:var(--d-loss)">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:var(--d-gain)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:var(--unit-ink)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:var(--d-transfer)"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  const c=deck[idx];if(c)ratings[c.id]=r;
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+  <!-- Ask the Course AI, floating 24/7 assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

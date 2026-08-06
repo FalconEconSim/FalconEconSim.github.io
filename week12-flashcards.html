@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u4);--unit-ink:var(--u4-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 12: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+
+    .fc-wrap { max-width: 40rem; margin: 0 auto; padding: var(--s-7) var(--s-4) var(--s-9);
+               display: flex; flex-direction: column; gap: var(--s-5);
+               min-height: calc(100vh - 3rem - var(--s-9)); justify-content: center; }
+    .fc-hdr { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+    html[data-ds="v2"] .fc-title { font-family: var(--font-display); font-size: var(--t-h3); color: var(--unit-ink); min-width: 0; line-height: 1.2; }
+    .fc-ctr { font-size: var(--t-small); color: var(--ink-faint); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+    .fc-prog { width: 100%; height: 4px; background: var(--rule2); border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: var(--unit-ink); border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 5px 13px;
+              font-size: var(--t-small); font-weight: 500; cursor: pointer;
+              background: var(--paper-raised); color: var(--ink-soft);
+              font-family: var(--font-body);
+              transition: background var(--dur-state) var(--ease-out),
+                          border-color var(--dur-state) var(--ease-out),
+                          color var(--dur-state) var(--ease-out); }
+    .fc-ftag.active { background: var(--unit-ink); color: var(--paper-raised); border-color: var(--unit-ink); }
+    .fc-badge { display: inline-flex; width: fit-content; padding: 0;
+               font-size: var(--t-caption); font-weight: 400; letter-spacing: 0.06em;
+               text-transform: uppercase; border-radius: 0;
+               background: none !important; color: var(--ink-faint) !important; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: var(--rule-strong); }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: var(--font-display); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink); flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid var(--rule2); margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: var(--t-body); line-height: 1.75; color: var(--ink); white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: var(--paper-sunk); border: 1px solid var(--rule2); border-radius: 4px; padding: 0 5px; font-size: var(--t-caption); color: var(--ink-faint); }
+    .fc-rate-label { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--paper-raised); font-family: var(--font-body); transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: var(--t-caption); opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: var(--font-display); font-size: var(--t-h2); color: var(--unit-ink); }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: var(--t-h2); font-weight: 500; }
+    .fc-stat-l { font-size: var(--t-caption); font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: var(--paper-sunk); border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: var(--unit-ink); color: var(--paper-raised); border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; font-family: var(--font-body); transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid var(--rule2); border-radius: 12px; padding: 0.65rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; background: var(--paper-raised); font-family: var(--font-body); color: var(--unit-ink); transition: background 0.15s; }
+    .fc-btn-outline:hover { background: var(--brand-wash); }
+    @media (max-width: 560px) { html[data-ds="v2"] .fc-title { font-size: var(--t-body-sm); } }
+    @media (max-height: 680px) {
+      .fc-wrap { justify-content: flex-start; min-height: 0; padding-top: var(--s-5); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published active"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week12.html">Week 12</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Flashcards</span>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"What is adverse selection? Why does the word 'adverse' apply?",
+    a:"Adverse selection arises when one party has private information about a FIXED characteristic (quality, risk, type) that the other cannot observe BEFORE the transaction.\n\nBecause buyers cannot tell high from low quality, they pay only the AVERAGE expected value. That price is too low for high-quality sellers, who exit, leaving a disproportionate share of low quality behind. The pool 'adversely' selects toward the worst types, hence the name.\n\nAkerlof's core insight: information asymmetry can destroy a market that would function perfectly under full information. The market for good used cars ('peaches') fails not because peaches lack value, but because buyers cannot distinguish them from lemons. Low quality imposes a negative externality on high-quality sellers through beliefs and prices." },
+
+  { id:2, type:"Def",
+    q:"Explain market unravelling with more than two quality tiers. What is the deeper welfare harm?",
+    a:"With several quality tiers, the failure CASCADES. In each round buyers update beliefs about the remaining pool, the expected value falls, and the next-highest tier finds the price unacceptable and exits.\n\nThree-type example (Low 50%, Medium 30%, High 20%): initial E[WTP] = $1,640 < High reserve ($3,000), so High exits. The pool re-weights, E[WTP] falls to $1,150 < Medium reserve, so Medium exits. Only lemons remain.\n\nThe deeper harm: adverse selection is not merely 'more bad goods are traded.' In the extreme, GOOD GOODS STOP TRADING ENTIRELY, even though buyers and sellers would both gain. The welfare loss is the destruction of high-quality markets, not just a mismatch, mutually beneficial trades simply vanish." },
+
+  { id:3, type:"Def",
+    q:"What is signalling, and what is the single-crossing condition that makes a signal credible?",
+    a:"Signalling is an action taken by the INFORMED party to credibly communicate private information (e.g. a worker acquiring education to reveal ability).\n\nIt works only under the single-crossing condition: the marginal cost of the signal must be LOWER for high-quality types than for low-quality types,\n\\[\\partial c_H/\\partial s < \\partial c_L/\\partial s\\]\nso only high types find it worth sending and low types cannot profitably mimic.\n\nIntuition: there must be a signal level high enough that the high type still gains (wage rise > cost) but the low type does not (cost > wage rise). If both types faced the same cost, the low type would copy the high type and the signal would convey nothing.\n\nSame logic underlies car warranties, brand reputation, professional certifications (CFA, CPA), and dividend policy." },
+
+  { id:4, type:"Def",
+    q:"What is screening, and why must a screening menu distort the low-type contract?",
+    a:"Screening is the mirror image of signalling: the UNINFORMED party designs a menu of contracts that induces each type to self-select. Classic case: insurance with different deductibles, low-risk buyers prefer high-deductible/low-premium, high-risk prefer low-deductible/high-premium.\n\nEffective menus require DISTORTIONS: the contract designed for the low-risk type must be made LESS attractive than its full-information optimum (partial coverage, higher deductibles) so that high-risk types will not want to mimic it.\n\nConsequence: the low-risk type bears the cost of the information asymmetry, receiving less-than-ideal coverage. This is the SECOND-BEST outcome, the best achievable when types cannot be observed directly.\n\nContrast with signalling: in screening the uninformed party moves first (offers the menu); in signalling the informed party moves first (sends the signal)." },
+
+  { id:5, type:"Def",
+    q:"What is moral hazard, and why does a flat salary produce zero effort?",
+    a:"Moral hazard arises when one party takes a hidden ACTION (effort) AFTER the contract is signed. An insured driver drives less carefully; a securitising bank under-screens loans.\n\nWhy flat pay fails: with a fixed salary the agent's pay is identical whatever effort they choose, but effort is personally costly. So the agent rationally chooses the MINIMUM effort, they bear the cost of effort but capture none of its reward.\n\nThe fix: tie pay to observable output (a positive performance weight beta on profit). This rewards effort and restores incentives, but it loads risk onto the agent because output also depends on luck.\n\nTiming diagnostic: moral hazard is EX POST (the hidden action is chosen after the deal), which distinguishes it from adverse selection (a hidden type that exists ex ante, before the deal)." },
+
+  { id:6, type:"Eq",
+    q:"Lemons critical fraction. Lemon: WTP $1,200, reserve $1,000. Peach: WTP $2,400, reserve $2,000. Find E[WTP](p) and the critical peach fraction p*.",
+    a:"Let p be the fraction of peaches. Buyers pay the expected value:\n\\[E[WTP] = p(2{,}400) + (1-p)(1{,}200) = 1{,}200 + 1{,}200p\\]\n\nPeaches trade only if this expected price covers the peach seller's reserve ($2,000):\n1,200 + 1,200p >= 2,000, so 1,200p >= 800, and\n\\[p^{*} = 2/3 \\approx 0.667\\]\n\nInterpretation:\n- p > 2/3: pooling equilibrium, E[WTP] exceeds $2,000, so peaches stay and both types trade.\n- p < 2/3: separating, E[WTP] falls below $2,000, peaches exit, only lemons trade.\n\nCheck: at p = 0.75, E[WTP] = $2,100 > $2,000 (pool). At p = 0.5, E[WTP] = $1,800 < $2,000 (peaches exit)." },
+
+  { id:7, type:"Eq",
+    q:"Spence separating range. y_H = $100,000, y_L = $40,000, c_H(s) = s, c_L(s) = 3s. Derive both incentive constraints and state the separating range.",
+    a:"For a separating equilibrium, the high type signals (s* > 0) and the low type does not.\n\nLow type's constraint (must NOT want to mimic): staying at s = 0 beats faking s*:\ny_L - 0 >= y_H - 3s^{*}, so 3s^{*} >= 100,000 - 40,000 = 60,000, giving s^{*} >= 20 (in thousands).\n\nHigh type's constraint (must WANT to signal): signalling beats pretending to be low:\ny_H - s^{*} >= y_L - 0, so s^{*} <= 60,000 - ... i.e. s^{*} <= 60 (in thousands).\n\nSeparating range:\n\\[20 \\le s^{*} \\le 60\\]\nThe minimum-cost (Riley) equilibrium is s^{*} = 20.\n\nSince education here adds no productivity, any s* > 0 is pure social waste, showing how asymmetric information causes over-investment in credentials." },
+
+  { id:8, type:"Eq",
+    q:"State the optimal performance weight in the principal-agent model and interpret its comparative statics.",
+    a:"With a linear contract w = alpha + beta*(profit), the optimal performance weight is:\n\\[\\beta^{*} = \\frac{1}{1 + r\\sigma^{2}}\\]\nwhere r is the agent's risk aversion and sigma^2 is the variance of the profit shock.\n\nComparative statics:\n- As output noise sigma^2 rises, beta* FALLS: pay would reflect luck more than effort, so heavy performance weighting just imposes risk without sharpening incentives.\n- As risk aversion r rises, beta* FALLS: loading risk onto a more risk-averse agent is costlier, so insure more.\n\nThis is the incentive-insurance trade-off: higher beta sharpens incentives but loads risk. Application: salespeople face steep commissions (their output closely tracks effort, low sigma^2), while research scientists get salary-heavy pay (noisy, long-horizon output, high sigma^2)." },
+
+  { id:9, type:"Graph",
+    q:"Compare adverse selection and moral hazard across hidden variable, timing, distortion, tools, and the diagnostic test.",
+    a:"Adverse selection vs Moral hazard:\n\n- Hidden variable: TYPE / quality (fixed) vs ACTION / effort (chosen).\n- Timing: EX ANTE, before contracting vs EX POST, after contracting.\n- Distortion: high quality crowded out of the market vs sub-optimal (too little) effort.\n- Tools: signalling, screening, certification vs performance pay, monitoring.\n- The test: a LIE DETECTOR (reveals hidden type) fixes adverse selection; a HIDDEN CAMERA (reveals hidden action) fixes moral hazard.\n\nThe single most reliable diagnostic is TIMING. Ask: does the hidden thing exist before the deal (a pre-existing type -> adverse selection) or is it chosen after the deal (an action -> moral hazard)? The 2008 crisis had both: originators knew loan quality investors didn't (adverse selection) and stopped screening once they could offload risk (moral hazard)." },
+
+  { id:10, type:"Eq",
+    q:"Insurance screening. Contract A (full $10,000 coverage, $5,000 premium) vs Contract B (partial $4,000 coverage, $400 premium). Accident chance 50% high-risk, 10% low-risk. Why must B be distorted?",
+    a:"Expected net benefit = (accident prob x coverage) - premium.\n\nHigh-risk (50%):\n- A: 0.5(10,000) - 5,000 = $0.\n- B: 0.5(4,000) - 400 = $1,600.\nLow-risk (10%):\n- A: 0.1(10,000) - 5,000 = -$4,000.\n- B: 0.1(4,000) - 400 = $0.\n\nAs stated, BOTH types prefer B, so the menu does not separate them. To make high-risk types self-select into A, contract B (aimed at low-risk) must be made LESS attractive to high-risk types, i.e. its coverage reduced further, until high-risk strictly prefer A.\n\nThat coverage reduction is the DISTORTION: the low-risk type ends up under-insured relative to full information. It is the price of separating types when risk is unobservable, the second-best outcome." },
+
+  { id:11, type:"Mistake",
+    q:"Common mistake: 'A signal works as long as it is costly.' What is missing?",
+    a:"Cost alone is not enough. A credible signal must satisfy the SINGLE-CROSSING condition: it must be cheaper for the high type than the low type,\n\\[\\partial c_H/\\partial s < \\partial c_L/\\partial s\\]\n\nWhy: separation requires a signal level that the high type is willing to send (benefit > cost for them) but the low type is not (cost > benefit for them). That gap only exists if the low type's marginal cost is steeper.\n\nIf both types face the SAME cost of the signal, the low type can mimic the high type at identical expense, so the signal conveys no information and no separating equilibrium exists, no matter how expensive the signal is.\n\nSo the test is not 'is it costly?' but 'is it DIFFERENTIALLY costly, cheaper for the type we want to identify?'" },
+
+  { id:12, type:"Mistake",
+    q:"Common mistake: 'Higher performance pay is always better' and 'signalling is always wasteful.' Correct both.",
+    a:"Both overstate a half-truth.\n\n'Higher performance pay is always better' is false. A larger beta sharpens incentives but loads risk onto a risk-averse agent. The optimum balances the two:\n\\[\\beta^{*} = \\frac{1}{1 + r\\sigma^{2}}\\]\nWhen output is noisy (high sigma^2) or the agent is very risk-averse (high r), the optimal contract is FLATTER, more salary, less bonus, because extra performance weight would mostly transfer risk, not effort.\n\n'Signalling is always socially wasteful' is also false. It is wasteful only if the signal adds NO productivity (pure Spence education that just sorts). If the education (or certification) ALSO raises real skill, the signal has dual value, sorting plus productivity, and may be socially efficient. Whether a signal wastes resources depends entirely on whether it does anything besides separate types." }
+];
+
+// engine
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'var(--unit-ink)',Eq:'var(--ink-faint)',Graph:'var(--d-gain)',Mistake:'var(--d-loss)'};
+const BG  = {Def:'var(--paper-raised)',Eq:'var(--paper-raised)',Graph:'var(--paper-raised)',Mistake:'var(--paper-raised)'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All',ratings={};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
+  const c=deck[idx];const col=COL[c.type]||'var(--unit-ink)';const bg=BG[c.type]||'var(--paper-raised)';
+  const total=deck.length;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <h1 class="fc-title">EC224 &middot; Week 12 &middot; Asymmetric Information</h1>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:var(--d-loss);border-color:var(--d-transfer)" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--unit-ink);border-color:var(--unit-ink)" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--d-gain);border-color:var(--d-gain)" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-gain)">${stats.Easy}</div><div class="fc-stat-l" style="color:var(--d-gain)">Easy</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--unit-ink)">${stats.Good}</div><div class="fc-stat-l" style="color:var(--unit-ink)">Good</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-loss)">${stats.Hard}</div><div class="fc-stat-l" style="color:var(--d-loss)">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:var(--d-gain)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:var(--unit-ink)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:var(--d-transfer)"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  const c=deck[idx];if(c)ratings[c.id]=r;
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+  <!-- Ask the Course AI, floating 24/7 assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u1);--unit-ink:var(--u1-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 1: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+
+    .fc-wrap { max-width: 40rem; margin: 0 auto; padding: var(--s-7) var(--s-4) var(--s-9);
+               display: flex; flex-direction: column; gap: var(--s-5);
+               min-height: calc(100vh - 3rem - var(--s-9)); justify-content: center; }
+    .fc-hdr { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+    html[data-ds="v2"] .fc-title { font-family: var(--font-display); font-size: var(--t-h3); color: var(--unit-ink); min-width: 0; line-height: 1.2; }
+    .fc-ctr { font-size: var(--t-small); color: var(--ink-faint); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+    .fc-prog { width: 100%; height: 4px; background: var(--rule2); border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: var(--unit-ink); border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 5px 13px;
+              font-size: var(--t-small); font-weight: 500; cursor: pointer;
+              background: var(--paper-raised); color: var(--ink-soft);
+              font-family: var(--font-body);
+              transition: background var(--dur-state) var(--ease-out),
+                          border-color var(--dur-state) var(--ease-out),
+                          color var(--dur-state) var(--ease-out); }
+    .fc-ftag.active { background: var(--unit-ink); color: var(--paper-raised); border-color: var(--unit-ink); }
+    .fc-badge { display: inline-flex; width: fit-content; padding: 0;
+               font-size: var(--t-caption); font-weight: 400; letter-spacing: 0.06em;
+               text-transform: uppercase; border-radius: 0;
+               background: none !important; color: var(--ink-faint) !important; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: var(--rule-strong); }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: var(--font-display); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink); flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid var(--rule2); margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: var(--t-body); line-height: 1.75; color: var(--ink); white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: var(--paper-sunk); border: 1px solid var(--rule2); border-radius: 4px; padding: 0 5px; font-size: var(--t-caption); color: var(--ink-faint); }
+    .fc-rate-label { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--paper-raised); font-family: var(--font-body); transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: var(--t-caption); opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: var(--font-display); font-size: var(--t-h2); color: var(--unit-ink); }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: var(--t-h2); font-weight: 500; }
+    .fc-stat-l { font-size: var(--t-caption); font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: var(--paper-sunk); border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: var(--unit-ink); color: var(--paper-raised); border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; font-family: var(--font-body); transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid var(--rule2); border-radius: 12px; padding: 0.65rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; background: var(--paper-raised); font-family: var(--font-body); color: var(--unit-ink); transition: background 0.15s; }
+    .fc-btn-outline:hover { background: var(--brand-wash); }
+    @media (max-width: 560px) { html[data-ds="v2"] .fc-title { font-size: var(--t-body-sm); } }
+    @media (max-height: 680px) {
+      .fc-wrap { justify-content: flex-start; min-height: 0; padding-top: var(--s-5); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published active"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week1.html">Week 1</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Flashcards</span>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"What is opportunity cost? Why is nothing ever truly free?",
+    a:"Opportunity cost is the value of the best foregone alternative when you make a choice.\n\nNothing is ever truly free because every choice uses a scarce resource, even if that resource is only your time. A 'free' 3-hour review session still costs the $45 you could have earned working, or whatever you valued the next-best use of those hours.\n\nWhy it matters: good decisions compare the full opportunity cost of an option, not just the money price. An engineer earning $120,000 who starts a company must count that forgone salary as a cost, which is exactly why economic profit can be negative even when accounting profit looks positive." },
+
+  { id:2, type:"Def",
+    q:"What is a sunk cost, and why should it be ignored in forward-looking decisions?",
+    a:"A sunk cost is a cost already incurred and unrecoverable. It is the same whether you continue or stop, so it should not affect any forward-looking decision.\n\nThe correct question is always: what are the FUTURE costs and benefits from this point forward?\n\nExample: you paid $15 for a bad film and are 20 minutes in. The $15 is gone either way; only the opportunity cost of the remaining time should decide whether you stay.\n\nSunk-cost fallacy: continuing a failing project because of prior investment ('we've already spent so much'). Rational managers treat past spending as irrelevant and weigh only future prospects." },
+
+  { id:3, type:"Def",
+    q:"What does it mean that utility is ordinal, not cardinal?",
+    a:"Utility is an ORDINAL index of satisfaction: it ranks bundles from most to least preferred, but the numbers carry no cardinal meaning.\n\nU = 10 is NOT 'twice as good' as U = 5; only the ordering matters. Utility tells you A is preferred to B, not by how much.\n\nKey consequence: any order-preserving (strictly increasing) transformation of a utility function represents the SAME preferences, i.e. the same indifference curves, rankings, and MRS. For example U = XY and V = ln X + ln Y describe identical preferences because V is a monotone transform of U.\n\nEconomists say utility is 'unique up to a monotone transformation.'" },
+
+  { id:4, type:"Def",
+    q:"State the three assumptions on rational preferences and what each guarantees.",
+    a:"1. Completeness: any two bundles can be ranked (A preferred to B, B to A, or indifferent). A consumer can never say 'I cannot compare these.'\n\n2. Transitivity: preferences are logically consistent. If A is preferred to B and B to C, then A is preferred to C. Violations allow 'money-pump' cycles where someone can be drained of cash.\n\n3. Monotonicity: more of both goods is always preferred. Rules out 'bads' and ensures indifference curves slope downward.\n\nTogether these three guarantee a well-behaved utility function and the familiar downward-sloping, non-crossing indifference map." },
+
+  { id:5, type:"Def",
+    q:"What is an indifference curve, and what are its four key properties?",
+    a:"An indifference curve (IC) is the set of all bundles (X, Y) giving the consumer EQUAL utility. The full set of ICs, one per utility level, is the indifference map.\n\nFour properties, each following from a preference assumption:\n1. Downward sloping, from monotonicity (losing Y must be compensated by gaining X).\n2. Convex / bowed inward, from diminishing MRS (love of variety).\n3. Higher = better, an IC farther from the origin is higher utility (monotonicity).\n4. Never cross, from transitivity (a crossing would give one bundle two utility levels).\n\nConvexity means consumers prefer balanced bundles to extremes: a mix of coffee and tea beats all of one at equal cost." },
+
+  { id:6, type:"Def",
+    q:"Define marginal utility and state the law of diminishing marginal utility.",
+    a:"Marginal utility is the additional utility from consuming one more unit of a good:\n\\[MU_X = \\partial U / \\partial X\\]\nthe partial derivative of the utility function with respect to X (holding Y fixed).\n\nLaw of diminishing marginal utility: MU_X decreases as X increases. The first cup of coffee is the most satisfying, the fifth much less so. Mathematically:\n\\[\\partial^2 U / \\partial X^2 < 0\\]\n\nWhy it matters: diminishing marginal utility is what makes indifference curves convex (bowed inward). As you accumulate X, each extra unit is worth less, so you demand less Y in exchange for it." },
+
+  { id:7, type:"Def",
+    q:"What is the marginal rate of substitution (MRS), and what does it mean economically?",
+    a:"The MRS is the number of units of Y a consumer will give up per unit of X gained, staying on the same indifference curve. It equals the (negative) slope of the IC:\n\\[MRS = -\\frac{MU_X}{MU_Y}\\]\n\nEconomic meaning: the MRS is the consumer's INTERNAL trade-off rate, how they personally value X in terms of Y at the current bundle.\n\nDiminishing MRS: as you move right along an IC (more X, less Y), |MRS| falls. You become less willing to sacrifice Y for X because X is now relatively abundant, producing the inward bow.\n\nIn Week 2 the MRS is compared to the market's trade-off rate, the price ratio P_X/P_Y, to find the optimal bundle." },
+
+  { id:8, type:"Eq",
+    q:"State the three differentiation rules used throughout the course, with a utility example of each.",
+    a:"1. Constant rule: d(c)/dx = 0. In U = X^(1/2) Y^(2/3), when taking the partial with respect to X, the Y^(2/3) term is a constant multiplier (its own derivative is 0) and stays put.\n\n2. Power rule: d(x^n)/dx = n x^(n-1). U = X^(1/2) gives MU_X = (1/2) X^(-1/2): positive but decreasing, capturing diminishing marginal utility.\n\n3. Sum rule: d(f + g)/dx = f' + g'. For U = X^2 + Y^(2/3), the partial with respect to X is 2X (the Y term is constant), so MU_X = 2X.\n\nThese three rules cover every derivative needed in EC224." },
+
+  { id:9, type:"Eq",
+    q:"Apply the power rule. Find dy/dx for: (a) y = x^4, (b) y = 1/x^(1/2), (c) y = 5x^3 + 2x^(1/2) + 7.",
+    a:"Power rule: d(x^n)/dx = n x^(n-1).\n\n(a) y = x^4 gives dy/dx = 4x^3.\n\n(b) Rewrite 1/x^(1/2) as x^(-1/2) FIRST, then differentiate: (-1/2) x^(-3/2).\n\n(c) Term by term (sum rule): d(5x^3) = 15x^2; d(2x^(1/2)) = x^(-1/2); d(7) = 0. So dy/dx = 15x^2 + x^(-1/2).\n\nMost common error: forgetting to rewrite a negative or fractional exponent before applying the rule. Always convert 1/x^2 to x^(-2) before differentiating." },
+
+  { id:10, type:"Eq",
+    q:"Cobb-Douglas marginal utilities. U = X^(1/3) Y^(2/3). Find MU_X and MU_Y, and say which assumption their sign reflects.",
+    a:"Treat the other variable as a constant multiplier and apply the power rule.\n\nMU_X = partial U / partial X = (1/3) X^(-2/3) Y^(2/3).\nMU_Y = partial U / partial Y = (2/3) X^(1/3) Y^(-1/3).\n\nBoth are strictly positive for X, Y > 0.\n\nPositive marginal utilities reflect MONOTONICITY: more of either good always increases utility. (Their decreasing pattern in their own good, e.g. MU_X falling as X rises, reflects diminishing marginal utility.)" },
+
+  { id:11, type:"Eq",
+    q:"MRS for Cobb-Douglas. For U = X^a Y^b, derive the MRS. Then evaluate it for U = X^(1/2) Y^(1/2).",
+    a:"MRS = -MU_X / MU_Y.\n\nFor U = X^a Y^b:\nMU_X = a X^(a-1) Y^b, MU_Y = b X^a Y^(b-1).\n\\[MRS = -\\frac{a X^{a-1} Y^b}{b X^a Y^{b-1}} = -\\frac{a}{b}\\cdot\\frac{Y}{X}\\]\n\nFor U = X^(1/2) Y^(1/2) (a = b = 1/2):\nMRS = -(1/1)(Y/X) = -Y/X.\n\nCheck diminishing MRS: at (2, 8), |MRS| = 4; at (4, 4), |MRS| = 1. As X rises and Y falls along the IC, |MRS| shrinks, exactly the convex, inward-bowed shape." },
+
+  { id:12, type:"Eq",
+    q:"MRS vs the price ratio (preview of the consumer optimum). A consumer has |MRS| = 4 but faces P_X/P_Y = 2. Should she buy more X or more Y? Why?",
+    a:"Compare the internal trade-off rate (|MRS|) to the market trade-off rate (P_X/P_Y).\n\n|MRS| = 4 means she would give up 4 units of Y for one more X and stay equally happy. The market only charges 2 units of Y per unit of X (P_X/P_Y = 2).\n\nX is 'underpriced' relative to how she values it, so she should buy MORE X and LESS Y. As she does, diminishing MRS lowers |MRS| until |MRS| = P_X/P_Y = 2, the optimum.\n\nGeneral rule (developed fully in Week 2):\n- |MRS| > P_X/P_Y: buy more X.\n- |MRS| < P_X/P_Y: buy more Y.\n- |MRS| = P_X/P_Y: optimal bundle." },
+
+  { id:13, type:"Graph",
+    q:"Why can two indifference curves never cross? Give the transitivity argument.",
+    a:"Suppose ICs at utility levels U1 < U2 crossed at bundle Z. Take A on U1 only and B on U2 only.\n\n- Z lies on U1, so Z ~ A (indifferent).\n- Z lies on U2, so Z ~ B (indifferent).\n- By transitivity, Z ~ A and Z ~ B imply A ~ B.\n\nBut B is on the higher curve U2 > U1, so B must be strictly preferred to A. That contradicts A ~ B.\n\nThe crossing forces the same bundle Z to deliver two different utility levels at once, which violates transitivity. Therefore indifference curves are distinct and never intersect." },
+
+  { id:14, type:"Graph",
+    q:"Why do indifference curves slope downward and bow inward (convex)? Tie each to its assumption.",
+    a:"Downward sloping, from MONOTONICITY: more is better, so if you take away some Y the consumer is worse off; the only way back to equal utility is to receive more X. When Y falls, X must rise, a negative slope. (An upward slope would mean more of both goods leaves you equally happy, contradicting 'more is better.')\n\nConvex / bowed inward, from DIMINISHING MRS: as the consumer gets more X and less Y, each extra X is worth fewer units of Y, so |MRS| falls moving rightward. The curve is steep on the left (X scarce, valuable) and flat on the right (X abundant), producing the inward bow.\n\nConvexity is why balanced bundles beat extremes: a mix sits on a higher IC than either corner." },
+
+  { id:15, type:"Mistake",
+    q:"Common mistake: including a sunk cost in a forward-looking decision. Why is it wrong, and what is the right question?",
+    a:"Wrong. Once a cost is sunk (already incurred and unrecoverable), it is identical whether you continue or stop, so it cannot change the ranking of your options.\n\nThe right question is only: from this point forward, do expected future benefits exceed expected future costs?\n\nExample: a restaurant owner spent $50,000 on renovations six months ago and business is poor. That $50,000 is gone regardless of staying open or closing, so it must NOT enter the decision. Compare only future revenues against future operating costs.\n\nThe sunk-cost fallacy ('we've invested too much to quit now') keeps people in losing projects. Rational choice is always forward-looking." },
+
+  { id:16, type:"Mistake",
+    q:"Common mistake: treating utility numbers as cardinal. What is the correct interpretation?",
+    a:"Wrong. Utility is ORDINAL: the numbers rank bundles but carry no magnitude. U = 10 is not 'twice as good' as U = 5; it only means the first bundle is preferred.\n\nCorrect interpretation: only the ORDERING matters. Any strictly increasing transformation of a utility function gives identical predictions, same indifference curves, same MRS, same optimal choices.\n\nQuick test: U = XY and V = (XY)^2 and W = ln X + ln Y all represent the SAME preferences, because each is a monotone transform of the others. If you ever find yourself saying 'this bundle gives 3x the happiness,' you have slipped into a cardinal interpretation the theory does not support." },
+
+  { id:17, type:"Mistake",
+    q:"Common mistake: confusing movement ALONG a curve with a SHIFT of the curve. What causes each?",
+    a:"These are different events with different causes.\n\nMovement ALONG a demand (or supply) curve: caused by a change in the good's OWN PRICE. Price changes trace out the existing curve; quantity demanded/supplied moves, the curve itself does not.\n\nSHIFT of the entire curve: caused by a change in something OTHER than the good's own price, income, tastes, prices of related goods, expectations, input costs, technology.\n\nMnemonic: own price = move along; everything else = shift. A common exam trap is to 'shift demand' when the price changed, or to slide along the curve when income rose. Identify the trigger first: is it the good's own price, or not?" },
+
+  { id:18, type:"Mistake",
+    q:"Common mistake: dropping the negative sign in the MRS, or mishandling negative exponents in the power rule.",
+    a:"Two frequent slip-ups:\n\n1. The MRS carries a negative sign: MRS = -MU_X / MU_Y, because indifference curves slope downward. When comparing magnitudes to the price ratio, work with |MRS| explicitly, but do not 'lose' the sign by accident, be clear whether you are reporting MRS or |MRS|.\n\n2. Rewrite negative and fractional exponents BEFORE differentiating. Convert 1/x^2 to x^(-2) first, then apply the power rule: d/dx = -2x^(-3). Differentiating '1/x^2' directly by inspection is the single most common algebra error on calculus questions.\n\nBoth are careless-error traps, not conceptual gaps: slow down and rewrite the expression cleanly first." }
+];
+
+// engine
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'var(--unit-ink)',Eq:'var(--ink-faint)',Graph:'var(--d-gain)',Mistake:'var(--d-loss)'};
+const BG  = {Def:'var(--paper-raised)',Eq:'var(--paper-raised)',Graph:'var(--paper-raised)',Mistake:'var(--paper-raised)'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All',ratings={};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
+  const c=deck[idx];const col=COL[c.type]||'var(--unit-ink)';const bg=BG[c.type]||'var(--paper-raised)';
+  const total=deck.length;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <h1 class="fc-title">EC224 &middot; Week 1 &middot; Utility &amp; Preferences</h1>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:var(--d-loss);border-color:var(--d-transfer)" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--unit-ink);border-color:var(--unit-ink)" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--d-gain);border-color:var(--d-gain)" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-gain)">${stats.Easy}</div><div class="fc-stat-l" style="color:var(--d-gain)">Easy</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--unit-ink)">${stats.Good}</div><div class="fc-stat-l" style="color:var(--unit-ink)">Good</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-loss)">${stats.Hard}</div><div class="fc-stat-l" style="color:var(--d-loss)">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:var(--d-gain)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:var(--unit-ink)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:var(--d-transfer)"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  const c=deck[idx];if(c)ratings[c.id]=r;
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+  <!-- Ask the Course AI, floating 24/7 assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

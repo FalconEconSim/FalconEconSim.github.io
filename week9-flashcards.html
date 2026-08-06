@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u3);--unit-ink:var(--u3-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 9: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+
+    .fc-wrap { max-width: 40rem; margin: 0 auto; padding: var(--s-7) var(--s-4) var(--s-9);
+               display: flex; flex-direction: column; gap: var(--s-5);
+               min-height: calc(100vh - 3rem - var(--s-9)); justify-content: center; }
+    .fc-hdr { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+    html[data-ds="v2"] .fc-title { font-family: var(--font-display); font-size: var(--t-h3); color: var(--unit-ink); min-width: 0; line-height: 1.2; }
+    .fc-ctr { font-size: var(--t-small); color: var(--ink-faint); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+    .fc-prog { width: 100%; height: 4px; background: var(--rule2); border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: var(--unit-ink); border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 5px 13px;
+              font-size: var(--t-small); font-weight: 500; cursor: pointer;
+              background: var(--paper-raised); color: var(--ink-soft);
+              font-family: var(--font-body);
+              transition: background var(--dur-state) var(--ease-out),
+                          border-color var(--dur-state) var(--ease-out),
+                          color var(--dur-state) var(--ease-out); }
+    .fc-ftag.active { background: var(--unit-ink); color: var(--paper-raised); border-color: var(--unit-ink); }
+    .fc-badge { display: inline-flex; width: fit-content; padding: 0;
+               font-size: var(--t-caption); font-weight: 400; letter-spacing: 0.06em;
+               text-transform: uppercase; border-radius: 0;
+               background: none !important; color: var(--ink-faint) !important; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: var(--rule-strong); }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: var(--font-display); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink); flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid var(--rule2); margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: var(--t-body); line-height: 1.75; color: var(--ink); white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: var(--paper-sunk); border: 1px solid var(--rule2); border-radius: 4px; padding: 0 5px; font-size: var(--t-caption); color: var(--ink-faint); }
+    .fc-rate-label { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--paper-raised); font-family: var(--font-body); transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: var(--t-caption); opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: var(--font-display); font-size: var(--t-h2); color: var(--unit-ink); }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: var(--t-h2); font-weight: 500; }
+    .fc-stat-l { font-size: var(--t-caption); font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: var(--paper-sunk); border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: var(--unit-ink); color: var(--paper-raised); border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; font-family: var(--font-body); transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid var(--rule2); border-radius: 12px; padding: 0.65rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; background: var(--paper-raised); font-family: var(--font-body); color: var(--unit-ink); transition: background 0.15s; }
+    .fc-btn-outline:hover { background: var(--brand-wash); }
+    @media (max-width: 560px) { html[data-ds="v2"] .fc-title { font-size: var(--t-body-sm); } }
+    @media (max-height: 680px) {
+      .fc-wrap { justify-content: flex-start; min-height: 0; padding-top: var(--s-5); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published active"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week9.html">Week 9</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Flashcards</span>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"Distinguish linear from non-linear pricing. Give the total-bill formula for each.",
+    a:"Linear pricing sets the bill exactly proportional to quantity:\n\\[T(q) = p\\cdot q\\]\nso the per-unit price is a constant p at every quantity.\n\nNon-linear pricing lets the average price T(q)/q vary with quantity, so the schedule can track the demand curve more closely than any single flat price.\n\nExample: a coffee shop charging $1.60 for 8 oz ($0.20/oz) and $2.00 for 16 oz ($0.125/oz) is pricing non-linearly, the big cup is not twice the price.\n\nWhy firms do it: charging more for early units (high WTP) and less for later units extracts more total surplus than one flat price ever could." },
+
+  { id:2, type:"Def",
+    q:"What is a two-part tariff? Name the two parts and give a real-world example.",
+    a:"A two-part tariff splits the price into:\n\\[T(q) = F + p\\cdot q\\]\n- F: a fixed access fee, paid once to gain the right to buy.\n- p: a per-unit (usage) charge for each unit consumed.\n\nExample: Amazon Prime charges a fixed annual fee (F is about $139) plus $0 shipping per eligible order (p = 0, near MC). The low usage charge encourages members to order freely; the fixed fee is where the profit comes from.\n\nOther examples: gym membership + per-class fee, Costco membership + shelf prices, a nightclub cover charge + drink prices." },
+
+  { id:3, type:"Eq",
+    q:"State the optimal two-part pricing rule and the profit-doubling result it produces under linear demand.",
+    a:"Two-step rule:\n\\[p^{*} = MC, \\qquad F^{*} = CS(p = MC)\\]\nStep 1: set the usage charge equal to marginal cost. This maximises the quantity traded, so total surplus (the pie) is as large as possible.\nStep 2: set the fixed fee equal to the entire consumer surplus at that price. This transfers the whole pie to the firm as a lump sum.\n\nDoubling result (linear demand):\n\\[\\pi_{2P} = 2\\pi_{M}\\]\nThe uniform monopoly profit rectangle is exactly half the consumer-surplus triangle; two-part pricing captures both halves, so profit exactly doubles." },
+
+  { id:4, type:"Eq",
+    q:"Prove the doubling result. Inverse demand P = 3 - Q/10, constant MC = AC = $1. Find uniform monopoly profit, then optimal two-part profit.",
+    a:"Uniform monopoly: MR = 3 - Q/5 = 1, so Q_M = 10, P_M = 3 - 1 = 2.\nProfit_M = (2 - 1)(10) = $10.\n\nCompetitive benchmark: P = MC gives Q_PC = 20, and\nCS_PC = (1/2)(3 - 1)(20) = $20.\n\nOptimal two-part:\np* = MC = $1, so Q = 20.\nF* = CS(p = MC) = $20.\nProfit_2P = $20 = 2 x $10. Confirmed.\n\nIntuition: the monopoly rectangle ($10) is exactly half the CS triangle ($20). Two-part pricing takes the whole triangle." },
+
+  { id:5, type:"Def",
+    q:"With unobservable heterogeneous consumers, what is an information rent? Use the gym example.",
+    a:"When a firm must charge every buyer the same fixed fee (because it cannot tell types apart), it sets F low enough to retain the low-demand type. The high-demand type would have paid more, so the surplus it keeps is an information rent, surplus the firm cannot extract because it lacks the information to identify and target that buyer.\n\nGym example (per-pair of one H and one L, p = MC):\n- CS_H = $162, CS_L = $50.\n- Uniform fee F = $50 keeps both: profit = 2 x 50 = $100, and Type H pockets an information rent of 162 - 50 = $112.\n- Excluding L (F = $162) earns only $81.\n\nThis is why firms invest in loyalty data and tiered memberships: any signal of type lets them claw back the rent." },
+
+  { id:6, type:"Def",
+    q:"What is a natural monopoly? What cost structure creates one?",
+    a:"A natural monopoly is a market where average cost declines over the entire relevant range of output, so a single firm supplies the whole market at lower total cost than two or more firms could.\n\nCause, the cost structure: large fixed cost FC plus low marginal cost c:\n\\[TC = FC + cQ, \\quad AC = FC/Q + c > c = MC\\]\nBecause MC < AC everywhere, one firm spreading the huge fixed cost over all output is always cheaper than splitting output between rivals.\n\nExamples: electricity grids, water pipes, broadband backbone, railway track, gas pipelines, all enormous fixed infrastructure with near-zero marginal cost per extra user.\n\nNote: this is not a market failure, it is a feature of the technology. The hard question is how to regulate the monopolist once it exists." },
+
+  { id:7, type:"Eq",
+    q:"Why can't a natural monopoly survive on marginal-cost pricing? Show it with the cost structure.",
+    a:"With TC = FC + cQ:\n\\[AC = \\frac{FC}{Q} + c > c = MC \\quad \\text{for all } Q > 0.\\]\nThe fixed cost is spread over units but never disappears, so average cost always sits above marginal cost.\n\nIf the regulator imposes P = MC = c, then P = c < AC, so the firm loses money on every unit (it never recovers the fixed cost). Loss = FC.\n\nConsequence: MC pricing is the efficient rule (it maximises total surplus, DWL = 0) but it is not self-financing. Without a subsidy the firm exits. This is the regulator's dilemma." },
+
+  { id:8, type:"Graph",
+    q:"Name the four regulatory regimes for a natural monopoly and give the verdict on each.",
+    a:"1. Unregulated (MR = MC): low Q, high P. Profitable for the firm but the most inefficient outcome.\n\n2. MC pricing (P = MC): efficient quantity, DWL = 0, but P < AC so the firm loses money and needs a subsidy.\n\n3. AC pricing / Ramsey (P = AC): the firm breaks even, self-financing, at the cost of a small residual DWL. This is the second-best solution and the one regulators usually choose.\n\n4. Two-part (p = MC, F = fixed): efficient quantity AND self-financing, but the fixed fee drives consumer surplus to zero.\n\nThe dilemma in one line: MC pricing is efficient but loss-making; AC pricing is viable but slightly inefficient; two-part is both efficient and viable but extracts all CS." },
+
+  { id:9, type:"Eq",
+    q:"AC pricing solve. A broadband provider has TC = 40 + 2Q and faces P = 20 - Q. Under P = AC regulation, what quantity and price result?",
+    a:"Set price equal to average cost:\n\\[20 - Q = \\frac{40}{Q} + 2\\]\nMultiply through by Q:\n18Q - Q^2 = 40, so Q^2 - 18Q + 40 = 0.\n\\[Q = \\frac{18 \\pm \\sqrt{324 - 160}}{2} = \\frac{18 \\pm \\sqrt{164}}{2}\\]\nQ is about 15.4 or 2.6.\n\nThe regulator picks the larger break-even quantity, Q is about 15.4, giving P = 20 - 15.4, about $4.6.\n\nThe firm exactly breaks even. A small deadweight loss remains versus MC pricing, the price we pay for self-financing." },
+
+  { id:10, type:"Def",
+    q:"What is cross-subsidisation, and how does it let a regulated natural monopoly break even without a subsidy?",
+    a:"Cross-subsidisation lets a regulated firm charge different groups different prices, so profit from a high-price (inelastic) group covers the fixed cost, letting a low-price (elastic) group pay near marginal cost.\n\nRailway example: MC = $20, FC = $4,000.\n- Business travellers (inelastic): P_B = $110, Q_B = 45, variable profit = (110 - 20)(45) = $4,050.\n- Leisure travellers (elastic): priced near MC = $20, roughly zero variable profit.\nThe business profit ($4,050) covers the fixed cost ($4,000), no government subsidy needed.\n\nThis is third-degree price discrimination in a regulatory suit: the regulator requires above-cost pricing for one group precisely so the firm can afford near-MC pricing for another." },
+
+  { id:11, type:"Def",
+    q:"Define a Nash equilibrium and a dominant strategy. How are they related?",
+    a:"Nash equilibrium: a strategy profile where each player's choice is a best response to the other's, so no player can gain by deviating unilaterally. It is self-enforcing, nobody has a reason to move.\n\\[\\pi_A(s_A^{*}, s_B^{*}) \\ge \\pi_A(s_A, s_B^{*}) \\text{ for all } s_A\\]\n\nDominant strategy: a strategy that is a best response to every strategy the opponent might pick. A rational player always plays it.\n\nRelationship: if every player has a dominant strategy, the profile of dominant strategies is automatically a Nash equilibrium (dominant-strategy equilibrium). But a Nash equilibrium can exist without any dominant strategy." },
+
+  { id:12, type:"Graph",
+    q:"Describe the circle (best-response) method for finding Nash equilibria in a 2x2 payoff matrix.",
+    a:"The circle method marks each player's best response, then reads off the cells where both are marked.\n\nStep 1: For each COLUMN (a fixed choice by the column player), underline the ROW player's highest payoff.\nStep 2: For each ROW (a fixed choice by the row player), underline the COLUMN player's highest payoff.\nStep 3: Any cell with BOTH payoffs underlined is a Nash equilibrium.\n\nWhy it works: an underline means 'this is my best response given what you did.' A cell underlined for both means neither player wants to deviate, exactly the Nash condition.\n\nThis best-response test is the workhorse for all of Weeks 9 and 10. A game can have zero, one, or several such cells." },
+
+  { id:13, type:"Eq",
+    q:"Circle method worked. Row = A. A-Top vs (Left, Right) = (3, 9), (2, 8). A-Bottom vs (Left, Right) = (0, 2), (1, 1). Find all Nash equilibria and dominant strategies.",
+    a:"A's best responses (compare A's payoff down each column):\n- vs Left: Top (3) beats Bottom (0). Top.\n- vs Right: Top (2) beats Bottom (1). Top.\nSo Top is dominant for A.\n\nB's best responses (compare B's payoff across each row):\n- vs Top: Left (9) beats Right (8). Left.\n- vs Bottom: Left (2) beats Right (1). Left.\nSo Left is dominant for B.\n\nBoth players' best responses meet at (Top, Left):\nUnique Nash equilibrium = (Top, Left), payoffs (3, 9)." },
+
+  { id:14, type:"Def",
+    q:"What is the prisoner's dilemma, and why is its Nash equilibrium collectively bad?",
+    a:"The prisoner's dilemma is a game with a single Nash equilibrium that is Pareto-dominated by an unreachable cooperative outcome. Each player has a dominant strategy to defect, so both defect, even though both would be better off cooperating.\n\nClassic payoffs: Confess is dominant for both, so the unique NE is (Confess, Confess) = (-3, -3), even though (Silent, Silent) = (-2, -2) is better for both.\n\nWhy the NE is bad: (Silent, Silent) is not stable, each player can improve by deviating to Confess, so cooperation unravels. Individual rationality produces a collectively irrational result.\n\nSame structure drives price wars, advertising wars, arms races, overfishing, and the tragedy of the commons." },
+
+  { id:15, type:"Eq",
+    q:"OPEC as a prisoner's dilemma. Both Restrict (900, 900); one Overproduces / other Restricts (1200, 300); both Overproduce (600, 600). Find the NE and explain cartel fragility.",
+    a:"Best responses (circle method):\n- If rival Restricts: Overproduce (1200) beats Restrict (900). Overproduce.\n- If rival Overproduces: Overproduce (600) beats Restrict (300). Overproduce.\nOverproduce is dominant for each, so:\nNash equilibrium = (Overproduce, Overproduce) = (600, 600).\n\nBut (Restrict, Restrict) = (900, 900) Pareto-dominates it: both members would earn more under the cartel quota.\n\nWhy cartels are fragile: the collectively best outcome is individually unstable, each member can earn more by secretly cheating (overproducing). Sustaining the cartel requires monitoring and credible punishment for defectors." },
+
+  { id:16, type:"Def",
+    q:"What is a coordination game, and how does it differ from a prisoner's dilemma?",
+    a:"A coordination game has MULTIPLE Nash equilibria, and the challenge is for players to land on the SAME one (ideally the best one) without being able to communicate.\n\nTechnology-standard example: (Standard A, Standard A) = (8, 8) and (Standard B, Standard B) = (6, 6) are both Nash equilibria. A Pareto-dominates B, but if each firm expects the other to choose B, then B is a best response too.\n\nDifference from a prisoner's dilemma:\n- Prisoner's dilemma: ONE Nash equilibrium, and it is Pareto-inferior. Problem = escaping a bad outcome.\n- Coordination game: MULTIPLE Nash equilibria, each stable once reached. Problem = selecting the good one.\n\nCoordination failure (landing on the inferior equilibrium): VHS vs Betamax, QWERTY vs Dvorak, AC vs DC current. A focal point or communication helps." },
+
+  { id:17, type:"Mistake",
+    q:"Common mistake: 'Setting the usage charge p = 0 maximises two-part profit.' Why is this wrong?",
+    a:"Wrong. The optimum is p* = MC, not p = 0.\n\nIf p < MC, the firm loses money on every unit sold. That per-unit loss more than offsets the slightly larger fixed fee it could charge, so total profit falls.\n\nThe logic of the two-step rule:\n- Set p = MC so the quantity traded, and therefore the total surplus pie, is as large as possible.\n- Then take that whole pie through F = CS(p = MC).\n\np = 0 only coincides with the optimum in the special case MC = 0 (as with Amazon Prime shipping, where marginal cost is near zero). In general, price the usage at marginal cost, not free." },
+
+  { id:18, type:"Mistake",
+    q:"Common mistake: setting the fixed fee equal to consumer surplus at the monopoly price. What is the right benchmark?",
+    a:"Wrong benchmark. The fixed fee must equal consumer surplus measured at p = MC, not at the monopoly price.\n\\[F^{*} = CS(p = MC)\\]\n\nWhy the order matters:\n1. First set p = MC. This is the price that maximises the quantity traded and therefore the size of the surplus triangle.\n2. Then measure that (largest possible) consumer surplus and take it as F.\n\nIf you instead compute CS at the higher monopoly price, the surplus triangle is smaller (fewer units, higher price), so you set a smaller fixed fee and leave money on the table. Make the pie as big as possible before you take it." },
+
+  { id:19, type:"Mistake",
+    q:"Common mistake: 'Marginal-cost pricing is always best for a natural monopoly.' Correct this.",
+    a:"MC pricing maximises total surplus (efficient quantity, DWL = 0) but it is not always the best practical choice, because it loses money.\n\nSince MC < AC everywhere, setting P = MC means P < AC, so the firm cannot cover its fixed cost and needs a government subsidy to survive.\n\nThat is why regulators usually pick AC pricing instead: the firm breaks even (self-financing), at the cost of a small residual deadweight loss. It is the 'second-best' rule.\n\nCorrect statement: MC pricing is the most EFFICIENT rule, but AC pricing is the most common because it is efficient enough AND does not require taxpayer money." },
+
+  { id:20, type:"Mistake",
+    q:"Common mistake: calling (Silent, Silent) a Nash equilibrium in the prisoner's dilemma. Why is it not?",
+    a:"(Silent, Silent) is Pareto-superior, both players do better than at the Nash equilibrium, but it is NOT a Nash equilibrium, because it is not stable.\n\nTest: at (Silent, Silent), can either player improve by deviating alone? Yes. Given the other stays Silent, switching to Confess raises your own payoff (you go free instead of serving time). Since a profitable unilateral deviation exists, the Nash condition fails.\n\nThe unique Nash equilibrium is (Confess, Confess): there, neither player can improve by deviating.\n\nLesson: 'good for both players' is not the definition of a Nash equilibrium. 'No profitable unilateral deviation' is." },
+
+  { id:21, type:"Mistake",
+    q:"True or False: 'A Nash equilibrium is always efficient.'",
+    a:"False. A Nash equilibrium only guarantees that no player can improve by deviating UNILATERALLY. It says nothing about whether the outcome is collectively efficient.\n\nThe prisoner's dilemma is the counterexample: the unique Nash equilibrium (Confess, Confess) is worse for BOTH players than the cooperative (Silent, Silent), which is unreachable because it is not self-enforcing.\n\nWhy the two come apart: each player ignores the harm their defection imposes on the other (an externality within the game). Individually rational choices sum to a collectively bad outcome.\n\nSo: efficiency is about the group; Nash stability is about no single player wanting to move. They frequently disagree." },
+
+  { id:22, type:"Def",
+    q:"Rank the pricing strategies from Weeks 8-9 by information needed and profit: uniform monopoly, third-degree, two-part, perfect price discrimination.",
+    a:"From least to most information, and least to most profit:\n\n1. Uniform monopoly, needs no information. Profit = pi_M. CS > 0, DWL > 0.\n\n2. Third-degree (market separation), needs to observe the buyer's GROUP. Profit > pi_M. CS > 0, DWL reduced.\n\n3. Two-part pricing, needs AGGREGATE demand only. Profit = 2 pi_M (linear demand). CS = 0, DWL = 0.\n\n4. Perfect price discrimination, needs each buyer's INDIVIDUAL WTP. Profit = CS_PC + pi_M (the whole pie). CS = 0, DWL = 0.\n\nHeadline: two-part pricing is the week's centrepiece, it doubles profit and achieves efficiency using only aggregate demand, with no need to observe individual types." }
+];
+
+// engine
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'var(--unit-ink)',Eq:'var(--ink-faint)',Graph:'var(--d-gain)',Mistake:'var(--d-loss)'};
+const BG  = {Def:'var(--paper-raised)',Eq:'var(--paper-raised)',Graph:'var(--paper-raised)',Mistake:'var(--paper-raised)'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All',ratings={};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
+  const c=deck[idx];const col=COL[c.type]||'var(--unit-ink)';const bg=BG[c.type]||'var(--paper-raised)';
+  const total=deck.length;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <h1 class="fc-title">EC224 &middot; Week 9 &middot; Pricing &amp; Game Theory</h1>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:var(--d-loss);border-color:var(--d-transfer)" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--unit-ink);border-color:var(--unit-ink)" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--d-gain);border-color:var(--d-gain)" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-gain)">${stats.Easy}</div><div class="fc-stat-l" style="color:var(--d-gain)">Easy</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--unit-ink)">${stats.Good}</div><div class="fc-stat-l" style="color:var(--unit-ink)">Good</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-loss)">${stats.Hard}</div><div class="fc-stat-l" style="color:var(--d-loss)">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:var(--d-gain)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:var(--unit-ink)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:var(--d-transfer)"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  const c=deck[idx];if(c)ratings[c.id]=r;
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+  <!-- Ask the Course AI, floating 24/7 assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

@@ -3,22 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Week 12: Adverse Selection &amp; Moral Hazard</title>
+  <title>Week 12: Adverse Selection &amp; Moral Hazard &middot; EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <script>
-    window.MathJax = {
-      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
-      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
-      svg: { fontCache: 'global' }
-    };
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
   <link rel="stylesheet" href="shared.css" />
   <script src="assets/theme.js"></script>
   <style>
-    .layout-solo { max-width: calc(var(--measure-wide) + var(--s-5) * 2); }
+    /* Page-local only; the hub components live in shared.css under
+       DESIGN SYSTEM v2. See DESIGN.md. */
     .eyebrow { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase;
                color: var(--unit-ink); margin-bottom: var(--s-3); }
     html[data-ds="v2"] .byline { font-size: var(--t-body); color: var(--ink-faint); margin-top: var(--s-3); }
@@ -59,35 +52,11 @@
   </ul>
 </nav>
 
-<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
-
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <span class="sidebar-title">On this page</span>
-    <button class="sidebar-close" onclick="closeSidebar()">&#x2715;</button>
-  </div>
-  <ul class="sidebar-nav">
-    <li><a href="#objectives" onclick="closeSidebar()">Learning Objectives</a></li>
-    <li><a href="#topics"     onclick="closeSidebar()">Chapter Sections</a></li>
-    <li><a href="#compare"    onclick="closeSidebar()">Two Failures Compared</a></li>
-    <li><a href="#solutions"  onclick="closeSidebar()">Solutions</a></li>
-    <li><a href="#equations"  onclick="closeSidebar()">Equations</a></li>
-    <li><a href="#mistakes"   onclick="closeSidebar()">Exam Prep</a></li>
-    <li><a href="#questions"  onclick="closeSidebar()">Questions</a></li>
-    <li><a href="#videos"     onclick="closeSidebar()">Videos</a></li>
-  </ul>
-</aside>
-
 <div class="topbar">
   <a class="wordmark" href="index.html">EC224</a>
   <span class="crumb-sep">/</span>
-  <a href="week12.html">Week 12</a>
-  <span class="crumb-sep">/</span>
   <span class="crumb-here">Overview</span>
-  <span class="topbar-end">
-    <a class="btn" href="week12-viz.html">Visualizations</a>
-    <button class="btn" onclick="openLN()">All weeks</button>
-  </span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
 </div>
 
 <main class="layout-solo" id="main-content">
@@ -99,362 +68,54 @@
     <p class="byline">Prof. Naveen Sunder</p>
   </header>
 
-  <div class="download-row">
-    <a class="dl-btn" href="week12-viz.html">Interactive Visualizations</a>
-    <a class="dl-btn" href="https://brightspace.bentley.edu" target="_blank">Homework</a>
-  </div>
-  <div class="note" style="margin:var(--s-5) 0 var(--s-7)">
-    <strong>Note:&nbsp;</strong>This page is a structured summary of the Week 12 chapter, the course finale. It analyses information itself as a source of market failure: adverse selection (hidden type, before contracting) and moral hazard (hidden action, after contracting). The key diagnostic is timing, <em>ex ante</em> versus <em>ex post</em>.
-  </div>
-
-  <section class="section" id="objectives">
-    <p class="section-label">Learning Objectives</p>
-    <h2>What You Will Be Able to Do</h2>
-    <ul class="lo-list">
-      <li class="lo-item"><span class="lo-badge">LO1</span><span>Define adverse selection; derive the pooling/separating condition; find the critical peach fraction \(p^{*}\).</span></li>
-      <li class="lo-item"><span class="lo-badge">LO2</span><span>Trace the unravelling argument through multiple rounds of exit; compute the welfare loss.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO3</span><span>Explain signalling and screening; apply the single-crossing condition; interpret the Spence model education range.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO4</span><span>Set up the principal&ndash;agent model; derive optimal effort under a linear contract.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO5</span><span>Apply the participation (PC) and incentive-compatibility (ICC) constraints; solve for the optimal performance weight \(\beta^{*}\) and interpret the incentive&ndash;insurance trade-off.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO6</span><span>Distinguish adverse selection from moral hazard by timing and by the type of hidden variable.</span></li>
-    </ul>
-  </section>
-
-  <section class="section" id="topics">
-    <p class="section-label">Chapter Sections</p>
-    <h2>Topics</h2>
-    <div class="accordion-list">
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;12.2: Adverse Selection &amp; the Lemons Model</span><span class="acc-tag">LO1</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p><strong>Adverse selection</strong> arises when one party has private information about a fixed characteristic (quality, risk, type) that the other cannot observe <em>before</em> the transaction. Because buyers cannot tell high from low quality, they pay only the <em>average</em> expected value, which drives high-quality sellers out and leaves a disproportionate share of low quality: the word &ldquo;adverse.&rdquo;</p>
-          <p>In Akerlof&rsquo;s lemons model (lemon: seller reserve $1,000, buyer WTP $1,200; peach: seller reserve $2,000, buyer WTP $2,400), the buyer pays \(\mathbb{E}[WTP]=1{,}200+1{,}200p\) where \(p\) is the peach fraction. Setting this equal to the peach seller&rsquo;s reserve gives \(p^{*}=2/3\): above it the market pools (both trade), below it peaches exit and only lemons trade.</p>
-          <div class="app-box"><strong>Akerlof&rsquo;s Core Insight</strong>Information asymmetry can destroy a market that would function perfectly under full information. The market for peaches fails not because peaches lack value ($400 gains from trade), but because buyers cannot distinguish them from lemons. Low quality imposes a negative externality on high-quality sellers through beliefs and prices.</div>
+  <div class="hub-list">
+      <div class="hub-group">Study Materials</div>
+      <a class="hub-item" href="https://naveensunder.github.io/MicroBook/week12.html" target="_blank" rel="noopener">
+        <div>
+          <div class="hub-title">Textbook</div>
+          <div class="hub-desc">Read the full Week 12 chapter, the course finale, covering adverse selection and Akerlof's lemons model, the critical peach fraction and market unravelling, signalling and the Spence education model under the single-crossing condition, screening with menus of contracts, and moral hazard in the principal-agent model with the incentive-insurance trade-off.</div>
         </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;12.2.4: Market Unravelling</span><span class="acc-tag">LO2</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>With more than two quality tiers, the failure cascades. In each round buyers update their beliefs about the remaining pool, the expected value falls, and the next-highest tier finds the price unacceptable and exits. In a three-type market (Low 50%, Medium 30%, High 20%): at the start \(\mathbb{E}[WTP]=\$1{,}640\), below the High reserve of $3,000, so High exits; the pool re-weights, \(\mathbb{E}[WTP]\) falls to $1,150, below the Medium reserve, so Medium exits; only lemons remain.</p>
-          <div class="app-box"><strong>The Deeper Harm</strong>Adverse selection is not just &ldquo;more bad goods are traded.&rdquo; In the extreme, complete unravelling means good goods stop being traded at all, even though buyers and sellers would both gain. The welfare loss is the destruction of high-quality markets, not mere mismatch.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;12.2.5: Signalling &amp; the Spence Model</span><span class="acc-tag">LO3</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p><strong>Signalling</strong> is an action taken by the <em>informed</em> party to credibly communicate private information. It works only under the <strong>single-crossing condition</strong>: the marginal cost of the signal must be lower for high-quality types than for low-quality types, so only high types find it worth sending and low types cannot profitably mimic.</p>
-          <p>In Spence&rsquo;s education model (\(y_H=\$100{,}000,\ y_L=\$40{,}000,\ c_H(s)=s,\ c_L(s)=3s\)), the two incentive-compatibility constraints give a separating range \(20\le s^{*}\le 60\). The minimum-cost (Riley) equilibrium is \(s^{*}=20\). Because education here adds no productivity, any \(s^{*}&gt;0\) is pure social waste, showing how asymmetric information can cause over-investment in credentials.</p>
-          <div class="app-box"><strong>Signalling Beyond Education</strong>The same single-crossing logic explains car warranties, brand reputation, professional certifications (CFA, CPA), and dividend policy. A signal is credible only when it is cheap enough for the high type but too expensive for the low type to copy. Whether it is socially efficient depends on whether the signal <em>also</em> raises productivity.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;12.2.5: Screening &amp; Menus of Contracts</span><span class="acc-tag">LO3</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p><strong>Screening</strong> is the mirror image of signalling: the <em>uninformed</em> party designs a menu of contracts that induces each type to self-select. The classic case is insurance with different deductibles: low-risk individuals prefer high-deductible/low-premium contracts; high-risk prefer low-deductible/high-premium.</p>
-          <p>Effective screening menus require <strong>distortions</strong>: the contract designed for the low-risk type must be made <em>less</em> attractive than the full-information optimum (partial coverage, higher deductibles) so high-risk types will not mimic. The low-risk type bears the cost of information asymmetry, the <em>second-best</em> outcome.</p>
-          <div class="app-box"><strong>eBay and the Lemon Problem</strong>When eBay launched in 1995, buyers could not inspect goods, a textbook adverse-selection setup. Its reputation/feedback system turned this into a repeated game: sellers with 100% positive feedback fetch 5&ndash;10% higher prices, exactly as the signalling premium predicts. Third-party certification (car inspections, credit ratings) does the same by making quality publicly verifiable.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;12.4: Moral Hazard &amp; the Principal&ndash;Agent Model</span><span class="acc-tag">LO4&nbsp;&middot;&nbsp;LO5</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p><strong>Moral hazard</strong> arises when one party takes a hidden <em>action</em> (effort) after the contract is signed. An insured driver drives less carefully; a securitising bank under-screens loans. Because effort is unobservable, a flat salary produces zero effort: the agent bears the cost of effort but not its reward.</p>
-          <p>In the principal&ndash;agent model with a linear contract \(w=\alpha+\beta\pi\), the optimal performance weight is \(\beta^{*}=\dfrac{1}{1+r\sigma^{2}}\), where \(r\) is the agent&rsquo;s risk aversion and \(\sigma^{2}\) the variance of the profit shock. Higher \(\beta\) sharpens incentives but loads more risk onto a risk-averse agent, the <strong>incentive&ndash;insurance trade-off</strong>. As \(r\) or \(\sigma^{2}\) rises, \(\beta^{*}\) falls toward a flatter, more insured contract.</p>
-          <div class="app-box"><strong>Comparative Statics</strong>When output is very noisy (\(\sigma^{2}\) large), pay reflects luck more than effort, so the optimal contract puts little weight on performance. When the agent is very risk-averse (\(r\) large), loading risk is costly, so \(\beta^{*}\) again falls. This is why CEO pay is more performance-linked in stable industries and salespeople face steep commissions where effort clearly drives sales.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;12.3: The 2008 Crisis &amp; Real Applications</span><span class="acc-tag">LO6</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>The 2008 financial crisis combined both failures. <strong>Adverse selection:</strong> mortgage originators knew loan quality that MBS investors could not, and bundled the worse loans (Akerlof unravelling). <strong>Moral hazard:</strong> once a bank sold a loan into a security, it no longer bore default risk, so screening effort collapsed (&ldquo;NINJA&rdquo; loans). Dodd-Frank&rsquo;s skin-in-the-game rule (originators retain 5%) directly targets the moral hazard.</p>
-          <p>Other applications: the <strong>health-insurance death spiral</strong> (healthy people exit a pooled premium, raising it, driving out the next-healthiest, hence the ACA individual mandate), and <strong>Stiglitz&ndash;Weiss credit rationing</strong> (raising the interest rate drives out safe borrowers, so banks ration credit rather than raise rates).</p>
-          <div class="app-box"><strong>The Timing Diagnostic</strong>Adverse selection is <em>ex ante</em>: the hidden type exists before the deal. Moral hazard is <em>ex post</em>: the hidden action is chosen after the deal. A useful test: a lie detector (revealing type) fixes adverse selection; a hidden camera (revealing action) fixes moral hazard.</div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <section class="section" id="compare">
-    <p class="section-label">Quick Reference</p>
-    <h2>Two Information Failures Compared</h2>
-    <table class="rules-table">
-      <thead><tr><th></th><th>Adverse selection</th><th>Moral hazard</th></tr></thead>
-      <tbody>
-        <tr><td><span class="rule-name">Hidden variable</span></td><td><span class="rule-example">Type / quality (fixed)</span></td><td><span class="rule-example">Action / effort (chosen)</span></td></tr>
-        <tr><td><span class="rule-name">Timing</span></td><td><span class="rule-example"><em>Ex ante</em> (before contracting)</span></td><td><span class="rule-example"><em>Ex post</em> (after contracting)</span></td></tr>
-        <tr><td><span class="rule-name">Distortion</span></td><td><span class="rule-example">High quality crowded out</span></td><td><span class="rule-example">Sub-optimal effort</span></td></tr>
-        <tr><td><span class="rule-name">Tools</span></td><td><span class="rule-example">Signalling, screening, certification</span></td><td><span class="rule-example">Performance pay, monitoring</span></td></tr>
-        <tr><td><span class="rule-name">The test</span></td><td><span class="rule-example">Lie detector (reveals type)</span></td><td><span class="rule-example">Hidden camera (reveals action)</span></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="section" id="solutions">
-    <p class="section-label">Quick Reference</p>
-    <h2>Solutions to Information Problems</h2>
-    <div class="assumptions-grid">
-      <div class="assump-card">
-        <div class="assump-name">Signalling</div>
-        <div class="assump-def">The informed party acts. Credible only under single-crossing: the signal must be cheaper for high types. Education, warranties, brands.</div>
-      </div>
-      <div class="assump-card">
-        <div class="assump-name">Screening</div>
-        <div class="assump-def">The uninformed party offers a menu that induces self-selection. Requires distorting the low-type contract. Insurance deductibles.</div>
-      </div>
-      <div class="assump-card">
-        <div class="assump-name">Certification &amp; Reputation</div>
-        <div class="assump-def">Third parties verify quality; repeated interaction gives sellers a stake in honesty. eBay feedback, credit ratings, inspections.</div>
-      </div>
-      <div class="assump-card">
-        <div class="assump-name">Performance Pay</div>
-        <div class="assump-def">Ties reward to observable output so effort is incentivised, trading incentives against insurance via \(\beta^{*}=1/(1+r\sigma^{2})\).</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="equations">
-    <p class="section-label">Equations</p>
-    <h2>Key Equations</h2>
-    <div class="eq-list">
-      <div class="eq-row"><span class="eq-label">Expected buyer WTP (lemons)</span><span>\(\mathbb{E}[WTP] = 1{,}200 + 1{,}200p\)</span></div>
-      <div class="eq-row"><span class="eq-label">Critical peach fraction</span><span>\(p^{*} = 2/3\) (pool if \(p&gt;p^{*}\), separate if \(p&lt;p^{*}\))</span></div>
-      <div class="eq-row"><span class="eq-label">Single-crossing (signal cost)</span><span>\(\partial c_H/\partial s &lt; \partial c_L/\partial s\)</span></div>
-      <div class="eq-row"><span class="eq-label">Spence separating range</span><span>\(20 \le s^{*} \le 60\) (min-cost at \(s^{*}=20\))</span></div>
-      <div class="eq-row"><span class="eq-label">Optimal performance weight</span><span>\(\beta^{*} = \dfrac{1}{1+r\sigma^{2}}\)</span></div>
-    </div>
-  </section>
-
-  <section class="section" id="mistakes">
-    <p class="section-label">Exam Prep</p>
-    <h2>Five Common Mistakes</h2>
-    <div class="warning-box">
-      <h3>Watch out for these</h3>
-      <ul class="warning-list">
-        <li><strong>Confusing adverse selection with moral hazard.</strong> Adverse selection is a hidden <em>type</em> that exists before the deal; moral hazard is a hidden <em>action</em> chosen after the deal. Timing is the diagnostic.</li>
-        <li><strong>Thinking adverse selection just means &ldquo;more bad goods.&rdquo;</strong> The deeper harm is that good goods stop trading entirely; complete unravelling can destroy the high-quality market.</li>
-        <li><strong>Believing a signal works if it is merely costly.</strong> It must satisfy single-crossing: cheaper for the high type. If both types face the same cost, the signal cannot separate them.</li>
-        <li><strong>Assuming higher performance pay is always better.</strong> A larger \(\beta\) sharpens incentives but loads risk onto a risk-averse agent. The optimum balances the two: \(\beta^{*}=1/(1+r\sigma^{2})\).</li>
-        <li><strong>Claiming signalling is always socially wasteful.</strong> It is wasteful only if the signal adds no productivity. If education also raises skill, the signal has dual value and may be efficient.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="section" id="questions">
-    <p class="section-label">Practice</p>
-    <h2>Practice Questions</h2>
-    <div class="pq-filters">
-      <button class="pq-filter active" onclick="filterQ('all',this)">All (12)</button>
-      <button class="pq-filter" onclick="filterQ('1',this)">&#8902; Level 1</button>
-      <button class="pq-filter" onclick="filterQ('2',this)">&#8902;&#8902; Level 2</button>
-      <button class="pq-filter" onclick="filterQ('3',this)">&#8902;&#8902;&#8902; Level 3</button>
-    </div>
-    <div class="pq-list">
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q1</span>
-          <span class="pq-text">Which failure? Classify each as adverse selection or moral hazard: (a) a driver with full insurance drives faster; (b) a used-car seller hides a known defect; (c) an employee slacks once tenured; (d) sick people are likelier to buy health insurance.</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Moral hazard (hidden action after contracting). <strong>(b)</strong> Adverse selection (hidden type before contracting). <strong>(c)</strong> Moral hazard (hidden action). <strong>(d)</strong> Adverse selection (hidden type: risk level known to the buyer, not the insurer).</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q2</span>
-          <span class="pq-text">Expected value. Half the used cars are lemons (worth $1,200 to a buyer), half are peaches (worth $2,400). If a buyer cannot tell them apart, what is the most she will rationally pay?</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p>\(\mathbb{E}[WTP]=0.5(1{,}200)+0.5(2{,}400)=\$1{,}800\). If peach sellers value their cars at $2,000, they will not sell at $1,800, so only lemons are offered and the buyer revises down to $1,200.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q3</span>
-          <span class="pq-text">Single-crossing. Why must a credible signal be cheaper for the high type than the low type? What goes wrong if both face the same cost?</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p>If the signal is cheaper for the high type, there is a level that the high type will pay for (wage gain &gt; cost) but the low type will not (cost &gt; wage gain), so it separates them. If both face the same cost, the low type can mimic the high type at the same expense, so the signal conveys no information.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q4</span>
-          <span class="pq-text">Flat pay. Why does a flat salary produce zero effort under moral hazard? What feature of the contract fixes this?</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p>With a flat salary the agent&rsquo;s pay is the same regardless of effort, but effort is personally costly, so the agent chooses the minimum. Tying pay to observable output (a positive performance weight \(\beta\)) rewards effort and restores incentives, at the cost of loading some risk onto the agent.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q5</span>
-          <span class="pq-text">Critical fraction. Lemon: buyer WTP $1,200, seller reserve $1,000. Peach: buyer WTP $2,400, seller reserve $2,000. (a) Write \(\mathbb{E}[WTP]\) as a function of the peach fraction \(p\). (b) Find \(p^{*}\). (c) Is there a pooling equilibrium at \(p=0.75\)? At \(p=0.5\)?</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(\mathbb{E}[WTP]=p(2{,}400)+(1-p)(1{,}200)=1{,}200+1{,}200p\). <strong>(b)</strong> Pool if \(\mathbb{E}[WTP]\ge\) peach reserve $2,000: \(1{,}200+1{,}200p=2{,}000\Rightarrow p^{*}=2/3\approx0.667\). <strong>(c)</strong> \(p=0.75&gt;2/3\): pooling (\(\mathbb{E}[WTP]=\$2{,}100&gt;\$2{,}000\)). \(p=0.5&lt;2/3\): separating (\(\mathbb{E}[WTP]=\$1{,}800&lt;\$2{,}000\)), peaches exit.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q6</span>
-          <span class="pq-text">Higher valuation. In the lemons benchmark (lemon WTP $1,200; peach reserve $2,000), buyers now value peaches at $3,000 instead of $2,400. (a) Recompute \(p^{*}\). (b) Does a higher buyer valuation make the market more or less likely to unravel?</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(\mathbb{E}[WTP]=1{,}200+(3{,}000-1{,}200)p=1{,}200+1{,}800p\). Set \(=2{,}000\): \(1{,}800p=800\Rightarrow p^{*}=4/9\approx0.444\). <strong>(b)</strong> Less likely to unravel: a lower \(p^{*}\) means pooling survives at lower peach fractions, so a higher buyer valuation for quality supports the high-quality market.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q7</span>
-          <span class="pq-text">Spence separating range. Productivities \(y_H=\$100{,}000\), \(y_L=\$40{,}000\); costs \(c_H(s)=s\), \(c_L(s)=3s\). (a) Derive the low type&rsquo;s ICC. (b) Derive the high type&rsquo;s ICC. (c) State the range of separating thresholds and the minimum-cost equilibrium.</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Low type must prefer not to mimic: \(y_L-0\ge y_H-3s^{*}\Rightarrow 3s^{*}\ge 60\Rightarrow s^{*}\ge 20\). <strong>(b)</strong> High type must prefer to signal: \(y_H-s^{*}\ge y_L-0\Rightarrow s^{*}\le 60\). <strong>(c)</strong> Any \(20\le s^{*}\le 60\) separates; the minimum-cost (Riley) equilibrium is \(s^{*}=20\).</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q8</span>
-          <span class="pq-text">Insurance screening. An insurer offers Contract A (full $10,000 coverage, $5,000 premium) and Contract B (partial $4,000 coverage, $400 premium). High-risk accident chance 50%, low-risk 10%. Compute each type&rsquo;s expected net benefit for each contract and explain why B must be distorted.</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p>High-risk: A gives \(0.5(10{,}000)-5{,}000=\$0\); B gives \(0.5(4{,}000)-400=\$1{,}600\). Low-risk: A gives \(0.1(10{,}000)-5{,}000=-\$4{,}000\); B gives \(0.1(4{,}000)-400=\$0\). Both prefer B as stated, so B must be made <em>less</em> attractive to high-risk types (lower coverage) so they self-select into A. Reducing coverage in B is the distortion that separates the types, the second-best outcome.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q9</span>
-          <span class="pq-text">Three-round unravelling. Market: Low 50% (reserve $700), Medium 30% (reserve $1,500), High 20% (reserve $3,000); buyer WTP equals each type&rsquo;s value 700/1900/3600. (a) Compute round-0 \(\mathbb{E}[WTP]\); who exits? (b) Re-weight and compute round-1 \(\mathbb{E}[WTP]\); who exits? (c) What survives?</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(\mathbb{E}[WTP]=0.5(700)+0.3(1{,}900)+0.2(3{,}600)=\$1{,}640&lt;\$3{,}000\): High exits. <strong>(b)</strong> Re-weight Low \(=0.5/0.8=62.5\%\), Medium \(=37.5\%\): \(\mathbb{E}[WTP]=0.625(700)+0.375(1{,}900)=\$1{,}150&lt;\$1{,}500\): Medium exits. <strong>(c)</strong> Only Low (lemons) remain; buyers pay at most $700. The market fully unravels.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q10</span>
-          <span class="pq-text">Incentive&ndash;insurance trade-off. Optimal performance weight \(\beta^{*}=1/(1+r\sigma^{2})\). (a) What happens to \(\beta^{*}\) as output noise \(\sigma^{2}\) rises? (b) As risk aversion \(r\) rises? (c) Use this to explain why a salesperson faces steeper commissions than a research scientist.</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(\beta^{*}\) falls: noisier output means pay reflects luck, so heavy performance weighting just imposes risk without sharpening incentives. <strong>(b)</strong> \(\beta^{*}\) falls: a more risk-averse agent finds risk more costly, so the optimal contract insures more. <strong>(c)</strong> A salesperson&rsquo;s output closely tracks their own effort (low \(\sigma^{2}\)), so steep commissions are efficient; a scientist&rsquo;s output is noisy and long-horizon (high \(\sigma^{2}\)), so a flatter, salary-heavy contract is optimal.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q11</span>
-          <span class="pq-text">The 2008 crisis. Explain how mortgage securitisation produced both (a) adverse selection and (b) moral hazard, and (c) name the Dodd-Frank rule that targets the moral hazard and why it works.</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Adverse selection: originators knew individual loan quality that MBS investors could not, and bundled disproportionately toxic loans, an Akerlof unravelling in the secondary market. <strong>(b)</strong> Moral hazard: once a bank sold a loan into a security it no longer bore default risk, so its unobservable screening effort collapsed (NINJA loans). <strong>(c)</strong> The skin-in-the-game rule (retain 5% of securitised loans) makes the originator a partial residual claimant, restoring the incentive to screen.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q12</span>
-          <span class="pq-text">Credit rationing. Safe projects succeed with prob 0.9 (return $1,500); risky with prob 0.5 (return $2,500). Loan $1,000, repay \(1{,}000(1+r)\), limited liability. (a) Write each type&rsquo;s expected profit. (b) At what \(r^{*}\) do safe borrowers exit? (c) Why might the bank ration credit rather than raise \(r\)?</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(\mathbb{E}[\Pi_S]=0.9[1{,}500-1{,}000(1+r)]=450-900r\); \(\mathbb{E}[\Pi_R]=0.5[2{,}500-1{,}000(1+r)]=750-500r\). <strong>(b)</strong> Safe exit when \(450-900r&lt;0\Rightarrow r^{*}=0.5\) (50%). <strong>(c)</strong> Above \(r^{*}\) only risky borrowers remain, so the bank&rsquo;s expected return falls discontinuously (adverse selection). Raising \(r\) worsens the pool, so the bank prefers to hold rates down and ration the quantity of credit instead.</p>
-          </div></div></div>
-
-    </div>
-  </section>
-
-  <section class="section" id="videos">
-    <p class="section-label">Videos</p>
-    <h2>Recommended Viewing</h2>
-    <div class="video-list">
-
-      <a class="video-item" href="https://www.youtube.com/watch?v=sxJ9nSGuJgk" target="_blank" rel="noopener" aria-label="Asymmetric Information and the Market for Lemons">
-        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">6 min</span></div>
-        <div class="video-details">
-          <div class="video-title-text">Asymmetric Information &amp; the Market for Lemons</div>
-          <div class="video-uploader">Marginal Revolution University</div>
-          <div class="video-desc">Akerlof&rsquo;s model in plain terms: why hidden quality drives good cars out. Pairs with &sect;12.2 and the pooling/separating decision guide.</div>
-        </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
       </a>
-
-      <a class="video-item" href="https://www.youtube.com/watch?v=xrKj_yZTFHI" target="_blank" rel="noopener" aria-label="Signalling and Education">
-        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">9 min</span></div>
-        <div class="video-details">
-          <div class="video-title-text">Signalling, Screening &amp; the Spence Model</div>
-          <div class="video-uploader">Economics in Many Lessons</div>
-          <div class="video-desc">Develops education as a signal and the single-crossing condition. Directly supports &sect;12.2.5 and the signalling visualization.</div>
+      <a class="hub-item" href="week12-viz.html">
+        <div>
+          <div class="hub-title">Interactive Visualizations</div>
+          <div class="hub-desc">Two interactive tools: the market for lemons (slide the peach fraction across the critical threshold and watch the market flip between pooling, where peaches survive, and separating, where they unravel and exit) and the Spence signalling tool, which shades the separating range of education levels that credibly distinguish high from low types.</div>
         </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
       </a>
-
-      <a class="video-item" href="https://www.youtube.com/watch?v=Nz3o4Xj3Ars" target="_blank" rel="noopener" aria-label="Moral Hazard and the Principal-Agent Problem">
-        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">8 min</span></div>
-        <div class="video-details">
-          <div class="video-title-text">Moral Hazard &amp; the Principal&ndash;Agent Problem</div>
-          <div class="video-uploader">Marginal Revolution University</div>
-          <div class="video-desc">Explains hidden action, why flat pay fails, and the incentive&ndash;insurance trade-off. Reinforces &sect;12.4 and the \(\beta^{*}\) comparative statics.</div>
+      <div class="hub-group">Practice</div>
+      <a class="hub-item" href="https://brightspace.bentley.edu" target="_blank" rel="noopener">
+        <div>
+          <div class="hub-title">Graded Homework</div>
+          <div class="hub-desc">Submit your graded problem set for Week 12 on Brightspace. Complete and submit before the deadline to receive full credit.</div>
         </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
       </a>
-
-    </div>
-  </section>
-
-  <div class="week-nav">
-    <a class="week-nav-link" href="week11.html">
-      <span class="wnl-label">&larr; Previous</span>
-      <span class="wnl-title">Week 11: Public Goods &amp; Externalities</span>
-    </a>
-    <a class="week-nav-link" style="text-align:right" href="index.html">
-      <span class="wnl-label">Course &rarr;</span>
-      <span class="wnl-title">Back to Course Home</span>
-    </a>
+      <a class="hub-item" href="week12-flashcards.html">
+        <div>
+          <div class="hub-title">Flashcards</div>
+          <div class="hub-desc">Cards covering adverse selection and the lemons model, the critical peach fraction and unravelling, signalling and the single-crossing condition, the Spence separating range, screening menus, moral hazard and the principal-agent model, and the optimal performance weight.</div>
+        </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
+      </a>
   </div>
+
+  <footer class="site-foot">
+    <div>
+      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
+      &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
+    </div>
+    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
+  </footer>
 
 </main>
 
 <script>
   function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
   function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
-  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
-  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
-  function toggleAcc(btn) {
-    const body = btn.nextElementSibling;
-    const isOpen = body.classList.contains('open');
-    document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
-    document.querySelectorAll('.accordion-header').forEach(b => b.classList.remove('open'));
-    if (!isOpen) { body.classList.add('open'); btn.classList.add('open'); }
-  }
-  function togglePQ(btn) { const b = btn.nextElementSibling; b.classList.toggle('open'); btn.classList.toggle('open'); }
-  function toggleSol(btn) { const s = btn.nextElementSibling; s.classList.toggle('open'); btn.textContent = s.classList.contains('open') ? 'Hide Solution' : 'Show Solution'; }
-  function filterQ(level, btn) {
-    document.querySelectorAll('.pq-filter').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.pq-item').forEach(item => { item.dataset.hidden = (level !== 'all' && item.dataset.level !== level); });
-  }
 </script>
-  <!-- Ask the Course AI, floating assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
   <script src="assets/polish.js"></script>

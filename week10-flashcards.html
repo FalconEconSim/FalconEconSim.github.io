@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u3);--unit-ink:var(--u3-ink)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 10: Flashcards - EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise([document.body]).catch(()=>{});
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+  <style>
+
+    .fc-wrap { max-width: 40rem; margin: 0 auto; padding: var(--s-7) var(--s-4) var(--s-9);
+               display: flex; flex-direction: column; gap: var(--s-5);
+               min-height: calc(100vh - 3rem - var(--s-9)); justify-content: center; }
+    .fc-hdr { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+    html[data-ds="v2"] .fc-title { font-family: var(--font-display); font-size: var(--t-h3); color: var(--unit-ink); min-width: 0; line-height: 1.2; }
+    .fc-ctr { font-size: var(--t-small); color: var(--ink-faint); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+    .fc-prog { width: 100%; height: 4px; background: var(--rule2); border-radius: 99px; overflow: hidden; }
+    .fc-prog-fill { height: 100%; background: var(--unit-ink); border-radius: 99px; transition: width 0.4s ease; }
+    .fc-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fc-ftag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 5px 13px;
+              font-size: var(--t-small); font-weight: 500; cursor: pointer;
+              background: var(--paper-raised); color: var(--ink-soft);
+              font-family: var(--font-body);
+              transition: background var(--dur-state) var(--ease-out),
+                          border-color var(--dur-state) var(--ease-out),
+                          color var(--dur-state) var(--ease-out); }
+    .fc-ftag.active { background: var(--unit-ink); color: var(--paper-raised); border-color: var(--unit-ink); }
+    .fc-badge { display: inline-flex; width: fit-content; padding: 0;
+               font-size: var(--t-caption); font-weight: 400; letter-spacing: 0.06em;
+               text-transform: uppercase; border-radius: 0;
+               background: none !important; color: var(--ink-faint) !important; }
+    .fc-scene { perspective: 1000px; }
+    .fc-card-inner { position: relative; transform-style: preserve-3d; transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+    .fc-card-inner.flipped { transform: rotateY(180deg); }
+    .fc-front, .fc-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 1.75rem; min-height: 220px; display: flex; flex-direction: column; }
+    .fc-back { position: absolute; top: 0; left: 0; right: 0; transform: rotateY(180deg); border-color: var(--rule-strong); }
+    .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
+    .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
+    .fc-q { font-family: var(--font-display); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink); flex: 1; display: flex; align-items: center; }
+    .fc-q-sm { font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid var(--rule2); margin-bottom: 0.65rem; line-height: 1.45; }
+    .fc-a { font-size: var(--t-body); line-height: 1.75; color: var(--ink); white-space: pre-line; flex: 1; }
+    .fc-hint { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
+    .fc-kbd { display: inline-block; background: var(--paper-sunk); border: 1px solid var(--rule2); border-radius: 4px; padding: 0 5px; font-size: var(--t-caption); color: var(--ink-faint); }
+    .fc-rate-label { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.03em; }
+    .fc-rate-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .fc-rbtn { border: 1px solid; border-radius: 12px; padding: 0.6rem 0.5rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--paper-raised); font-family: var(--font-body); transition: opacity 0.15s, transform 0.1s; }
+    .fc-rbtn:hover { opacity: 0.8; transform: scale(0.98); }
+    .fc-rbtn .kh { font-size: var(--t-caption); opacity: 0.55; margin-top: 1px; }
+    .fc-reveal { animation: fc-ri 0.22s ease both; }
+    @keyframes fc-ri { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #fc-card-zone { will-change: transform, opacity; }
+    @keyframes fc-zone-exit { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-52px) scale(0.97); } }
+    @keyframes fc-zone-enter { from { opacity: 0; transform: translateX(52px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .fc-zone-exit  { animation: fc-zone-exit  0.18s cubic-bezier(.4,0,1,1) forwards; }
+    .fc-zone-enter { animation: fc-zone-enter 0.24s cubic-bezier(0,0,.2,1.2) both; }
+    .fc-summary { background: var(--paper-raised); border: 1px solid var(--rule2); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; text-align: center; }
+    .fc-sum-title { font-family: var(--font-display); font-size: var(--t-h2); color: var(--unit-ink); }
+    .fc-stat-row { display: flex; gap: 10px; width: 100%; }
+    .fc-stat { flex: 1; padding: 0.9rem; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .fc-stat-n { font-size: var(--t-h2); font-weight: 500; }
+    .fc-stat-l { font-size: var(--t-caption); font-weight: 500; opacity: 0.7; }
+    .fc-bar-track { width: 100%; height: 10px; background: var(--paper-sunk); border-radius: 99px; overflow: hidden; display: flex; }
+    .fc-bar-seg { height: 100%; transition: width 0.5s ease; }
+    .fc-btn-row { display: flex; gap: 8px; width: 100%; }
+    .fc-btn-primary { flex: 1; background: var(--unit-ink); color: var(--paper-raised); border: none; border-radius: 12px; padding: 0.7rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; font-family: var(--font-body); transition: opacity 0.2s; }
+    .fc-btn-primary:hover { opacity: 0.88; }
+    .fc-btn-outline { flex: 1; border: 1px solid var(--rule2); border-radius: 12px; padding: 0.65rem 1rem; font-size: var(--t-small); font-weight: 500; cursor: pointer; background: var(--paper-raised); font-family: var(--font-body); color: var(--unit-ink); transition: background 0.15s; }
+    .fc-btn-outline:hover { background: var(--brand-wash); }
+    @media (max-width: 560px) { html[data-ds="v2"] .fc-title { font-size: var(--t-body-sm); } }
+    @media (max-height: 680px) {
+      .fc-wrap { justify-content: flex-start; min-height: 0; padding-top: var(--s-5); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
+<nav class="left-nav" id="leftNav" aria-label="Course weeks">
+  <div class="left-nav-header">EC224</div>
+  <ul>
+    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
+    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
+    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
+    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
+    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
+    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
+    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
+    <li class="left-nav-item published"><a href="week8.html">Week 8</a></li>
+    <li class="left-nav-item published"><a href="week9.html">Week 9</a></li>
+    <li class="left-nav-item published active"><a href="week10.html">Week 10</a></li>
+    <li class="left-nav-item published"><a href="week11.html">Week 11</a></li>
+    <li class="left-nav-item published"><a href="week12.html">Week 12</a></li>
+  </ul>
+</nav>
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week10.html">Week 10</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Flashcards</span>
+</div>
+
+<main>
+  <div class="fc-wrap" id="fc-root"></div>
+</main>
+
+<script>
+const CARDS = [
+  { id:1, type:"Def",
+    q:"What is a dominant strategy? How does it simplify finding a Nash equilibrium?",
+    a:"A dominant strategy yields a strictly higher payoff than any other strategy, no matter what the opponent does. A rational player always plays it, so you need no reasoning about the opponent's choice.\n\nTwo anchoring facts:\n1. Dominant strategies do not exist in every game.\n2. When every player has one, the Nash equilibrium is simply the profile of dominant strategies.\n\nAdvertising example: Coke vs Pepsi each earns more by advertising regardless of the rival (it steals share when the rival is silent, and avoids losing share when the rival advertises). Advertising is dominant for both, and the Nash outcome (Advertise, Advertise) is Pareto-dominated by (Don't, Don't), a direct parallel to the prisoner's dilemma." },
+
+  { id:2, type:"Def",
+    q:"Describe the Cournot model. What does it mean that quantities are strategic substitutes?",
+    a:"In Cournot competition, firms choose QUANTITIES simultaneously, each treating the rival's output as given.\n\nFirm A maximises pi_A = (120 - q_A - q_B) q_A, giving the best-response (reaction) function:\n\\[q_A^{*}(q_B) = (120 - q_B)/2\\]\n\nStrategic substitutes: A's optimal output FALLS as q_B rises (the slope of the reaction function is negative). More rival output means A optimally produces less.\n\nEquilibrium (P = 120 - Q, MC = 0): q_A = q_B = 40, Q = 80, P = $40, pi = $1,600 each. Output lies strictly between monopoly (60) and competition (120): more firms means more output and a lower price." },
+
+  { id:3, type:"Def",
+    q:"What is backward induction, and what is the subgame-perfect Nash equilibrium (SPNE) it produces?",
+    a:"Backward induction solves a sequential game by starting at the terminal nodes and working backward, choosing the payoff-maximising action at each decision node.\n\nThe result is the subgame-perfect Nash equilibrium (SPNE): a Nash equilibrium that prescribes optimal play at EVERY subgame, so it eliminates equilibria sustained by non-credible threats.\n\nEntry game: an incumbent's threat to 'fight' any entrant is not credible, because once entry occurs, accommodating (payoff 2) beats fighting (payoff 0). Anticipating this, the entrant enters. SPNE = (Enter, Accommodate).\n\nCredibility requires commitment: a verbal threat is empty; only a pre-commitment (e.g. building excess capacity) that makes fighting a genuine best response can deter entry." },
+
+  { id:4, type:"Def",
+    q:"Describe the Stackelberg model. Why does the leader gain a first-mover advantage?",
+    a:"In Stackelberg competition the leader (Firm A) commits to a quantity FIRST, and the follower (Firm B) observes it and best-responds.\n\nSubstituting B's reaction q_B = (120 - q_A)/2 into A's profit gives pi_A = (60 - q_A/2) q_A, maximised at q_A = 60; the follower then produces q_B = 30.\n\nOutcome: Q = 90, P = $30, pi_A = $1,800, pi_B = $900. The leader produces 50% more than its Cournot quantity (40) and earns a $200 premium over Cournot ($1,600).\n\nWhy it works: by committing to a large output the leader forces the follower onto a lower branch of its reaction function. The commitment must be both OBSERVABLE and IRREVERSIBLE to confer the advantage." },
+
+  { id:5, type:"Def",
+    q:"State the Bertrand model and the Bertrand paradox. Which three assumptions make the paradox break down?",
+    a:"In Bertrand competition, firms set PRICES simultaneously. With identical products, unlimited capacity, and one-shot play, the unique Nash equilibrium is P_A = P_B = MC with ZERO profit: either firm can capture the whole market by undercutting a cent, and that logic drives price down to marginal cost.\n\nThe Bertrand paradox: just TWO firms suffice to reproduce the perfectly competitive outcome.\n\nThree assumptions that often fail (and restore positive margins):\n1. Capacity constraints: a small firm cannot serve the whole market, so undercutting is limited.\n2. Product differentiation: loyal customers let a firm price above MC.\n3. Repeated interaction: the threat of future price wars sustains tacit collusion.\n\nIf a near-identical duopoly still prices above MC, at least one assumption is broken. Identifying which is more useful than memorising the paradox." },
+
+  { id:6, type:"Def",
+    q:"State the Hotelling model result and the principle of minimum differentiation. Is the equilibrium efficient?",
+    a:"Two vendors on a 1-mile beach with uniformly distributed consumers each choose a location; a consumer visits the nearer vendor, so vendor A's share is (a + b)/2.\n\nMoving toward the centre RAISES a vendor's share (the derivative of A's share with respect to a is 1/2 > 0), so both creep inward until they sit side by side at the middle:\n\\[a^{*} = b^{*} = 1/2\\]\nThis is the principle of minimum differentiation.\n\nEfficient? No. The socially efficient locations are the quarter-points (0.25, 0.75), which minimise total travel, but that is NOT a Nash equilibrium. Private incentives and social efficiency diverge.\n\nSame logic explains why petrol stations cluster, political parties converge to the centre, and rival smartphones look alike." },
+
+  { id:7, type:"Eq",
+    q:"Derive and verify the Cournot-Nash duopoly. P = 120 - Q, MC = 0. Find each firm's output, and check that (40, 40) is a Nash equilibrium.",
+    a:"Firm A maximises pi_A = (120 - q_A - q_B) q_A. First-order condition:\n120 - 2q_A - q_B = 0, so q_A = (120 - q_B)/2 (the reaction function).\n\nBy symmetry q_A = q_B. Substitute: q = (120 - q)/2, so 2q = 120 - q, q = 40.\n\nEquilibrium: q_A = q_B = 40, Q = 80, P = $40, pi_i = (40)(40) = $1,600.\n\nCheck no profitable deviation: if A deviates to q_A = 50 (with q_B = 40), Q = 90, P = 30, pi_A = 30 x 50 = $1,500 < $1,600. Deviating lowers profit, so (40, 40) is a Nash equilibrium." },
+
+  { id:8, type:"Eq",
+    q:"State the n-firm Cournot formula (P = 120 - Q, MC = 0) and show it nests monopoly and perfect competition.",
+    a:"With n identical firms:\n\\[q_i^{*} = \\frac{120}{n+1}, \\quad Q^{*} = \\frac{120n}{n+1}, \\quad P^{*} = \\frac{120}{n+1}\\]\n\nLimiting cases:\n- n = 1: q = 60, Q = 60, P = $60 (monopoly).\n- n = 2: q = 40, Q = 80, P = $40 (duopoly).\n- n = 3: q = 30, Q = 90, P = $30.\n- n to infinity: P to $0 = MC, Q to 120 (perfect competition).\n\nSo the Cournot model nests monopoly (n = 1) and perfect competition (n to infinity) as the two extremes: more firms drive price toward marginal cost. This is exactly why fares on two-carrier airline routes exceed those on routes with three or more carriers." },
+
+  { id:9, type:"Eq",
+    q:"First-mover advantage. Stackelberg with P = 120 - Q, MC = 0. Confirm the leader earns $1,800 and quantify the premium over Cournot.",
+    a:"Leader commits q_A = 60; follower best-responds q_B = (120 - 60)/2 = 30.\nQ = 90, P = 120 - 90 = $30.\npi_A (leader) = 30 x 60 = $1,800.\npi_B (follower) = 30 x 30 = $900.\n\nCompare to Cournot ($1,600 each):\n- Leader gains: 1,800 - 1,600 = $200 premium, the pure value of committing first.\n- Follower loses: 900 vs 1,600, being forced to follow is costly.\n\nNote total industry profit ($2,700) is lower than Cournot's ($3,200): the leader's aggression drives price down. The advantage is distributional, taken from the follower, not created from thin air." },
+
+  { id:10, type:"Eq",
+    q:"Bertrand with demand. Two identical firms, MC = $10, market demand Q = 500 - 5P. Find the equilibrium price, quantity, and profit, and contrast with monopoly.",
+    a:"Bertrand equilibrium: price is driven to marginal cost.\nP^{*} = MC = $10.\nQ = 500 - 5(10) = 450 (split between the two firms).\nProfit = $0 each (price equals marginal cost).\n\nContrast with a monopolist on the same demand:\nP = 100 - Q/5, so MR = 100 - 2Q/5. Set MR = MC = 10:\n100 - 2Q/5 = 10, so 2Q/5 = 90, Q = 225, P = $55, with large positive profit.\n\nHeadline: two Bertrand price-setters wipe out the entire monopoly profit. The number of firms is not the only thing that matters, the strategic variable (price vs quantity) does." },
+
+  { id:11, type:"Eq",
+    q:"Differentiated Bertrand. Firm A faces q_A = 60 - 2P_A + P_B, MC = 0. Derive A's best-response price and solve the symmetric equilibrium. Why is price above MC?",
+    a:"Firm A maximises pi_A = P_A(60 - 2P_A + P_B). First-order condition:\nd/dP_A = 60 - 4P_A + P_B = 0, so\n\\[P_A^{*} = \\frac{60 + P_B}{4}\\]\n(prices are strategic complements: A raises its price when B does).\n\nSymmetric equilibrium, set P_A = P_B = P:\nP = (60 + P)/4, so 4P = 60 + P, 3P = 60, P = $20 > MC = 0.\n\nWhy above MC: with differentiated products, a firm pricing slightly above the rival keeps its loyal customers rather than losing the whole market. Undercutting no longer captures everything, so the destructive Bertrand logic is blunted and margins survive. This is exactly the 'differentiation' escape from the paradox." },
+
+  { id:12, type:"Graph",
+    q:"Compare the four oligopoly models on the SAME market (P = 120 - Q, MC = 0): Cournot, Stackelberg, collusion, Bertrand.",
+    a:"Outputs / total Q, P / profits:\n\nCournot (simultaneous quantities): q = 40, 40; Q = 80, P = $40; pi = $1,600 / $1,600.\n\nStackelberg (A leads): q = 60, 30; Q = 90, P = $30; pi = $1,800 / $900.\n\nCollusion (cartel, splits monopoly): q = 30, 30; Q = 60, P = $60; pi = $1,800 / $1,800.\n\nBertrand (prices): q = 60, 60; Q = 120, P = $0; pi = $0 / $0.\n\nThe punchline: the SAME market gives four different answers depending on what firms choose (quantity vs price vs location) and when (simultaneous vs sequential). Collusion is best for the firms and worst for consumers; Bertrand is the reverse; Cournot and Stackelberg sit in between." },
+
+  { id:13, type:"Mistake",
+    q:"Common mistake: setting MR = MC on total output Q in a Cournot problem. Why is that wrong?",
+    a:"Wrong. Setting MR = MC on total output Q solves the MONOPOLY problem (one decision-maker choosing all output), not the Cournot problem.\n\nIn Cournot, each firm differentiates its OWN profit (P - MC) q_i, holding the RIVAL's quantity fixed:\nd/dq_A of [(120 - q_A - q_B) q_A] = 120 - 2q_A - q_B = 0.\nThat gives the reaction function q_A = (120 - q_B)/2, not the monopoly answer.\n\nThe difference: a monopolist internalises the price effect on ALL units; a Cournot firm only accounts for the effect on its OWN units, treating the rival's output as a fixed background. That is exactly why Cournot output (80) exceeds monopoly output (60)." },
+
+  { id:14, type:"Mistake",
+    q:"Common mistake: confusing the Stackelberg leader's and follower's outputs. What is the correct assignment and what error follows?",
+    a:"The LEADER commits to the LARGER quantity (60); the FOLLOWER best-responds with the smaller (30). Reversing them reverses the profits.\n\nWhy the leader produces more: by committing first to a large, irreversible output, it forces the follower down its reaction function. The follower's best response to q_A = 60 is (120 - 60)/2 = 30.\n\nIf you mistakenly give the leader 30 and the follower 60, you get pi_leader = $900 and pi_follower = $1,800, exactly backwards, implying (falsely) that moving first is a disadvantage.\n\nMemory hook: the leader's whole advantage is producing MORE than it would in Cournot (60 > 40); the follower produces LESS (30 < 40)." },
+
+  { id:15, type:"Mistake",
+    q:"Common mistake: 'Two firms can never produce a competitive outcome.' Why is this false?",
+    a:"False. Under BERTRAND competition, two identical price-setting firms drive price all the way to marginal cost, exactly the perfectly competitive result, with zero profit.\n\nThe reasoning: any price above MC invites the rival to undercut by a cent and capture the entire market, so undercutting continues until P = MC.\n\nLesson: the number of firms is NOT the only determinant of competitiveness. The STRATEGIC VARIABLE matters:\n- Two quantity-setters (Cournot): price above MC, positive profit.\n- Two price-setters (Bertrand): price = MC, zero profit.\n\nSame two firms, same demand, opposite outcomes, purely because of what they choose. This is why 'how many firms?' is the wrong first question for a regulator; 'how do they compete?' is the right one." },
+
+  { id:16, type:"Mistake",
+    q:"Common mistake: treating every Nash equilibrium of a game as subgame-perfect. Why can sequential play eliminate a Nash equilibrium?",
+    a:"Not every Nash equilibrium survives backward induction. Some are sustained by NON-CREDIBLE threats, and the SPNE refinement discards them.\n\nExample: A moves first (Top/Bottom), B responds. Payoffs (A, B): Top to (Left 3,9)(Right 1,8); Bottom to (Left 0,0)(Right 2,1). The simultaneous game has a Nash equilibrium at (Bottom, Right), but it relies on B threatening 'Left if you play Bottom' when in fact, once A plays Bottom, B prefers Right (1 > 0).\n\nBackward induction: if A plays Top, B picks Left (9 > 8), A gets 3; if A plays Bottom, B picks Right, A gets 2. A compares 3 vs 2 and plays Top. SPNE = (Top, Left).\n\nThe (Bottom, Right) equilibrium is eliminated because it embeds a threat B would never carry out." },
+
+  { id:17, type:"Mistake",
+    q:"Common mistake: expecting Hotelling firms to spread out to the efficient locations. Where do they actually locate, and why the divergence?",
+    a:"Students expect the two firms to spread to the quarter-points (0.25 and 0.75), which minimise total consumer travel and are socially efficient. They do NOT.\n\nThe Nash equilibrium is BOTH at the centre (a = b = 1/2): minimum differentiation. From any pair of interior locations, either firm can raise its market share by edging toward the centre, so the only stable configuration is both at the middle.\n\nWhy the divergence: each firm cares only about its own market share, not total travel cost. Moving inward steals share from the rival even as it raises average travel for consumers. Private incentives (share) and social efficiency (minimising travel) pull in opposite directions.\n\nThis externality, one firm's location choice imposing travel costs on the other's would-be customers, is the whole point of the model." }
+];
+
+// engine
+const TYPES = [...new Set(CARDS.map(c=>c.type))];
+const COL = {Def:'var(--unit-ink)',Eq:'var(--ink-faint)',Graph:'var(--d-gain)',Mistake:'var(--d-loss)'};
+const BG  = {Def:'var(--paper-raised)',Eq:'var(--paper-raised)',Graph:'var(--paper-raised)',Mistake:'var(--paper-raised)'};
+let deck=[],idx=0,flipped=false,stats={Easy:0,Good:0,Hard:0},filter='All',ratings={};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function rebuildDeck(){deck=shuffle(CARDS.filter(c=>filter==='All'||c.type===filter));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};}
+function render(){
+  const root=document.getElementById('fc-root');
+  if(idx>=deck.length){root.innerHTML=summary();if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});return;}
+  const c=deck[idx];const col=COL[c.type]||'var(--unit-ink)';const bg=BG[c.type]||'var(--paper-raised)';
+  const total=deck.length;
+  root.innerHTML=`
+    <div class="fc-hdr">
+      <h1 class="fc-title">EC224 &middot; Week 10 &middot; Oligopoly</h1>
+      <span class="fc-ctr">${idx+1} / ${total}</span>
+    </div>
+    <div class="fc-prog"><div class="fc-prog-fill" style="width:${(idx/total*100).toFixed(1)}%"></div></div>
+    <div class="fc-filters">
+      ${['All',...TYPES].map(t=>`<button class="fc-ftag${filter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="fc-scene" id="fc-card-zone">
+      <div class="fc-card-inner" id="fc-inner">
+        <div class="fc-front" onclick="flipCard()">
+          <div class="fc-q-sm">
+            <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
+          </div>
+          <div class="fc-q">${c.q}</div>
+          <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-q-sm" style="color:${col}">Answer</div>
+          <div class="fc-a fc-reveal">${c.a}</div>
+          <div class="fc-rate-label" style="margin-top:0.85rem">How well did you know this?</div>
+          <div class="fc-rate-row">
+            <button class="fc-rbtn" style="color:var(--d-loss);border-color:var(--d-transfer)" onclick="rate('Hard')">
+              Again<div class="kh"><span class="fc-kbd">1</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--unit-ink);border-color:var(--unit-ink)" onclick="rate('Good')">
+              Good<div class="kh"><span class="fc-kbd">2</span></div>
+            </button>
+            <button class="fc-rbtn" style="color:var(--d-gain);border-color:var(--d-gain)" onclick="rate('Easy')">
+              Easy<div class="kh"><span class="fc-kbd">3</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([root]).catch(()=>{});
+}
+function summary(){
+  const t=stats.Easy+stats.Good+stats.Hard;
+  return `<div class="fc-summary">
+    <div class="fc-sum-title">Deck complete!</div>
+    <div class="fc-stat-row">
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-gain)">${stats.Easy}</div><div class="fc-stat-l" style="color:var(--d-gain)">Easy</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--unit-ink)">${stats.Good}</div><div class="fc-stat-l" style="color:var(--unit-ink)">Good</div></div>
+      <div class="fc-stat" style="background:var(--paper-raised)"><div class="fc-stat-n" style="color:var(--d-loss)">${stats.Hard}</div><div class="fc-stat-l" style="color:var(--d-loss)">Again</div></div>
+    </div>
+    <div class="fc-bar-track">
+      <div class="fc-bar-seg" style="width:${(stats.Easy/t*100).toFixed(1)}%;background:var(--d-gain)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Good/t*100).toFixed(1)}%;background:var(--unit-ink)"></div>
+      <div class="fc-bar-seg" style="width:${(stats.Hard/t*100).toFixed(1)}%;background:var(--d-transfer)"></div>
+    </div>
+    <div class="fc-btn-row">
+      <button class="fc-btn-primary" onclick="restart()">Study again</button>
+      <button class="fc-btn-outline" onclick="restartHard()">Review missed</button>
+    </div>
+  </div>`;
+}
+function flipCard(){flipped=!flipped;document.getElementById('fc-inner')?.classList.toggle('flipped',flipped);}
+function rate(r){
+  const c=deck[idx];if(c)ratings[c.id]=r;
+  stats[r]++;flipped=false;idx++;
+  const zone=document.getElementById('fc-card-zone');
+  if(zone){zone.classList.add('fc-zone-exit');setTimeout(()=>{zone.classList.remove('fc-zone-exit');render();},180);}
+  else render();
+}
+function setFilter(f){filter=f;rebuildDeck();render();}
+function restart(){rebuildDeck();render();}
+function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(e.code==='Digit1')rate('Hard');
+  if(e.code==='Digit2')rate('Good');
+  if(e.code==='Digit3')rate('Easy');
+});
+rebuildDeck();render();
+function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
+function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
+</script>
+  <!-- Ask the Course AI, floating 24/7 assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+</body>
+</html>

@@ -3,22 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Week 11: Public Goods &amp; Externalities</title>
+  <title>Week 11: Public Goods &amp; Externalities &middot; EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <script>
-    window.MathJax = {
-      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
-      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
-      svg: { fontCache: 'global' }
-    };
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
   <link rel="stylesheet" href="shared.css" />
   <script src="assets/theme.js"></script>
   <style>
-    .layout-solo { max-width: calc(var(--measure-wide) + var(--s-5) * 2); }
+    /* Page-local only; the hub components live in shared.css under
+       DESIGN SYSTEM v2. See DESIGN.md. */
     .eyebrow { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase;
                color: var(--unit-ink); margin-bottom: var(--s-3); }
     html[data-ds="v2"] .byline { font-size: var(--t-body); color: var(--ink-faint); margin-top: var(--s-3); }
@@ -59,35 +52,11 @@
   </ul>
 </nav>
 
-<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
-
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <span class="sidebar-title">On this page</span>
-    <button class="sidebar-close" onclick="closeSidebar()">&#x2715;</button>
-  </div>
-  <ul class="sidebar-nav">
-    <li><a href="#objectives" onclick="closeSidebar()">Learning Objectives</a></li>
-    <li><a href="#topics"     onclick="closeSidebar()">Chapter Sections</a></li>
-    <li><a href="#taxonomy"   onclick="closeSidebar()">Goods Taxonomy</a></li>
-    <li><a href="#instruments" onclick="closeSidebar()">Policy Instruments</a></li>
-    <li><a href="#equations"  onclick="closeSidebar()">Equations</a></li>
-    <li><a href="#mistakes"   onclick="closeSidebar()">Exam Prep</a></li>
-    <li><a href="#questions"  onclick="closeSidebar()">Questions</a></li>
-    <li><a href="#videos"     onclick="closeSidebar()">Videos</a></li>
-  </ul>
-</aside>
-
 <div class="topbar">
   <a class="wordmark" href="index.html">EC224</a>
   <span class="crumb-sep">/</span>
-  <a href="week11.html">Week 11</a>
-  <span class="crumb-sep">/</span>
   <span class="crumb-here">Overview</span>
-  <span class="topbar-end">
-    <a class="btn" href="week11-viz.html">Visualizations</a>
-    <button class="btn" onclick="openLN()">All weeks</button>
-  </span>
+  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
 </div>
 
 <main class="layout-solo" id="main-content">
@@ -99,361 +68,54 @@
     <p class="byline">Prof. Naveen Sunder</p>
   </header>
 
-  <div class="download-row">
-    <a class="dl-btn" href="week11-viz.html">Interactive Visualizations</a>
-    <a class="dl-btn" href="https://brightspace.bentley.edu" target="_blank">Homework</a>
-  </div>
-  <div class="note" style="margin:var(--s-5) 0 var(--s-7)">
-    <strong>Note:&nbsp;</strong>This page is a structured summary of the Week 11 chapter. It covers the two central reasons markets fail, public goods and externalities, and the policy instruments (property rights, Pigouvian taxes, and cap-and-trade) that can restore efficiency. The unifying theme: when private prices diverge from social costs and benefits, markets fail.
-  </div>
-
-  <section class="section" id="objectives">
-    <p class="section-label">Learning Objectives</p>
-    <h2>What You Will Be Able to Do</h2>
-    <ul class="lo-list">
-      <li class="lo-item"><span class="lo-badge">LO1</span><span>Classify goods using the rivalry/excludability taxonomy; explain the free-rider problem.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO2</span><span>Analyse private provision of a public good as a game; show how partial contributions turn the prisoner&rsquo;s dilemma into a coordination game.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO3</span><span>Distinguish negative and positive externalities; compute the deadweight loss from overproduction or underproduction.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO4</span><span>Apply the Coase theorem; state its conditions and identify when it breaks down.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO5</span><span>Compute the Pigouvian tax \(t^{*}=MEC(Q^{*})\) and verify it eliminates the deadweight loss.</span></li>
-      <li class="lo-item"><span class="lo-badge">LO6</span><span>Derive the efficient abatement allocation under cap-and-trade; compare its cost to equal regulation.</span></li>
-    </ul>
-  </section>
-
-  <section class="section" id="topics">
-    <p class="section-label">Chapter Sections</p>
-    <h2>Topics</h2>
-    <div class="accordion-list">
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;11.2: Public Goods &amp; the Free-Rider Problem</span><span class="acc-tag">LO1</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>A <strong>pure public good</strong> is <strong>non-excludable</strong> (once provided, no one can be prevented from consuming it) and <strong>non-rival</strong> (one person&rsquo;s use does not reduce availability, so the marginal cost of serving an extra consumer is zero). National defence and broadcast radio are the classic examples.</p>
-          <p>Non-excludability creates the <strong>free-rider problem</strong>: because no one can be charged, each person waits for someone else to pay and enjoys the benefit for free. In the extreme, the good is never provided even though everyone would benefit. This is the public-goods version of the prisoner&rsquo;s dilemma: individual rationality produces collective irrationality.</p>
-          <div class="app-box"><strong>Non-Rival Does Not Mean Free</strong>Non-rivalry means the marginal cost of serving an extra consumer is zero, not that the good costs nothing to produce. National defence is non-rival but costs hundreds of billions. Once it exists everyone should have access at zero marginal charge, but the fixed cost must still be covered, usually through taxation.</div>
+  <div class="hub-list">
+      <div class="hub-group">Study Materials</div>
+      <a class="hub-item" href="https://naveensunder.github.io/MicroBook/week11.html" target="_blank" rel="noopener">
+        <div>
+          <div class="hub-title">Textbook</div>
+          <div class="hub-desc">Read the full Week 11 chapter covering the rivalry/excludability goods taxonomy and the free-rider problem, private provision of public goods as a game, negative and positive externalities and the deadweight loss they create, the Coase theorem and its breakdown, the Pigouvian tax rule t* = MEC(Q*), and cap-and-trade with marginal-abatement-cost equalisation.</div>
         </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;11.3: Provision as a Game</span><span class="acc-tag">LO2</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>Provision is socially desirable when total willingness to pay exceeds cost: \(r_A+r_B&gt;c\), even if no single person&rsquo;s WTP exceeds cost alone. In the binary &ldquo;pay the full cost or not&rdquo; game, Free-ride strictly dominates Contribute, so the unique Nash equilibrium is (Free-ride, Free-ride) and the good is not provided.</p>
-          <p>Allowing <strong>partial contributions</strong> transforms the strategic structure from a prisoner&rsquo;s dilemma into a <strong>coordination game</strong> with two Nash equilibria: the efficient one (both contribute their share) and the zero-provision one. The challenge shifts from &ldquo;will the good be provided?&rdquo; to &ldquo;can we coordinate on the good equilibrium?&rdquo;</p>
-          <div class="app-box"><strong>Kickstarter&rsquo;s All-or-Nothing Rule</strong>Crowdfunding implements exactly this structure: backers are only charged if the project reaches its funding target. A pledge costs nothing unless the target is met, so contributing becomes weakly dominant for anyone who values the project. The all-or-nothing threshold coordinates expectations on the efficient equilibrium.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;11.4&ndash;11.5: Externalities &amp; Deadweight Loss</span><span class="acc-tag">LO3</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>An <strong>externality</strong> is a cost or benefit imposed on a third party not involved in the transaction and not reflected in market prices. A <strong>negative externality</strong> (factory pollution) means \(SMC=PMC+MEC&gt;PMC\), so the market overproduces. A <strong>positive externality</strong> (vaccination, education) means \(SMB=MB+MEB&gt;MB\), so the market underproduces.</p>
-          <p>The market equates \(PMC=MB\) at \(Q^{E}\), but the social optimum requires \(SMC=MB\) at \(Q^{*}\). Every unit between \(Q^{*}\) and \(Q^{E}\) has a social cost exceeding its social benefit: that gap is the deadweight loss, \(DWL=\tfrac12(Q^{E}-Q^{*})\times[SMC(Q^{E})-MB(Q^{E})]\).</p>
-          <div class="app-box"><strong>Don&rsquo;t Confuse MEC with SMC</strong>The DWL triangle uses the vertical distance between SMC and MB at \(Q^{E}\), not the area under the MEC curve alone. A common error is to compute the triangle from MEC by itself; always measure the gap between the social-cost and demand curves.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;11.6.1: The Coase Theorem</span><span class="acc-tag">LO4</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>The <strong>Coase theorem</strong> states that if property rights are well-defined, transaction costs are zero, and parties can bargain freely, the market reaches an efficient allocation <em>regardless of who holds the right</em>. The polluter and the victim bargain to the same efficient pollution level \(S^{*}\); only the distribution of gains changes, not efficiency.</p>
-          <p>In practice the three conditions are routinely violated: high <strong>transaction costs</strong> when millions are affected, <strong>hold-up</strong> after sunk investments, <strong>information asymmetry</strong> about true costs and damages, and <strong>free-riding among victims</strong>. When Coasian bargaining is impractical (global carbon emissions), government intervention is the only path to the optimum.</p>
-          <div class="app-box"><strong>When Coase Works, and When It Doesn&rsquo;t</strong>A factory and a single downstream fishery with clear rights and low bargaining costs will reach the efficient outcome on their own. But when emissions affect 500 communities across three countries, transaction costs are enormous and each community free-rides: the conditions fail catastrophically, exactly like global carbon.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;11.6.2: Pigouvian Taxes</span><span class="acc-tag">LO5</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>A <strong>Pigouvian tax</strong> sets a per-unit tax equal to the marginal external cost <em>at the social optimum</em>: \(t^{*}=MEC(Q^{*})\), not \(MEC(Q^{E})\). The tax shifts the effective supply curve from PMC to \(PMC+t^{*}=SMC\), moving the equilibrium to \(Q^{*}\) and eliminating the deadweight loss.</p>
-          <p>With the benchmark \(P=100-Q,\ PMC=10+Q,\ MEC=20\): the social optimum is \(Q^{*}=35\), and \(t^{*}=20\) restores it exactly, wiping out the $100 DWL. When MEC is constant, \(MEC(Q^{*})=MEC(Q^{E})\), but when MEC depends on \(Q\) you must first solve for \(Q^{*}\), then evaluate MEC there.</p>
-          <div class="app-box"><strong>The Tax Does Not Stop Pollution Entirely</strong>The Pigouvian tax internalises the external cost so the firm faces the full social cost; it moves output to the efficient level, where <em>some</em> pollution remains because the marginal benefit of that output still exceeds its full social cost. Zero pollution is generally not efficient.</div>
-        </div>
-      </div>
-
-      <div class="accordion">
-        <button class="accordion-header" onclick="toggleAcc(this)">
-          <div class="acc-left"><span class="acc-title">&sect;11.6.3: Cap-and-Trade</span><span class="acc-tag">LO6</span></div>
-          <span class="acc-chevron">&#9660;</span>
-        </button>
-        <div class="accordion-body">
-          <p>Under <strong>cap-and-trade</strong>, the regulator sets a total pollution cap, issues permits equal to it, and lets firms buy and sell. At equilibrium every firm equates its marginal abatement cost to the permit price: \(MAC_A(e_A^{*})=MAC_B(e_B^{*})=\lambda^{*}\). Firms with low abatement costs clean up more and sell permits; firms with high costs buy them. The environmental target is hit at minimum total cost.</p>
-          <p>With \(MAC_A=2e_A,\ MAC_B=8e_B\) and total abatement 100: equalising MACs gives \(e_A^{*}=80,\ e_B^{*}=20\), permit price \(\lambda^{*}=\$160\), total cost $8,000, versus $12,500 under equal regulation (a 36% saving). Equal regulation wastes the low-cost firm&rsquo;s advantage.</p>
-          <div class="app-box"><strong>Tax vs Cap: Weitzman&rsquo;s Rule</strong>Use a tax (price instrument) when marginal abatement costs are steep; use a cap (quantity instrument) when marginal damages are steep, such as cliff-edge damage thresholds. Real systems often combine both: a price floor plus a tradeable cap, giving both price and quantity certainty.</div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <section class="section" id="taxonomy">
-    <p class="section-label">Quick Reference</p>
-    <h2>The Four-Quadrant Goods Taxonomy</h2>
-    <table class="rules-table">
-      <thead><tr><th></th><th>Rival</th><th>Non-rival</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="rule-name">Excludable</span></td>
-          <td><span class="rule-example"><strong>Private goods.</strong> Food, clothing, airline seats. Market works: the seller can price and exclude.</span></td>
-          <td><span class="rule-example"><strong>Club goods.</strong> Netflix, toll roads, gyms. Excludable, so a firm can charge an access fee even though MC &asymp; 0.</span></td>
-        </tr>
-        <tr>
-          <td><span class="rule-name">Non-excludable</span></td>
-          <td><span class="rule-example"><strong>Common-pool resources.</strong> Fisheries, aquifers, congested roads. Tragedy of the commons: over-exploitation.</span></td>
-          <td><span class="rule-example"><strong>Pure public goods.</strong> National defence, broadcast radio, public health. Free-rider problem: market under-provides.</span></td>
-        </tr>
-      </tbody>
-    </table>
-    <p style="font-size:var(--t-small);color:var(--ink-soft);margin-top:var(--s-3)">Non-excludability is what makes the market fail. Non-rivalry only removes the efficiency <em>reason</em> to charge.</p>
-  </section>
-
-  <section class="section" id="instruments">
-    <p class="section-label">Quick Reference</p>
-    <h2>Three Policy Instruments Compared</h2>
-    <table class="rules-table">
-      <thead><tr><th></th><th>Coase bargaining</th><th>Pigouvian tax</th><th>Cap-and-trade</th></tr></thead>
-      <tbody>
-        <tr><td><span class="rule-name">Mechanism</span></td><td><span class="rule-example">Private negotiation</span></td><td><span class="rule-example">Per-unit tax on emissions</span></td><td><span class="rule-example">Tradeable permits</span></td></tr>
-        <tr><td><span class="rule-name">Info needed</span></td><td><span class="rule-example">Parties&rsquo; own valuations</span></td><td><span class="rule-example">Regulator knows MEC</span></td><td><span class="rule-example">Regulator knows cap target</span></td></tr>
-        <tr><td><span class="rule-name">Certainty</span></td><td><span class="rule-example">Neither price nor quantity</span></td><td><span class="rule-example">Price fixed at \(t^{*}\)</span></td><td><span class="rule-example">Quantity fixed (cap binds)</span></td></tr>
-        <tr><td><span class="rule-name">Works when</span></td><td><span class="rule-example">Few parties, low TX costs</span></td><td><span class="rule-example">MEC well measured</span></td><td><span class="rule-example">Many firms, diverse costs</span></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="section" id="equations">
-    <p class="section-label">Equations</p>
-    <h2>Key Equations</h2>
-    <div class="eq-list">
-      <div class="eq-row"><span class="eq-label">Social marginal cost</span><span>\(SMC = PMC + MEC\)</span></div>
-      <div class="eq-row"><span class="eq-label">Social marginal benefit</span><span>\(SMB = MB + MEB\)</span></div>
-      <div class="eq-row"><span class="eq-label">Public-good optimality</span><span>\(r_A + r_B &gt; c\) (sum of WTP exceeds cost)</span></div>
-      <div class="eq-row"><span class="eq-label">Deadweight loss</span><span>\(DWL = \tfrac12(Q^{E}-Q^{*})\,[SMC(Q^{E})-MB(Q^{E})]\)</span></div>
-      <div class="eq-row"><span class="eq-label">Pigouvian tax</span><span>\(t^{*} = MEC(Q^{*})\)</span></div>
-      <div class="eq-row"><span class="eq-label">Cap-and-trade efficiency</span><span>\(MAC_A(e_A^{*}) = MAC_B(e_B^{*}) = \lambda^{*}\)</span></div>
-    </div>
-  </section>
-
-  <section class="section" id="mistakes">
-    <p class="section-label">Exam Prep</p>
-    <h2>Five Common Mistakes</h2>
-    <div class="warning-box">
-      <h3>Watch out for these</h3>
-      <ul class="warning-list">
-        <li><strong>Thinking non-rival means the good should be free to produce.</strong> Non-rivalry sets the efficient <em>marginal</em> charge to zero, but the fixed cost of producing the good must still be covered.</li>
-        <li><strong>Evaluating the Pigouvian tax at \(Q^{E}\) instead of \(Q^{*}\).</strong> The correct tax is \(t^{*}=MEC(Q^{*})\). With constant MEC the two coincide, but with \(MEC=bQ\) you must solve for \(Q^{*}\) first.</li>
-        <li><strong>Computing the DWL from the MEC curve alone.</strong> The triangle uses the vertical gap between SMC and MB at the market quantity, not the area under MEC by itself.</li>
-        <li><strong>Assuming the Coase theorem always delivers efficiency.</strong> It needs well-defined rights, zero transaction costs, and free bargaining. With many parties and high transaction costs, it fails and government action is required.</li>
-        <li><strong>Believing equal regulation and cap-and-trade cost the same.</strong> Equal abatement forces high-cost firms to over-abate; equalising marginal abatement costs across firms hits the target far more cheaply.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="section" id="questions">
-    <p class="section-label">Practice</p>
-    <h2>Practice Questions</h2>
-    <div class="pq-filters">
-      <button class="pq-filter active" onclick="filterQ('all',this)">All (12)</button>
-      <button class="pq-filter" onclick="filterQ('1',this)">&#8902; Level 1</button>
-      <button class="pq-filter" onclick="filterQ('2',this)">&#8902;&#8902; Level 2</button>
-      <button class="pq-filter" onclick="filterQ('3',this)">&#8902;&#8902;&#8902; Level 3</button>
-    </div>
-    <div class="pq-list">
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q1</span>
-          <span class="pq-text">Classify each good in the taxonomy: (a) a congested highway, (b) a lighthouse, (c) a Netflix subscription, (d) groundwater from a shared aquifer.</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Common-pool resource (non-excludable, rival: one car&rsquo;s use congests others). <strong>(b)</strong> Pure public good (non-excludable, non-rival). <strong>(c)</strong> Club good (excludable via paywall, non-rival). <strong>(d)</strong> Common-pool resource (non-excludable, rival).</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q2</span>
-          <span class="pq-text">Negative externality direction. For a factory emitting pollution: (a) does the market equilibrium \(Q^{E}\) lie above or below the social optimum \(Q^{*}\)? (b) Which curve does the externality shift?</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Above: since \(SMC&gt;PMC\), the market overproduces, so \(Q^{E}&gt;Q^{*}\). <strong>(b)</strong> A production externality creates a wedge between PMC (the supply curve) and SMC; the socially relevant supply curve is SMC, which lies above PMC by MEC.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q3</span>
-          <span class="pq-text">Free-rider logic. Why does the free-rider problem arise for public goods but not for private goods? (Hint: what role does excludability play?)</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p>Private goods are excludable: a seller can withhold the good until you pay, so free-riding is impossible. Public goods are non-excludable: once provided, non-payers cannot be shut out, so each person has an incentive to let others pay. The market cannot recover its costs and under-provides.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="1">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q4</span>
-          <span class="pq-text">Positive externality. A new user joins WhatsApp. (a) Is this a positive or negative externality? (b) Does the market over- or under-supply users? (c) What Pigouvian instrument corrects it?</span>
-          <span class="pq-stars">&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Positive: each new user makes the network more valuable to all existing users. <strong>(b)</strong> Under-supplies, because the joining user captures only her own benefit, not the benefit she confers on others (\(SMB&gt;MB\)). <strong>(c)</strong> A Pigouvian subsidy \(s^{*}=MEB(Q^{*})\), which is why platforms offer free trials and referral bonuses.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q5</span>
-          <span class="pq-text">Free-rider game. Three neighbours can jointly fund a $300/month guard; each values it at $120/month. (a) Is it socially optimal? (b) Will anyone pay if each decides alone? (c) What is the missed net surplus?</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Yes: total WTP \(=3\times120=\$360&gt;\$300\), a net social surplus of $60. <strong>(b)</strong> No: each reasons &ldquo;if the other two pay, I benefit free,&rdquo; so everyone free-rides and the guard is not hired. <strong>(c)</strong> The missed net surplus is $60.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q6</span>
-          <span class="pq-text">Coordination via partial contributions. A streetlight costs \(c=\$120\); Amara values it at \(r_A=\$70\), Ben at \(r_B=\$80\); each can contribute \(g=\$60\). (a) Is provision socially desirable? (b) Payoffs for (Contribute, Contribute) and (Don&rsquo;t, Don&rsquo;t)? (c) Are both Nash equilibria?</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Yes: \(70+80=\$150&gt;\$120\). <strong>(b)</strong> If both contribute $60, the light is provided: Amara nets \(70-60=\$10\), Ben nets \(80-60=\$20\), so (10, 20). If neither contributes, no light: (0, 0). <strong>(c)</strong> Both are Nash equilibria: given the other contributes, contributing your $60 yields a positive net; given the other doesn&rsquo;t, contributing alone wastes $60 (the light needs both), so not contributing is best. It is a coordination game.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q7</span>
-          <span class="pq-text">Externality benchmark. \(P=100-Q\), \(PMC=10+Q\), \(MEC=20\) (constant). (a) Find the competitive equilibrium \(Q^{E},P^{E}\). (b) Find the social optimum \(Q^{*}\). (c) Compute the deadweight loss.</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(PMC=MB:\ 10+Q=100-Q\Rightarrow Q^{E}=45,\ P^{E}=\$55\). <strong>(b)</strong> \(SMC=MB:\ 30+Q=100-Q\Rightarrow Q^{*}=35,\ P^{*}=\$65\). <strong>(c)</strong> \(DWL=\tfrac12(45-35)[SMC(45)-MB(45)]=\tfrac12(10)(20)=\$100\).</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="2">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q8</span>
-          <span class="pq-text">Pigouvian tax. Using the same benchmark (\(P=100-Q,\,PMC=10+Q,\,MEC=20\)): (a) find the optimal tax \(t^{*}\). (b) Verify it moves the equilibrium to \(Q^{*}=35\) and eliminates the DWL.</span>
-          <span class="pq-stars">&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(t^{*}=MEC(Q^{*})=20\). <strong>(b)</strong> With the tax, effective supply \(=PMC+t^{*}=10+Q+20=30+Q=SMC\). New equilibrium: \(30+Q=100-Q\Rightarrow Q=35=Q^{*}\). The tax internalises the external cost and removes the $100 DWL entirely.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q9</span>
-          <span class="pq-text">MEC that varies. \(P=200-3Q\), \(PMC=20+Q\), \(MEC=2Q\). (a) Find \(Q^{*}\). (b) Compute the correct tax \(t^{*}=MEC(Q^{*})\). (c) Explain why using \(MEC(Q^{E})\) would over-tax.</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> \(SMC=PMC+MEC=20+Q+2Q=20+3Q\); set \(=MB\): \(20+3Q=200-3Q\Rightarrow Q^{*}=30\). <strong>(b)</strong> \(t^{*}=MEC(30)=2(30)=\$60\). <strong>(c)</strong> The competitive equilibrium is larger (\(PMC=MB:\ 20+Q=200-3Q\Rightarrow Q^{E}=45\)), so \(MEC(Q^{E})=90&gt;60\). Taxing at $90 would push output below the optimum; the tax must equal marginal external cost at the destination \(Q^{*}\), not at \(Q^{E}\).</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q10</span>
-          <span class="pq-text">Cap-and-trade cost saving. Two firms, \(MAC_A=2e_A\), \(MAC_B=8e_B\), total abatement required = 100. (a) Find the cost-minimising allocation and permit price. (b) Compare its cost to equal regulation (\(e_A=e_B=50\)). (c) What principle drives the saving?</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Equalise MACs: \(2e_A=8e_B\Rightarrow e_A=4e_B\); with \(e_A+e_B=100\): \(e_A^{*}=80,\ e_B^{*}=20\). Permit price \(\lambda^{*}=2(80)=8(20)=\$160\). Cost \(=\tfrac12(2)(80^2)+\tfrac12(8)(20^2)=6{,}400+1{,}600=\$8{,}000\). <strong>(b)</strong> Equal regulation: \(\tfrac12(2)(50^2)+\tfrac12(8)(50^2)=2{,}500+10{,}000=\$12{,}500\). Saving \(=\$4{,}500\) (36%). <strong>(c)</strong> Equalising marginal abatement costs: the low-cost firm (A) does more of the cleanup, so the target is met at least total cost.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q11</span>
-          <span class="pq-text">Coase in practice. (a) State the three Coase conditions. (b) Give a setting where they hold and bargaining reaches efficiency. (c) Give a setting where they fail catastrophically, and say which instrument is then appropriate.</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Well-defined property rights, zero (or low) transaction costs, and free bargaining. <strong>(b)</strong> A single factory and a single downstream fishery with clear water rights: the two parties negotiate directly to the efficient pollution level. <strong>(c)</strong> Global carbon emissions: hundreds of millions affected across many countries, huge transaction costs, and victim free-riding. Here a Pigouvian carbon tax or a cap-and-trade system is the practical instrument.</p>
-          </div></div></div>
-
-      <div class="pq-item" data-level="3">
-        <button class="pq-header" onclick="togglePQ(this)"><span class="pq-num">Q12</span>
-          <span class="pq-text">Tax vs cap under uncertainty. (a) State Weitzman&rsquo;s rule for choosing between a price and a quantity instrument. (b) Why might cap-and-trade be politically easier than a carbon tax? (c) If the regulator issues too many permits, what happens to the permit price and pollution?</span>
-          <span class="pq-stars">&#8902;&#8902;&#8902;</span><span class="pq-chevron">&#9660;</span></button>
-        <div class="pq-body"><button class="pq-sol-btn" onclick="toggleSol(this)">Show Solution</button>
-          <div class="pq-solution">
-            <p><strong>(a)</strong> Use a tax (price instrument) when marginal abatement costs are steep; use a cap (quantity instrument) when marginal damages are steep, e.g. a cliff-edge damage threshold. <strong>(b)</strong> The &ldquo;cost&rdquo; of a permit is a less visible opportunity cost than an explicit tax line on an energy bill, and permits can be grandfathered to buy political support. <strong>(c)</strong> Excess permits make the cap non-binding, so the permit price collapses toward zero and pollution stays near the unregulated level, exactly the EU ETS experience before 2018.</p>
-          </div></div></div>
-
-    </div>
-  </section>
-
-  <section class="section" id="videos">
-    <p class="section-label">Videos</p>
-    <h2>Recommended Viewing</h2>
-    <div class="video-list">
-
-      <a class="video-item" href="https://www.youtube.com/watch?v=iVOtdgUprosQ" target="_blank" rel="noopener" aria-label="Public Goods and the Free-Rider Problem">
-        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">6 min</span></div>
-        <div class="video-details">
-          <div class="video-title-text">Public Goods &amp; the Free-Rider Problem</div>
-          <div class="video-uploader">Marginal Revolution University</div>
-          <div class="video-desc">Explains non-excludability, non-rivalry, and why free-riding causes under-provision. Pairs with &sect;11.2 and the goods taxonomy.</div>
-        </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
       </a>
-
-      <a class="video-item" href="https://www.youtube.com/watch?v=Xu1S2sHhWmM" target="_blank" rel="noopener" aria-label="Externalities and Pigouvian Taxes">
-        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">10 min</span></div>
-        <div class="video-details">
-          <div class="video-title-text">Negative Externalities &amp; the Pigouvian Tax</div>
-          <div class="video-uploader">ACDC Economics (Jacob Clifford)</div>
-          <div class="video-desc">Draws the PMC/SMC diagram, the DWL triangle, and the corrective tax. Directly reinforces &sect;11.4&ndash;11.6 and the externality visualization.</div>
+      <a class="hub-item" href="week11-viz.html">
+        <div>
+          <div class="hub-title">Interactive Visualizations</div>
+          <div class="hub-desc">Two interactive tools: the negative-externality diagram (slide the marginal external cost, toggle the Pigouvian tax, and watch the deadweight-loss triangle appear and vanish as output moves from the market equilibrium to the social optimum) and the cap-and-trade tool that equalises marginal abatement cost across two firms to hit the target at least total cost.</div>
         </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
       </a>
-
-      <a class="video-item" href="https://www.youtube.com/watch?v=NxHkVAsZ0Zw" target="_blank" rel="noopener" aria-label="The Coase Theorem">
-        <div class="video-thumb-sm"><svg class="yt-icon" viewBox="0 0 90 63" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="90" height="63" rx="14" fill="#FF0000"/><polygon points="36,16 36,47 64,31.5" fill="white"/></svg><span class="video-duration">8 min</span></div>
-        <div class="video-details">
-          <div class="video-title-text">The Coase Theorem</div>
-          <div class="video-uploader">Marginal Revolution University</div>
-          <div class="video-desc">Shows how well-defined property rights can solve externalities through bargaining, and when transaction costs make it fail. Supports &sect;11.6.1.</div>
+      <div class="hub-group">Practice</div>
+      <a class="hub-item" href="https://brightspace.bentley.edu" target="_blank" rel="noopener">
+        <div>
+          <div class="hub-title">Graded Homework</div>
+          <div class="hub-desc">Submit your graded problem set for Week 11 on Brightspace. Complete and submit before the deadline to receive full credit.</div>
         </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
       </a>
-
-    </div>
-  </section>
-
-  <div class="week-nav">
-    <a class="week-nav-link" href="week10.html">
-      <span class="wnl-label">&larr; Previous</span>
-      <span class="wnl-title">Week 10: Oligopoly &amp; Spatial Competition</span>
-    </a>
-    <a class="week-nav-link" style="text-align:right" href="week12.html">
-      <span class="wnl-label">Next &rarr;</span>
-      <span class="wnl-title">Week 12: Asymmetric Information</span>
-    </a>
+      <a class="hub-item" href="week11-flashcards.html">
+        <div>
+          <div class="hub-title">Flashcards</div>
+          <div class="hub-desc">Cards covering the four-quadrant goods taxonomy, the free-rider problem, public-good provision games, negative and positive externalities and their deadweight loss, the Coase theorem and its conditions, the Pigouvian tax rule, and cap-and-trade cost minimisation.</div>
+        </div>
+        <span class="hub-go" aria-hidden="true">&rsaquo;</span>
+      </a>
   </div>
+
+  <footer class="site-foot">
+    <div>
+      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
+      &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
+    </div>
+    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
+  </footer>
 
 </main>
 
 <script>
   function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
   function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
-  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
-  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
-  function toggleAcc(btn) {
-    const body = btn.nextElementSibling;
-    const isOpen = body.classList.contains('open');
-    document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
-    document.querySelectorAll('.accordion-header').forEach(b => b.classList.remove('open'));
-    if (!isOpen) { body.classList.add('open'); btn.classList.add('open'); }
-  }
-  function togglePQ(btn) { const b = btn.nextElementSibling; b.classList.toggle('open'); btn.classList.toggle('open'); }
-  function toggleSol(btn) { const s = btn.nextElementSibling; s.classList.toggle('open'); btn.textContent = s.classList.contains('open') ? 'Hide Solution' : 'Show Solution'; }
-  function filterQ(level, btn) {
-    document.querySelectorAll('.pq-filter').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.pq-item').forEach(item => { item.dataset.hidden = (level !== 'all' && item.dataset.level !== level); });
-  }
 </script>
-  <!-- Ask the Course AI, floating assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
   <script src="assets/polish.js"></script>
