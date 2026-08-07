@@ -63,6 +63,8 @@
       <li><a href="#sec-101"><span>10.1</span>Cournot &amp; Stackelberg Best Responses</a></li>
       <li><a href="#sec-102"><span>10.2</span>Hotelling Beach</a></li>
       <li><a href="#sec-103"><span>10.3</span>n-Firm Cournot</a></li>
+      <li><a href="#sec-104"><span>10.4</span>Four Models Compared</a></li>
+      <li><a href="#sec-105"><span>10.5</span>Bertrand Undercutting</a></li>
     </ol>
   </nav>
 
@@ -159,6 +161,59 @@
     </div>
     <div class="fig-state" id="v103-readout"></div>
     <div class="insight-box"><strong>Competition is a limit, not a switch.</strong> The same model spans the whole spectrum: market power fades smoothly as firms are added, and price approaches marginal cost only as \(n\to\infty\). This is why the <em>number</em> of competitors, not just their existence, shapes how close a market gets to the efficient outcome.</div>
+  </section>
+
+  <div class="sec-divider">Section 4 &middot; The Strategic Variable Matters</div>
+
+  <!-- FIG 10.4 -->
+  <section class="sec page" id="sec-104">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 10.4</span>
+      <h3>Four Models, One Market</h3>
+    </div>
+    <p class="fig-intro">
+      The same duopoly (\(P = 120 - Q,\ MC = 0\)) yields four different answers depending on what firms choose and when.
+      Cournot firms pick quantities at once; a Stackelberg leader commits first; colluding firms split the monopoly
+      output; Bertrand firms set prices and compete it away to marginal cost. Switch between models to see total output,
+      price, and industry profit move, with the profit rectangle shaded on the demand diagram.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs104-wrap"></div></div>
+    <div class="ctrl-row">
+      <button class="quiz-btn revealed" id="v104-b-cournot" onclick="v104Set('cournot')">Cournot</button>
+      <button class="quiz-btn" id="v104-b-stackelberg" onclick="v104Set('stackelberg')">Stackelberg</button>
+      <button class="quiz-btn" id="v104-b-collusion" onclick="v104Set('collusion')">Collusion</button>
+      <button class="quiz-btn" id="v104-b-bertrand" onclick="v104Set('bertrand')">Bertrand</button>
+    </div>
+    <div class="fig-state" id="v104-readout"></div>
+    <div class="insight-box"><strong>Not just how many firms, but how they compete.</strong> Collusion reproduces the monopoly ($3,600 industry profit); two Bertrand price-setters wipe profit out entirely ($0); Cournot and Stackelberg sit in between. The <em>strategic variable</em>, quantity versus price, and the <em>timing</em>, simultaneous versus sequential, matter as much as the number of competitors.</div>
+  </section>
+
+  <!-- FIG 10.5 -->
+  <section class="sec page" id="sec-105">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 10.5</span>
+      <h3>Bertrand: The Incentive to Undercut</h3>
+    </div>
+    <p class="fig-intro">
+      With identical products buyers go to whoever is cheapest. Market demand is \(Q = 120 - P\) and \(MC = \$20\). Your
+      profit depends on your price relative to the rival&rsquo;s: price above the rival and you sell nothing; match and you
+      split the market; undercut (while staying above cost) and you capture the whole market. Slide your price against a
+      fixed rival price and watch your best response, always to shave just below the rival, which is what drives price
+      down to marginal cost.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs105-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Your price: <span class="ctrl-value" id="v105-p-val">$50</span></span>
+        <input type="range" id="v105-p" min="20" max="110" step="1" value="50" oninput="v105Draw()">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Rival&rsquo;s price: <span class="ctrl-value" id="v105-pr-val">$60</span></span>
+        <input type="range" id="v105-pr" min="20" max="110" step="1" value="60" oninput="v105Draw()">
+      </div>
+    </div>
+    <div class="fig-state" id="v105-readout"></div>
+    <div class="insight-box red"><strong>The paradox: two firms are enough.</strong> Because the best response is always to undercut by a penny, any price above marginal cost is unstable, and price collapses to \(MC\) with zero profit, the perfectly competitive outcome from just two firms. The paradox breaks only when capacity is limited, products differ, or the game repeats.</div>
   </section>
 
   </main>
@@ -296,7 +351,90 @@ function v103Draw() {
     '</div><p style="margin-top:.6rem;color:' + EC.second + '">' + verdict + '</p>';
 }
 
-document.addEventListener('DOMContentLoaded', function () { v101Draw(); v102Draw(); v103Draw(); });
+// ── FIG 10.4: four oligopoly models on one market ───────────────────────────
+var V104 = 'cournot';
+function v104Set(m) {
+  V104 = m;
+  ['cournot', 'stackelberg', 'collusion', 'bertrand'].forEach(function (k) {
+    document.getElementById('v104-b-' + k).classList.toggle('revealed', k === m);
+  });
+  v104Draw();
+}
+function v104Draw() {
+  var models = {
+    cournot:     { qA: 40, qB: 40, name: 'Cournot' },
+    stackelberg: { qA: 60, qB: 30, name: 'Stackelberg' },
+    collusion:   { qA: 30, qB: 30, name: 'Collusion' },
+    bertrand:    { qA: 60, qB: 60, name: 'Bertrand' }
+  };
+  var m = models[V104], Q = m.qA + m.qB, P = Math.max(0, 120 - Q), piA = P * m.qA, piB = P * m.qB, ind = piA + piB;
+  var scX = d3.scaleLinear().domain([0, 124]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 124]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs104-wrap');
+  d3AddAxes(svg, scX, scY, 'Total quantity Q', 'Price P ($)', null, function (d) { return '$' + d; });
+  if (P > 0 && Q > 0) {
+    d3Poly(svg, scX, scY, [[0, 0], [0, P], [Q, P], [Q, 0]], FILL_GAIN, STROKE_GAIN);
+    d3Halo(svg, scX(Q / 2), scY(P / 2), 'industry profit', { color: STROKE_GAIN, size: 10 });
+  }
+  d3Seg(svg, scX, scY, 0, 120, 120, 0, EC.primary, 3);
+  d3Halo(svg, scX(104), scY(120 - 104 + 5), 'Demand P = 120 - Q', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Seg(svg, scX, scY, Q, 0, Q, P, EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(Q), scY(P), EC.indicator);
+  d3Halo(svg, scX(Q), scY(P) - 12, 'Q=' + Q + ', P=$' + P, { color: EC.indicator, size: 10 });
+  var verdicts = {
+    cournot: 'Cournot: each firm makes 40, total 80 at $40. Industry profit $3,200, between monopoly and competition.',
+    stackelberg: 'Stackelberg: the leader commits 60, the follower makes 30; total 90 at $30. The leader out-earns the follower ($1,800 vs $900).',
+    collusion: 'Collusion: the two split the monopoly output (30 each, total 60 at $60), earning the full monopoly profit of $3,600, the best outcome for the firms, worst for consumers.',
+    bertrand: 'Bertrand: price competition drives P to marginal cost ($0 here). Output is the competitive 120 and industry profit is zero.'
+  };
+  document.getElementById('v104-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">q_A, q_B</div><div class="readout-val">' + m.qA + ', ' + m.qB + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Total Q</div><div class="readout-val">' + Q + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Industry profit</div><div class="readout-val">$' + ind.toLocaleString() + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.second + '">' + verdicts[V104] + '</p>';
+}
+
+// ── FIG 10.5: Bertrand undercutting incentive ───────────────────────────────
+function v105Draw() {
+  var p = parseFloat(document.getElementById('v105-p').value);
+  var pr = parseFloat(document.getElementById('v105-pr').value);
+  document.getElementById('v105-p-val').textContent = '$' + p;
+  document.getElementById('v105-pr-val').textContent = '$' + pr;
+  var MC = 20, Qd = function (x) { return Math.max(0, 120 - x); };
+  var myProfit = function (pp) { if (pp > pr) return 0; if (pp === pr) return 0.5 * (pp - MC) * Qd(pp); return (pp - MC) * Qd(pp); };
+  var scX = d3.scaleLinear().domain([20, 120]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 2700]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs105-wrap');
+  d3AddAxes(svg, scX, scY, 'Your price ($)', 'Your profit ($)', function (d) { return '$' + d; }, function (d) { return '$' + d; });
+  var pts = [];
+  for (var pp = 20; pp <= pr; pp += 1) pts.push([pp, (pp - MC) * Qd(pp)]);
+  if (pts.length) svg.append('path').attr('d', pts.map(function (q, i) { return (i ? 'L' : 'M') + scX(q[0]) + ' ' + scY(q[1]); }).join(' '))
+    .attr('fill', 'none').attr('stroke', EC.primary).attr('stroke-width', 3);
+  d3Seg(svg, scX, scY, pr, (pr - MC) * Qd(pr), pr, 0, EC.ghost, 1.5, '4,3');   // drop at rival price
+  d3Seg(svg, scX, scY, Math.min(pr + 0.5, 120), 0, 120, 0, EC.loss, 2.5);       // above rival: profit 0
+  d3Seg(svg, scX, scY, pr, 0, pr, 2600, EC.second, 1.2, '3,4');
+  d3Halo(svg, scX(pr), scY(2600), 'rival $' + pr, { color: EC.second, size: 9 });
+  d3Halo(svg, scX((20 + pr) / 2), scY((pr - MC) * Qd(pr) * 0.35), 'you undercut: whole market', { color: EC.primary, size: 9 });
+  var prof = myProfit(p);
+  d3Seg(svg, scX, scY, p, 0, p, prof, EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(p), scY(prof), EC.indicator);
+  d3Halo(svg, scX(p), scY(prof) - 12, '$' + prof.toFixed(0), { color: EC.indicator, size: 10 });
+  var share = p > pr ? '0% (priced out)' : p === pr ? '50% (split)' : '100% (undercut)';
+  var verdict = p > pr ? 'Priced above the rival, you sell nothing: buyers all go to the cheaper seller.'
+    : p === pr ? 'Matching the rival splits the market 50/50.'
+    : 'You undercut and capture the whole market for $' + prof.toFixed(0) + '. But the rival now has exactly the same incentive to undercut you, so price keeps falling toward MC = $20.';
+  document.getElementById('v105-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Your price</div><div class="readout-val">$' + p + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Rival price</div><div class="readout-val">$' + pr + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Your profit</div><div class="readout-val">$' + prof.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Market share</div><div class="readout-val" style="font-size:var(--t-small)">' + share + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (p > pr ? EC.loss : EC.primary) + '">' + verdict + '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v101Draw(); v102Draw(); v103Draw(); v104Draw(); v105Draw(); });
 </script>
   <!-- Ask the Course AI, floating assistant -->
   <script src="assets/chatbot.js"></script>
