@@ -33,14 +33,51 @@ html[data-ds="v2"] .byline {
    size in the text column, not muted 14px across the full container. */
 .fig-intro { margin-bottom: var(--s-6); }
 
-/* 4.4: derived quantities and verdicts, unboxed, under the plot. No border,
-   no fill, no radius: the figure block already has its one container. */
 .fig-state { margin-top: var(--s-4); font-size: var(--t-body-sm); line-height: 1.6; color: var(--ink-soft); }
 .fig-state:empty { display: none; }
 .readout-row { display: flex; flex-wrap: wrap; gap: var(--s-5) var(--s-6); }
 .readout-col { flex: 0 1 auto; }
-.readout-label { font-size: var(--t-caption); color: var(--ink-faint); }
-.readout-val { font-family: var(--font-mono); font-size: var(--t-body-sm); color: var(--unit-ink); }
+.readout-label { font-size: var(--t-caption); color: var(--ink-faint); letter-spacing: 0.04em; text-transform: uppercase; }
+.readout-val { font-family: var(--font-mono); font-size: var(--t-body-sm); color: var(--unit-ink); font-variant-numeric: tabular-nums; }
+
+/* ── Figure control deck ─────────────────────────────────────────────────────
+   The chart, its sliders/buttons and its numeric readouts are separate grid
+   children that used to sit unboxed on the page background, so the controls read
+   as loose text once the chart card ended. Bind them into ONE card: a white
+   chart zone with a rounded top, then a faintly tinted control deck (sliders +
+   readouts) below it, separated by a hairline, with the last piece rounding the
+   bottom. The .page grid has row-gap 0, so zeroing the inter-block margins makes
+   the pieces sit flush as a single component. */
+.sec.page > .fig-plot:has(+ .ctrl-row),
+.sec.page > .fig-plot:has(+ .fig-state:not(:empty)),
+.sec.page > .fig-plot:has(+ .readout-row) {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.sec.page > .ctrl-row,
+.sec.page > .fig-state:not(:empty),
+.sec.page > .readout-row {
+  background: var(--paper-sunk);
+  margin: 0;
+  padding: var(--s-4) var(--s-5);
+}
+.sec.page > .ctrl-row { border-top: 1px solid var(--rule2); align-items: flex-start; }
+.sec.page > .ctrl-row + .fig-state,
+.sec.page > .ctrl-row + .readout-row { padding-top: var(--s-2); }
+.sec.page > .ctrl-row:last-child,
+.sec.page > .ctrl-row:has(+ .fig-state:empty),
+.sec.page > .fig-state:not(:empty):last-child,
+.sec.page > .readout-row:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding-bottom: var(--s-5);
+}
+/* Square plots don't span the band; keep their deck the same width and left
+   edge so the card stays rectangular rather than a narrow chart over a wide
+   deck. */
+.sec.page:has(> .fig-plot.square) > .ctrl-row,
+.sec.page:has(> .fig-plot.square) > .fig-state:not(:empty),
+.sec.page:has(> .fig-plot.square) > .readout-row {
+  max-width: 34rem; justify-self: start;
+}
 
 /* Multi-panel figures: the panel name is information (which panel is this),
    so it stays; it is plain sentence-case text, not a mono uppercase bar. */

@@ -1002,24 +1002,34 @@ html[data-ds="v2"] a { color: var(--unit-ink); }
 .ctrl { display: flex; flex-direction: column; gap: var(--s-2); min-width: 11rem; flex: 1 1 11rem; max-width: 18rem; }
 .ctrl-label { font: 500 var(--t-small)/1.2 var(--font-body); color: var(--ink); white-space: nowrap; }
 .ctrl-value { font-family: var(--font-mono); color: var(--unit-ink); }
-input[type="range"].ctrl-track {
+/* One custom slider for EVERY figure. Previously only .ctrl-track sliders were
+   styled, so the newer weeks (2, 3, 9-12) that used a bare <input type=range>
+   fell back to the default browser control (blue accent-color) and looked
+   unpolished/inconsistent. Styling the base selector fixes all of them at once;
+   .ctrl-track is kept as an alias for any markup that still sets it. */
+input[type="range"], input[type="range"].ctrl-track {
   -webkit-appearance: none; appearance: none;
-  width: 100%; height: 4px; border-radius: 2px; margin: 0;
+  width: 100%; height: 6px; border-radius: 999px; margin: 0;
   background: var(--rule-strong); outline: none; cursor: pointer;
 }
-input[type="range"].ctrl-track::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--unit-ink); border: 2px solid var(--paper-raised);
-  box-shadow: 0 1px 3px rgba(28,36,51,0.3); cursor: grab;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--unit-ink); border: 3px solid var(--paper-raised);
+  box-shadow: 0 1px 4px rgba(28,36,51,0.35); cursor: grab;
+  transition: transform 0.12s var(--ease-out), box-shadow 0.12s var(--ease-out);
 }
-input[type="range"].ctrl-track::-moz-range-thumb {
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--unit-ink); border: 2px solid var(--paper-raised);
-  box-shadow: 0 1px 3px rgba(28,36,51,0.3); cursor: grab;
+input[type="range"]::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--unit-ink); border: 3px solid var(--paper-raised);
+  box-shadow: 0 1px 4px rgba(28,36,51,0.35); cursor: grab;
+  transition: transform 0.12s var(--ease-out), box-shadow 0.12s var(--ease-out);
 }
-input[type="range"].ctrl-track:active::-webkit-slider-thumb { cursor: grabbing; }
-input[type="range"].ctrl-track:focus-visible { outline: 2px solid var(--unit-ink); outline-offset: 4px; box-shadow: none; }
+input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.12); box-shadow: 0 2px 7px rgba(28,36,51,0.4); }
+input[type="range"]:hover::-moz-range-thumb    { transform: scale(1.12); box-shadow: 0 2px 7px rgba(28,36,51,0.4); }
+input[type="range"]:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.05); }
+input[type="range"]:active::-moz-range-thumb     { cursor: grabbing; transform: scale(1.05); }
+input[type="range"]:focus-visible { outline: 2px solid var(--unit-ink); outline-offset: 4px; box-shadow: none; }
 
 .btn {
   font: 500 var(--t-small)/1 var(--font-body);
