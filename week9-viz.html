@@ -96,6 +96,8 @@
       <li><a href="#sec-91"><span>9.1</span>Two-Part Pricing Benchmark</a></li>
       <li><a href="#sec-92"><span>9.2</span>Natural Monopoly Regimes</a></li>
       <li><a href="#sec-93"><span>9.3</span>Game Theory: The Circle Method</a></li>
+      <li><a href="#sec-94"><span>9.4</span>Block Pricing Staircase</a></li>
+      <li><a href="#sec-95"><span>9.5</span>Heterogeneous Consumers</a></li>
     </ol>
   </nav>
 
@@ -207,6 +209,60 @@
         <p class="gm-verdict" id="gm-verdict"></p>
       </div>
     </div>
+  </section>
+
+  <div class="sec-divider">Section 4 &middot; Extracting More Surplus</div>
+
+  <!-- FIG 9.4 -->
+  <section class="sec page" id="sec-94">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 9.4</span>
+      <h3>Block Pricing: A Staircase Toward Perfect Discrimination</h3>
+    </div>
+    <p class="fig-intro">
+      Instead of one price, a monopolist can charge a declining sequence of prices, a high rate for the first block of
+      units and lower rates for later blocks (electricity and water tariffs work this way). Each extra block lets the
+      firm claw back more of the consumer-surplus triangle. Slide the number of blocks: with one block the firm captures
+      almost nothing, and as blocks multiply the staircase hugs the demand curve and profit approaches the perfect
+      price-discrimination maximum. Demand \(P = 3 - Q/10\), \(MC = \$1\).
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs94-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Number of price blocks: <span class="ctrl-value" id="v94-n-val">3</span></span>
+        <input type="range" id="v94-n" min="1" max="10" step="1" value="3" oninput="v94Draw()">
+      </div>
+      <button class="btn" onclick="document.getElementById('v94-n').value=1;v94Draw()">Single price</button>
+      <button class="btn" onclick="document.getElementById('v94-n').value=10;v94Draw()">Many blocks</button>
+    </div>
+    <div class="fig-state" id="v94-readout"></div>
+    <div class="insight-box gold"><strong>More blocks, more surplus.</strong> Block pricing is second-degree price discrimination: the firm never observes any individual&rsquo;s willingness to pay, it just offers a menu of rates and lets buyers sort themselves. Each added block converts a slice of consumer surplus into profit and pushes output toward the efficient quantity, so second-degree pricing typically <em>reduces</em> deadweight loss even as it transfers surplus to the firm.</div>
+  </section>
+
+  <!-- FIG 9.5 -->
+  <section class="sec page" id="sec-95">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 9.5</span>
+      <h3>Heterogeneous Consumers &amp; the Information Rent</h3>
+    </div>
+    <p class="fig-intro">
+      A gym faces two equally common types it cannot tell apart: fitness enthusiasts (\(P_H = 20 - Q\)) and casual users
+      (\(P_L = 12 - Q\)), with \(MC = \$2\). Their consumer surpluses at \(p = MC\) are \(CS_H = \$162\) and
+      \(CS_L = \$50\). With a single membership fee \(F\) the firm faces a trade-off: a low fee keeps both types but hands
+      the high type a large <em>information rent</em>; a high fee extracts more per member but drives the casual users
+      out. Slide the fee and watch who stays and what the firm earns.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs95-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Membership fee F: <span class="ctrl-value" id="v95-f-val">$50</span></span>
+        <input type="range" id="v95-f" min="0" max="162" step="1" value="50" oninput="v95Draw()">
+      </div>
+      <button class="btn" onclick="document.getElementById('v95-f').value=50;v95Draw()">Keep both (F = 50)</button>
+      <button class="btn" onclick="document.getElementById('v95-f').value=162;v95Draw()">Exclude casual (F = 162)</button>
+    </div>
+    <div class="fig-state" id="v95-readout"></div>
+    <div class="insight-box"><strong>The information rent.</strong> When the firm charges the low fee that retains casual users, the enthusiasts pay far less than their \($162\) value and pocket the difference: an information rent the firm cannot capture without observing types. This is exactly why firms invest so heavily in loyalty programmes, usage tracking, and tiered memberships, any signal of type lets them shift toward more profitable type-specific pricing.</div>
   </section>
 
   </main>
@@ -392,9 +448,78 @@ function gmAnalyse() {
   else v.innerHTML = nash.length + ' Nash equilibria: <b>' + nash.join(' and ') + '</b>. A coordination game &mdash; the problem is choosing which one.';
 }
 
+// ── FIG 9.4: block pricing staircase ────────────────────────────────────────
+function v94Draw() {
+  var n = parseInt(document.getElementById('v94-n').value);
+  document.getElementById('v94-n-val').textContent = n;
+  var a = 3, b = 0.1, MC = 1, Qc = (a - MC) / b;   // competitive Q = 20
+  var D = function (q) { return a - b * q; };
+  var scX = d3.scaleLinear().domain([0, 32]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 3.2]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs94-wrap');
+  d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
+  var w = Qc / n;
+  for (var i = 1; i <= n; i++) {
+    var xL = (i - 1) * w, xR = i * w, price = D(xR);
+    d3Poly(svg, scX, scY, [[xL, MC], [xL, price], [xR, price], [xR, MC]], FILL_PS, STROKE_PS);
+    // faint block-boundary line up to demand, so all n blocks read even when the
+    // final block's price meets MC and its profit rectangle has zero height.
+    d3Seg(svg, scX, scY, xR, MC, xR, D(xR), EC.ghost, 1, '2,3');
+  }
+  d3Seg(svg, scX, scY, 0, a, 32, a - b * 32, EC.primary, 3);
+  d3Seg(svg, scX, scY, 0, MC, 32, MC, EC.slate, 2, '6,4');
+  d3Halo(svg, scX(27), scY(D(27) + 0.14), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(30), scY(MC + 0.14), 'MC = $1', { color: EC.slate, anchor: 'end', size: 10 });
+  var profit = 20 * (n - 1) / n, pct = profit / 20 * 100;
+  var verdict = n === 1
+    ? 'A single block priced so the whole market still buys captures nothing beyond cost, the competitive outcome.'
+    : 'With ' + n + ' blocks the firm captures $' + profit.toFixed(1) + ', ' + pct.toFixed(0) + '% of the $20 perfect-discrimination maximum. Each block turns another slice of the surplus triangle into profit.';
+  document.getElementById('v94-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Blocks</div><div class="readout-val">' + n + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Profit captured</div><div class="readout-val">$' + profit.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Perfect-discrim. max</div><div class="readout-val">$20.0</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Share captured</div><div class="readout-val">' + pct.toFixed(0) + '%</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.transfer + '">' + verdict + '</p>';
+}
+
+// ── FIG 9.5: heterogeneous consumers, profit vs uniform fee ─────────────────
+function v95Draw() {
+  var F = parseFloat(document.getElementById('v95-f').value);
+  document.getElementById('v95-f-val').textContent = '$' + F;
+  var CSH = 162, CSL = 50;
+  var scX = d3.scaleLinear().domain([0, 170]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 175]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs95-wrap');
+  d3AddAxes(svg, scX, scY, 'Membership fee F ($)', 'Firm profit ($)', function (d) { return '$' + d; }, function (d) { return '$' + d; });
+  d3Seg(svg, scX, scY, 0, 0, CSL, 2 * CSL, EC.gain, 3);            // both join: profit 2F
+  d3Seg(svg, scX, scY, CSL, CSL, CSH, CSH, EC.primary, 3);        // only H: profit F
+  d3Seg(svg, scX, scY, CSL, 2 * CSL, CSL, CSL, EC.ghost, 1.5, '4,3'); // drop at F=50
+  d3Halo(svg, scX(22), scY(2 * 22 + 16), 'both join (2F)', { color: EC.gain, size: 9, anchor: 'start' });
+  d3Halo(svg, scX(96), scY(120), 'only enthusiasts (F)', { color: EC.primary, size: 9, anchor: 'start' });
+  var profit, who, rent = 0;
+  if (F <= CSL) { profit = 2 * F; who = 'Both types'; rent = CSH - F; }
+  else { profit = F; who = 'Enthusiasts only'; }
+  d3Seg(svg, scX, scY, F, 0, F, profit, EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(F), scY(profit), EC.indicator);
+  d3Halo(svg, scX(F), scY(profit) - 12, '$' + profit.toFixed(0), { color: EC.indicator, size: 10 });
+  var verdict = F <= CSL
+    ? 'At F = $' + F + ' both types join, profit = 2F = $' + profit.toFixed(0) + '. The enthusiast values membership at $162 but pays only $' + F + ', keeping a $' + rent.toFixed(0) + ' information rent the firm cannot reach.'
+    : 'At F = $' + F + ' the casual users drop out (their surplus is only $50); only enthusiasts pay, so profit = $' + profit.toFixed(0) + '. Excluding the low type earns more here than the $100 from keeping both.';
+  document.getElementById('v95-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Fee F</div><div class="readout-val">$' + F.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Who joins</div><div class="readout-val" style="font-size:var(--t-small)">' + who + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Firm profit</div><div class="readout-val">$' + profit.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Info rent</div><div class="readout-val">$' + rent.toFixed(0) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (F <= CSL ? EC.gain : EC.primary) + '">' + verdict + '</p>';
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   v91Draw();
   v92Draw();
+  v94Draw();
+  v95Draw();
   GM = JSON.parse(JSON.stringify(GM_PRESETS.pd));   // match the active preset
   gmRender();
 });
