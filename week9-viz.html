@@ -221,8 +221,11 @@ function v91Draw() {
   d3Seg(svg, scX, scY, 0, MC, 32, MC, EC.slate, 2, '6,4');              // MC = AC
   d3Seg(svg, scX, scY, Qp, 0, Qp, p, EC.indicator, 1.5, '3,3');        // qty guide
 
-  d3Halo(svg, scX(3), scY(2.55), 'Fixed fee F = CS', { color: STROKE_CS, anchor: 'start' });
-  if (p > MC) d3Halo(svg, scX(Qp / 2), scY((p + MC) / 2), 'usage π', { color: STROKE_PS, size: 10 });
+  // Only label the F and usage regions while they have visible area; near the
+  // choke price (p → a) the quantity sold collapses to 0 and both regions vanish
+  // into the DWL triangle, so their labels would otherwise sit on empty space.
+  if (Qp > 0.4) d3Halo(svg, scX(3), scY(2.55), 'Fixed fee F = CS', { color: STROKE_CS, anchor: 'start' });
+  if (p > MC && Qp > 0.4) d3Halo(svg, scX(Qp / 2), scY((p + MC) / 2), 'usage π', { color: STROKE_PS, size: 10 });
   if (p > MC) d3Halo(svg, scX((Qp + Qeff) / 2 + 1), scY(MC + 0.12), 'DWL', { color: STROKE_DWL, size: 10 });
   d3Halo(svg, scX(30), scY(MC + 0.12), 'MC = AC = $1', { color: EC.slate, anchor: 'end', size: 10 });
 
