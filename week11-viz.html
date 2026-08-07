@@ -62,6 +62,7 @@
     <ol>
       <li><a href="#sec-111"><span>11.1</span>Externality &amp; the Pigouvian Tax</a></li>
       <li><a href="#sec-112"><span>11.2</span>Cap-and-Trade: Equalising MAC</a></li>
+      <li><a href="#sec-113"><span>11.3</span>Positive Externality &amp; Subsidy</a></li>
     </ol>
   </nav>
 
@@ -127,6 +128,34 @@
     </div>
     <div class="fig-state" id="v112-readout"></div>
     <div class="insight-box"><strong>Let the cheap firm clean up.</strong> Equalising marginal abatement cost across firms hits the pollution target at least total cost. Forcing every firm to abate the same amount wastes the low-cost firm&rsquo;s advantage, here trading lets Firm A do most of the work and cuts total cost by 36%.</div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; When the Spillover Is Positive</div>
+
+  <!-- FIG 11.3 -->
+  <section class="sec page" id="sec-113">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 11.3</span>
+      <h3>Positive Externality &amp; the Pigouvian Subsidy</h3>
+    </div>
+    <p class="fig-intro">
+      Some goods (vaccination, education, a new user joining a network) confer a marginal external benefit \(MEB\) on
+      third parties, so social marginal benefit \(MSB = MB + MEB\) lies above private demand. The market equates
+      \(MB = MC\) and <em>under</em>-produces; the optimum is where \(MSB = MC\). The red triangle is the deadweight loss
+      from too little activity, and a Pigouvian subsidy \(s^{*}=MEB\) closes it. Slide the external benefit and toggle the
+      subsidy.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs113-wrap"></div></div>
+    <div class="ctrl-row">
+      <button class="quiz-btn revealed" id="v113-b-off" onclick="v113Sub(false)">No subsidy</button>
+      <button class="quiz-btn" id="v113-b-on" onclick="v113Sub(true)">Apply Pigouvian subsidy</button>
+      <div class="ctrl">
+        <span class="ctrl-label">Marginal external benefit MEB: <span class="ctrl-value" id="v113-meb-val">$20</span></span>
+        <input type="range" id="v113-meb" min="0" max="40" step="2" value="20" oninput="v113Draw()">
+      </div>
+    </div>
+    <div class="fig-state" id="v113-readout"></div>
+    <div class="insight-box gold"><strong>Subsidise the spillover.</strong> A positive externality is the mirror image of a negative one: the market does too <em>little</em>, not too much, so the fix is a subsidy, not a tax. Setting \(s^{*}=MEB(Q^{*})\) pays for the benefit conferred on others and moves output up to the efficient level, which is why governments subsidise vaccines, schooling, and R&amp;D.</div>
   </section>
 
   </main>
@@ -233,7 +262,53 @@ function v112Draw() {
     '</div><p style="margin-top:.6rem;color:' + EC.gain + '">Trading lets the cheap firm (A) do most of the cleanup, hitting the target for $' + costCT.toFixed(0) + ' instead of $' + costEq.toFixed(0) + ' under equal shares: a saving of $' + saving.toFixed(0) + ' (' + (100 * saving / costEq).toFixed(0) + '%).</p>';
 }
 
-document.addEventListener('DOMContentLoaded', function () { v111Draw(); v112Draw(); });
+// ── FIG 11.3: positive externality + Pigouvian subsidy ──────────────────────
+var V113SUB = false;
+function v113Sub(on) {
+  V113SUB = on;
+  document.getElementById('v113-b-off').classList.toggle('revealed', !on);
+  document.getElementById('v113-b-on').classList.toggle('revealed', on);
+  v113Draw();
+}
+function v113Draw() {
+  var MEB = parseFloat(document.getElementById('v113-meb').value);
+  document.getElementById('v113-meb-val').textContent = '$' + MEB;
+  // MB = 100 - Q, MC = 10 + Q, MSB = MB + MEB
+  var QE = 45;                       // MB = MC: 100-Q = 10+Q
+  var Qs = (90 + MEB) / 2;           // MSB = MC: 100-Q+MEB = 10+Q
+  var eqQ = V113SUB ? Qs : QE, eqP = 10 + eqQ;   // price sits on MC (supply)
+  var scX = d3.scaleLinear().domain([0, 100]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 145]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs113-wrap');
+  d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
+  // DWL triangle (underproduction) between QE and Q*: [QE,MC(QE)]-[QE,MSB(QE)]-[Q*,MC(Q*)]
+  if (!V113SUB && MEB > 0) {
+    d3Poly(svg, scX, scY, [[QE, 10 + QE], [QE, 100 - QE + MEB], [Qs, 10 + Qs]], FILL_DWL, STROKE_DWL);
+    d3Halo(svg, scX((QE + Qs) / 2 + 1), scY(10 + QE + 4), 'DWL', { color: STROKE_DWL, size: 10 });
+  }
+  d3Seg(svg, scX, scY, 0, 100, 100, 0, EC.primary, 3);              // MB (demand)
+  d3Seg(svg, scX, scY, 0, 100 + MEB, 100, MEB, EC.gain, 2.5, '6,4'); // MSB = MB + MEB
+  d3Seg(svg, scX, scY, 0, 10, 90, 100, EC.second, 3);              // MC (supply)
+  d3Halo(svg, scX(84), scY(100 - 84 + 4), 'MB', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(66), scY(100 - 66 + MEB + 4), 'MSB = MB + MEB', { color: EC.gain, size: 10 });
+  d3Halo(svg, scX(84), scY(10 + 84 + 5), 'MC', { color: EC.second, anchor: 'end', size: 10 });
+  d3Seg(svg, scX, scY, eqQ, 0, eqQ, eqP, EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(eqQ), scY(eqP), EC.indicator);
+  d3Halo(svg, scX(eqQ), scY(0) + 14, (V113SUB ? 'Q* = ' : 'Q_E = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10 });
+  var sub = MEB, dwl = MEB * MEB / 4;
+  var verdict = V113SUB
+    ? 'With the subsidy s* = $' + sub + ', output rises to the efficient Q* = ' + Qs.toFixed(1) + ' where MSB = MC, and the deadweight loss is eliminated.'
+    : 'The market produces only Q_E = 45 where MB = MC, short of the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between is worth more to society than it costs: a $' + dwl.toFixed(1) + ' deadweight loss from under-provision.';
+  document.getElementById('v113-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Market Q_E</div><div class="readout-val">45</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Social optimum Q*</div><div class="readout-val">' + Qs.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Pigouvian subsidy s*</div><div class="readout-val">$' + sub + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">DWL if unsubsidised</div><div class="readout-val">$' + dwl.toFixed(1) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (V113SUB ? EC.gain : EC.second) + '">' + verdict + '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v111Draw(); v112Draw(); v113Draw(); });
 </script>
   <!-- Ask the Course AI, floating assistant -->
   <script src="assets/chatbot.js"></script>
