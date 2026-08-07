@@ -534,12 +534,18 @@ function setupCvs(id) {
   const cvs = document.getElementById(id);
   if (!cvs) return {ctx:null,W:300,H:300};
   const dpr = window.devicePixelRatio || 1;
-  const W = Math.min(cvs.clientWidth || cvs.parentElement?.clientWidth || 300, 480);
-  const H = W;
+  // Size the backing store to the ACTUAL displayed width. The old code capped
+  // the logical width at 480 while the canvas CSS displayed it at the full
+  // container width (width:100%), so a 480-wide backing was upscaled to ~768px
+  // and rendered blurry (63% of native resolution at 2x DPI). Use the real
+  // clientWidth (uncapped) and pin the display size to it so backing = display.
+  const W = cvs.clientWidth || cvs.parentElement?.clientWidth || 300;
+  const H = Math.min(W, 480);   // preserve prior height behaviour (square on phones, 480-tall on desktop)
   const tw = Math.round(W * dpr), th = Math.round(H * dpr);
   if (cvs.width !== tw || cvs.height !== th) {
     cvs.width = tw; cvs.height = th;
   }
+  cvs.style.width = W + 'px';
   cvs.style.height = H + 'px';
   const ctx = cvs.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
