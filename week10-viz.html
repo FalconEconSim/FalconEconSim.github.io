@@ -335,6 +335,8 @@ function v103Draw() {
   for (var k = 1; k <= 15; k++) pts.push([k, Pof(k)]);
   svg.append('path').attr('d', pts.map(function (pt, i) { return (i ? 'L' : 'M') + scX(pt[0]) + ' ' + scY(pt[1]); }).join(' '))
     .attr('fill', 'none').attr('stroke', EC.primary).attr('stroke-width', 3);
+  // Integer dots: n is a count, so the price is only defined at whole numbers.
+  pts.forEach(function (pt) { svg.append('circle').attr('cx', scX(pt[0])).attr('cy', scY(pt[1])).attr('r', 2.6).attr('fill', EC.primary); });
   d3Seg(svg, scX, scY, n, 0, n, Pof(n), EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(n), scY(Pof(n)), EC.indicator);
   d3Halo(svg, scX(n), scY(Pof(n)) - 12, '$' + Pof(n).toFixed(1), { color: EC.indicator, size: 10 });
@@ -414,9 +416,14 @@ function v105Draw() {
     .attr('fill', 'none').attr('stroke', EC.primary).attr('stroke-width', 3);
   d3Seg(svg, scX, scY, pr, (pr - MC) * Qd(pr), pr, 0, EC.ghost, 1.5, '4,3');   // drop at rival price
   d3Seg(svg, scX, scY, Math.min(pr + 0.5, 120), 0, 120, 0, EC.loss, 2.5);       // above rival: profit 0
+  d3Halo(svg, scX((pr + 120) / 2), scY(0) + 22, 'price above rival: you sell nothing', { color: EC.loss, size: 9 });
+  // match point: pricing exactly at the rival splits the market (half profit)
+  var half = 0.5 * (pr - MC) * Qd(pr);
+  d3Dot(svg, scX(pr), scY(half), EC.transfer, 4);
+  d3Halo(svg, scX(pr) - 6, scY(half), 'match: split', { color: EC.transfer, size: 9, anchor: 'end' });
   d3Seg(svg, scX, scY, pr, 0, pr, 2600, EC.second, 1.2, '3,4');
   d3Halo(svg, scX(pr), scY(2600), 'rival $' + pr, { color: EC.second, size: 9 });
-  d3Halo(svg, scX((20 + pr) / 2), scY((pr - MC) * Qd(pr) * 0.35), 'you undercut: whole market', { color: EC.primary, size: 9 });
+  d3Halo(svg, scX(20 + (pr - 20) * 0.28), scY((pr - MC) * Qd(pr) * 0.62), 'undercut: whole market', { color: EC.primary, size: 9, anchor: 'start' });
   var prof = myProfit(p);
   d3Seg(svg, scX, scY, p, 0, p, prof, EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(p), scY(prof), EC.indicator);

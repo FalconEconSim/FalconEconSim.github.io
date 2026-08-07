@@ -262,7 +262,7 @@
       <button class="btn" onclick="document.getElementById('v95-f').value=162;v95Draw()">Exclude casual (F = 162)</button>
     </div>
     <div class="fig-state" id="v95-readout"></div>
-    <div class="insight-box"><strong>The information rent.</strong> When the firm charges the low fee that retains casual users, the enthusiasts pay far less than their \($162\) value and pocket the difference: an information rent the firm cannot capture without observing types. This is exactly why firms invest so heavily in loyalty programmes, usage tracking, and tiered memberships, any signal of type lets them shift toward more profitable type-specific pricing.</div>
+    <div class="insight-box"><strong>The information rent.</strong> With these 50/50 demands the firm actually earns more by excluding the casual users (F = $162 &rarr; $162) than by keeping both (F = $50 &rarr; $100); the $112 gap is the information rent that including the casual user would cost. Either way the enthusiast pays less than their \($162\) value, a rent the firm cannot capture without observing types. This is exactly why firms invest so heavily in loyalty programmes, usage tracking, and tiered memberships, any signal of type lets them shift toward more profitable type-specific pricing.</div>
   </section>
 
   </main>
@@ -346,10 +346,10 @@ function v92Draw() {
   d3Seg(svg, scX, scY, 0, 60, 30, 0, EC.second, 2, '5,4');    // MR = 60 - 2Q
   d3Seg(svg, scX, scY, 0, MC, 60, MC, EC.slate, 2);           // MC = 5
 
-  d3Halo(svg, scX(52), scY(60 - 52 + 2), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });
-  d3Halo(svg, scX(24), scY(60 - 2 * 24 + 2), 'MR', { color: EC.second, size: 10 });
-  d3Halo(svg, scX(54), scY(FC / 54 + MC + 2.5), 'AC', { color: EC.transfer, size: 10 });
-  d3Halo(svg, scX(50), scY(MC + 2), 'MC = $5', { color: EC.slate, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(40), scY(60 - 40 + 4), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(9), scY(60 - 2 * 9 + 3), 'MR', { color: EC.second, size: 10 });
+  d3Halo(svg, scX(57), scY(FC / 57 + MC + 3), 'AC', { color: EC.transfer, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(48), scY(MC - 2.5), 'MC = $5', { color: EC.slate, anchor: 'end', size: 10 });
 
   var Q, P, verdict, col;
   if (V92 === 'unreg') { Q = 27.5; P = 32.5; }
@@ -458,14 +458,17 @@ function v94Draw() {
   var scY = d3.scaleLinear().domain([0, 3.2]).range([D3H - D3PAD.bottom, D3PAD.top]);
   var svg = d3MakeSvg('cvs94-wrap');
   d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
-  var w = Qc / n;
+  var w = Qc / n, stair = [];
   for (var i = 1; i <= n; i++) {
     var xL = (i - 1) * w, xR = i * w, price = D(xR);
     d3Poly(svg, scX, scY, [[xL, MC], [xL, price], [xR, price], [xR, MC]], FILL_PS, STROKE_PS);
-    // faint block-boundary line up to demand, so all n blocks read even when the
-    // final block's price meets MC and its profit rectangle has zero height.
-    d3Seg(svg, scX, scY, xR, MC, xR, D(xR), EC.ghost, 1, '2,3');
+    stair.push([xL, price], [xR, price]);
   }
+  // Bold descending staircase so all n price steps are countable, even the last
+  // one, whose price meets MC so its profit rectangle has zero height.
+  svg.append('path').attr('d', stair.map(function (pt, i) { return (i ? 'L' : 'M') + scX(pt[0]) + ' ' + scY(pt[1]); }).join(' '))
+    .attr('fill', 'none').attr('stroke', STROKE_PS).attr('stroke-width', 2.5);
+  if (n > 1) d3Halo(svg, scX(Qc - w / 2), scY(MC) - 8, 'last block: price = MC', { color: EC.slate, size: 8 });
   d3Seg(svg, scX, scY, 0, a, 32, a - b * 32, EC.primary, 3);
   d3Seg(svg, scX, scY, 0, MC, 32, MC, EC.slate, 2, '6,4');
   d3Halo(svg, scX(27), scY(D(27) + 0.14), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });
@@ -496,7 +499,7 @@ function v95Draw() {
   d3Seg(svg, scX, scY, CSL, CSL, CSH, CSH, EC.primary, 3);        // only H: profit F
   d3Seg(svg, scX, scY, CSL, 2 * CSL, CSL, CSL, EC.ghost, 1.5, '4,3'); // drop at F=50
   d3Halo(svg, scX(22), scY(2 * 22 + 16), 'both join (2F)', { color: EC.gain, size: 9, anchor: 'start' });
-  d3Halo(svg, scX(96), scY(120), 'only enthusiasts (F)', { color: EC.primary, size: 9, anchor: 'start' });
+  d3Halo(svg, scX(64), scY(140), 'only enthusiasts (F)', { color: EC.primary, size: 9, anchor: 'start' });
   var profit, who, rent = 0;
   if (F <= CSL) { profit = 2 * F; who = 'Both types'; rent = CSH - F; }
   else { profit = F; who = 'Enthusiasts only'; }
