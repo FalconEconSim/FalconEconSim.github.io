@@ -62,6 +62,7 @@
     <ol>
       <li><a href="#sec-121"><span>12.1</span>The Market for Lemons</a></li>
       <li><a href="#sec-122"><span>12.2</span>Spence Signalling</a></li>
+      <li><a href="#sec-123"><span>12.3</span>Incentive-Insurance Trade-off</a></li>
     </ol>
   </nav>
 
@@ -126,6 +127,37 @@
     </div>
     <div class="fig-state" id="v122-readout"></div>
     <div class="insight-box"><strong>Single-crossing is the whole trick.</strong> A signal separates types only when it is cheaper for the high type, so the low type will not mimic it. Because education adds no productivity in this model, any positive signalling level is pure social waste, a cost paid solely to prove who you are.</div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; Moral Hazard &amp; Incentives</div>
+
+  <!-- FIG 12.3 -->
+  <section class="sec page" id="sec-123">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 12.3</span>
+      <h3>The Incentive-Insurance Trade-off</h3>
+    </div>
+    <p class="fig-intro">
+      Under moral hazard the principal ties pay to output with a linear contract \(w=\alpha+\beta\pi\). The optimal
+      performance weight is \(\beta^{*}=\dfrac{1}{1+r\sigma^{2}}\), where \(r\) is the agent&rsquo;s risk aversion and
+      \(\sigma^{2}\) the noise in output. A higher \(\beta\) sharpens incentives but loads more risk onto the agent.
+      Slide the noise and the risk aversion to watch the optimal contract move between sharp incentives and flat insurance.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs123-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Output noise &sigma;&sup2;: <span class="ctrl-value" id="v123-s2-val">1.0</span></span>
+        <input type="range" id="v123-s2" min="0" max="5" step="0.1" value="1" oninput="v123Draw()">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Risk aversion r: <span class="ctrl-value" id="v123-r-val">1.0</span></span>
+        <input type="range" id="v123-r" min="0.2" max="3" step="0.1" value="1" oninput="v123Draw()">
+      </div>
+      <button class="btn" onclick="v123Preset(0.3)">Salesperson (low noise)</button>
+      <button class="btn" onclick="v123Preset(4)">Researcher (high noise)</button>
+    </div>
+    <div class="fig-state" id="v123-readout"></div>
+    <div class="insight-box"><strong>Pay for what effort controls.</strong> When output closely tracks effort (low noise, low risk aversion) the optimal contract is steep performance pay, a salesperson on commission. When output is noisy or the agent is very risk-averse, extra performance weight mostly transfers risk rather than sharpening effort, so pay flattens toward a salary. That is the incentive-insurance trade-off in one curve.</div>
   </section>
 
   </main>
@@ -223,7 +255,41 @@ function v122Draw() {
     '</p>';
 }
 
-document.addEventListener('DOMContentLoaded', function () { v121Draw(); v122Draw(); });
+// ── FIG 12.3: principal-agent incentive-insurance trade-off ─────────────────
+function v123Preset(s2) { document.getElementById('v123-s2').value = s2; v123Draw(); }
+function v123Draw() {
+  var r = parseFloat(document.getElementById('v123-r').value);
+  var s2 = parseFloat(document.getElementById('v123-s2').value);
+  document.getElementById('v123-r-val').textContent = r.toFixed(1);
+  document.getElementById('v123-s2-val').textContent = s2.toFixed(1);
+  var beta = function (x) { return 1 / (1 + r * x); };
+  var scX = d3.scaleLinear().domain([0, 5]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 1.08]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs123-wrap');
+  d3AddAxes(svg, scX, scY, 'Output noise σ²', 'Optimal weight β*', null, function (d) { return d.toFixed(1); });
+  d3Seg(svg, scX, scY, 0, 1, 5, 1, EC.slate, 1.5, '4,4');            // beta = 1 reference
+  d3Halo(svg, scX(4.9), scY(1) - 6, 'β = 1 (pure incentive pay)', { color: EC.slate, anchor: 'end', size: 10 });
+  var pts = [];
+  for (var x = 0; x <= 5.001; x += 0.1) pts.push([x, beta(x)]);
+  svg.append('path').attr('d', pts.map(function (pt, i) { return (i ? 'L' : 'M') + scX(pt[0]) + ' ' + scY(pt[1]); }).join(' '))
+    .attr('fill', 'none').attr('stroke', EC.primary).attr('stroke-width', 3);
+  var bv = beta(s2);
+  d3Seg(svg, scX, scY, s2, 0, s2, bv, EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(s2), scY(bv), EC.indicator);
+  d3Halo(svg, scX(s2), scY(bv) - 12, 'β* = ' + bv.toFixed(2), { color: EC.indicator, size: 10 });
+  var verdict = bv > 0.66 ? 'High β*: output closely tracks effort (low noise / low risk aversion), so steep performance pay is optimal, like a salesperson on commission.'
+    : bv < 0.34 ? 'Low β*: output is noisy or the agent is very risk-averse, so pay is mostly a flat salary; loading incentives would just impose risk without sharpening effort.'
+    : 'Moderate β*: the contract balances sharper incentives against the cost of loading risk onto the agent.';
+  document.getElementById('v123-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Risk aversion</div><div class="readout-val">' + r.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Output noise</div><div class="readout-val">' + s2.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Optimal weight</div><div class="readout-val">' + bv.toFixed(2) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Pay style</div><div class="readout-val">' + (bv > 0.66 ? 'Incentive' : bv < 0.34 ? 'Insurance' : 'Balanced') + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.second + '">' + verdict + '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v121Draw(); v122Draw(); v123Draw(); });
 </script>
   <!-- Ask the Course AI, floating assistant -->
   <script src="assets/chatbot.js"></script>
