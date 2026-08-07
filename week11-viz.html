@@ -352,7 +352,7 @@ function v113Draw() {
   d3Halo(svg, scX(84), scY(10 + 84 + 5), 'MC', { color: EC.second, anchor: 'end', size: 10 });
   d3Seg(svg, scX, scY, eqQ, 0, eqQ, eqP, EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(eqQ), scY(eqP), EC.indicator);
-  d3Halo(svg, scX(eqQ), scY(0) + 14, (V113SUB ? 'Q* = ' : 'Q_E = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10 });
+  d3Halo(svg, scX(eqQ) + 5, scY(6), (V113SUB ? 'Q* = ' : 'Qₑ = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10, anchor: 'start' });
   var sub = MEB, dwl = MEB * MEB / 4;
   var verdict = V113SUB
     ? 'With the subsidy s* = $' + sub + ', output rises to the efficient Q* = ' + Qs.toFixed(1) + ' where MSB = MC, and the deadweight loss is eliminated.'
@@ -374,18 +374,21 @@ function v114Draw() {
   document.getElementById('v114-v-val').textContent = '$' + v;
   var c = 300, total = N * v, surplus = total - c;
   var maxY = Math.max(total, c, 400) * 1.12;
-  var scX = d3.scaleLinear().domain([0, 3]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scX = d3.scaleLinear().domain([0, 2]).range([D3PAD.left, D3W - D3PAD.right]);
   var scY = d3.scaleLinear().domain([0, maxY]).range([D3H - D3PAD.bottom, D3PAD.top]);
   var svg = d3MakeSvg('cvs114-wrap');
   d3AddAxes(svg, scX, scY, '', 'Dollars', function () { return ''; }, function (d) { return '$' + d; });
-  d3Poly(svg, scX, scY, [[0.55, 0], [0.55, total], [1.35, total], [1.35, 0]], surplus > 0 ? FILL_GAIN : FILL_DWL, surplus > 0 ? STROKE_GAIN : STROKE_DWL);
-  d3Poly(svg, scX, scY, [[1.75, 0], [1.75, c], [2.45, c], [2.45, 0]], 'rgba(44,62,80,0.18)', EC.slate);
-  d3Seg(svg, scX, scY, 0, c, 3, c, EC.slate, 1.2, '4,4');
-  d3Halo(svg, scX(0.95), scY(total) - 6, '$' + total, { color: surplus > 0 ? STROKE_GAIN : STROKE_DWL, size: 11 });
-  d3Halo(svg, scX(2.1), scY(c) - 6, '$300', { color: EC.slate, size: 11 });
-  d3Halo(svg, scX(0.95), scY(0) + 16, 'Total value (N×v)', { color: EC.slate, size: 9 });
-  d3Halo(svg, scX(2.1), scY(0) + 16, 'Cost', { color: EC.slate, size: 9 });
   var efficient = total > c, aloneOK = v >= c, verdict, col;
+  // Cost reference line across both bars, so each bar reads against it.
+  d3Seg(svg, scX, scY, 0, c, 2, c, EC.slate, 1.5, '5,4');
+  d3Halo(svg, scX(1.95), scY(c) + 12, 'cost = $300', { color: EC.slate, size: 10, anchor: 'end' });
+  // Bar 1: total value (efficiency test). Bar 2: value PER PERSON (why it fails).
+  d3Poly(svg, scX, scY, [[0.3, 0], [0.3, total], [0.85, total], [0.85, 0]], efficient ? FILL_GAIN : FILL_DWL, efficient ? STROKE_GAIN : STROKE_DWL);
+  d3Poly(svg, scX, scY, [[1.15, 0], [1.15, v], [1.7, v], [1.7, 0]], aloneOK ? FILL_GAIN : FILL_DWL, aloneOK ? STROKE_GAIN : STROKE_DWL);
+  d3Halo(svg, scX(0.575), scY(total) - 8, '$' + total, { color: efficient ? STROKE_GAIN : STROKE_DWL, size: 11 });
+  d3Halo(svg, scX(1.425), scY(v) - 8, '$' + v, { color: aloneOK ? STROKE_GAIN : STROKE_DWL, size: 11 });
+  d3Halo(svg, scX(0.575), scY(0) + 16, 'Total value (N×v)', { color: EC.slate, size: 9 });
+  d3Halo(svg, scX(1.425), scY(0) + 16, 'Per person (v)', { color: EC.slate, size: 9 });
   if (aloneOK) { verdict = 'Each person values the good at $' + v + ' ≥ the $300 cost, so someone provides it alone: no free-rider problem here.'; col = EC.gain; }
   else if (efficient) { verdict = 'Providing is efficient: total value $' + total + ' exceeds the $300 cost, a $' + surplus + ' surplus. But no one values it enough to fund it alone, so each free-rides and the good is NOT provided, wasting $' + surplus + '.'; col = EC.loss; }
   else { verdict = 'Total value $' + total + ' is below the $300 cost, so the good is not worth providing, and correctly is not.'; col = EC.slate; }
@@ -394,7 +397,7 @@ function v114Draw() {
     '<div class="readout-col"><div class="readout-label">Group size N</div><div class="readout-val">' + N + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Total value</div><div class="readout-val">$' + total + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Cost</div><div class="readout-val">$300</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Nash outcome</div><div class="readout-val" style="font-size:var(--t-small)">' + (aloneOK ? 'Provided' : efficient ? 'Free-ride: none' : 'Not provided') + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Outcome</div><div class="readout-val" style="font-size:var(--t-small)">' + (aloneOK ? 'Provided' : efficient ? 'Not provided (all free-ride)' : 'Not provided') + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
 }
 
@@ -426,6 +429,9 @@ function v115Draw() {
   d3Halo(svg, scX(44), scY(MD(44) + 6), 'MD to neighbour', { color: EC.loss, anchor: 'end', size: 10 });
   d3Seg(svg, scX, scY, Sstar, 0, Sstar, 50, EC.slate, 1.2, '4,4');
   d3Halo(svg, scX(Sstar), scY(54), 'S* = 25', { color: EC.slate, size: 9 });
+  // Starting points set by who owns the right: neighbour's right => S=0, polluter's => S=50.
+  d3Halo(svg, scX(1), scY(96), 'neighbour&rsquo;s right (start S=0)', { color: V115RIGHT === 'victim' ? EC.gain : EC.ghost, size: 8, anchor: 'start', weight: V115RIGHT === 'victim' ? 700 : 400 });
+  d3Halo(svg, scX(49), scY(96), 'polluter&rsquo;s right (start S=50)', { color: V115RIGHT === 'polluter' ? EC.gain : EC.ghost, size: 8, anchor: 'end', weight: V115RIGHT === 'polluter' ? 700 : 400 });
   d3Seg(svg, scX, scY, S, 0, S, Math.max(MB(S), MD(S)), EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(S), scY(MB(S)), EC.primary);
   d3Dot(svg, scX(S), scY(MD(S)), EC.loss);
