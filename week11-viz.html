@@ -63,6 +63,8 @@
       <li><a href="#sec-111"><span>11.1</span>Externality &amp; the Pigouvian Tax</a></li>
       <li><a href="#sec-112"><span>11.2</span>Cap-and-Trade: Equalising MAC</a></li>
       <li><a href="#sec-113"><span>11.3</span>Positive Externality &amp; Subsidy</a></li>
+      <li><a href="#sec-114"><span>11.4</span>Public Goods &amp; Free-Riding</a></li>
+      <li><a href="#sec-115"><span>11.5</span>The Coase Theorem</a></li>
     </ol>
   </nav>
 
@@ -156,6 +158,62 @@
     </div>
     <div class="fig-state" id="v113-readout"></div>
     <div class="insight-box gold"><strong>Subsidise the spillover.</strong> A positive externality is the mirror image of a negative one: the market does too <em>little</em>, not too much, so the fix is a subsidy, not a tax. Setting \(s^{*}=MEB(Q^{*})\) pays for the benefit conferred on others and moves output up to the efficient level, which is why governments subsidise vaccines, schooling, and R&amp;D.</div>
+  </section>
+
+  <div class="sec-divider">Section 4 &middot; Public Goods &amp; Bargaining</div>
+
+  <!-- FIG 11.4 -->
+  <section class="sec page" id="sec-114">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 11.4</span>
+      <h3>Public Goods &amp; the Free-Rider Problem</h3>
+    </div>
+    <p class="fig-intro">
+      A public good (a neighbourhood streetlight, a shared security guard) is worth providing when the group&rsquo;s total
+      willingness to pay exceeds its cost, even if no single person values it enough to fund it alone. But because no one
+      can be excluded, each person waits for someone else to pay. Slide the group size and how much each member values the
+      good against a fixed \(\$300\) cost: watch when provision is socially efficient, yet still fails because everyone
+      free-rides.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs114-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Group size N: <span class="ctrl-value" id="v114-n-val">3</span></span>
+        <input type="range" id="v114-n" min="1" max="8" step="1" value="3" oninput="v114Draw()">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Value per person: <span class="ctrl-value" id="v114-v-val">$120</span></span>
+        <input type="range" id="v114-v" min="0" max="200" step="10" value="120" oninput="v114Draw()">
+      </div>
+    </div>
+    <div class="fig-state" id="v114-readout"></div>
+    <div class="insight-box red"><strong>Efficient, yet unprovided.</strong> Whenever total value exceeds the cost, providing the good is efficient, but each individual&rsquo;s dominant move is to free-ride and hope the others pay. Non-excludability, not the cost, is what makes the market fail: the good is under-provided even though everyone would gain. Fixes coordinate contributions (an all-or-nothing crowdfunding threshold) or fund it through taxes.</div>
+  </section>
+
+  <!-- FIG 11.5 -->
+  <section class="sec page" id="sec-115">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 11.5</span>
+      <h3>The Coase Theorem: Bargaining to Efficiency</h3>
+    </div>
+    <p class="fig-intro">
+      A factory&rsquo;s marginal benefit from polluting falls as it pollutes more (\(MB = 100 - 2S\)); the marginal damage to
+      a neighbour rises (\(MD = 2S\)). The efficient level is where they cross, \(S^{*}=25\). Coase&rsquo;s insight: if
+      property rights are clear and bargaining is cheap, the two parties reach \(S^{*}\) <em>regardless of who holds the
+      right</em>, only the split of the gains changes. Set the starting point by who owns the right and slide the pollution
+      level to see the bargaining range close on \(S^{*}\).
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs115-wrap"></div></div>
+    <div class="ctrl-row">
+      <button class="quiz-btn" id="v115-b-polluter" onclick="v115Right('polluter')">Polluter owns the right</button>
+      <button class="quiz-btn" id="v115-b-victim" onclick="v115Right('victim')">Neighbour owns the right</button>
+      <div class="ctrl">
+        <span class="ctrl-label">Pollution level S: <span class="ctrl-value" id="v115-s-val">25</span></span>
+        <input type="range" id="v115-s" min="0" max="50" step="1" value="25" oninput="v115Draw()">
+      </div>
+    </div>
+    <div class="fig-state" id="v115-readout"></div>
+    <div class="insight-box"><strong>Rights decide who pays, not the outcome.</strong> Start from the polluter&rsquo;s right (high pollution) and the neighbour pays it to cut back; start from the neighbour&rsquo;s right (zero pollution) and the polluter pays to be allowed some, either way they meet at \(S^{*}=25\). Efficiency does not depend on the allocation of rights, only on the ability to bargain, which is exactly why Coase fails when transaction costs are high or parties are many.</div>
   </section>
 
   </main>
@@ -308,7 +366,83 @@ function v113Draw() {
     '</div><p style="margin-top:.6rem;color:' + (V113SUB ? EC.gain : EC.second) + '">' + verdict + '</p>';
 }
 
-document.addEventListener('DOMContentLoaded', function () { v111Draw(); v112Draw(); v113Draw(); });
+// ── FIG 11.4: public goods free-rider ───────────────────────────────────────
+function v114Draw() {
+  var N = parseInt(document.getElementById('v114-n').value);
+  var v = parseFloat(document.getElementById('v114-v').value);
+  document.getElementById('v114-n-val').textContent = N;
+  document.getElementById('v114-v-val').textContent = '$' + v;
+  var c = 300, total = N * v, surplus = total - c;
+  var maxY = Math.max(total, c, 400) * 1.12;
+  var scX = d3.scaleLinear().domain([0, 3]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, maxY]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs114-wrap');
+  d3AddAxes(svg, scX, scY, '', 'Dollars', function () { return ''; }, function (d) { return '$' + d; });
+  d3Poly(svg, scX, scY, [[0.55, 0], [0.55, total], [1.35, total], [1.35, 0]], surplus > 0 ? FILL_GAIN : FILL_DWL, surplus > 0 ? STROKE_GAIN : STROKE_DWL);
+  d3Poly(svg, scX, scY, [[1.75, 0], [1.75, c], [2.45, c], [2.45, 0]], 'rgba(44,62,80,0.18)', EC.slate);
+  d3Seg(svg, scX, scY, 0, c, 3, c, EC.slate, 1.2, '4,4');
+  d3Halo(svg, scX(0.95), scY(total) - 6, '$' + total, { color: surplus > 0 ? STROKE_GAIN : STROKE_DWL, size: 11 });
+  d3Halo(svg, scX(2.1), scY(c) - 6, '$300', { color: EC.slate, size: 11 });
+  d3Halo(svg, scX(0.95), scY(0) + 16, 'Total value (N×v)', { color: EC.slate, size: 9 });
+  d3Halo(svg, scX(2.1), scY(0) + 16, 'Cost', { color: EC.slate, size: 9 });
+  var efficient = total > c, aloneOK = v >= c, verdict, col;
+  if (aloneOK) { verdict = 'Each person values the good at $' + v + ' ≥ the $300 cost, so someone provides it alone: no free-rider problem here.'; col = EC.gain; }
+  else if (efficient) { verdict = 'Providing is efficient: total value $' + total + ' exceeds the $300 cost, a $' + surplus + ' surplus. But no one values it enough to fund it alone, so each free-rides and the good is NOT provided, wasting $' + surplus + '.'; col = EC.loss; }
+  else { verdict = 'Total value $' + total + ' is below the $300 cost, so the good is not worth providing, and correctly is not.'; col = EC.slate; }
+  document.getElementById('v114-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Group size N</div><div class="readout-val">' + N + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Total value</div><div class="readout-val">$' + total + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Cost</div><div class="readout-val">$300</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Nash outcome</div><div class="readout-val" style="font-size:var(--t-small)">' + (aloneOK ? 'Provided' : efficient ? 'Free-ride: none' : 'Not provided') + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
+}
+
+// ── FIG 11.5: Coase bargaining ──────────────────────────────────────────────
+var V115RIGHT = 'polluter';
+function v115Right(who) {
+  V115RIGHT = who;
+  document.getElementById('v115-s').value = (who === 'polluter') ? 50 : 0;
+  document.getElementById('v115-b-polluter').classList.toggle('revealed', who === 'polluter');
+  document.getElementById('v115-b-victim').classList.toggle('revealed', who === 'victim');
+  v115Draw();
+}
+function v115Draw() {
+  var S = parseFloat(document.getElementById('v115-s').value);
+  document.getElementById('v115-s-val').textContent = S;
+  var MB = function (s) { return 100 - 2 * s; }, MD = function (s) { return 2 * s; }, Sstar = 25;
+  var scX = d3.scaleLinear().domain([0, 50]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 105]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs115-wrap');
+  d3AddAxes(svg, scX, scY, 'Pollution level S', '$ per unit', null, function (d) { return '$' + d; });
+  // gains-from-trade wedge between MB and MD, from S to S*
+  if (Math.abs(S - Sstar) > 0.5) {
+    var lo = Math.min(S, Sstar), hi = Math.max(S, Sstar);
+    d3Poly(svg, scX, scY, [[lo, MB(lo)], [lo, MD(lo)], [hi, MD(hi)], [hi, MB(hi)]], 'rgba(47,125,85,0.16)', 'none');
+  }
+  d3Seg(svg, scX, scY, 0, 100, 50, 0, EC.primary, 3);    // MB
+  d3Seg(svg, scX, scY, 0, 0, 50, 100, EC.loss, 3);       // MD
+  d3Halo(svg, scX(44), scY(MB(44) + 6), 'MB of polluting', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(44), scY(MD(44) + 6), 'MD to neighbour', { color: EC.loss, anchor: 'end', size: 10 });
+  d3Seg(svg, scX, scY, Sstar, 0, Sstar, 50, EC.slate, 1.2, '4,4');
+  d3Halo(svg, scX(Sstar), scY(54), 'S* = 25', { color: EC.slate, size: 9 });
+  d3Seg(svg, scX, scY, S, 0, S, Math.max(MB(S), MD(S)), EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(S), scY(MB(S)), EC.primary);
+  d3Dot(svg, scX(S), scY(MD(S)), EC.loss);
+  var mb = MB(S), md = MD(S), verdict, col;
+  if (Math.abs(S - Sstar) < 1) { verdict = 'At S* = 25, MB = MD = $50. No trade can make both better off: this is the efficient level, and it is where bargaining lands from either starting point.'; col = EC.gain; }
+  else if (S < Sstar) { verdict = 'At S = ' + S + ', the factory gains $' + mb + ' from one more unit but the neighbour loses only $' + md + '. Both are better off allowing MORE pollution, up toward S* = 25.'; col = EC.primary; }
+  else { verdict = 'At S = ' + S + ', one more unit costs the neighbour $' + md + ' but is worth only $' + mb + ' to the factory. The neighbour will pay the factory to cut back toward S* = 25.'; col = EC.loss; }
+  document.getElementById('v115-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Pollution S</div><div class="readout-val">' + S + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MB of polluting</div><div class="readout-val">$' + mb + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MD to neighbour</div><div class="readout-val">$' + md + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Efficient S*</div><div class="readout-val">25</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v111Draw(); v112Draw(); v113Draw(); v114Draw(); v115Draw(); });
 </script>
   <!-- Ask the Course AI, floating assistant -->
   <script src="assets/chatbot.js"></script>
