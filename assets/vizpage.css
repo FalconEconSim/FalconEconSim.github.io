@@ -53,14 +53,17 @@ html[data-ds="v2"] .byline {
 .sec.page > .fig-plot:has(+ .readout-row) {
   border-radius: var(--radius) var(--radius) 0 0;
 }
-.sec.page > .ctrl-row,
-.sec.page > .fig-state:not(:empty),
+/* Descendant (not just direct child) so figures that nest their controls in a
+   wrapper, e.g. the multi-panel Fig 4.8, still get the deck. Controls are never
+   placed inside a .fig-plot, so this can't tint a chart's interior. */
+.sec.page .ctrl-row,
+.sec.page .fig-state:not(:empty),
 .sec.page > .readout-row {
   background: var(--paper-sunk);
   margin: 0;
   padding: var(--s-4) var(--s-5);
 }
-.sec.page > .ctrl-row { border-top: 1px solid var(--rule2); align-items: flex-start; }
+.sec.page .ctrl-row { border-top: 1px solid var(--rule2); align-items: flex-start; }
 .sec.page > .ctrl-row + .fig-state,
 .sec.page > .ctrl-row + .readout-row { padding-top: var(--s-2); }
 .sec.page > .ctrl-row:last-child,
