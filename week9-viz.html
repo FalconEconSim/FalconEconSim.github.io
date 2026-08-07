@@ -132,6 +132,7 @@
       <button class="btn" onclick="document.getElementById('v91-p').value=1;v91Draw()">Reset (p = MC)</button>
     </div>
     <div class="fig-state" id="v91-readout"></div>
+    <div class="insight-box gold"><strong>The doubling result.</strong> At (p=MC) the fixed fee sweeps up the entire consumer-surplus triangle, which under linear demand is exactly twice the uniform-monopoly profit rectangle. That is why two-part pricing doubles profit using only aggregate demand, and why raising (p) above (MC) only shrinks the pie.</div>
   </section>
 
   <div class="sec-divider">Section 2 &middot; Regulating a Natural Monopoly</div>
@@ -152,9 +153,11 @@
       <button class="quiz-btn revealed" id="v92-b-unreg" onclick="v92Set('unreg')">Unregulated (MR = MC)</button>
       <button class="quiz-btn" id="v92-b-mc" onclick="v92Set('mc')">MC pricing (P = MC)</button>
       <button class="quiz-btn" id="v92-b-ac" onclick="v92Set('ac')">AC pricing (P = AC)</button>
+      <button class="quiz-btn" id="v92-b-tp" onclick="v92Set('tp')">Two-part (p = MC + fee)</button>
     </div>
     <div class="fig-plot"><div class="demo-svg-wrap" id="cvs92-wrap"></div></div>
     <div class="fig-state" id="v92-readout"></div>
+    <div class="insight-box"><strong>The regulator&rsquo;s dilemma.</strong> MC pricing is efficient but loss-making; AC pricing breaks even but leaves a small deadweight loss; the unregulated firm is profitable but least efficient. No single regime is simultaneously efficient and self-financing without extracting all consumer surplus, which is why most utilities are regulated at average cost.</div>
   </section>
 
   <div class="sec-divider">Section 3 &middot; Strategic Interaction</div>
@@ -267,7 +270,7 @@ function v91Draw() {
 var V92 = 'unreg';
 function v92Set(r) {
   V92 = r;
-  ['unreg', 'mc', 'ac'].forEach(function (k) {
+  ['unreg', 'mc', 'ac', 'tp'].forEach(function (k) {
     document.getElementById('v92-b-' + k).classList.toggle('revealed', k === r);
   });
   v92Draw();
@@ -295,26 +298,33 @@ function v92Draw() {
   var Q, P, verdict, col;
   if (V92 === 'unreg') { Q = 27.5; P = 32.5; }
   else if (V92 === 'mc') { Q = 55; P = 5; }
+  else if (V92 === 'tp') { Q = 55; P = 5; }        // two-part: per-unit price = MC, efficient Q
   else { Q = (55 + Math.sqrt(55 * 55 - 4 * 200)) / 2; P = 60 - Q; }   // P = AC, larger root
   var AC = FC / Q + MC, profit = (P - AC) * Q;
+  var isTP = (V92 === 'tp');
 
-  // profit / loss rectangle between P and AC over 0..Q
+  // profit / loss rectangle between P and AC over 0..Q. Under two-part pricing
+  // the per-unit shortfall (P < AC) is covered by the fixed fee, so it is a
+  // transfer from consumers, not a loss: shade it gold and label the fee.
   var top = Math.max(P, AC), bot = Math.min(P, AC);
   d3Poly(svg, scX, scY, [[0, bot], [0, top], [Q, top], [Q, bot]],
-    profit >= 0 ? FILL_GAIN : FILL_DWL, profit >= 0 ? STROKE_GAIN : STROKE_DWL);
+    isTP ? FILL_PS : (profit >= 0 ? FILL_GAIN : FILL_DWL),
+    isTP ? STROKE_PS : (profit >= 0 ? STROKE_GAIN : STROKE_DWL));
+  if (isTP) d3Halo(svg, scX(Q / 2), scY((top + bot) / 2), 'fixed fee F = $200', { color: STROKE_PS, size: 10 });
   d3Seg(svg, scX, scY, Q, 0, Q, P, EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(Q), scY(P), EC.indicator);
   d3Halo(svg, scX(Q), scY(P) - 12, 'P = $' + P.toFixed(1), { color: EC.indicator, size: 10 });
 
   if (V92 === 'unreg') { verdict = 'Unregulated: output is restricted to Q = 27.5, price is highest ($32.5), and the firm earns a large profit (green). Profitable for the firm, but the most inefficient regime: consumers lose and deadweight loss is largest.'; col = EC.transfer; }
   else if (V92 === 'mc') { verdict = 'MC pricing: efficient output Q = 55 at P = $5, but price is below average cost, so the firm makes a $200 loss (red) and needs a subsidy to survive.'; col = EC.loss; }
+  else if (isTP) { verdict = 'Two-part: the firm charges p = MC = $5 (so output is the efficient Q = 55, no deadweight loss) plus a fixed fee F = $200 that exactly covers the fixed cost. The firm breaks even with no subsidy, but consumers pay the fee on top of marginal cost.'; col = EC.gain; }
   else { verdict = 'AC pricing: the firm breaks even (P = AC, zero profit) at Q ≈ ' + Q.toFixed(1) + '. A small deadweight loss remains versus MC pricing, but no subsidy is required. This is the usual real-world choice.'; col = EC.gain; }
   document.getElementById('v92-readout').innerHTML =
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">Quantity</div><div class="readout-val">' + Q.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Avg cost</div><div class="readout-val">$' + AC.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Profit</div><div class="readout-val">$' + profit.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">' + (isTP ? 'Net profit' : 'Profit') + '</div><div class="readout-val">$' + (isTP ? 0 : profit).toFixed(0) + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
 }
 

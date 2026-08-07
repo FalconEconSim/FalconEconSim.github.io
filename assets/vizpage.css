@@ -65,10 +65,39 @@ html[data-ds="v2"] .byline {
 .sec.page > .ctrl-row + .readout-row { padding-top: var(--s-2); }
 .sec.page > .ctrl-row:last-child,
 .sec.page > .ctrl-row:has(+ .fig-state:empty),
-.sec.page > .fig-state:not(:empty):last-child,
-.sec.page > .readout-row:last-child {
+.sec.page > .fig-state:not(:empty),
+.sec.page > .readout-row:last-child,
+.sec.page > .readout-row:has(~ .insight-box) {
   border-radius: 0 0 var(--radius) var(--radius);
   padding-bottom: var(--s-5);
+}
+
+/* ── Explanation callouts (key insight / worked step) ────────────────────────
+   Week 8 carried these inline; promoted here so every figure can add the same
+   depth cue. Tinted by the week's accent so they stay theme-consistent, with
+   gold (headline result) and red (caution) variants. */
+.insight-box {
+  background: color-mix(in srgb, var(--unit-ink) 7%, var(--paper-raised));
+  border: 1px solid color-mix(in srgb, var(--unit-ink) 24%, var(--paper-raised));
+  border-radius: var(--radius); padding: var(--s-3) var(--s-4);
+  font-size: var(--t-body-sm); line-height: 1.65; margin-top: var(--s-4);
+  color: var(--ink);
+}
+.insight-box strong { color: var(--unit-ink); }
+.insight-box.gold {
+  background: color-mix(in srgb, var(--d-transfer) 14%, var(--paper-raised));
+  border-color: color-mix(in srgb, var(--d-transfer) 42%, var(--paper-raised));
+}
+.insight-box.gold strong { color: color-mix(in srgb, var(--d-transfer) 70%, var(--ink)); }
+.insight-box.red {
+  background: color-mix(in srgb, var(--d-loss) 9%, var(--paper-raised));
+  border-color: color-mix(in srgb, var(--d-loss) 30%, var(--paper-raised));
+}
+.insight-box.red strong { color: var(--d-loss); }
+.step-box {
+  background: var(--paper-sunk); border: 1px solid var(--rule2);
+  border-radius: var(--radius); padding: var(--s-4);
+  margin-top: var(--s-4); font-size: var(--t-body-sm); line-height: 1.7;
 }
 /* Square plots don't span the band; keep their deck the same width and left
    edge so the card stays rectangular rather than a narrow chart over a wide
