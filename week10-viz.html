@@ -62,6 +62,7 @@
     <ol>
       <li><a href="#sec-101"><span>10.1</span>Cournot &amp; Stackelberg Best Responses</a></li>
       <li><a href="#sec-102"><span>10.2</span>Hotelling Beach</a></li>
+      <li><a href="#sec-103"><span>10.3</span>n-Firm Cournot</a></li>
     </ol>
   </nav>
 
@@ -131,6 +132,33 @@
     </div>
     <div class="fig-state" id="v102-readout"></div>
     <div class="insight-box"><strong>Minimum differentiation.</strong> Both vendors converge to the centre even though the quarter-points would minimise total travel. Each firm cares only about its own market share, not total travel cost, so private incentives and social efficiency pull in opposite directions, which is why competitors so often cluster.</div>
+  </section>
+
+  <div class="sec-divider">Section 3 &middot; How Many Firms?</div>
+
+  <!-- FIG 10.3 -->
+  <section class="sec page" id="sec-103">
+    <div class="fig-hd">
+      <span class="fig-n">Fig 10.3</span>
+      <h3>n-Firm Cournot: From Monopoly to Competition</h3>
+    </div>
+    <p class="fig-intro">
+      With \(n\) identical firms and \(P = 120 - Q,\ MC = 0\), each firm produces \(q^{*}=\tfrac{120}{n+1}\) and the market
+      price is \(P^{*}=\tfrac{120}{n+1}\). Slide the number of firms: one firm is the monopoly (\(P=\$60\)), two is the
+      Cournot duopoly ($40), and as \(n\) grows the price slides down toward marginal cost. Cournot nests monopoly and
+      perfect competition as its two limiting cases.
+    </p>
+    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs103-wrap"></div></div>
+    <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Number of firms n: <span class="ctrl-value" id="v103-n-val">2</span></span>
+        <input type="range" id="v103-n" min="1" max="15" step="1" value="2" oninput="v103Draw()">
+      </div>
+      <button class="btn" onclick="document.getElementById('v103-n').value=1;v103Draw()">Monopoly (n = 1)</button>
+      <button class="btn" onclick="document.getElementById('v103-n').value=2;v103Draw()">Duopoly (n = 2)</button>
+    </div>
+    <div class="fig-state" id="v103-readout"></div>
+    <div class="insight-box"><strong>Competition is a limit, not a switch.</strong> The same model spans the whole spectrum: market power fades smoothly as firms are added, and price approaches marginal cost only as \(n\to\infty\). This is why the <em>number</em> of competitors, not just their existence, shapes how close a market gets to the efficient outcome.</div>
   </section>
 
   </main>
@@ -237,7 +265,38 @@ function v102Draw() {
     '</div><p style="margin-top:.6rem;color:' + (atNash ? EC.gain : EC.second) + '">' + note + '</p>';
 }
 
-document.addEventListener('DOMContentLoaded', function () { v101Draw(); v102Draw(); });
+// ── FIG 10.3: n-firm Cournot convergence ────────────────────────────────────
+function v103Draw() {
+  var n = parseInt(document.getElementById('v103-n').value);
+  document.getElementById('v103-n-val').textContent = n;
+  var Pof = function (k) { return 120 / (k + 1); };
+  var scX = d3.scaleLinear().domain([1, 15]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 64]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs103-wrap');
+  d3AddAxes(svg, scX, scY, 'Number of firms (n)', 'Market price P*', null, function (d) { return '$' + d; });
+  d3Seg(svg, scX, scY, 1, 0, 15, 0, EC.slate, 2, '6,4');                  // MC = 0
+  d3Halo(svg, scX(14), scY(2.5), 'MC = $0', { color: EC.slate, anchor: 'end', size: 10 });
+  var pts = [];
+  for (var k = 1; k <= 15; k++) pts.push([k, Pof(k)]);
+  svg.append('path').attr('d', pts.map(function (pt, i) { return (i ? 'L' : 'M') + scX(pt[0]) + ' ' + scY(pt[1]); }).join(' '))
+    .attr('fill', 'none').attr('stroke', EC.primary).attr('stroke-width', 3);
+  d3Seg(svg, scX, scY, n, 0, n, Pof(n), EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(n), scY(Pof(n)), EC.indicator);
+  d3Halo(svg, scX(n), scY(Pof(n)) - 12, '$' + Pof(n).toFixed(1), { color: EC.indicator, size: 10 });
+  var q = 120 / (n + 1), Q = 120 * n / (n + 1), P = Pof(n);
+  var verdict = n === 1 ? 'One firm is the pure monopoly: Q = 60 at P = $60, the least competitive outcome.'
+    : n === 2 ? 'Two firms is the Cournot duopoly: Q = 80 at P = $40, between monopoly and competition.'
+    : 'With ' + n + ' firms, price is $' + P.toFixed(1) + ', ' + (P < 10 ? 'close to marginal cost, nearly the competitive outcome.' : 'still above marginal cost, so some market power remains.');
+  document.getElementById('v103-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Firms n</div><div class="readout-val">' + n + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Per-firm q*</div><div class="readout-val">' + q.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Total Q</div><div class="readout-val">' + Q.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Price P*</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.second + '">' + verdict + '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v101Draw(); v102Draw(); v103Draw(); });
 </script>
   <!-- Ask the Course AI, floating assistant -->
   <script src="assets/chatbot.js"></script>
