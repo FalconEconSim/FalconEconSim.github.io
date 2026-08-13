@@ -575,12 +575,14 @@ function v115Draw() {
   d3Seg(svg, scX, scY, 0, 100, 50, 0, EC.primary, 3);    // MB
   d3Seg(svg, scX, scY, 0, 0, 50, 100, EC.loss, 3);       // MD
   d3Halo(svg, scX(44), scY(MB(44) + 6), 'MB of polluting', { color: EC.primary, anchor: 'end', size: 10 });
-  d3Halo(svg, scX(44), scY(MD(44) + 6), 'MD to neighbour', { color: EC.loss, anchor: 'end', size: 10 });
+  // Placed down the line at S=38 (not the top-right corner), so it clears the
+  // "polluter's right (start S=50)" start-marker label that sits at the very top.
+  d3Halo(svg, scX(38), scY(MD(38) + 6), 'MD to neighbour', { color: EC.loss, anchor: 'end', size: 10 });
   d3Seg(svg, scX, scY, Sstar, 0, Sstar, 50, EC.slate, 1.2, '4,4');
   d3Halo(svg, scX(Sstar), scY(54), 'S* = 25', { color: EC.slate, size: 9 });
   // Starting points set by who owns the right: neighbour's right => S=0, polluter's => S=50.
-  d3Halo(svg, scX(1), scY(96), 'neighbour&rsquo;s right (start S=0)', { color: V115RIGHT === 'victim' ? EC.gain : EC.ghost, size: 8, anchor: 'start', weight: V115RIGHT === 'victim' ? 700 : 400 });
-  d3Halo(svg, scX(49), scY(96), 'polluter&rsquo;s right (start S=50)', { color: V115RIGHT === 'polluter' ? EC.gain : EC.ghost, size: 8, anchor: 'end', weight: V115RIGHT === 'polluter' ? 700 : 400 });
+  d3Halo(svg, scX(1), scY(96), "neighbour's right (start S=0)", { color: V115RIGHT === 'victim' ? EC.gain : EC.ghost, size: 8, anchor: 'start', weight: V115RIGHT === 'victim' ? 700 : 400 });
+  d3Halo(svg, scX(49), scY(96), "polluter's right (start S=50)", { color: V115RIGHT === 'polluter' ? EC.gain : EC.ghost, size: 8, anchor: 'end', weight: V115RIGHT === 'polluter' ? 700 : 400 });
   d3Seg(svg, scX, scY, S, 0, S, Math.max(MB(S), MD(S)), EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(S), scY(MB(S)), EC.primary);
   d3Dot(svg, scX(S), scY(MD(S)), EC.loss);
