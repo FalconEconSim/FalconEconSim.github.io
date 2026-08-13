@@ -33,17 +33,36 @@
     .gm-cell.nash { background:color-mix(in srgb, var(--d-gain) 15%, white); }
     .gm-pay { display:inline-flex; gap:.15rem; font-family:var(--font-mono); font-size:1.05rem; }
     .gm-a, .gm-b { padding:0 1px; }
-    .gm-a.br { text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; color:var(--d-primary); font-weight:700; }
-    .gm-b.br { text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; color:var(--d-second); font-weight:700; }
+    /* Best-response cue. The payoff sits inside an editable <input>, and a text
+       underline does not render on a form control, so mark the winning number
+       with a coloured inset underline + tinted border on the input itself. */
+    .gm-a.br input { box-shadow: inset 0 -2px 0 var(--d-primary); border-color:var(--d-primary); color:var(--d-primary); font-weight:700; }
+    .gm-b.br input { box-shadow: inset 0 -2px 0 var(--d-second); border-color:var(--d-second); color:var(--d-second); font-weight:700; }
     /* Wide enough for multi-digit payoffs (e.g. -10, 1200); spinners removed so
        the full value is never clipped to a misleading substring like "-1". */
     .gm-cell input { width:52px; border:1px solid var(--rule2); border-radius:4px; padding:1px 2px; font-family:var(--font-mono); font-size:.9rem; text-align:center; color:var(--ink); background:#fff; -moz-appearance:textfield; appearance:textfield; }
     .gm-cell input::-webkit-outer-spin-button, .gm-cell input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
     .gm-presets { display:flex; flex-wrap:wrap; gap:.4rem; }
-    .gm-legend { font-size:var(--t-small); color:var(--ink-soft); line-height:1.6; }
-    .gm-legend b.a { color:var(--d-primary); } .gm-legend b.b { color:var(--d-second); }
     .gm-verdict { font-size:var(--t-body-sm); color:var(--ink); font-weight:500; }
+    /* Practice controls + step-by-step best-response walkthrough */
+    .gm-practice { display:flex; flex-wrap:wrap; gap:.5rem; padding-top:.6rem; margin-top:.2rem; border-top:1px solid var(--rule2); }
+    .gm-dice { font-weight:600; }
+    .gm-walk { display:flex; flex-direction:column; gap:.3rem; font-size:var(--t-body-sm); color:var(--ink); line-height:1.55; }
+    .gm-walk .gw-head { font-family:var(--font-mono); font-size:var(--t-caption); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin-top:.5rem; }
+    .gm-walk .gw-step { padding-left:.9rem; position:relative; }
+    .gm-walk .gw-step::before { content:"\2022"; position:absolute; left:0; color:var(--rule-strong); }
+    .gm-walk .gw-sol { padding-left:0; font-weight:600; font-size:var(--t-body); }
+    .gm-walk .gw-sol::before { content:none; }
+    .gm-walk b.a { color:var(--d-primary); } .gm-walk b.b { color:var(--d-second); }
+    .gm-prompt { font-size:var(--t-body-sm); color:var(--ink-soft); font-style:italic; line-height:1.55; }
     .seg-btns { display:flex; flex-wrap:wrap; gap:.4rem; }
+    /* Per-regime intuition panel (Fig 9.2): tells students what each regime
+       means and what to watch for in the figure as they switch between them. */
+    .regime-note { margin-top:var(--s-3); padding:var(--s-4); border-radius:10px;
+      background:var(--paper-sunk); border:1px solid var(--rule2); font-size:var(--t-body-sm); line-height:1.6; color:var(--ink); }
+    .regime-note .rn-title { font-weight:700; color:var(--unit-ink); margin-bottom:.25rem; }
+    .regime-note .rn-look { margin-top:.5rem; padding-top:.5rem; border-top:1px solid var(--rule2); color:var(--ink-soft); }
+    .regime-note .rn-look b { color:var(--ink); }
     /* Keep the editable payoff matrix within a phone's width: shrink the cells
        and header text so the 2x2 table fits, and wrap it in its own horizontal
        scroll box so it can never clip its right column or push the page body
@@ -97,7 +116,6 @@
       <li><a href="#sec-92"><span>9.2</span>Natural Monopoly Regimes</a></li>
       <li><a href="#sec-93"><span>9.3</span>Game Theory: The Circle Method</a></li>
       <li><a href="#sec-94"><span>9.4</span>Block Pricing Staircase</a></li>
-      <li><a href="#sec-95"><span>9.5</span>Heterogeneous Consumers</a></li>
     </ol>
   </nav>
 
@@ -159,6 +177,7 @@
     </div>
     <div class="fig-plot"><div class="demo-svg-wrap" id="cvs92-wrap"></div></div>
     <div class="fig-state" id="v92-readout"></div>
+    <div class="regime-note" id="v92-note"></div>
     <div class="insight-box"><strong>The regulator&rsquo;s dilemma.</strong> MC pricing is efficient but loss-making; AC pricing breaks even but leaves a small deadweight loss; the unregulated firm is profitable but least efficient. No single regime is simultaneously efficient and self-financing without extracting all consumer surplus, which is why most utilities are regulated at average cost.</div>
   </section>
 
@@ -171,10 +190,11 @@
       <h3>Game Theory: The Circle (Best-Response) Method</h3>
     </div>
     <p class="fig-intro">
-      Every cell shows the payoffs (Player&nbsp;A, Player&nbsp;B). For each column, A&rsquo;s best response is underlined;
-      for each row, B&rsquo;s best response is underlined. Any cell with <em>both</em> payoffs underlined is a Nash
-      equilibrium, shaded green. Edit any payoff, or load a classic game, and watch the equilibrium update. The
-      prisoner&rsquo;s dilemma has one bad equilibrium; the coordination game has two.
+      Every cell shows the payoffs (Player&nbsp;A, Player&nbsp;B). The circle (best-response) method finds the Nash
+      equilibrium in two passes: for each thing B could do, find A&rsquo;s best reply; for each thing A could do, find
+      B&rsquo;s best reply (the best replies are underlined on the grid). A cell where <em>both</em> players are
+      best-responding at once is a Nash equilibrium, shaded green. Load a classic game to read the full worked analysis,
+      edit any payoff, or hit <strong>New practice game</strong> and try to solve it yourself before revealing the answer.
     </p>
     <div class="fig-plot">
       <div class="gm-wrap">
@@ -205,10 +225,15 @@
           </tr>
         </table>
         </div>
-        <p class="gm-legend"><b class="a">Blue underline</b> = A&rsquo;s best response in that column. <b class="b">Orange underline</b> = B&rsquo;s best response in that row. Green cell = Nash equilibrium.</p>
+        <div class="gm-practice">
+          <button class="btn gm-dice" onclick="gmRandom()">&#127922;&nbsp; New practice game</button>
+          <button class="btn" id="gm-reveal" onclick="gmReveal()">Reveal solution</button>
+        </div>
+        <div class="gm-walk" id="gm-walk"></div>
         <p class="gm-verdict" id="gm-verdict"></p>
       </div>
     </div>
+    <div class="insight-box"><strong>How to read the grid.</strong> A <b style="color:var(--d-primary)">blue underline</b> marks Player&nbsp;A&rsquo;s best response in that column; an <b style="color:var(--d-second)">orange underline</b> marks Player&nbsp;B&rsquo;s best response in that row. A green cell is where both are best-responding at once, a Nash equilibrium. A player has a <em>dominant strategy</em> when the same action is underlined in both of that player&rsquo;s cases. Use <strong>New practice game</strong> to draw a fresh random 2&times;2 game, work out the best responses yourself, then reveal the step-by-step solution.</div>
   </section>
 
   <div class="sec-divider">Section 4 &middot; Extracting More Surplus</div>
@@ -236,33 +261,7 @@
       <button class="btn" onclick="document.getElementById('v94-n').value=10;v94Draw()">Many blocks</button>
     </div>
     <div class="fig-state" id="v94-readout"></div>
-    <div class="insight-box gold"><strong>More blocks, more surplus.</strong> Block pricing is second-degree price discrimination: the firm never observes any individual&rsquo;s willingness to pay, it just offers a menu of rates and lets buyers sort themselves. Each added block converts a slice of consumer surplus into profit and pushes output toward the efficient quantity, so second-degree pricing typically <em>reduces</em> deadweight loss even as it transfers surplus to the firm.</div>
-  </section>
-
-  <!-- FIG 9.5 -->
-  <section class="sec page" id="sec-95">
-    <div class="fig-hd">
-      <span class="fig-n">Fig 9.5</span>
-      <h3>Heterogeneous Consumers &amp; the Information Rent</h3>
-    </div>
-    <p class="fig-intro">
-      A gym faces two equally common types it cannot tell apart: fitness enthusiasts (\(P_H = 20 - Q\)) and casual users
-      (\(P_L = 12 - Q\)), with \(MC = \$2\). Their consumer surpluses at \(p = MC\) are \(CS_H = \$162\) and
-      \(CS_L = \$50\). With a single membership fee \(F\) the firm faces a trade-off: a low fee keeps both types but hands
-      the high type a large <em>information rent</em>; a high fee extracts more per member but drives the casual users
-      out. Slide the fee and watch who stays and what the firm earns.
-    </p>
-    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs95-wrap"></div></div>
-    <div class="ctrl-row">
-      <div class="ctrl">
-        <span class="ctrl-label">Membership fee F: <span class="ctrl-value" id="v95-f-val">$50</span></span>
-        <input type="range" id="v95-f" min="0" max="162" step="1" value="50" oninput="v95Draw()">
-      </div>
-      <button class="btn" onclick="document.getElementById('v95-f').value=50;v95Draw()">Keep both (F = 50)</button>
-      <button class="btn" onclick="document.getElementById('v95-f').value=162;v95Draw()">Exclude casual (F = 162)</button>
-    </div>
-    <div class="fig-state" id="v95-readout"></div>
-    <div class="insight-box"><strong>The information rent.</strong> With these 50/50 demands the firm actually earns more by excluding the casual users (F = $162 &rarr; $162) than by keeping both (F = $50 &rarr; $100); the $112 gap is the information rent that including the casual user would cost. Either way the enthusiast pays less than their \($162\) value, a rent the firm cannot capture without observing types. This is exactly why firms invest so heavily in loyalty programmes, usage tracking, and tiered memberships, any signal of type lets them shift toward more profitable type-specific pricing.</div>
+    <div class="insight-box gold"><strong>More blocks, more surplus &mdash; and a limit.</strong> Block pricing is second-degree price discrimination: the firm never observes any individual&rsquo;s willingness to pay, it just offers a menu of rates and lets buyers sort themselves. Each added block converts a slice of consumer surplus into profit and pushes output toward the efficient quantity, so second-degree pricing typically <em>reduces</em> deadweight loss. Now push the slider to the limit: <strong>if each block shrank to a single unit &mdash; one price per consumer&rsquo;s unit &mdash; the staircase would sit exactly on the demand curve and capture the entire $20 surplus.</strong> That limiting case, one block per consumer, is <em>first-degree (perfect) price discrimination</em>. Block pricing is the practical, menu-based approximation to it.</div>
   </section>
 
   </main>
@@ -382,6 +381,23 @@ function v92Draw() {
     '<div class="readout-col"><div class="readout-label">Avg cost</div><div class="readout-val">$' + AC.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">' + (isTP ? 'Net profit' : 'Profit') + '</div><div class="readout-val">$' + (isTP ? 0 : profit).toFixed(0) + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
+
+  // Per-regime intuition + "what to look for" (Naveen's request): help students
+  // read the figure, not just the numbers.
+  var NOTE = {
+    unreg: { t: 'Unregulated monopoly', b: 'Left to itself the firm maximises its own profit, setting marginal revenue equal to marginal cost and then charging whatever the demand curve will bear. It deliberately holds output back to keep the price high.',
+      look: 'The green profit rectangle is large, but the quantity marker sits far to the <b>left</b> of the efficient output. That leftward gap is surplus that is never created, the cost of leaving the monopoly alone.' },
+    mc: { t: 'Marginal-cost pricing', b: 'Forcing price down to marginal cost gives the efficient quantity (the last unit’s value equals its cost). But a natural monopoly has MC below AC everywhere, so pricing at MC means selling below average cost.',
+      look: 'The quantity marker now reaches the <b>efficient</b> output, but the price line sits <b>below the AC curve</b>. The red rectangle is the firm’s loss, which a subsidy would have to cover.' },
+    ac: { t: 'Average-cost pricing', b: 'Setting price equal to average cost lets the firm exactly break even, zero economic profit, no subsidy needed. Output is higher than the unregulated case but still short of efficient, so a little surplus is lost.',
+      look: 'The price marker sits <b>right on the AC curve</b> (profit ≈ 0), a bit to the left of the efficient quantity. The small remaining gap is the deadweight loss, the price of self-financing.' },
+    tp: { t: 'Two-part tariff', b: 'Charge marginal cost for each unit (so output is efficient) plus a fixed access fee sized to cover the fixed cost. The firm breaks even with no subsidy and there is no deadweight loss, but every customer pays the fee to get in.',
+      look: 'The quantity marker reaches the <b>efficient</b> output just like MC pricing, but the gold rectangle is now a <b>fixed fee that recovers the fixed cost</b>, a transfer from consumers, not a loss.' }
+  };
+  var nt = NOTE[V92];
+  document.getElementById('v92-note').innerHTML =
+    '<div class="rn-title">' + nt.t + '</div><div>' + nt.b + '</div>' +
+    '<div class="rn-look"><b>What to look for:</b> ' + nt.look + '</div>';
 }
 
 // ── FIG 9.3: prisoner's dilemma / circle method ─────────────────────────────
@@ -395,12 +411,44 @@ var GM_PRESETS = {
   coord: { labels: { a: 'Apple', b: 'Samsung', r: ['Standard A', 'Standard B'], c: ['Standard A', 'Standard B'] }, pay: [[[8, 8], [2, 3]], [[3, 2], [6, 6]]] },
   adv:   { labels: { a: 'Coca-Cola', b: 'Pepsi', r: ['Advertise', "Don't"], c: ['Advertise', "Don't"] }, pay: [[[3, 3], [8, 1]], [[1, 8], [5, 5]]] }
 };
+// Whether the solution (underlines, green cell, walkthrough) is shown. Classic
+// games teach, so they reveal immediately; a random practice game hides it so
+// the student can work it out first.
+var GM_SOLVED = true;
 function gmPreset(k, btn) {
   GM = JSON.parse(JSON.stringify(GM_PRESETS[k]));
   document.querySelectorAll('.gm-presets .quiz-btn').forEach(function (b) { b.classList.remove('revealed'); });
   if (btn) btn.classList.add('revealed');
+  GM_SOLVED = true;
   gmRender();
 }
+
+// Random practice game. Built from an equilibrium "archetype" so the practice
+// set reliably shows the whole variety of outcomes (one NE by dominance, one NE
+// by iterated best response, two NE, and none), then the numbers are jittered
+// and the rows/columns randomly relabelled so no two games look alike.
+function gmRandom() {
+  var arche = {
+    dominant: { aWin: [0, 0], bWin: [0, 0] }, // both have a dominant strategy → 1 NE
+    iterated: { aWin: [0, 0], bWin: [0, 1] }, // only A dominant; B best-responds → 1 NE
+    coord:    { aWin: [0, 1], bWin: [0, 1] }, // two NE on the diagonal
+    none:     { aWin: [0, 1], bWin: [1, 0] }  // best responses never coincide → 0 NE
+  };
+  var keys = ['dominant', 'iterated', 'coord', 'none'];
+  var A = arche[keys[Math.floor(Math.random() * keys.length)]];
+  var rnd = function (lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; };
+  var hilo = function () { var x = rnd(0, 9), y = rnd(0, 9); while (y === x) y = rnd(0, 9); return x > y ? [x, y] : [y, x]; };
+  var pay = [[[0, 0], [0, 0]], [[0, 0], [0, 0]]];
+  for (var j = 0; j < 2; j++) { var p = hilo(), w = A.aWin[j]; pay[w][j][0] = p[0]; pay[1 - w][j][0] = p[1]; }
+  for (var i = 0; i < 2; i++) { var q = hilo(), w2 = A.bWin[i]; pay[i][w2][1] = q[0]; pay[i][1 - w2][1] = q[1]; }
+  if (Math.random() < 0.5) pay = [pay[1], pay[0]];                                   // relabel A's rows
+  if (Math.random() < 0.5) for (var r = 0; r < 2; r++) { var t = pay[r][0]; pay[r][0] = pay[r][1]; pay[r][1] = t; } // relabel B's cols
+  GM = { labels: { a: 'Player A', b: 'Player B', r: ['Top', 'Bottom'], c: ['Left', 'Right'] }, pay: pay };
+  document.querySelectorAll('.gm-presets .quiz-btn').forEach(function (b) { b.classList.remove('revealed'); });
+  GM_SOLVED = false;
+  gmRender();
+}
+function gmReveal() { GM_SOLVED = !GM_SOLVED; gmAnalyse(); }
 function gmRead() {
   for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) {
     var ia = document.getElementById('gm-in-' + i + j + '-a'), ib = document.getElementById('gm-in-' + i + j + '-b');
@@ -436,16 +484,59 @@ function gmAnalyse() {
     var cell = document.getElementById('gm-' + i + j);
     var aIsBR = (aBR[j] === i) || aTie[j];
     var bIsBR = (bBR[i] === j) || bTie[i];
-    aStar.classList.toggle('br', aIsBR);
-    bStar.classList.toggle('br', bIsBR);
+    // Only paint the answer (underlines + green cell) once the solution is shown.
+    aStar.classList.toggle('br', aIsBR && GM_SOLVED);
+    bStar.classList.toggle('br', bIsBR && GM_SOLVED);
     var isNash = aIsBR && bIsBR;
-    cell.classList.toggle('nash', isNash);
+    cell.classList.toggle('nash', isNash && GM_SOLVED);
     if (isNash) nash.push('(' + GM.labels.r[i] + ', ' + GM.labels.c[j] + ')');
   }
+
+  var revealBtn = document.getElementById('gm-reveal');
+  if (revealBtn) revealBtn.textContent = GM_SOLVED ? 'Hide solution' : 'Reveal solution';
+
+  var walk = document.getElementById('gm-walk');
   var v = document.getElementById('gm-verdict');
-  if (nash.length === 0) v.textContent = 'No pure-strategy Nash equilibrium in this game.';
-  else if (nash.length === 1) v.innerHTML = 'One Nash equilibrium: <b>' + nash[0] + '</b>. A dominant-strategy prisoner’s-dilemma type.';
-  else v.innerHTML = nash.length + ' Nash equilibria: <b>' + nash.join(' and ') + '</b>. A coordination game &mdash; the problem is choosing which one.';
+
+  if (!GM_SOLVED) {
+    walk.innerHTML = '<p class="gm-prompt">Your turn: for each of <b class="b">' + GM.labels.b +
+      '</b>&rsquo;s choices, find <b class="a">' + GM.labels.a + '</b>&rsquo;s best reply; then for each of ' +
+      GM.labels.a + '&rsquo;s choices, find ' + GM.labels.b + '&rsquo;s. Any cell that is a best reply for both is a Nash equilibrium. Then press <b>Reveal solution</b>.</p>';
+    v.textContent = '';
+    return;
+  }
+
+  // Worked best-response walkthrough (replaces the old one-line legend).
+  var L = GM.labels, P = GM.pay, html = '';
+  html += '<div class="gw-head">Step 1 &mdash; <b class="a">' + L.a + '</b>&rsquo;s best responses</div>';
+  for (var c = 0; c < 2; c++) {
+    var top = P[0][c][0], bot = P[1][c][0];
+    var pick = aTie[c] ? 'tie (' + L.r[0] + ' or ' + L.r[1] + ')' : L.r[aBR[c]];
+    html += '<div class="gw-step">If <b class="b">' + L.b + '</b> plays <b>' + L.c[c] + '</b>: ' +
+      L.r[0] + ' gives ' + top + ', ' + L.r[1] + ' gives ' + bot + ' &rarr; best response <b class="a">' + pick + '</b>.</div>';
+  }
+  if (!aTie[0] && !aTie[1] && aBR[0] === aBR[1])
+    html += '<div class="gw-step"><b class="a">' + L.a + '</b> has a <b>dominant strategy</b>: <b class="a">' + L.r[aBR[0]] + '</b> (best whatever ' + L.b + ' does).</div>';
+  html += '<div class="gw-head">Step 2 &mdash; <b class="b">' + L.b + '</b>&rsquo;s best responses</div>';
+  for (var rr = 0; rr < 2; rr++) {
+    var left = P[rr][0][1], right = P[rr][1][1];
+    var pickb = bTie[rr] ? 'tie (' + L.c[0] + ' or ' + L.c[1] + ')' : L.c[bBR[rr]];
+    html += '<div class="gw-step">If <b class="a">' + L.a + '</b> plays <b>' + L.r[rr] + '</b>: ' +
+      L.c[0] + ' gives ' + left + ', ' + L.c[1] + ' gives ' + right + ' &rarr; best response <b class="b">' + pickb + '</b>.</div>';
+  }
+  if (!bTie[0] && !bTie[1] && bBR[0] === bBR[1])
+    html += '<div class="gw-step"><b class="b">' + L.b + '</b> has a <b>dominant strategy</b>: <b class="b">' + L.c[bBR[0]] + '</b> (best whatever ' + L.a + ' does).</div>';
+  html += '<div class="gw-head">Step 3 &mdash; Nash equilibrium</div>';
+  var sol;
+  if (nash.length === 0) sol = 'No cell is a best response for both players, so there is <b>no pure-strategy Nash equilibrium</b> (players would keep switching).';
+  else if (nash.length === 1) sol = 'One cell, <b>' + nash[0] + '</b>, is a best response for both players at once &mdash; the unique <b>Nash equilibrium</b>.';
+  else sol = 'Two cells, <b>' + nash.join(' and ') + '</b>, are each best responses for both players &mdash; <b>two Nash equilibria</b> (a coordination problem: which one?).';
+  html += '<div class="gw-step gw-sol">' + sol + '</div>';
+  walk.innerHTML = html;
+
+  if (nash.length === 0) v.textContent = '';
+  else if (nash.length === 1) v.innerHTML = 'Solution: <b>' + nash[0] + '</b>.';
+  else v.innerHTML = 'Solutions: <b>' + nash.join(' and ') + '</b>.';
 }
 
 // ── FIG 9.4: block pricing staircase ────────────────────────────────────────
@@ -476,7 +567,8 @@ function v94Draw() {
   var profit = 20 * (n - 1) / n, pct = profit / 20 * 100;
   var verdict = n === 1
     ? 'A single block priced so the whole market still buys captures nothing beyond cost, the competitive outcome.'
-    : 'With ' + n + ' blocks the firm captures $' + profit.toFixed(1) + ', ' + pct.toFixed(0) + '% of the $20 perfect-discrimination maximum. Each block turns another slice of the surplus triangle into profit.';
+    : 'With ' + n + ' blocks the firm captures $' + profit.toFixed(1) + ', ' + pct.toFixed(0) + '% of the $20 perfect-discrimination maximum. Each block turns another slice of the surplus triangle into profit.' +
+      (n >= 8 ? ' Keep going: in the limit of one block per unit (one price per consumer) the staircase meets the demand curve and captures all $20, that is first-degree (perfect) price discrimination.' : '');
   document.getElementById('v94-readout').innerHTML =
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">Blocks</div><div class="readout-val">' + n + '</div></div>' +
@@ -486,43 +578,10 @@ function v94Draw() {
     '</div><p style="margin-top:.6rem;color:' + EC.transfer + '">' + verdict + '</p>';
 }
 
-// ── FIG 9.5: heterogeneous consumers, profit vs uniform fee ─────────────────
-function v95Draw() {
-  var F = parseFloat(document.getElementById('v95-f').value);
-  document.getElementById('v95-f-val').textContent = '$' + F;
-  var CSH = 162, CSL = 50;
-  var scX = d3.scaleLinear().domain([0, 170]).range([D3PAD.left, D3W - D3PAD.right]);
-  var scY = d3.scaleLinear().domain([0, 175]).range([D3H - D3PAD.bottom, D3PAD.top]);
-  var svg = d3MakeSvg('cvs95-wrap');
-  d3AddAxes(svg, scX, scY, 'Membership fee F ($)', 'Firm profit ($)', function (d) { return '$' + d; }, function (d) { return '$' + d; });
-  d3Seg(svg, scX, scY, 0, 0, CSL, 2 * CSL, EC.gain, 3);            // both join: profit 2F
-  d3Seg(svg, scX, scY, CSL, CSL, CSH, CSH, EC.primary, 3);        // only H: profit F
-  d3Seg(svg, scX, scY, CSL, 2 * CSL, CSL, CSL, EC.ghost, 1.5, '4,3'); // drop at F=50
-  d3Halo(svg, scX(22), scY(2 * 22 + 16), 'both join (2F)', { color: EC.gain, size: 9, anchor: 'start' });
-  d3Halo(svg, scX(64), scY(140), 'only enthusiasts (F)', { color: EC.primary, size: 9, anchor: 'start' });
-  var profit, who, rent = 0;
-  if (F <= CSL) { profit = 2 * F; who = 'Both types'; rent = CSH - F; }
-  else { profit = F; who = 'Enthusiasts only'; }
-  d3Seg(svg, scX, scY, F, 0, F, profit, EC.indicator, 1.5, '3,3');
-  d3Dot(svg, scX(F), scY(profit), EC.indicator);
-  d3Halo(svg, scX(F), scY(profit) - 12, '$' + profit.toFixed(0), { color: EC.indicator, size: 10 });
-  var verdict = F <= CSL
-    ? 'At F = $' + F + ' both types join, profit = 2F = $' + profit.toFixed(0) + '. The enthusiast values membership at $162 but pays only $' + F + ', keeping a $' + rent.toFixed(0) + ' information rent the firm cannot reach.'
-    : 'At F = $' + F + ' the casual users drop out (their surplus is only $50); only enthusiasts pay, so profit = $' + profit.toFixed(0) + '. Excluding the low type earns more here than the $100 from keeping both.';
-  document.getElementById('v95-readout').innerHTML =
-    '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">Fee F</div><div class="readout-val">$' + F.toFixed(0) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Who joins</div><div class="readout-val" style="font-size:var(--t-small)">' + who + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Firm profit</div><div class="readout-val">$' + profit.toFixed(0) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Info rent</div><div class="readout-val">$' + rent.toFixed(0) + '</div></div>' +
-    '</div><p style="margin-top:.6rem;color:' + (F <= CSL ? EC.gain : EC.primary) + '">' + verdict + '</p>';
-}
-
 document.addEventListener('DOMContentLoaded', function () {
   v91Draw();
   v92Draw();
   v94Draw();
-  v95Draw();
   GM = JSON.parse(JSON.stringify(GM_PRESETS.pd));   // match the active preset
   gmRender();
 });
