@@ -23,6 +23,18 @@
   <style>
     .demo-svg-wrap { padding: 0; }
     .demo-svg-wrap svg { display: block; width: 100%; }
+    .seg-btns { display:flex; flex-wrap:wrap; gap:.4rem; }
+    .seg-row { display:flex; flex-direction:column; gap:.35rem; width:100%; }
+    .ctrl-sub { font-family:var(--font-mono); font-size:var(--t-caption); letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); }
+    .ctrl-hint { font-size:var(--t-caption); color:var(--ink-soft); font-style:italic; margin-top:.15rem; }
+    .v101-play { font-weight:600; }
+    /* Fully-worked calculation panel (Fig 10.4) */
+    .worked { margin-top:var(--s-3); padding:var(--s-4) var(--s-5); border-radius:10px;
+      background:var(--paper-sunk); border:1px solid var(--rule2); }
+    .worked .wk-title { font-weight:700; color:var(--unit-ink); margin-bottom:.5rem; font-size:var(--t-body-sm); }
+    .worked ol { margin:0; padding-left:1.3rem; display:flex; flex-direction:column; gap:.35rem; }
+    .worked li { font-size:var(--t-body-sm); line-height:1.55; color:var(--ink); }
+    .worked .wk-tot { font-weight:700; color:var(--ink); }
   </style>
 </head>
 <body>
@@ -87,22 +99,36 @@
       <h3>Cournot &amp; Stackelberg on the Best-Response Diagram</h3>
     </div>
     <p class="fig-intro">
-      Market demand is \(P = 120 - Q\) with \(MC = 0\). Each firm&rsquo;s reaction curve gives its profit-maximising output
-      as a function of the rival&rsquo;s. Slide Firm A&rsquo;s output and watch Firm B best-respond along its reaction curve.
-      Where the two curves cross, both are simultaneously best-responding: the Cournot&ndash;Nash equilibrium \((40, 40)\).
-      Push A to 60 and B falls to 30: the Stackelberg point, where committing first raises A&rsquo;s profit.
+      Market demand is \(P = a - bQ\) with \(MC = 0\). Each firm&rsquo;s reaction curve gives its profit-maximising output
+      as a function of the rival&rsquo;s. <strong>Pick a market demand</strong> to see how the reaction curves and the
+      equilibrium shift. Then drag Firm A&rsquo;s output: Firm B always best-responds along its own reaction curve (the
+      moving dot rides B&rsquo;s curve), but only where the two curves <em>cross</em> is A <em>also</em> best-responding,
+      the Cournot&ndash;Nash equilibrium. Away from that crossing the market is not at rest, so press
+      <strong>Watch adjustment</strong> and let the firms take turns best-responding: the staircase spirals into the
+      Cournot point. Push A out to the Stackelberg quantity to see the first-mover advantage.
     </p>
     <div class="fig-plot"><div class="demo-svg-wrap" id="cvs101-wrap"></div></div>
     <div class="ctrl-row">
+      <div class="seg-row">
+        <span class="ctrl-sub">Market demand</span>
+        <div class="seg-btns">
+          <button class="quiz-btn revealed" id="v101-d-base" onclick="v101Demand('base',this)">P = 120 &minus; Q</button>
+          <button class="quiz-btn" id="v101-d-small" onclick="v101Demand('small',this)">P = 90 &minus; Q</button>
+          <button class="quiz-btn" id="v101-d-steep" onclick="v101Demand('steep',this)">P = 120 &minus; 2Q</button>
+          <button class="quiz-btn" id="v101-d-large" onclick="v101Demand('large',this)">P = 160 &minus; Q</button>
+        </div>
+      </div>
       <div class="ctrl">
         <span class="ctrl-label">Firm A&rsquo;s output q<sub>A</sub>: <span class="ctrl-value" id="v101-qa-val">40</span></span>
-        <input type="range" id="v101-qa" min="0" max="90" step="1" value="40" oninput="v101Draw()">
+        <input type="range" id="v101-qa" min="0" max="120" step="1" value="40" oninput="v101Slide()">
+        <span class="ctrl-hint">Moves A off its reaction curve; B keeps best-responding. Only the crossing is an equilibrium.</span>
       </div>
-      <button class="btn" onclick="document.getElementById('v101-qa').value=40;v101Draw()">Cournot (40)</button>
-      <button class="btn" onclick="document.getElementById('v101-qa').value=60;v101Draw()">Stackelberg (60)</button>
+      <button class="btn" onclick="v101SetQ('cournot')">Cournot q*</button>
+      <button class="btn" onclick="v101SetQ('stackelberg')">Stackelberg</button>
+      <button class="btn v101-play" onclick="v101Animate()">&#9654;&nbsp; Watch adjustment</button>
     </div>
     <div class="fig-state" id="v101-readout"></div>
-    <div class="insight-box"><strong>Commitment is power.</strong> The Stackelberg leader produces more than its Cournot quantity and earns a premium purely by moving first, forcing the follower down its reaction curve. But the commitment must be both observable and irreversible, a threat the rival does not believe changes nothing.</div>
+    <div class="insight-box"><strong>Commitment is power.</strong> The Stackelberg leader produces more than its Cournot quantity and earns a premium purely by moving first, forcing the follower down its reaction curve. But the commitment must be both observable and irreversible, a threat the rival does not believe changes nothing. And notice the adjustment path: from any starting point the best-response dynamics converge back to the same Cournot crossing, which is what makes it a stable equilibrium.</div>
   </section>
 
   <div class="sec-divider">Section 2 &middot; Location Competition</div>
@@ -129,8 +155,7 @@
         <span class="ctrl-label">Vendor B location: <span class="ctrl-value" id="v102-b-val">0.70</span></span>
         <input type="range" id="v102-b" min="0" max="1" step="0.01" value="0.70" oninput="v102Draw()">
       </div>
-      <button class="btn" onclick="v102Preset(0.25,0.75)">Efficient (¼, ¾)</button>
-      <button class="btn" onclick="v102Preset(0.5,0.5)">Nash (½, ½)</button>
+      <button class="btn" onclick="v102Preset(0.5,0.5)">Jump to Nash (½, ½)</button>
     </div>
     <div class="fig-state" id="v102-readout"></div>
     <div class="insight-box"><strong>Minimum differentiation.</strong> Both vendors converge to the centre even though the quarter-points would minimise total travel. Each firm cares only about its own market share, not total travel cost, so private incentives and social efficiency pull in opposite directions, which is why competitors so often cluster.</div>
@@ -185,6 +210,7 @@
       <button class="quiz-btn" id="v104-b-bertrand" onclick="v104Set('bertrand')">Bertrand</button>
     </div>
     <div class="fig-state" id="v104-readout"></div>
+    <div class="worked" id="v104-worked"></div>
     <div class="insight-box"><strong>Not just how many firms, but how they compete.</strong> Collusion reproduces the monopoly ($3,600 industry profit); two Bertrand price-setters wipe profit out entirely ($0); Cournot and Stackelberg sit in between. The <em>strategic variable</em>, quantity versus price, and the <em>timing</em>, simultaneous versus sequential, matter as much as the number of competitors.</div>
   </section>
 
@@ -225,48 +251,110 @@ function openLN()  { document.getElementById('leftNav').classList.add('open'); d
 function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
 // ── FIG 10.1: Cournot / Stackelberg best-response diagram ───────────────────
-function v101Draw() {
+// General linear demand P = a - bQ, MC = 0. Reaction curves:
+//   BR_A: qA = a/(2b) - qB/2     BR_B: qB = a/(2b) - qA/2
+//   Cournot q* = a/(3b);  Stackelberg leader a/(2b), follower a/(4b).
+var V101_D = {
+  base:  { a: 120, b: 1 },
+  small: { a: 90,  b: 1 },
+  steep: { a: 120, b: 2 },
+  large: { a: 160, b: 1 }
+};
+var V101 = V101_D.base;
+var v101timer = null;
+function v101brB(qA) { return V101.a / (2 * V101.b) - qA / 2; }
+function v101brA(qB) { return V101.a / (2 * V101.b) - qB / 2; }
+function v101Demand(k, btn) {
+  if (v101timer) { clearInterval(v101timer); v101timer = null; }
+  V101 = V101_D[k];
+  document.querySelectorAll('[id^="v101-d-"]').forEach(function (b) { b.classList.remove('revealed'); });
+  if (btn) btn.classList.add('revealed');
+  var sl = document.getElementById('v101-qa');
+  sl.max = Math.round(V101.a / V101.b);
+  sl.value = Math.round(V101.a / (3 * V101.b));      // start at Cournot q*
+  v101Draw();
+}
+function v101SetQ(which) {
+  if (v101timer) { clearInterval(v101timer); v101timer = null; }
+  document.getElementById('v101-qa').value = Math.round(which === 'stackelberg' ? V101.a / (2 * V101.b) : V101.a / (3 * V101.b));
+  v101Draw();
+}
+function v101Slide() { if (v101timer) { clearInterval(v101timer); v101timer = null; } v101Draw(); }
+// Best-response dynamics: from A off-equilibrium, firms take turns best-responding.
+function v101Animate() {
+  if (v101timer) { clearInterval(v101timer); v101timer = null; }
   var qA = parseFloat(document.getElementById('v101-qa').value);
-  var qB = (120 - qA) / 2;                       // B's best response
-  var P = Math.max(0, 120 - qA - qB), piA = P * qA, piB = P * qB;
-  document.getElementById('v101-qa-val').textContent = qA;
+  var corners = [], cqA = qA, cqB = v101brB(qA);
+  corners.push([cqA, cqB]);
+  for (var s = 0; s < 7; s++) {
+    cqA = v101brA(cqB); corners.push([cqA, cqB]);   // A best-responds (horizontal move)
+    cqB = v101brB(cqA); corners.push([cqA, cqB]);   // B best-responds (vertical move)
+  }
+  var i = 1;
+  v101Draw(corners.slice(0, 1));
+  v101timer = setInterval(function () {
+    i++;
+    v101Draw(corners.slice(0, i));
+    if (i >= corners.length) {
+      clearInterval(v101timer); v101timer = null;
+      document.getElementById('v101-qa').value = Math.round(V101.a / (3 * V101.b));
+    }
+  }, 430);
+}
+function v101Draw(overlay) {
+  var a = V101.a, b = V101.b, qStar = a / (3 * b), maxAx = a / b;
+  // Point to display: the tip of the adjustment staircase during animation, else
+  // the slider value (with B best-responding).
+  var qA, qB, animating = overlay && overlay.length;
+  if (animating) { qA = overlay[overlay.length - 1][0]; qB = overlay[overlay.length - 1][1]; }
+  else { qA = parseFloat(document.getElementById('v101-qa').value); qB = v101brB(qA); }
+  var P = Math.max(0, a - b * (qA + qB)), piA = P * qA, piB = P * qB;
+  document.getElementById('v101-qa-val').textContent = Math.round(qA);
 
-  var scX = d3.scaleLinear().domain([0, 122]).range([D3PAD.left, D3W - D3PAD.right]);
-  var scY = d3.scaleLinear().domain([0, 122]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var scX = d3.scaleLinear().domain([0, maxAx * 1.02]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, maxAx * 1.02]).range([D3H - D3PAD.bottom, D3PAD.top]);
   var svg = d3MakeSvg('cvs101-wrap');
   d3AddAxes(svg, scX, scY, 'Firm A output', 'Firm B output');
 
-  // BR_A: qB = 120 - 2qA  (from (0,120) to (60,0))
-  d3Seg(svg, scX, scY, 0, 120, 60, 0, EC.primary, 3);
-  // BR_B: qB = (120 - qA)/2  (from (0,60) to (120,0))
-  d3Seg(svg, scX, scY, 0, 60, 120, 0, EC.second, 3);
-  d3Halo(svg, scX(18), scY(120 - 2 * 18), 'Firm A reacts', { color: EC.primary, anchor: 'start', size: 10 });
-  d3Halo(svg, scX(84), scY((120 - 84) / 2 + 4), 'Firm B reacts', { color: EC.second, anchor: 'start', size: 10 });
+  // BR_A: from (0, a/b) to (a/2b, 0). BR_B: from (0, a/2b) to (a/b, 0).
+  d3Seg(svg, scX, scY, 0, a / b, a / (2 * b), 0, EC.primary, 3);
+  d3Seg(svg, scX, scY, 0, a / (2 * b), a / b, 0, EC.second, 3);
+  d3Halo(svg, scX(maxAx * 0.15), scY(a / b - 2 * (maxAx * 0.15)), 'Firm A reacts', { color: EC.primary, anchor: 'start', size: 10 });
+  d3Halo(svg, scX(maxAx * 0.7), scY(v101brB(maxAx * 0.7) + maxAx * 0.03), 'Firm B reacts', { color: EC.second, anchor: 'start', size: 10 });
 
   // reference points
-  d3Dot(svg, scX(40), scY(40), EC.slate, 5);
-  d3Halo(svg, scX(40), scY(40) - 12, 'Cournot (40, 40)', { color: EC.slate, size: 10 });
-  d3Dot(svg, scX(60), scY(30), EC.gain, 5);
-  d3Halo(svg, scX(60) + 4, scY(30) + 14, 'Stackelberg (60, 30)', { color: EC.gain, anchor: 'start', size: 10 });
+  d3Dot(svg, scX(qStar), scY(qStar), EC.slate, 5);
+  d3Halo(svg, scX(qStar), scY(qStar) - 12, 'Cournot (' + qStar.toFixed(0) + ', ' + qStar.toFixed(0) + ')', { color: EC.slate, size: 10 });
+  d3Dot(svg, scX(a / (2 * b)), scY(a / (4 * b)), EC.gain, 5);
+  d3Halo(svg, scX(a / (2 * b)) + 4, scY(a / (4 * b)) + 14, 'Stackelberg', { color: EC.gain, anchor: 'start', size: 10 });
 
-  // current chosen point riding along BR_B
+  // adjustment staircase (best-response dynamics)
+  if (animating) {
+    var d = overlay.map(function (pt, i) { return (i ? 'L' : 'M') + scX(pt[0]) + ' ' + scY(pt[1]); }).join(' ');
+    svg.append('path').attr('d', d).attr('fill', 'none').attr('stroke', EC.indicator).attr('stroke-width', 2).attr('stroke-dasharray', '5,3');
+    overlay.forEach(function (pt) { d3Dot(svg, scX(pt[0]), scY(pt[1]), EC.indicator, 2.5); });
+  }
+
+  // current point riding along BR_B
   d3Seg(svg, scX, scY, qA, 0, qA, qB, EC.indicator, 1.2, '3,3');
   d3Seg(svg, scX, scY, 0, qB, qA, qB, EC.indicator, 1.2, '3,3');
   d3Dot(svg, scX(qA), scY(qB), EC.indicator, 6);
 
-  var note = Math.abs(qA - 40) < 1e-6
-    ? 'Both firms best-respond to each other: this is the Cournot&ndash;Nash equilibrium, each earning $1,600.'
-    : (Math.abs(qA - 60) < 1e-6
-      ? 'Firm A commits to 60; Firm B best-responds with 30. A earns $1,800 (up from $1,600), B only $900. First-mover advantage.'
-      : 'Firm B is best-responding to A&rsquo;s choice, but A is not on its own reaction curve, so this is not an equilibrium unless A commits.');
+  var atC = Math.abs(qA - qStar) < 0.6, atS = Math.abs(qA - a / (2 * b)) < 0.6;
+  var note = animating
+    ? 'Best-response dynamics: each firm takes turns best-responding to the other. The staircase spirals into the Cournot crossing (' + qStar.toFixed(0) + ', ' + qStar.toFixed(0) + '), the stable equilibrium.'
+    : atC ? 'Both firms best-respond to each other: this is the Cournot&ndash;Nash equilibrium, each earning $' + piA.toFixed(0) + '.'
+    : atS ? 'Firm A commits to the Stackelberg quantity ' + qA.toFixed(0) + '; Firm B best-responds with ' + qB.toFixed(0) + '. A out-earns B ($' + piA.toFixed(0) + ' vs $' + piB.toFixed(0) + '), the first-mover advantage.'
+    : 'Firm B is best-responding to A&rsquo;s choice, but A is off its own reaction curve, so this is not an equilibrium. Press Watch adjustment to see it converge.';
+  var col = animating ? EC.indicator : (atC ? EC.gain : atS ? EC.primary : EC.slate);
   document.getElementById('v101-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">q<sub>A</sub></div><div class="readout-val">' + qA + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">q<sub>A</sub></div><div class="readout-val">' + qA.toFixed(0) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">q<sub>B</sub> (best response)</div><div class="readout-val">' + qB.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Profit A</div><div class="readout-val">$' + piA.toFixed(0) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Profit B</div><div class="readout-val">$' + piB.toFixed(0) + '</div></div>' +
-    '</div><p style="margin-top:.6rem;color:' + EC.slate + '">' + note + '</p>';
+    '</div><p style="margin-top:.6rem;color:' + col + '">' + note + '</p>';
 }
 
 // ── FIG 10.2: Hotelling beach ───────────────────────────────────────────────
@@ -396,6 +484,32 @@ function v104Draw() {
     '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Industry profit</div><div class="readout-val">$' + ind.toLocaleString() + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + EC.second + '">' + verdicts[V104] + '</p>';
+
+  // Fully worked profit calculation for the selected model (Naveen's request).
+  var worked = {
+    cournot: ['Each firm best-responds to the other; the symmetric solution is \\(q^*=a/3b=120/3=40\\) each.',
+      'Total quantity \\(Q=q_A+q_B=40+40=80\\).',
+      'Price from demand: \\(P=120-Q=120-80=\\$40\\).',
+      'Profit per firm \\(=P\\times q=40\\times40=\\$1{,}600\\) (with \\(MC=0\\) there is no cost to subtract).',
+      '<span class="wk-tot">Industry profit \\(=\\$1{,}600+\\$1{,}600=\\$3{,}200\\).</span>'],
+    stackelberg: ['The leader anticipates the follower&rsquo;s reaction and commits \\(q_A=a/2b=60\\).',
+      'The follower best-responds: \\(q_B=(120-60)/2=30\\). Total \\(Q=90\\).',
+      'Price: \\(P=120-90=\\$30\\).',
+      'Leader profit \\(=30\\times60=\\$1{,}800\\); follower \\(=30\\times30=\\$900\\).',
+      '<span class="wk-tot">Industry profit \\(=\\$1{,}800+\\$900=\\$2{,}700\\).</span>'],
+    collusion: ['The cartel picks the monopoly output \\(Q_m=a/2b=60\\) and splits it 30 each.',
+      'Price: \\(P=120-60=\\$60\\).',
+      'Profit per firm \\(=60\\times30=\\$1{,}800\\).',
+      '<span class="wk-tot">Industry profit \\(=\\$3{,}600\\), the full monopoly profit (best for firms, worst for consumers).</span>'],
+    bertrand: ['Undercutting by a penny wins the whole market, so price is driven to marginal cost: \\(P=MC=\\$0\\).',
+      'At \\(P=0\\) the market buys \\(Q=120\\), split between the two firms.',
+      'Profit margin per unit \\(=P-MC=0\\), so each firm earns \\(\\$0\\).',
+      '<span class="wk-tot">Industry profit \\(=\\$0\\), the competitive outcome from just two firms.</span>']
+  };
+  document.getElementById('v104-worked').innerHTML =
+    '<div class="wk-title">How the ' + m.name + ' profit is calculated</div><ol><li>' +
+    worked[V104].join('</li><li>') + '</li></ol>';
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([document.getElementById('v104-worked')]);
 }
 
 // ── FIG 10.5: Bertrand undercutting incentive ───────────────────────────────
