@@ -453,6 +453,35 @@
     .left-nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.18); z-index: 140; }
     .left-nav-overlay.open { display: block; }
 
+    /* Expandable per-week sections: jump straight to a component (Visualizations,
+       Slides, Flashcards…) without visiting the week hub first. Pure CSS via
+       <details>/<summary> so it needs no shared JS across the 50+ nav pages. */
+    .left-nav-item .ln-wk > summary {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.3rem 1rem; font-size: 0.82rem; color: var(--text);
+      cursor: pointer; list-style: none; user-select: none;
+    }
+    .left-nav-item .ln-wk > summary::-webkit-details-marker { display: none; }
+    .left-nav-item .ln-wk > summary::after {
+      content: "\203A"; font-size: 1rem; line-height: 1; color: var(--muted);
+      transition: transform 0.15s ease;
+    }
+    .left-nav-item .ln-wk[open] > summary::after { transform: rotate(90deg); }
+    .left-nav-item .ln-wk > summary:hover { background: var(--accent-light); color: var(--accent); }
+    .left-nav-item .ln-wk > summary:hover::after { color: var(--accent); }
+    .left-nav-item.active .ln-wk > summary {
+      color: var(--accent); font-weight: 600;
+      border-left: 3px solid var(--accent); padding-left: calc(1rem - 3px);
+    }
+    .left-nav-sub { list-style: none; margin: 0 0 0.35rem; padding: 0.15rem 0 0; }
+    .left-nav-sub a {
+      display: block; padding: 0.26rem 1rem 0.26rem 1.15rem;
+      margin-left: 1rem; border-left: 2px solid var(--rule);
+      font-size: 0.78rem; color: var(--muted); text-decoration: none; transition: background 0.1s;
+    }
+    .left-nav-sub a:hover { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); }
+    .left-nav-sub a.on { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+
     /* ── Week-specific components (include as needed) ─── */
     .rules-table { width:100%; border-collapse:collapse; font-size:0.84rem; }
     .rules-table th { text-align:left; font-size:0.66rem; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--muted); padding:0.38rem 0.8rem 0.38rem 0; border-bottom:2px solid var(--rule); }
