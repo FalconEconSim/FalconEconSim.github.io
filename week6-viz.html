@@ -654,9 +654,10 @@ function v61Draw(Lcur,Kcur){
     {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width*1.45+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
   ];
 
-  // Resolve and draw static curve labels (isoquant + isocost)
-  resolveLabels(lbls61,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
-  lbls61.forEach(l=>drawForceLabel(ctx,l));
+  // NOTE: the isoquant/isocost labels (lbls61) are NOT resolved/drawn here.
+  // They are combined with the drag OR optimal labels below and resolved in ONE
+  // force pass, so every label repels every other (resolving them in separate
+  // passes let "Isoquant Q=3" land on the "(L,K)" drag label).
 
   // If optimal is shown, draw the green dot at the optimal location
   if(v61OptimalShown){
@@ -671,8 +672,10 @@ function v61Draw(Lcur,Kcur){
       {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
       {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
     ];
-    resolveLabels(optLbls,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
-    optLbls.forEach(l=>drawForceLabel(ctx,l));
+    // Resolve isoquant + isocost + optimal labels together; keep above the x-axis.
+    const all61=lbls61.concat(optLbls);
+    resolveLabels(all61,linePts61,120,6,{x0:8,y0:8,x1:W-12,y1:H-52});
+    all61.forEach(l=>drawForceLabel(ctx,l));
     document.getElementById('v61-readout').innerHTML=
       '<div class="readout-row">' +
       '<div class="readout-col"><div class="readout-label">L*</div><div class="readout-val">'+opt.Ls.toFixed(2)+'</div></div>' +
@@ -700,8 +703,10 @@ function v61Draw(Lcur,Kcur){
   if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false});
   else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width*1.45+8,h:12,text:'Not on isoquant yet',color:'#8b95a5',fontSize:9,bold:false});
   else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width*1.45+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#8b95a5',fontSize:9,bold:false});
-  resolveLabels(dragLbls,linePts61,60,5,{x0:8,y0:8,x1:W-12,y1:H-12});
-  dragLbls.forEach(l=>drawForceLabel(ctx,l));
+  // Resolve isoquant + isocost + drag labels together; keep above the x-axis.
+  const all61=lbls61.concat(dragLbls);
+  resolveLabels(all61,linePts61,120,6,{x0:8,y0:8,x1:W-12,y1:H-52});
+  all61.forEach(l=>drawForceLabel(ctx,l));
 
   const TC=w*Lcur+v*Kcur;
   document.getElementById('v61-readout').innerHTML=
