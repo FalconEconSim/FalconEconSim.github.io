@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 4 Audit Lab — 10 overlap-detection systems</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0e1320; --card:#151c2c; --line:#26314a; --ink:#e7ecf6; --dim:#95a2bf; --acc:#3b82f6; --red:#ff5c78; --amb:#ffb638; --grn:#5fd0a0; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.6 'DM Sans',system-ui,sans-serif; }
+  .wrap { max-width:1080px; margin:0 auto; padding:2.4rem 1.4rem 5rem; }
+  h1 { font-size:1.7rem; margin:0 0 .3rem; }
+  .lede { color:var(--dim); max-width:70ch; margin:0 0 1.6rem; }
+  .why { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem; margin-bottom:1.8rem; font-size:14px; }
+  .why b { color:#fff; }
+  code, .mono { font-family:'DM Mono',monospace; font-size:.9em; }
+  .grid { display:grid; gap:.9rem; }
+  .sys { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem; display:grid; grid-template-columns:2.1rem 1fr; gap:.2rem 1rem; }
+  .sys .n { font-family:'DM Mono',monospace; font-weight:600; color:var(--acc); font-size:1.15rem; }
+  .sys .name { font-weight:700; }
+  .sys .name a { color:inherit; text-decoration:none; border-bottom:1px dashed #3a4a6b; }
+  .sys .name a:hover { color:var(--acc); border-color:var(--acc); }
+  .sys .blurb { grid-column:2; color:var(--dim); font-size:13.5px; margin:.25rem 0 .5rem; }
+  .sys .found { grid-column:2; font-size:13px; }
+  .sys .found .tag { display:inline-block; font-family:'DM Mono',monospace; font-size:11px; padding:.08rem .45rem; border-radius:20px; margin-right:.4rem; }
+  .t-none { background:#1b2a22; color:var(--grn); } .t-some { background:#2a2113; color:var(--amb); } .t-many { background:#2a1620; color:var(--red); }
+  .sys .ex { color:#b9c4dc; margin-top:.3rem; }
+  .sys .ex li { margin:.1rem 0; }
+  .open { grid-column:2; margin-top:.55rem; }
+  .open a { display:inline-block; background:var(--acc); color:#fff; text-decoration:none; font-weight:600; font-size:13px; padding:.35rem .8rem; border-radius:7px; }
+  h2 { font-size:1.15rem; margin:2.2rem 0 .6rem; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:.4rem; }
+  th, td { text-align:left; padding:.4rem .5rem; border-bottom:1px solid var(--line); }
+  th { color:var(--dim); font-weight:600; }
+  td.y { color:var(--grn); } td.n { color:#5a6785; }
+  .back { margin-top:2rem; color:var(--dim); } .back a { color:var(--acc); }
+  .foot { color:#5a6785; font-size:12px; margin-top:1.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Week 4 Audit Lab</h1>
+  <p class="lede">Ten copies of the Week&nbsp;4 interactive page, each carrying a <b>different</b> overlap-detection system that runs live in a panel (bottom-right) and draws red boxes over what it finds. Built to answer one question: <i>which audit approach actually catches text overlaps in canvas + SVG figures?</i> Open any version, then drag points, sweep sliders, and resize the window to watch its detector react.</p>
+
+  <div class="why">
+    <b>Why this exists.</b> Two overlaps shipped that earlier audits missed: a canvas label sitting on a dot (nothing was in the DOM to inspect), and a video label whose bounding box <i>cleared the next label by 0.13&ndash;0.28 units</i> yet still read as overlapping. Lesson baked into these systems: you must (1) see <b>canvas-drawn</b> text, (2) check across <b>interaction + viewport</b> states, and (3) flag <b>near-touch crowding</b>, not only strict box intersection.
+  </div>
+
+  <div class="grid" id="sysgrid"></div>
+
+  <h2>What each system caught (same page, same run)</h2>
+  <p class="lede" style="font-size:13.5px;">Cross-referencing the ten on identical content shows the trade-offs: the DOM-only and SVG-only systems are blind to Week&nbsp;4&rsquo;s canvas text; the temporal and aspect-ratio systems find the most because overlaps here are state- and size-dependent; the pixel/OCR systems act as render-truth cross-checks; the vision system is the perceptual judge.</p>
+  <table>
+    <thead><tr><th>System</th><th>Sees canvas text</th><th>Across states</th><th>Across sizes</th><th># issues found</th></tr></thead>
+    <tbody id="cmp"></tbody>
+  </table>
+
+  <h2>The verdict</h2>
+  <p class="lede" style="font-size:13.5px;">No single system is enough. A practical pipeline runs <b>Canvas instrumentation (2)</b> for the cheap static truth, layers <b>Temporal (4)</b> + <b>Aspect-ratio (6)</b> + <b>Combinatorial (7)</b> to cover interaction &amp; responsive states, uses <b>Pixel (3)</b> / <b>Projection-OCR (9)</b> as render-truth cross-checks, and finishes with the <b>Vision (5)</b> pass for perceptual crowding that geometry can only approximate. All of them now flag <b>near-touch crowding</b>, the class that slipped through before.</p>
+
+  <p class="back">&larr; <a href="dev.html">Developer pages</a> &nbsp;·&nbsp; <a href="week4-viz.html">Production Week 4</a></p>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+// System catalogue + the findings from a headless run on identical content.
+var SYS = [
+  {n:1, name:'DOM / SVG geometry (getBoundingClientRect)', blurb:'Pairwise box intersection of every DOM/SVG text node + clipping + off-viewport. BLIND to canvas-drawn text by design — the baseline that shows the gap.', canvas:'n', states:'n', sizes:'n', issues:0, ex:['Finds nothing: Week 4 draws its labels on &lt;canvas&gt;, invisible to the DOM.']},
+  {n:2, name:'Canvas-2D instrumentation', blurb:'Hooks CanvasRenderingContext2D (fillText/arc) so it SEES canvas labels+dots, then geometric overlap + near-touch crowding.', canvas:'y', states:'n', sizes:'n', issues:3, ex:['"kink P=$12" over a marker','crowded: "+100%" ~ "Pharmaceuticals"','crowded: "e = −0.3" ~ "Pharmaceuticals"']},
+  {n:3, name:'Rendered-pixel connected-components', blurb:'Reads real canvas pixels and measures ink density under each descriptive label; a box far denser than one glyph-line means text piled on text.', canvas:'y', states:'n', sizes:'n', issues:0, ex:['Clean here after excluding tick numbers — a render-truth cross-check.']},
+  {n:4, name:'Temporal keyframe sampler', blurb:'Drives sliders + clicks buttons + drags points, sampling every step; runs the geometry check per frame. Catches overlaps that only appear mid-interaction.', canvas:'y', states:'y', sizes:'n', issues:6, ex:['"Market D" over a marker  [drag / Expand]','crowded: "P=$12" ~ "Market D"  [slider]','crowded: "D₂" ~ "Market D"  [drag]']},
+  {n:5, name:'Semantic vision audit (capture → VLM)', blurb:'Captures each figure to PNG for a vision model to judge legibility/overlap/meaning. The perceptual judge for crowding geometry can only approximate.', canvas:'y', states:'n', sizes:'n', issues:3, ex:['Exports frames to window.__auditFrames + flags what a VLM would.']},
+  {n:6, name:'Aspect-ratio / viewport fuzz', blurb:'Re-renders at a matrix of widths and re-checks — finds overlaps that appear only at certain sizes.', canvas:'y', states:'n', sizes:'y', issues:5, ex:['crowded: "Q=10" ~ "kink P=$12"  [@360px]','crowded: "kink P=$12" ~ "Qm = 54 − 3P"  [@414px]','crowded: "Choke $30" ~ "Qm = 30 − P"  [@768px]']},
+  {n:7, name:'Interaction combinatorial explorer', blurb:'Enumerates the Cartesian product of control states + a drag grid, overlap-checking every combination — collisions that need two controls at specific values.', canvas:'y', states:'y', sizes:'n', issues:3, ex:['"kink P=$12" over a marker  [128 combos]','crowded: "+100%" ~ "Pharmaceuticals"  [128 combos]']},
+  {n:8, name:'SVG-native geometry (getBBox / CTM)', blurb:'Uses SVG’s own coordinate space for exact overlay-label collision + a viewBox-bounds check. Precise for the d3 overlays; Week 4 is mostly canvas so it finds little.', canvas:'n', states:'n', sizes:'n', issues:0, ex:['No SVG-overlay overlaps on Week 4 — the right tool for weeks 8–12.']},
+  {n:9, name:'Projection-profile OCR proxy', blurb:'Text-line detection without OCR: projects canvas ink onto rows; a band 2–4 glyph-rows tall with no internal gap = merged text. Language-agnostic.', canvas:'y', states:'n', sizes:'n', issues:1, ex:['tall dense ink band on cvs4 (h≈23px) — stacked/merged text?']},
+  {n:10, name:'DPR-diff + fragility mutation', blurb:'Compares label geometry at DPR 1 vs 2 and measures how close the nearest pair is to touching — a layout that only just clears is flagged as fragile.', canvas:'y', states:'n', sizes:'n', issues:0, ex:['No sub-3px near-misses at the default state here.']}
+];
+function cls(i){ return i===0?'t-none':i<=3?'t-some':'t-many'; }
+var g = document.getElementById('sysgrid');
+SYS.forEach(function(s){
+  var d = document.createElement('div'); d.className='sys';
+  d.innerHTML = '<div class="n">'+s.n+'</div>'+
+    '<div class="name"><a href="week4-audit'+String(s.n).padStart(2,'0')+'.html">System '+s.n+' — '+s.name+'</a></div>'+
+    '<div class="blurb">'+s.blurb+'</div>'+
+    '<div class="found"><span class="tag '+cls(s.issues)+'">'+s.issues+' issue'+(s.issues===1?'':'s')+'</span>'+
+      '<ul class="ex">'+s.ex.map(function(e){return '<li>'+e+'</li>';}).join('')+'</ul></div>'+
+    '<div class="open"><a href="week4-audit'+String(s.n).padStart(2,'0')+'.html">Open live version &rarr;</a></div>';
+  g.appendChild(d);
+});
+var cmp = document.getElementById('cmp');
+SYS.forEach(function(s){
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td>'+s.n+'. '+s.name.split(' (')[0]+'</td>'+
+    '<td class="'+s.canvas+'">'+(s.canvas==='y'?'yes':'no')+'</td>'+
+    '<td class="'+s.states+'">'+(s.states==='y'?'yes':'no')+'</td>'+
+    '<td class="'+s.sizes+'">'+(s.sizes==='y'?'yes':'no')+'</td>'+
+    '<td>'+s.issues+'</td>';
+  cmp.appendChild(tr);
+});
+document.getElementById('foot').textContent='Findings from a headless msedge run on identical Week-4 content. Each live page re-runs its own system and can be re-triggered from its panel.';
+</script>
+</body>
+</html>
