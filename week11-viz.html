@@ -447,8 +447,12 @@ function v112Draw() {
   var eAmaxLine = yTop / 2, eBmaxLine = yTop / 8;
   d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eAmaxLine), Math.min(2 * maxE, yTop), EC.primary, 3);   // MAC_A = 2e
   d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eBmaxLine), Math.min(8 * maxE, yTop), EC.second, 3);    // MAC_B = 8e
-  d3Halo(svg, scX(eAmaxLine * 0.85), scY(2 * eAmaxLine * 0.85 + 8), 'Firm A MAC = 2e (cheap)', { color: EC.primary, anchor: 'end', size: 10 });
-  d3Halo(svg, scX(eBmaxLine * 0.9), scY(8 * eBmaxLine * 0.9 + 8), 'Firm B MAC = 8e (dear)', { color: EC.second, anchor: 'start', size: 10 });
+  // Anchor the curve labels to the VISIBLE part of each line (clamped to maxE):
+  // eAmaxLine can exceed the axis domain, which pushed "Firm A MAC…" off the
+  // right edge (leaving a lone "F") at high tariff.
+  var exA = Math.min(maxE, eAmaxLine) * 0.62, exB = Math.min(maxE, eBmaxLine) * 0.7;
+  d3Halo(svg, scX(exA), scY(2 * exA + 8), 'Firm A MAC = 2e (cheap)', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(exB), scY(8 * exB + 8), 'Firm B MAC = 8e (dear)', { color: EC.second, anchor: 'start', size: 10 });
 
   // permit price line + firm abatement points
   d3Seg(svg, scX, scY, 0, lam, maxE, lam, EC.transfer, 1.6, '5,4');

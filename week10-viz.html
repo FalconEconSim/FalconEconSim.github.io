@@ -354,7 +354,7 @@
       </div>
       <div class="ctrl">
         <span class="ctrl-label">Rival&rsquo;s price: <span class="ctrl-value" id="v105-pr-val">$60</span></span>
-        <input type="range" id="v105-pr" min="20" max="110" step="1" value="60" oninput="v105Draw()">
+        <input type="range" id="v105-pr" min="30" max="110" step="1" value="60" oninput="v105Draw()">
       </div>
     </div>
     <div class="fig-state" id="v105-readout"></div>
@@ -653,7 +653,10 @@ function v105Draw() {
   // match point: pricing exactly at the rival splits the market (half profit)
   var half = 0.5 * (pr - MC) * Qd(pr);
   d3Dot(svg, scX(pr), scY(half), EC.transfer, 4);
-  d3Halo(svg, scX(pr) - 6, scY(half), 'match: split', { color: EC.transfer, size: 9, anchor: 'end' });
+  // Flip the label to the right of the match point when the rival price is near
+  // the left edge, so "match: split" never clips off the plot (was "natch: split").
+  var mLeft = scX(pr) < D3PAD.left + 70;
+  d3Halo(svg, scX(pr) + (mLeft ? 8 : -6), scY(half), 'match: split', { color: EC.transfer, size: 9, anchor: mLeft ? 'start' : 'end' });
   d3Seg(svg, scX, scY, pr, 0, pr, 2600, EC.second, 1.2, '3,4');
   d3Halo(svg, scX(pr), scY(2600), 'rival $' + pr, { color: EC.second, size: 9 });
   d3Halo(svg, scX(20 + (pr - 20) * 0.28), scY((pr - MC) * Qd(pr) * 0.62), 'undercut: whole market', { color: EC.primary, size: 9, anchor: 'start' });

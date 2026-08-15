@@ -1117,7 +1117,7 @@ function v83DrawFreeTrade(p,Pw){
   d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)-3,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:8,weight:600});
   const CS_new=0.5*(20-Pw)*(20-Pw), PS_new=0.5*QS*QS;
   d3HaloLabel(dyn,xS(QD*0.3),yS((20+Pw)/2),'CS=$'+CS_new.toFixed(0),{color:'#1f6fb2',size:10,weight:700});
-  if(QS>1.5) d3HaloLabel(dyn,xS(QS*0.35),yS((4+Pw)/2),'PS=$'+PS_new.toFixed(0),{color:EC.gold,size:10,weight:700});
+  if(QS>1.5) d3HaloLabel(dyn,xS(QS)+6,yS((4+Pw)/2),'PS=$'+PS_new.toFixed(0),{anchor:'start',color:EC.gold,size:10,weight:700});
 }
 function v83DrawTariff(p,Pw,t){
   const {xS,yS,dyn}=p;
@@ -1150,7 +1150,7 @@ function v83DrawTariff(p,Pw,t){
   }
   const CS_eff=0.5*(20-Peff)*(20-Peff), PS_eff=0.5*QS_eff*QS_eff;
   d3HaloLabel(dyn,xS(QD_eff*0.28),yS((20+Peff)/2),'CS=$'+CS_eff.toFixed(0),{color:'#1f6fb2',size:10,weight:700});
-  if(QS_eff>1.5) d3HaloLabel(dyn,xS(QS_eff*0.35),yS((4+Peff)/2),'PS=$'+PS_eff.toFixed(0),{color:EC.gold,size:10,weight:700});
+  if(QS_eff>1.5) d3HaloLabel(dyn,xS(QS_eff)+6,yS((4+Peff)/2),'PS=$'+PS_eff.toFixed(0),{anchor:'start',color:EC.gold,size:10,weight:700});
 }
 function v83Init(){
   v83panelAL=v83MakePanel('cvs83a-wrap');
@@ -1852,9 +1852,16 @@ function v811Draw(){
   v811dyn.append('circle').attr('cx',scX(QR)).attr('cy',scY(PR)).attr('r',4).attr('fill',STROKE_CS).attr('stroke','#fff').attr('stroke-width',1.5);
   // Price labels: sit just inside the axis on each dashed line, haloed so they
   // clear the y-axis $ ticks and the guide lines instead of stacking on them.
-  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PA)-3,'PA=$'+PA.toFixed(0),{anchor:'start',color:EC.slate,size:9,weight:700});
-  d3HaloLabel(v811dyn,D3PAD.left+5,scY(AC_QR)-3,'AC=$'+AC_QR.toFixed(1),{anchor:'start',color:EC.red,size:9,weight:600});
-  d3HaloLabel(v811dyn,D3PAD.left+5,scY(PR)-3,'PR=$'+PR.toFixed(0),{anchor:'start',color:EC.slate,size:9,weight:700});
+  // Spread the three left-edge price labels (PA, PR, AC) vertically so they never
+  // stack when their values cluster (P_A slider at an extreme made PA/PR/AC land
+  // on the same row). Sort top-to-bottom and enforce a 13px minimum gap.
+  var lab811 = [
+    { t: 'PA=$' + PA.toFixed(0), y: scY(PA), c: EC.slate, w: 700 },
+    { t: 'PR=$' + PR.toFixed(0), y: scY(PR), c: EC.slate, w: 700 },
+    { t: 'AC=$' + AC_QR.toFixed(1), y: scY(AC_QR), c: EC.red, w: 600 }
+  ].sort(function (a, b) { return a.y - b.y; });
+  for (var _i = 1; _i < lab811.length; _i++) if (lab811[_i].y - lab811[_i - 1].y < 13) lab811[_i].y = lab811[_i - 1].y + 13;
+  lab811.forEach(function (l) { d3HaloLabel(v811dyn, D3PAD.left + 5, l.y - 3, l.t, { anchor: 'start', color: l.c, size: 9, weight: l.w }); });
   // Quantity labels: own row below the x-axis tick numbers, haloed.
   d3HaloLabel(v811dyn,scX(QA),scY(0)+24,'QA='+QA.toFixed(0),{color:EC.slate,size:9,weight:600});
   d3HaloLabel(v811dyn,scX(QR),scY(0)+24,'QR='+QR.toFixed(0),{color:EC.slate,size:9,weight:600});
