@@ -889,6 +889,12 @@ function v1Draw() {
     const nA = v1Nodes.find(n=>n.id==='A'), nB = v1Nodes.find(n=>n.id==='B');
     d3MoveAnchor(nA, cx1, cy1);
     d3MoveAnchor(nB, cx2, cy2);
+    // Pin each A/B box a fixed distance directly BELOW its dot (centred, with a
+    // short vertical leader). The force-sim only repels labels from each other,
+    // not from the demand line, so the boxes were settling on top of the line
+    // and the dots. Pinning keeps them clear and still glides with the points.
+    nA.fx = cx1 - nA.lw/2; nA.fy = cy1 + 18;
+    nB.fx = cx2 - nB.lw/2; nB.fy = cy2 + 18;
     nA.color = labelColorA; nB.color = labelColorB;
     if (v1Lbl) {
       v1Lbl.gs.select('rect').attr('stroke', d=>d.color);
