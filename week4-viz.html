@@ -591,11 +591,15 @@ function d3LblNode(id, color, label, lw, ax, ay, extra={}) {
 
 // forceSimulation with collide + weak pull toward each node's anchor:
 // exactly the S6/S8 spec.
+// Optional per-node `boxOff` = {x,y}: the label BOX settles centred at
+// (anchor + boxOff) instead of on the anchor, so a label whose anchor sits on a
+// curve/point can be pulled clear of it while its leader still points to the
+// anchor. Nodes without boxOff keep the original behaviour.
 function d3LabelSim(nodes) {
   return d3.forceSimulation(nodes)
     .force('collide', d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-    .force('x', d3.forceX(d=>d.fx_anchor).strength(0.04))
-    .force('y', d3.forceY(d=>d.fy_anchor).strength(0.04));
+    .force('x', d3.forceX(d=>d.boxOff ? d.fx_anchor - d.lw/2 + d.boxOff.x : d.fx_anchor).strength(d=>d.boxOff?0.14:0.04))
+    .force('y', d3.forceY(d=>d.boxOff ? d.fy_anchor - D3_LABEL_H/2 + d.boxOff.y : d.fy_anchor).strength(d=>d.boxOff?0.14:0.04));
 }
 
 // Append connector lines + draggable white rounded-rect label groups
@@ -889,12 +893,13 @@ function v1Draw() {
     const nA = v1Nodes.find(n=>n.id==='A'), nB = v1Nodes.find(n=>n.id==='B');
     d3MoveAnchor(nA, cx1, cy1);
     d3MoveAnchor(nB, cx2, cy2);
-    // Pin each A/B box a fixed distance directly BELOW its dot (centred, with a
-    // short vertical leader). The force-sim only repels labels from each other,
-    // not from the demand line, so the boxes were settling on top of the line
-    // and the dots. Pinning keeps them clear and still glides with the points.
-    nA.fx = cx1 - nA.lw/2; nA.fy = cy1 + 18;
-    nB.fx = cx2 - nB.lw/2; nB.fy = cy2 + 18;
+    // Pin each A/B box just off its dot, on the OUTWARD side (the left point's
+    // label goes down-left, the right point's down-right), so the box clears BOTH
+    // the demand line AND the shaded arc rectangle between the points. The
+    // force-sim only repels labels from each other, not from the line/box.
+    const aLeft = cx1 <= cx2;
+    nA.fx = (aLeft ? cx1 - nA.lw - 6 : cx1 + 6); nA.fy = cy1 + 12;
+    nB.fx = (aLeft ? cx2 + 6 : cx2 - nB.lw - 6); nB.fy = cy2 + 12;
     nA.color = labelColorA; nB.color = labelColorB;
     if (v1Lbl) {
       v1Lbl.gs.select('rect').attr('stroke', d=>d.color);
@@ -1745,7 +1750,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   {
     const ov = v8aGetOverlay(canvasId, W, H);
     if (ov.svg && !ov.nodes) {
-      ov.nodes = [ d3LblNode('formula', color, formula, fW+8, mlx, mly) ];
+      ov.nodes = [ d3LblNode('formula', color, formula, fW+8, mlx, mly, {boxOff:{x:38,y:-16}}) ];
       ov.sim = d3LabelSim(ov.nodes);
       ov.lbl = d3LabelLayer(ov.svg, ov.nodes, ()=>ov.sim);
       ov.sim.on('tick', ()=>d3LabelTick(ov.nodes, ov.lbl.gs, ov.lbl.conns, W, H, ML2, MR2, MT2, MB2));
@@ -1847,9 +1852,9 @@ function v8aMarketDraw(P) {
     const ov = v8aGetOverlay('cvs8c', W, H);
     if (ov.svg && !ov.nodes) {
       ov.nodes = [
-        d3LblNode('kink', 'var(--ink-faint)', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky),
-        d3LblNode('upper', '#1f6fb2', upTxt, ctx.measureText(upTxt).width+8, ulx, uly),
-        d3LblNode('lower', '#1f6fb2', loTxt, ctx.measureText(loTxt).width+8, llx, lly),
+        d3LblNode('kink', 'var(--ink-faint)', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky, {boxOff:{x:46,y:6}}),
+        d3LblNode('upper', '#1f6fb2', upTxt, ctx.measureText(upTxt).width+8, ulx, uly, {boxOff:{x:50,y:-4}}),
+        d3LblNode('lower', '#1f6fb2', loTxt, ctx.measureText(loTxt).width+8, llx, lly, {boxOff:{x:-8,y:24}}),
       ];
       ov.sim = d3LabelSim(ov.nodes);
       ov.lbl = d3LabelLayer(ov.svg, ov.nodes, ()=>ov.sim);
@@ -2014,9 +2019,9 @@ function v8Draw() {
   // typed equations cross the visible price range)
   const labelSpec = [
     ...kinkInfo,
-    {id:'D1', color:EC.red, label:'D₁', lw:24, ax:c1ax, ay:c1ay},
-    {id:'D2', color:EC.accent2, label:'D₂', lw:24, ax:c2ax, ay:c2ay},
-    {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my},
+    {id:'D1', color:EC.red, label:'D₁', lw:24, ax:c1ax, ay:c1ay, boxOff:{x:22,y:-16}},
+    {id:'D2', color:EC.accent2, label:'D₂', lw:24, ax:c2ax, ay:c2ay, boxOff:{x:22,y:-16}},
+    {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my, boxOff:{x:38,y:-16}},
   ];
   ctx.font='bold 10px DM Sans,sans-serif';
   labelSpec.forEach(s=>{ if(s.lw===undefined) s.lw = ctx.measureText(s.label).width+10; });
@@ -2030,7 +2035,7 @@ function v8Draw() {
     v8Svg.selectAll('*').remove();
     v8Nodes = labelSpec.map(s=>{
       const prev = old[s.id];
-      const n = d3LblNode(s.id, s.color, s.label, s.lw, s.ax, s.ay);
+      const n = d3LblNode(s.id, s.color, s.label, s.lw, s.ax, s.ay, {boxOff: s.boxOff});
       if (prev) { n.x=prev.x; n.y=prev.y; n.fx=prev.fx; n.fy=prev.fy; n.vx=prev.vx; n.vy=prev.vy; }
       return n;
     });
