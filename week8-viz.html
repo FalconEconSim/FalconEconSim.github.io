@@ -738,11 +738,14 @@ function d3AddLabels(svg,nodes,sim){
     .text(d=>d.label);
   return {conns,gs};
 }
+// Optional per-node boxOff {x,y}: the label BOX settles centred at
+// (anchor + boxOff) instead of on the anchor, pulling a label clear of a
+// curve/point it would otherwise sit on while its leader still points home.
 function d3MakeSim(nodes){
   return d3.forceSimulation(nodes)
     .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-    .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
-    .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04));
+    .force('x',d3.forceX(d=>d.boxOff?d.fx_anchor-d.lw/2+d.boxOff.x:d.fx_anchor).strength(d=>d.boxOff?0.14:0.04))
+    .force('y',d3.forceY(d=>d.boxOff?d.fy_anchor-LABEL_H/2+d.boxOff.y:d.fy_anchor).strength(d=>d.boxOff?0.14:0.04));
 }
 function d3TickClamp(nodes,gs,conns){
   nodes.forEach(d=>{
@@ -1696,7 +1699,7 @@ function v810Init(){
     d3Node('D',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
     d3Node('MR',EC.indicator,'MR',26,scX(8.4),scY(3.2)),
     d3Node('MC',EC.green,'MC',26,scX(18.6),scY(2)),
-    d3Node('AC',EC.red,'AC',26,scX(4),scY(50/4+2)),
+    d3Node('AC',EC.red,'AC',26,scX(4),scY(50/4+2),{boxOff:{x:34,y:6}}),
   ];
   v810sim=d3MakeSim(v810nodes);
   const els=d3AddLabels(v810svg,v810nodes,v810sim);
@@ -1771,7 +1774,7 @@ function v811Init(){
     d3Node('D811',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
     d3Node('MR811',EC.indicator,'MR',26,scX(8.5),scY(3.5)),
     d3Node('MC811',EC.green,'MC',26,scX(19.5),scY(2.3)),
-    d3Node('AC811',EC.red,'AC',26,scX(4.5),scY(50/4.5+2)),
+    d3Node('AC811',EC.red,'AC',26,scX(4.5),scY(50/4.5+2),{boxOff:{x:34,y:6}}),
   ];
   v811sim=d3MakeSim(v811nodes);
   const els=d3AddLabels(v811svg,v811nodes,v811sim);

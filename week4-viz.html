@@ -1250,7 +1250,7 @@ function v3Init() {
     const xMax = Math.max(v3.a, 115);
     const xR3l=[0,xMax], yR3l=[0,55];   // fixed: both price sliders top out at 45
     const [lx0,ly0]=toC(0, v3.a/b, v3W, v3H, xR3l, yR3l);
-    v3Nodes = [ d3LblNode('D', '#1f6fb2', 'D', 18, lx0, ly0) ];
+    v3Nodes = [ d3LblNode('D', '#1f6fb2', 'D', 18, lx0, ly0, {boxOff:{x:20,y:6}}) ];
     v3Sim = d3LabelSim(v3Nodes);
     v3Lbl = d3LabelLayer(v3Svg, v3Nodes, ()=>v3Sim);
     v3Sim.on('tick', ()=>d3LabelTick(v3Nodes, v3Lbl.gs, v3Lbl.conns, v3W, v3H, ML, MR, MT, MB));
@@ -1852,7 +1852,7 @@ function v8aMarketDraw(P) {
     const ov = v8aGetOverlay('cvs8c', W, H);
     if (ov.svg && !ov.nodes) {
       ov.nodes = [
-        d3LblNode('kink', 'var(--ink-faint)', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky, {boxOff:{x:46,y:6}}),
+        d3LblNode('kink', 'var(--ink-faint)', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky, {boxOff:{x:54,y:-6}}),
         d3LblNode('upper', '#1f6fb2', upTxt, ctx.measureText(upTxt).width+8, ulx, uly, {boxOff:{x:50,y:-4}}),
         d3LblNode('lower', '#1f6fb2', loTxt, ctx.measureText(loTxt).width+8, llx, lly, {boxOff:{x:-8,y:24}}),
       ];
@@ -2003,7 +2003,10 @@ function v8Draw() {
       const [kx,ky]=toC(Qk,Pk,W,H,xRl,yRl);
       const col=i===0?EC.red:EC.accent2;
       dot(ctx,kx,ky,5,col,'#fff');
-      kinkInfo.push({id:'kink'+i, color:col, label:`P=$${Pk.toFixed(0)}`, ax:kx, ay:ky});
+      // i=0 is Consumer 1's choke (top-left of the steep segment): push RIGHT into
+      // the open upper area. i=1 is the kink where Consumer 2 enters (mid-tangle):
+      // push LEFT toward the open gap between the two demand lines.
+      kinkInfo.push({id:'kink'+i, color:col, label:`P=$${Pk.toFixed(0)}`, ax:kx, ay:ky, boxOff:(i===0?{x:54,y:2}:{x:-56,y:0})});
     }
   });
 
@@ -2021,7 +2024,7 @@ function v8Draw() {
     ...kinkInfo,
     {id:'D1', color:EC.red, label:'D₁', lw:24, ax:c1ax, ay:c1ay, boxOff:{x:22,y:-16}},
     {id:'D2', color:EC.accent2, label:'D₂', lw:24, ax:c2ax, ay:c2ay, boxOff:{x:22,y:-16}},
-    {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my, boxOff:{x:38,y:-16}},
+    {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my, boxOff:{x:72,y:2}},
   ];
   ctx.font='bold 10px DM Sans,sans-serif';
   labelSpec.forEach(s=>{ if(s.lw===undefined) s.lw = ctx.measureText(s.label).width+10; });

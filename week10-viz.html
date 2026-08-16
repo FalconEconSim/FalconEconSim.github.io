@@ -546,7 +546,10 @@ function v103Draw() {
   pts.forEach(function (pt) { svg.append('circle').attr('cx', scX(pt[0])).attr('cy', scY(pt[1])).attr('r', 2.6).attr('fill', EC.primary); });
   d3Seg(svg, scX, scY, n, 0, n, Pof(n), EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(n), scY(Pof(n)), EC.indicator);
-  d3Halo(svg, scX(n), scY(Pof(n)) - 12, '$' + Pof(n).toFixed(1), { color: EC.indicator, size: 10 });
+  // Price label offset to the side of its dot (which sits on the P(n) curve),
+  // flipping to the right near the left edge so it never clips.
+  var pnLeft = scX(n) < D3PAD.left + 60;
+  d3Halo(svg, scX(n) + (pnLeft ? 8 : -8), scY(Pof(n)) - 16, '$' + Pof(n).toFixed(1), { color: EC.indicator, size: 10, anchor: pnLeft ? 'start' : 'end' });
   var q = 120 / (n + 1), Q = 120 * n / (n + 1), P = Pof(n);
   var verdict = n === 1 ? 'One firm is the pure monopoly: Q = 60 at P = $60, the least competitive outcome.'
     : n === 2 ? 'Two firms is the Cournot duopoly: Q = 80 at P = $40, between monopoly and competition.'
@@ -663,7 +666,9 @@ function v105Draw() {
   var prof = myProfit(p);
   d3Seg(svg, scX, scY, p, 0, p, prof, EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(p), scY(prof), EC.indicator);
-  d3Halo(svg, scX(p), scY(prof) - 12, '$' + prof.toFixed(0), { color: EC.indicator, size: 10 });
+  // Value label up-and-left of its dot so the rising profit curve doesn't run
+  // through it (the dot sits on the curve; straight-up still grazed it).
+  d3Halo(svg, scX(p) - 8, scY(prof) - 18, '$' + prof.toFixed(0), { color: EC.indicator, size: 10, anchor: 'end' });
   var share = p > pr ? '0% (priced out)' : p === pr ? '50% (split)' : '100% (undercut)';
   var verdict = p > pr ? 'Priced above the rival, you sell nothing: buyers all go to the cheaper seller.'
     : p === pr ? 'Matching the rival splits the market 50/50.'
