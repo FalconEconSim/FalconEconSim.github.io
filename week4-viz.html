@@ -1105,7 +1105,9 @@ function v2Init() {
     const xHi = Math.max(110, Math.ceil(a*1.12/10)*10);
     const yHi = Math.max(55, Math.ceil(Pmax*1.12/5)*5);
     const [ux,uy]=toC(a/2, Pmax/2, v2W, v2H, [0,xHi], [0,yHi]);
-    v2Nodes = [ d3LblNode('unitElastic', 'var(--ink-faint)', 'unit elastic midpoint', 118, ux, uy) ];
+    // Push the label off the demand line (the anchor sits on it) into the open
+    // area up and to the right, with a leader back to the midpoint marker.
+    v2Nodes = [ d3LblNode('unitElastic', 'var(--ink-faint)', 'unit elastic midpoint', 118, ux, uy, {boxOff:{x:34,y:-36}}) ];
     v2Sim = d3LabelSim(v2Nodes);
     v2Lbl = d3LabelLayer(v2Svg, v2Nodes, ()=>v2Sim);
     v2Sim.on('tick', ()=>d3LabelTick(v2Nodes, v2Lbl.gs, v2Lbl.conns, v2W, v2H, ML, MR, MT, MB));
