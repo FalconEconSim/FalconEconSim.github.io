@@ -622,7 +622,7 @@ function d3LabelLayer(svg, nodes, simRef) {
     .attr('fill', 'white').attr('stroke', d=>d.color).attr('stroke-width', 0.8).attr('opacity', 0.95);
   gs.append('text').attr('x', d=>d.lw/2).attr('y', D3_LABEL_H-4)
     .attr('text-anchor', 'middle').attr('fill', d=>d.color)
-    .attr('font-size', 9).attr('font-weight', 600)
+    .attr('font-size', 12).attr('font-weight', 600)
     .text(d=>d.label);
   return { conns, gs };
 }
@@ -759,7 +759,7 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   ctx.stroke();
 
   ctx.fillStyle = '#8b95a5';
-  ctx.font = '9px DM Sans, sans-serif';
+  ctx.font = '12px DM Sans, sans-serif';
   ctx.textAlign = 'center';
 
   // x ticks
@@ -783,7 +783,7 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   }
 
   // axis labels
-  ctx.fillStyle = '#666'; ctx.font = '10px DM Sans, sans-serif';
+  ctx.fillStyle = '#666'; ctx.font = '13px DM Sans, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(xLabel || 'Q', W/2, H - 4);
   ctx.save();
@@ -1309,7 +1309,7 @@ function v4Draw() {
     const y=midY-halfH*i/4;
     ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(W-MR,y); ctx.stroke();
     if(i%2===0){
-      ctx.fillStyle='#bbb'; ctx.font='10px DM Mono,monospace'; ctx.textAlign='right';
+      ctx.fillStyle='#bbb'; ctx.font='13px DM Mono,monospace'; ctx.textAlign='right';
       ctx.fillText((i*25>0?'+':'')+i*25+'%',ML-4,y+4);
     }
   }
@@ -1323,7 +1323,7 @@ function v4Draw() {
   // P bar (left)
   ctx.fillStyle = pChange>=0 ? 'rgba(231,76,60,0.8)' : 'rgba(39,174,96,0.8)';
   ctx.fillRect(cx-barW*1.6, pChange>=0 ? midY-pH : midY, barW, pH);
-  ctx.fillStyle='#333'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#333'; ctx.font='bold 14px DM Sans,sans-serif'; ctx.textAlign='center';
   ctx.fillText('%ΔP', cx-barW*1.1, chartBot+14);
 
   // TR bar (right)
@@ -1339,13 +1339,13 @@ function v4Draw() {
   // elasticity badge — indented right of the y-axis so it clears the "+100%"
   // tick label in the top-left corner, and with a wider line gap so the two
   // lines read as a clean stacked badge.
-  ctx.fillStyle=eColor(ind.e); ctx.font='bold 13px DM Mono,monospace'; ctx.textAlign='left';
+  ctx.fillStyle=eColor(ind.e); ctx.font='bold 16px DM Mono,monospace'; ctx.textAlign='left';
   ctx.fillText(`e = ${ind.e}`, ML+46, MT+14);
-  ctx.fillStyle='#555'; ctx.font='11px DM Sans,sans-serif';
+  ctx.fillStyle='#555'; ctx.font='14px DM Sans,sans-serif';
   ctx.fillText(ind.name, ML+46, MT+31);
 
   // bar value labels -- D3 SVG force labels (draggable, anchored to bar tops)
-  ctx.font='bold 11px DM Sans,sans-serif';
+  ctx.font='bold 14px DM Sans,sans-serif';
   const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
   const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
   const pValLblY = pChange>=0 ? midY-pH-8 : midY+pH+14;
@@ -1406,7 +1406,7 @@ function v4Init() {
     const tH=Math.min(Math.abs(trChange)/100*halfH, halfH);
     const pValLblY = pChange>=0 ? midY-pH-8 : midY+pH+14;
     const tValLblY = trChange>=0 ? midY-tH-8 : midY+tH+14;
-    v4ctx.font='bold 11px DM Sans,sans-serif';
+    v4ctx.font='bold 14px DM Sans,sans-serif';
     const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
     const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
     v4Nodes = [
@@ -1662,7 +1662,7 @@ function v7Init() {
   if (v7Svg) {
     const [,pyn]=toC(0, v7.Pnorm, v7W, v7H, xR7, yR7);
     const normTxt='normal $'+v7.Pnorm;
-    v7ctx.font='10px DM Sans,sans-serif';
+    v7ctx.font='13px DM Sans,sans-serif';
     v7Nodes = [ d3LblNode('normal', '#9aa3b0', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn) ];
     v7Sim = d3LabelSim(v7Nodes);
     v7Lbl = d3LabelLayer(v7Svg, v7Nodes, ()=>v7Sim);
@@ -1720,7 +1720,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
-  ctx.fillStyle='#bbb'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#bbb'; ctx.font='12px DM Sans,sans-serif'; ctx.textAlign='center';
   ctx.fillText('Q',W-MR2,H-MB2+3);
   ctx.textAlign='right'; ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
 
@@ -1736,7 +1736,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
     const [,cy]=toXY(0,choke);
     ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML2-4,cy); ctx.lineTo(ML2,cy); ctx.stroke();
-    ctx.fillStyle='#8b95a5'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+    ctx.fillStyle='#8b95a5'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='right';
     ctx.fillText(`Choke $${choke.toFixed(0)}`,ML2-5,cy+3);
   }
 
@@ -1745,7 +1745,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   const midQ=a-b*midP;
   const [mlx,mly]=toXY(midQ,midP);
   const formula=b===1?`Q = ${a} − P`:`Q = ${a} − ${b}P`;
-  ctx.font='bold 8px DM Sans,sans-serif';
+  ctx.font='bold 10px DM Sans,sans-serif';
   const fW=ctx.measureText(formula).width;
   {
     const ov = v8aGetOverlay(canvasId, W, H);
@@ -1773,7 +1773,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   ctx.setLineDash([]);
 
   // P label on y-axis (skip if too close to choke label)
-  ctx.fillStyle=color; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle=color; ctx.font='bold 12px DM Sans,sans-serif'; ctx.textAlign='right';
   if (P>0.5 && Math.abs(P-choke)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
 
   // Q label on x-axis
@@ -1803,7 +1803,7 @@ function v8aMarketDraw(P) {
   ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
-  ctx.fillStyle='#bbb'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#bbb'; ctx.font='12px DM Sans,sans-serif'; ctx.textAlign='center';
   ctx.fillText('Q',W-MR2,H-MB2+3); ctx.textAlign='right';
   ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
 
@@ -1831,7 +1831,7 @@ function v8aMarketDraw(P) {
   const [,cy30]=toXY(0,30);
   ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2-4,cy30); ctx.lineTo(ML2,cy30); ctx.stroke();
-  ctx.fillStyle='#8b95a5'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle='#8b95a5'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='right';
   ctx.fillText('Choke $30',ML2-2,cy30+3);  // slightly right
 
   // P=12: Consumer 2's choke price (kink)
@@ -1844,7 +1844,7 @@ function v8aMarketDraw(P) {
   dot(ctx,kx,ky,5,'var(--ink-faint)','#fff');
 
   // D3 SVG draggable force labels: kink label + formula segments
-  ctx.font='bold 8px DM Sans,sans-serif';
+  ctx.font='bold 10px DM Sans,sans-serif';
   const [ulx,uly]=toXY(v8aQmarket(23),23);
   const [llx,lly]=toXY(v8aQmarket(6),6);
   const kinkTxt='kink P=$12', upTxt='Qm = 30 − P', loTxt='Qm = 54 − 3P';
@@ -1877,7 +1877,7 @@ function v8aMarketDraw(P) {
   if(Qm>0) { ctx.beginPath(); ctx.moveTo(qx,py); ctx.lineTo(qx,H-MB2); ctx.stroke(); }
   ctx.setLineDash([]);
 
-  ctx.fillStyle='#1f6fb2'; ctx.font='bold 9px DM Sans,sans-serif';
+  ctx.fillStyle='#1f6fb2'; ctx.font='bold 12px DM Sans,sans-serif';
   ctx.textAlign='right'; if(P>0.5 && Math.abs(P-30)>3 && Math.abs(P-12)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
   ctx.textAlign='center';
   if(Qm>0.5) ctx.fillText(`Q=${Qm.toFixed(0)}`,qx,H-MB2+12);
@@ -1994,7 +1994,7 @@ function v8Draw() {
   ctx.stroke();
 
   // Kink dots
-  ctx.font='9px DM Sans,sans-serif';
+  ctx.font='12px DM Sans,sans-serif';
   const kinkInfo=[];
   [c1,c2].forEach((c,i)=>{
     const Pk=c.a/c.b;
@@ -2026,7 +2026,7 @@ function v8Draw() {
     {id:'D2', color:EC.accent2, label:'D₂', lw:24, ax:c2ax, ay:c2ay, boxOff:{x:22,y:-16}},
     {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my, boxOff:{x:72,y:2}},
   ];
-  ctx.font='bold 10px DM Sans,sans-serif';
+  ctx.font='bold 13px DM Sans,sans-serif';
   labelSpec.forEach(s=>{ if(s.lw===undefined) s.lw = ctx.measureText(s.label).width+10; });
 
   const sig = labelSpec.map(s=>s.id).join(',');

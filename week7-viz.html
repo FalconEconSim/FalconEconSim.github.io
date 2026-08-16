@@ -580,7 +580,7 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
   ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox,y2);ctx.stroke();
   // Tick text
   const nx=4;
-  ctx.font="9px 'DM Sans',sans-serif";ctx.fillStyle='#8b95a5';
+  ctx.font="12px 'DM Sans',sans-serif";ctx.fillStyle='#8b95a5';
   for(let i=0;i<=nx;i++){
     const xv=xR[0]+i*(xR[1]-xR[0])/nx;
     const[cx]=toC7(xv,yR[0],W,H,xR,yR);
@@ -593,7 +593,7 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
     ctx.textAlign='right';ctx.fillText(yv.toFixed(0),ox-4,cy+3);
   }
   // Axis labels
-  ctx.fillStyle='#666';ctx.font="10px 'DM Sans',sans-serif";
+  ctx.fillStyle='#666';ctx.font="13px 'DM Sans',sans-serif";
   if(xLabel){ctx.textAlign='center';ctx.fillText(xLabel,ox+(x1-ox)/2,H-4);}
   if(yLabel){ctx.save();ctx.translate(12,y2+(oy-y2)/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(yLabel,0,0);ctx.restore();}
   ctx.restore();
@@ -677,7 +677,7 @@ function v71Draw(){
     const gLblQ71=Math.min(8, trQmaxBase*0.55);
     const[glx71,gly71]=toC7(gLblQ71,V71_P_BASE*gLblQ71,W,HA,xR,yRA);
     ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1f6fb2';
-    ctxA.font='9px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
+    ctxA.font='12px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
     ctxA.fillText('TR', glx71+4, gly71-4);
     ctxA.restore();
   }
@@ -700,7 +700,7 @@ function v71Draw(){
   ctxA.moveTo(tx0,ty0);ctxA.lineTo(tx1,ty1);
   ctxA.strokeStyle='#1f6fb2';ctxA.lineWidth=3;ctxA.stroke();
 
-  ctxA.font='bold 10px DM Sans,sans-serif';
+  ctxA.font='bold 13px DM Sans,sans-serif';
   let qTC=8; while(qTC>0.6 && v71TC(qTC,tfc,ms)>yRA[1]*0.9) qTC-=0.05;
   const[tcLx,tcLy]=toC7(qTC,v71TC(qTC,tfc,ms),W,HA,xR,yRA);
   const trLblQ = Math.min(8, trQmax*0.85);
@@ -732,7 +732,7 @@ function v71Draw(){
   if(tc_val<=yRA[1])dot7(ctxA,curX,toC7(q,tc_val,W,HA,xR,yRA)[1],5,EC.red);
   if(tr_val<=yRA[1])dot7(ctxA,curX,toC7(q,tr_val,W,HA,xR,yRA)[1],5,'#1f6fb2');
   ctxA.fillStyle=mc>P?EC.red:EC.green;
-  ctxA.font='bold 10px DM Sans,sans-serif';ctxA.textAlign='left';
+  ctxA.font='bold 13px DM Sans,sans-serif';ctxA.textAlign='left';
   const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
   // Fixed top-left status, not curX+6: tracking the point ran this annotation
   // into the "TC" curve label near the top-right intersection.
@@ -853,12 +853,12 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
-  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xLabel);
-  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yLabel);
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
+  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
 }
 function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
@@ -866,12 +866,12 @@ function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H2-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
-  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(xLabel);
-  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text(yLabel);
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
+  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
 }
 function d3TickClamp2(nodes,gs,conns){
   nodes.forEach(d=>{
@@ -900,7 +900,7 @@ function d3AddLabels(svg,nodes,sim){
   gs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
     .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
   gs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
-    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
     .text(d=>d.label);
   return {conns,gs};
 }
@@ -984,16 +984,16 @@ function v72DrawUpdate(P){
   if(v72showMistakes&&P>4&&P>savcQ){
     v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,vy)).attr('width',x1-x0).attr('height',Math.abs(py-vy))
       .attr('fill','rgba(255,200,0,0.15)').attr('stroke','rgba(255,180,0,0.5)').attr('stroke-dasharray','3,3').attr('stroke-width',1);
-    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',Math.min(py,vy)+14).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(230,130,0,0.85)').text('Wrong: uses SAVC');
+    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',Math.min(py,vy)+14).attr('text-anchor','middle').attr('font-size',12).attr('fill','rgba(230,130,0,0.85)').text('Wrong: uses SAVC');
   }
   if(P>sacQ&&sacQ<yMax){
     v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,sy)).attr('width',x1-x0).attr('height',Math.abs(py-sy))
       .attr('fill','rgba(39,174,96,0.25)').attr('stroke',EC.green).attr('stroke-width',2);
-    v72rectG.append('text').attr('x',x1-4).attr('y',(py+sy)/2+4).attr('text-anchor','end').attr('font-size',9).attr('font-weight',600).attr('fill',EC.green).text('Height = P*−SAC');
+    v72rectG.append('text').attr('x',x1-4).attr('y',(py+sy)/2+4).attr('text-anchor','end').attr('font-size',12).attr('font-weight',600).attr('fill',EC.green).text('Height = P*−SAC');
   } else if(P<sacQ&&sacQ<yMax){
     v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,sy)).attr('width',x1-x0).attr('height',Math.abs(py-sy))
       .attr('fill','rgba(231,76,60,0.2)').attr('stroke',EC.red).attr('stroke-width',2);
-    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',(py+sy)/2+4).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill',EC.red).text('Loss');
+    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',(py+sy)/2+4).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).attr('fill',EC.red).text('Loss');
   }
   v72rectG.append('circle').attr('cx',x1).attr('cy',py).attr('r',6).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
   // SAC(q*) dot only when SAC is inside the y-domain (at very low prices q* is
@@ -1138,7 +1138,7 @@ function v73Draw_OLD_UNUSED(P){
     ctx.strokeStyle=col;ctx.lineWidth=3;ctx.stroke();
     const ql=fn===SMC7?7:fn===SAC7?6:5;
     const[ax,ay]=toC7(ql,fn(ql),W,H,xR,yR);
-    ctx.font='bold 9px DM Sans,sans-serif';
+    ctx.font='bold 12px DM Sans,sans-serif';
     const tw=ctx.measureText(lbl).width;
     curveLbls73.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize:9,bold:true,w:tw+6,h:12});
   }
@@ -1198,7 +1198,7 @@ function v75InitSvg(){
   // q label at the foot of the drop-line (sits just above the axis, to the right
   // of the drop-line: drawn IN the tick row it collided with tick numbers
   // whenever q passed an integer during the sweep)
-  v75qLabel=v75svgA.append('text').attr('text-anchor','start').attr('font-size',9).attr('font-weight',700).attr('fill',EC.indicator).attr('opacity',0);
+  v75qLabel=v75svgA.append('text').attr('text-anchor','start').attr('font-size',12).attr('font-weight',700).attr('fill',EC.indicator).attr('opacity',0);
   // Intersection dot where the price line crosses MC -- the (q, P) pairing made visible
   v75isectDot=v75svgA.append('circle').attr('r',5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5).attr('opacity',0);
   // Labels for left panel
@@ -1390,7 +1390,7 @@ function v77Draw(){
     const ox=D3PAD.left+i*(pw+10);
     const oy=D3PAD.top, bot=D3H-D3PAD.bottom;
     g.append('rect').attr('x',ox).attr('y',oy).attr('width',pw).attr('height',bot-oy).attr('fill','none').attr('stroke','#e0e4f0').attr('stroke-width',1);
-    g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',9).attr('font-weight',600).attr('fill','var(--ink-faint)').text(label);
+    g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).attr('fill','var(--ink-faint)').text(label);
     // Demand (down-slope, blue) and Supply (up-slope, red)
     g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1f6fb2').attr('stroke-width',2);
     g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke',EC.red).attr('stroke-width',2);
@@ -1401,16 +1401,16 @@ function v77Draw(){
       const st=data.shiftType||'demand_right';
       if(st==='demand_right'){
         g.append('line').attr('x1',ox+10+sh).attr('y1',oy+20).attr('x2',ox+pw-10+sh).attr('y2',bot-10).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10+sh+8).attr('y',oy+30).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('D →');
+        g.append('text').attr('x',ox+10+sh+8).attr('y',oy+30).attr('text-anchor','start').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text('D →');
       } else if(st==='demand_left'){
         g.append('line').attr('x1',ox+10-sh).attr('y1',oy+20).attr('x2',ox+pw-10-sh).attr('y2',bot-10).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10-sh-2).attr('y',oy+30).attr('text-anchor','end').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('← D');
+        g.append('text').attr('x',ox+10-sh-2).attr('y',oy+30).attr('text-anchor','end').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text('← D');
       } else if(st==='supply_left'){
         g.append('line').attr('x1',ox+10-sh).attr('y1',bot-10).attr('x2',ox+pw-10-sh).attr('y2',oy+20).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10-sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('← S');
+        g.append('text').attr('x',ox+10-sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text('← S');
       } else if(st==='supply_right'){
         g.append('line').attr('x1',ox+10+sh).attr('y1',bot-10).attr('x2',ox+pw-10+sh).attr('y2',oy+20).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10+sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',8).attr('font-weight',600).attr('fill',EC.green).text('S →');
+        g.append('text').attr('x',ox+10+sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text('S →');
       }
     }
   });
@@ -1427,7 +1427,7 @@ function v77Draw(){
   arrowOrder.forEach((ax,k)=>{
     if(v77step>=k+1){
       g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5);
-      g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',9).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
+      g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',12).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
     }
   });
 }
@@ -1590,7 +1590,7 @@ function v79Draw(){
     const gQ79=200, gP79=4+2*gQ79/v79Start.n;
     if(gP79>=4&&gP79<=14){
       gM.append('text').attr('x',scXM(gQ79)+4).attr('y',scYM(gP79)-4)
-        .attr('font-size',9).attr('font-weight',600).attr('fill',EC.red).attr('opacity',0.55).text('S');
+        .attr('font-size',12).attr('font-weight',600).attr('fill',EC.red).attr('opacity',0.55).text('S');
     }
   }
 

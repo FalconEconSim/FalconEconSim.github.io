@@ -550,7 +550,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
   // Tick text
-  ctx.fillStyle='#8b95a5'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#8b95a5'; ctx.font='12px DM Sans,sans-serif'; ctx.textAlign='center';
   const xs=(xR[1]-xR[0])/4;
   for(let i=0;i<=4;i++){
     const v=xR[0]+i*xs; const [px]=toC(v,yR[0],W,H,xR,yR);
@@ -561,7 +561,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
     ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-5,py+3);
   }
   // Axis labels
-  ctx.fillStyle="#4a5566"; ctx.font="13px DM Sans,sans-serif";
+  ctx.fillStyle="#4a5566"; ctx.font="16px DM Sans,sans-serif";
   ctx.textAlign='center'; ctx.fillText(xLbl||'q',W/2,H-4);
   ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'$',0,0); ctx.restore(); ctx.restore();
@@ -645,13 +645,13 @@ function v61Draw(Lcur,Kcur){
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
   });
   const [icLx,icLy]=toC(0,Math.min(TCopt/v,AXIS_MAX),W,H,xR,yR);
-  ctx.font='9px DM Sans,sans-serif';
+  ctx.font='13px DM Sans,sans-serif';
   // Anchor label to a point on the isoquant near L=AXIS_MAX*0.7
   const iqL=AXIS_MAX*0.7, iqK=q*q/iqL;
   const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
   const lbls61=[
-    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width*1.45+8,h:12,text:'Isoquant Q = '+q,color:'#1f6fb2',fontSize:9,bold:false},
-    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width*1.45+8,h:12,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
+    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width*1.45+8,h:18,text:'Isoquant Q = '+q,color:'#1f6fb2',fontSize:9,bold:false},
+    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width*1.45+8,h:18,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
   ];
 
   // NOTE: the isoquant/isocost labels (lbls61) are NOT resolved/drawn here.
@@ -667,10 +667,10 @@ function v61Draw(Lcur,Kcur){
     ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font='9px DM Sans,sans-serif';
+    ctx.font='13px DM Sans,sans-serif';
     const optLbls=[
-      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:12,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
-      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:18,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:18,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
     ];
     // Resolve isoquant + isocost + optimal labels together; keep above the x-axis.
     const all61=lbls61.concat(optLbls);
@@ -695,14 +695,15 @@ function v61Draw(Lcur,Kcur){
   const atOpt=onIsoquant&&atTangency;
   const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
   dot6(ctx,bx,by,8,atOpt?'#2f5c3a':EC.red,'#fff');
-  ctx.font='9px DM Sans,sans-serif';
+  ctx.font='13px DM Sans,sans-serif';
   const dotCol=atOpt?'#2f5c3a':EC.red;
-  const dragLbls=[
-    {ax:bx,ay:by,x:bx+12,y:by-10,w:ctx.measureText('(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')').width*1.45+8,h:12,text:'(L='+Lcur.toFixed(1)+', K='+Kcur.toFixed(1)+')',color:dotCol,fontSize:9,bold:false},
-  ];
-  if(atOpt) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:12,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false});
-  else if(!onIsoquant) dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('Not on isoquant yet').width*1.45+8,h:12,text:'Not on isoquant yet',color:'#8b95a5',fontSize:9,bold:false});
-  else dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText('MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2)).width*1.45+8,h:12,text:'MRTS='+MRTS.toFixed(2)+' vs w/v='+wv.toFixed(2),color:'#8b95a5',fontSize:9,bold:false});
+  // One short verdict at the dot. The (L,K) coordinate and the MRTS/(w/v)
+  // numbers both live in the readout panel below, so repeating them here only
+  // stacked two long labels on one anchor and made them overlap.
+  const dragLbls=[];
+  const verdict = atOpt ? 'Cost minimised!' : (!onIsoquant ? 'Not on isoquant yet' : 'MRTS ≠ w/v yet');
+  const verdictCol = atOpt ? '#2f5c3a' : '#8b95a5';
+  dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText(verdict).width*1.45+8,h:18,text:verdict,color:verdictCol,fontSize:9,bold:false});
   // Resolve isoquant + isocost + drag labels together; keep above the x-axis.
   const all61=lbls61.concat(dragLbls);
   resolveLabels(all61,linePts61,120,6,{x0:8,y0:8,x1:W-12,y1:H-52});
@@ -993,20 +994,20 @@ window._initFig65=function initFig65(){
 
   // min ATC dot
   const minDot=svg.append('circle').attr('r',5).attr('fill','#1f6fb2').attr('stroke','white').attr('stroke-width',1.5);
-  const atcGhostLbl=svg.append('text').attr('font-size',9).attr('font-weight',600)
+  const atcGhostLbl=svg.append('text').attr('font-size',12).attr('font-weight',600)
     .attr('fill','#1f6fb2').attr('opacity',0).attr('text-anchor','start').text('ATC');
 
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Quantity (q)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('Quantity (q)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('Cost per unit ($)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('Cost per unit ($)');
 
   // Force label nodes: SMC, ATC, AVC, AFC, minATC, (LRAC)
   function makePts(fn,qlo,qhi,step){
@@ -1053,7 +1054,7 @@ window._initFig65=function initFig65(){
     f65LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
       .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
     f65LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
-      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
 
     f65Sim=d3.forceSimulation(f65Nodes)
@@ -1223,14 +1224,14 @@ window._initFig66=function initFig66(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(7).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('q (output)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('q (output)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('AC ($)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('AC ($)');
 
   let f66Sim, f66Nodes, f66LblGs, f66Conn;
 
@@ -1317,7 +1318,7 @@ window._initFig66=function initFig66(){
     f66LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
       .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
     f66LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
-      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
 
     f66Sim=d3.forceSimulation(f66Nodes)
@@ -1409,21 +1410,21 @@ window._initFig68=function initFig68(){
   const arrow=svg.append('line').attr('stroke','#2f5c3a').attr('stroke-width',1.5).attr('opacity',0.65);
   // Old optimum X marker
   const oldOptTxt=svg.append('text').attr('text-anchor','middle').attr('dominant-baseline','middle')
-    .attr('fill',EC.red).attr('font-size',18).attr('font-weight',700).text('✕');
+    .attr('fill',EC.red).attr('font-size',22).attr('font-weight',700).text('✕');
   // New optimum dot
   const newOptDot=svg.append('circle').attr('r',8).attr('fill','#2f5c3a').attr('stroke','white').attr('stroke-width',2);
 
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('L (labor)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('L (labor)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).text('K (capital)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('K (capital)');
 
   let f68Nodes, f68Sim, f68LblGs, f68Conn;
 
@@ -1465,7 +1466,7 @@ window._initFig68=function initFig68(){
     f68LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
       .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
     f68LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
-      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+      .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
 
     f68Sim=d3.forceSimulation(f68Nodes)
@@ -1714,14 +1715,14 @@ window._initFig610=function initFig610(){
   const qstarDot=svg.append('circle').attr('r',7).attr('fill','#1f6fb2').attr('stroke','white').attr('stroke-width',1.5);
 
   // Shading labels
-  const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',10).attr('font-family',"'DM Sans',sans-serif");
-  const diseconLbl=svg.append('text').attr('fill','rgba(231,76,60,0.85)').attr('font-size',10).attr('font-family',"'DM Sans',sans-serif");
+  const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',13).attr('font-family',"'DM Sans',sans-serif");
+  const diseconLbl=svg.append('text').attr('fill','rgba(231,76,60,0.85)').attr('font-size',13).attr('font-family',"'DM Sans',sans-serif");
 
   // Axes groups (rebuilt per draw via scales)
   const xAxisG=svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`);
   const yAxisG=svg.append('g').attr('transform',`translate(${PAD.left},0)`);
-  const xLblEl=svg.append('text').attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).attr('y',H-6).text('q (output)');
-  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('text-anchor','middle').attr('fill','#666').attr('font-size',10).attr('y',14).text('$ per unit');
+  const xLblEl=svg.append('text').attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).attr('y',H-6).text('q (output)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).attr('y',14).text('$ per unit');
 
   // Force label group
   const labelG=svg.append('g');
@@ -1756,9 +1757,9 @@ window._initFig610=function initFig610(){
 
     // Axes
     xAxisG.call(d3.axisBottom(scX).ticks(10).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
     yAxisG.call(d3.axisLeft(scY).ticks(6).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',9).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
     xLblEl.attr('x',PAD.left+(W-PAD.left-PAD.right)/2);
 
     // AC curve points
@@ -1857,7 +1858,7 @@ window._initFig610=function initFig610(){
       f610LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
         .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
       f610LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
-        .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',9).attr('font-weight',600)
+        .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
         .text(d=>d.label);
 
       f610Sim=d3.forceSimulation(f610Nodes)
