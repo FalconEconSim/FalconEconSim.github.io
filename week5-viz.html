@@ -1597,7 +1597,8 @@ function v53EnsureOverlay(W,H) {
     d5Node('q','#1f6fb2','Q',40,W/2,H/2),
     d5Node('lk','#2f5c3a','L,K',70,W/2,H/2),
     d5Node('mrts',EC.red,'MRTS',80,W/2,H/2),
-    d5Node('repl',EC.red,'replaces',110,W/2,H/2),
+    // The plain-English "1 worker replaces X machines" restatement lives in the
+    // readout panel; three labels on one point was crowding, so it's dropped here.
   ];
   const sim=d5MakeSim(nodes);
   const {gs,conns}=d5AddLabels(svg,nodes,sim);
@@ -1666,18 +1667,15 @@ function v53Draw() {
     const [dlx,dly]=toC(14,Q0*Q0/14,W,H,xR,yR);
     const lkTxt=`L = ${L.toFixed(1)},  K = ${K.toFixed(1)}`;
     const mTxt=`MRTS = K/L = ${mrts.toFixed(2)}`;
-    const replTxt=`1 worker replaces ${mrts.toFixed(2)} machines`;
     const qTxt=`Q = ${Q0}`;
     const nQ=ovl.nodes.find(n=>n.id==='q'), nLK=ovl.nodes.find(n=>n.id==='lk'),
-          nMRTS=ovl.nodes.find(n=>n.id==='mrts'), nRepl=ovl.nodes.find(n=>n.id==='repl');
+          nMRTS=ovl.nodes.find(n=>n.id==='mrts');
     nQ.label=qTxt; nQ.lw=Math.max(36,qTxt.length*6.4+10);
     nLK.label=lkTxt; nLK.lw=Math.max(60,lkTxt.length*6.4+10);
     nMRTS.label=mTxt; nMRTS.lw=Math.max(60,mTxt.length*6.4+10);
-    nRepl.label=replTxt; nRepl.lw=Math.max(80,replTxt.length*6.0+10);
     d5MoveAnchor(nQ,dlx,dly);
     d5MoveAnchor(nLK,cx,cy);
     d5MoveAnchor(nMRTS,cx,cy);
-    d5MoveAnchor(nRepl,cx,cy);
     ovl.gs.select('rect').attr('width',d=>d5w(d));
     ovl.gs.select('text').attr('x',d=>d5w(d)/2).text(d=>d.label);
   }
@@ -1783,8 +1781,9 @@ function v54Draw() {
   const ovlA=v54EnsureOverlayA(W,H54);
   if(ovlA){
     const mplLblTxt='MPL falls as L rises (K='+Kfix+' fixed)';
-    const mplMidL=6;
-    const [mplax,mpaly]=toC(mplMidL,b*v54CD(Kfix,mplMidL,a,b)/mplMidL,W,H54,xRa,yRa);
+    // Anchor in the open space above the curve's flat tail, not on the curve
+    // itself (where the line ran straight through the caption).
+    const [mplax,mpaly]=toC(7.5,1.5,W,H54,xRa,yRa);
     const nCap=ovlA.nodes[0];
     nCap.label=mplLblTxt; nCap.lw=Math.max(60,mplLblTxt.length*5.2+10);
     d5MoveAnchor(nCap,mplax,mpaly);
