@@ -50,9 +50,12 @@ Q_MAX  = 8.0
 P_MAX  = 14.0
 
 
-def label_with_bg(text, font_size, color, bg_opacity=0.6):
+def label_with_bg(text, font_size, color, bg_opacity=1.0):
     """A text label with a small dark backing so lines that later sweep
-    behind it (the animated price line) stay from visually merging with it."""
+    behind it (the animated price line) stay from visually merging with it.
+    Opaque, not translucent: at 0.6 the SMC/SAVC curves showed straight
+    through the price label. On the black scene the box is invisible except
+    that it cleanly erases the curve segment directly behind the text."""
     txt = Text(text, font_size=font_size, color=color, weight=BOLD)
     bg = Rectangle(width=txt.width + 0.14, height=txt.height + 0.10,
                     fill_color=BLACK, fill_opacity=bg_opacity, stroke_width=0)

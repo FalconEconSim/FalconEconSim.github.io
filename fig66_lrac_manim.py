@@ -137,7 +137,11 @@ class LRACEnvelope(Scene):
             zigzag = 0.30 if ki % 2 == 0 else 0.62
             lbl = Text(f"K={K}", font_size=13, color=col)
             lbl.move_to(axes.c2p(q_opt, ac_opt) + UP * zigzag)
-            lbl_bg = BackgroundRectangle(lbl, color=BLACK, fill_opacity=0.75, buff=0.045)
+            # Fully opaque backing: the floor band is so crowded that a 0.75
+            # patch let the crossing curves show straight through the glyphs.
+            # On the black scene an opaque black box is invisible except that it
+            # cleanly erases the curve segment behind the label text.
+            lbl_bg = BackgroundRectangle(lbl, color=BLACK, fill_opacity=1.0, buff=0.06)
 
             run = 0.55 if ki < 2 else 0.32
             self.play(Create(curve, run_time=run), FadeIn(dot, scale=0.5),
