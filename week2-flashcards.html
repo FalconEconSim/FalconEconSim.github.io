@@ -105,6 +105,10 @@
       font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink);
       flex: 1; display: flex; align-items: center;
     }
+    /* The question is injected as mixed text + MathJax; the inner wrapper keeps
+       it a single flex item so inline math flows in the sentence instead of
+       collapsing the surrounding words into a narrow column. */
+    .fc-q > * { width: 100%; min-width: 0; }
     .fc-q-sm {
       font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500;
       padding-bottom: 0.65rem;
@@ -486,7 +490,7 @@ function cardZoneHTML(c, ts) {
     <div class="fc-scene">
       <div class="fc-card-inner" id="fc-inner" style="position:relative">
         <div class="fc-front" id="fc-front-el">
-          <div class="fc-q">${c.q}</div>
+          <div class="fc-q"><div>${c.q}</div></div>
           <div class="fc-hint">tap to flip &nbsp;<span class="fc-kbd">space</span></div>
         </div>
         <div class="fc-back">

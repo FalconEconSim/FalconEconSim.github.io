@@ -53,6 +53,9 @@
     .fc-front { cursor: pointer; transition: box-shadow 0.2s, transform 0.15s; }
     .fc-front:hover { box-shadow: 0 4px 20px rgba(0,119,200,0.10); transform: translateY(-1px); }
     .fc-q { font-family: var(--font-display); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink); flex: 1; display: flex; align-items: center; }
+    /* keep the injected question a single flex item so inline MathJax
+       flows in the sentence instead of collapsing the words to a column */
+    .fc-q > * { width: 100%; min-width: 0; }
     .fc-q-sm { font-size: var(--t-body-sm); color: var(--ink-soft); font-weight: 500; padding-bottom: 0.65rem; border-bottom: 1px solid var(--rule2); margin-bottom: 0.65rem; line-height: 1.45; }
     .fc-a { font-size: var(--t-body); line-height: 1.75; color: var(--ink); white-space: pre-line; flex: 1; }
     .fc-hint { font-size: var(--t-caption); color: var(--ink-faint); text-align: center; margin-top: 0.75rem; letter-spacing: 0.03em; }
@@ -342,7 +345,7 @@ function render(){
           <div class="fc-q-sm">
             <span class="fc-badge" style="background:${bg};color:${col}">${c.type}</span>
           </div>
-          <div class="fc-q">${c.q}</div>
+          <div class="fc-q"><div>${c.q}</div></div>
           <div class="fc-hint">Click to reveal answer &nbsp;<span class="fc-kbd">Space</span></div>
         </div>
         <div class="fc-back">
