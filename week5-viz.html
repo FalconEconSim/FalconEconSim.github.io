@@ -552,20 +552,13 @@ function drawForceLabel(ctx, lbl) {
   }
   ctx.font='bold 9px DM Sans,sans-serif';
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  const tw=ctx.measureText(text).width;
-  const th=15;
-  const rx=3, rw=tw+8, rh=th, rx0=x-rw/2, ry0=y-rh/2;
-  ctx.fillStyle='white';
-  ctx.strokeStyle=color; ctx.lineWidth=0.8;
-  ctx.beginPath();
-  if(ctx.roundRect){ ctx.roundRect(rx0,ry0,rw,rh,rx); }
-  else {
-    ctx.moveTo(rx0+rx,ry0); ctx.lineTo(rx0+rw-rx,ry0); ctx.arcTo(rx0+rw,ry0,rx0+rw,ry0+rx,rx);
-    ctx.lineTo(rx0+rw,ry0+rh-rx); ctx.arcTo(rx0+rw,ry0+rh,rx0+rw-rx,ry0+rh,rx);
-    ctx.lineTo(rx0+rx,ry0+rh); ctx.arcTo(rx0,ry0+rh,rx0,ry0+rh-rx,rx);
-    ctx.lineTo(rx0,ry0+rx); ctx.arcTo(rx0,ry0,rx0+rx,ry0,rx); ctx.closePath();
-  }
-  ctx.fill(); ctx.stroke();
+  // DESIGN 4.3 (matches weeks 6-7): haloed text, NOT a solid white box. The white
+  // stroke painted under the glyphs keeps the label legible over curves/fills
+  // without a container that chops the line behind it (the old box was the same
+  // "solid label sitting on a curve" defect flagged in Fig 4.1).
+  ctx.lineJoin='round';
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=3.5;
+  ctx.strokeText(text,x,y);
   ctx.fillStyle=color;
   ctx.fillText(text,x,y);
   ctx.restore();
