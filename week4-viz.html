@@ -1737,7 +1737,9 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
     ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML2-4,cy); ctx.lineTo(ML2,cy); ctx.stroke();
     ctx.fillStyle='#8b95a5'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='right';
-    ctx.fillText(`Choke $${choke.toFixed(0)}`,ML2-5,cy+3);
+    // Just the dollar value: on a single consumer's demand the y-intercept IS
+    // the choke price, so the full word overflowed the narrow left margin.
+    ctx.fillText(`$${choke.toFixed(0)}`,ML2-5,cy+3);
   }
 
   // Demand formula label -- D3 SVG draggable force label
@@ -1831,14 +1833,17 @@ function v8aMarketDraw(P) {
   const [,cy30]=toXY(0,30);
   ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2-4,cy30); ctx.lineTo(ML2,cy30); ctx.stroke();
+  // Compact dollar-value ticks in the margin; the "Qm=30-P" and "kink P=$12"
+  // force-labels already carry the choke/kink naming, so the full words here
+  // were both redundant and overflowing the narrow left margin.
   ctx.fillStyle='#8b95a5'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='right';
-  ctx.fillText('Choke $30',ML2-2,cy30+3);  // slightly right
+  ctx.fillText('$30',ML2-4,cy30+3);
 
   // P=12: Consumer 2's choke price (kink)
   const [kx,ky]=toXY(v8aQmarket(12),12);
   const [,cy12]=toXY(0,12);
   ctx.beginPath(); ctx.moveTo(ML2-4,cy12); ctx.lineTo(ML2,cy12); ctx.stroke();
-  ctx.fillText('Kink $12',ML2-2,cy12+3);  // slightly right
+  ctx.fillText('$12',ML2-4,cy12+3);
 
   // Kink dot
   dot(ctx,kx,ky,5,'var(--ink-faint)','#fff');
