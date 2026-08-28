@@ -1070,7 +1070,7 @@ function v83MakePanel(wrapId){
   const yS=d3.scaleLinear().domain([0,22]).range([H-PAD.bottom,PAD.top]);
   svg.append('g').selectAll('line').data(yS.ticks(5)).enter().append('line')
     .attr('x1',PAD.left).attr('x2',W-PAD.right).attr('y1',d=>yS(d)).attr('y2',d=>yS(d)).attr('stroke','#f2f2f2');
-  svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`)
+  const xAxisG = svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`)
     .call(d3.axisBottom(xS).ticks(4).tickSize(4))
     .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('text').attr('fill','var(--ink-faint)').attr('font-size',10);});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`)
@@ -1084,7 +1084,15 @@ function v83MakePanel(wrapId){
   svg.append('text').attr('x',xS(1.2)).attr('y',yS(18.8)-4).attr('font-size',13).attr('fill',STROKE_CS).attr('font-weight',600).text('D');
   svg.append('text').attr('x',xS(15.5)).attr('y',yS(19.5)-4).attr('font-size',13).attr('fill',EC.green).attr('font-weight',600).text('S');
   const dyn=svg.append('g');
-  return {svg,xS,yS,dyn,W,H,PAD};
+  return {svg,xS,yS,dyn,W,H,PAD,xAxisG};
+}
+/* The dynamic Qˢ/Qᵈ markers are drawn on the same row as the static x-axis
+   ticks, so a marker landing beside a tick read as one number ("14 15").
+   Hide the static label only where a marker covers it. */
+function v83SyncTicks(p, markX){
+  if(!p.xAxisG) return;
+  p.xAxisG.selectAll('.tick text')
+    .attr('opacity', d => markX.some(mx => Math.abs(p.xS(d) - mx) < 14) ? 0 : 1);
 }
 function v83DrawAutarky(p){
   const {xS,yS,dyn}=p;
@@ -1098,6 +1106,7 @@ function v83DrawAutarky(p){
   d3HaloLabel(dyn,xS(2.5),yS(7.5),'PS = $32',{color:EC.gold,size:11,weight:700});
   d3HaloLabel(dyn,p.PAD.left+4,yS(12)-3,'P*=$12',{anchor:'start',color:EC.slate,size:8,weight:600});
   d3HaloLabel(dyn,xS(8),yS(0)+14,'Q*=8',{color:EC.slate,size:8,weight:600});
+  v83SyncTicks(p,[]);
 }
 function v83DrawFreeTrade(p,Pw){
   const {xS,yS,dyn}=p;
@@ -1112,12 +1121,13 @@ function v83DrawFreeTrade(p,Pw){
     dyn.append('text').attr('x',xS(q)).attr('y',yS(0)+15).attr('text-anchor','middle').attr('font-size',10).attr('fill',EC.indicator).text(q.toFixed(0));
     dyn.append('text').attr('x',xS(q)).attr('y',yS(0)+24).attr('text-anchor','middle').attr('font-size',9).attr('fill',EC.indicator).text(lbl);
   });
+  v83SyncTicks(p,[xS(QS),xS(QD)]);
   // imports bracket at Pw level
   if(QD-QS>0.5){
     dyn.append('line').attr('x1',xS(QS)).attr('x2',xS(QD)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke',EC.indicator).attr('stroke-width',3).attr('opacity',0.5);
     d3HaloLabel(dyn,xS((QS+QD)/2),yS(Pw)-7,'Imports='+(QD-QS).toFixed(0),{color:EC.indicator,size:8,weight:600});
   }
-  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)-3,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:8,weight:600});
+  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)-3,'Pw=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:8,weight:600});
   const CS_new=0.5*(20-Pw)*(20-Pw), PS_new=0.5*QS*QS;
   d3HaloLabel(dyn,xS(QD*0.3),yS((20+Pw)/2),'CS=$'+CS_new.toFixed(0),{color:'#1f6fb2',size:10,weight:700});
   if(QS>1.5) d3HaloLabel(dyn,xS(QS)+6,yS((4+Pw)/2),'PS=$'+PS_new.toFixed(0),{anchor:'start',color:EC.gold,size:10,weight:700});
@@ -1125,6 +1135,7 @@ function v83DrawFreeTrade(p,Pw){
 function v83DrawTariff(p,Pw,t){
   const {xS,yS,dyn}=p;
   dyn.selectAll('*').remove();
+  v83SyncTicks(p,[]);
   const Peff=Math.min(Pw+t,11.9), tAct=Peff-Pw;
   const QS_free=Math.max(0,Pw-4), QD_free=20-Pw;
   const QS_eff=Math.max(0,Peff-4), QD_eff=20-Peff;
@@ -1135,7 +1146,7 @@ function v83DrawTariff(p,Pw,t){
   dyn.append('polygon').attr('points',`${xS(0)},${yS(4)} ${xS(QS_eff)},${yS(Peff)} ${xS(0)},${yS(Peff)}`).attr('fill',FILL_PS);
   // world price reference
   dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_free+1)).attr('y1',yS(Pw)).attr('y2',yS(Pw)).attr('stroke',EC.indicator).attr('stroke-width',1.4).attr('stroke-dasharray','4,3').attr('opacity',0.6);
-  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)+9,'Pᵥᵥ=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:7,weight:600});
+  d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)+9,'Pw=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:7,weight:600});
   if(tAct>0.1){
     // tariff-inclusive price line
     dyn.append('line').attr('x1',xS(0)).attr('x2',xS(QD_eff+0.5)).attr('y1',yS(Peff)).attr('y2',yS(Peff)).attr('stroke',EC.red).attr('stroke-width',1.8).attr('stroke-dasharray','5,3');

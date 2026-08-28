@@ -473,8 +473,13 @@ function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
     }
     for (const lm of items) {
       const hw=lm.w/2+8, hh=lm.h/2+8;
+      /* (x,y) is the box's TOP-LEFT here, so the avoid-test has to run from the
+         box's centre. Comparing the corner against half-extents shifted the
+         whole avoidance zone half a label to the left, which let the right-hand
+         part of a label settle straight on top of a curve or a dot. */
+      const lcx=lm.x+lm.w/2, lcy=lm.y+lm.h/2;
       for (const [lx,ly] of linePts) {
-        const dx=lm.x-lx, dy=lm.y-ly;
+        const dx=lcx-lx, dy=lcy-ly;
         if (Math.abs(dx)<hw && Math.abs(dy)<hh) {
           lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
           lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
@@ -505,9 +510,16 @@ function drawForceLabel(ctx, lbl) {
   // Connector only when the label has actually been pushed clear of its anchor;
   // below that a leader line is noise.
   if (Math.hypot(cx - ax, cy - ay) > 26) {
+    /* Stop the leader at the label's border, not its centre: run it to the
+       centre and the dashed line is drawn straight through the text, since the
+       halo masks the glyphs but not the gaps between them. */
+    const ldx = ax - cx, ldy = ay - cy;
+    const lhw = bw / 2 + 2, lhh = bh / 2 + 2;
+    const lt = Math.min(Math.abs(ldx) > 1e-6 ? lhw / Math.abs(ldx) : Infinity,
+                        Math.abs(ldy) > 1e-6 ? lhh / Math.abs(ldy) : Infinity, 1);
     ctx.globalAlpha = 0.55;
     ctx.strokeStyle = color; ctx.lineWidth = 0.9; ctx.setLineDash([4, 3]);
-    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx + ldx * lt, cy + ldy * lt); ctx.stroke();
     ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   ctx.font = '500 ' + FS + 'px "DM Sans",system-ui,sans-serif';
@@ -701,7 +713,12 @@ function v61Draw(Lcur,Kcur){
   // numbers both live in the readout panel below, so repeating them here only
   // stacked two long labels on one anchor and made them overlap.
   const dragLbls=[];
-  const verdict = atOpt ? 'Cost minimised!' : (!onIsoquant ? 'Not on isoquant yet' : 'MRTS ≠ w/v yet');
+  /* The draggable dot is an obstacle too. Seed a small ring, not a single
+     point, so a long label is pushed clear of the marker instead of settling
+     with the dot sitting in the middle of its text. */
+  for (let a6 = 0; a6 < Math.PI*2; a6 += Math.PI/4) linePts61.push([bx + Math.cos(a6)*9, by + Math.sin(a6)*9]);
+  linePts61.push([bx,by]);
+  const verdict = atOpt ? 'Cost minimised!' : (!onIsoquant ? 'Not on isoquant yet' : 'MRTS ≠ w/v');
   const verdictCol = atOpt ? '#2f5c3a' : '#8b95a5';
   dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText(verdict).width*1.45+8,h:18,text:verdict,color:verdictCol,fontSize:9,bold:false});
   // Resolve isoquant + isocost + drag labels together; keep above the x-axis.

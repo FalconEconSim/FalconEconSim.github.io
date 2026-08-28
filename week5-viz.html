@@ -545,12 +545,19 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
 function drawForceLabel(ctx, lbl) {
   const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false} = lbl;
   ctx.save();
+  ctx.font='bold 12px DM Sans,sans-serif';
   if (Math.hypot(x-ax,y-ay)>5) {
+    /* Stop the leader at the label's border, not its centre: run it to the
+       centre and the dashed line is drawn straight through the text, since the
+       halo masks the glyphs but not the gaps between them. */
+    const lbw = lbl.w || ctx.measureText(text).width*1.45+10, lbh = lbl.h || 17;
+    const ldx = ax - x, ldy = ay - y;
+    const lt = Math.min(Math.abs(ldx) > 1e-6 ? (lbw/2+2)/Math.abs(ldx) : Infinity,
+                        Math.abs(ldy) > 1e-6 ? (lbh/2+2)/Math.abs(ldy) : Infinity, 1);
     ctx.strokeStyle=color; ctx.lineWidth=0.9; ctx.setLineDash([4,3]); ctx.globalAlpha=0.55;
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x,y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(x+ldx*lt, y+ldy*lt); ctx.stroke();
     ctx.setLineDash([]); ctx.globalAlpha=1;
   }
-  ctx.font='bold 12px DM Sans,sans-serif';
   ctx.textAlign='center'; ctx.textBaseline='middle';
   // DESIGN 4.3 (matches weeks 6-7): haloed text, NOT a solid white box. The white
   // stroke painted under the glyphs keeps the label legible over curves/fills
@@ -945,8 +952,20 @@ function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
   // The connector runs from the anchor to the label's centre, and is hidden
   // when the label is close enough that a leader line would be noise.
   conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor)
-       .attr('x2',d=>d.x).attr('y2',d=>d.y)
+       .attr('x2',d=>d5EdgePt(d)[0]).attr('y2',d=>d5EdgePt(d)[1])
        .attr('opacity',d=>Math.hypot(d.x-d.fx_anchor,d.y-d.fy_anchor) > 26 ? 0.55 : 0);
+}
+
+/* Clip the leader to the label's border. Ending it at the label's centre drew
+   the dashed connector through the text; the glyph halo only masks the letters
+   themselves, not the gaps between them. */
+function d5EdgePt(d){
+  const hw = d5w(d)/2 + 2, hh = D5_LABEL_H/2 + 2;
+  const dx = d.fx_anchor - d.x, dy = d.fy_anchor - d.y;
+  if (!dx && !dy) return [d.x, d.y];
+  const t = Math.min(Math.abs(dx) > 1e-6 ? hw/Math.abs(dx) : Infinity,
+                     Math.abs(dy) > 1e-6 ? hh/Math.abs(dy) : Infinity, 1);
+  return [d.x + dx*t, d.y + dy*t];
 }
 
 // Reposition a node's anchor (e.g. after a slider/drag changes curve position)
@@ -1229,7 +1248,7 @@ function v51Draw() {
     const gL=9.3, [glx,gly]=toC(gL,tpBase(gL),W,HA,xR,yRA);
     ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1f6fb2';
     ctxA.font='12px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
-    ctxA.fillText('TP', glx+3, gly);
+    ctxA.fillText('TP', glx+3, gly-6);
     ctxA.restore();
   }
 
@@ -1248,7 +1267,7 @@ function v51Draw() {
     const idL = L > 5 ? 3.2 : 8.5, [ilx,ily]=toC(idL,tp(idL),W,HA,xR,yRA);
     ctxA.save(); ctxA.fillStyle='#1f6fb2'; ctxA.font='bold 13px DM Sans,sans-serif';
     ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
-    ctxA.fillText(kShifted?'TP′':'TP', ilx+3, ily);
+    ctxA.fillText(kShifted?'TP′':'TP', ilx+3, ily-6);
     ctxA.restore();
   }
 

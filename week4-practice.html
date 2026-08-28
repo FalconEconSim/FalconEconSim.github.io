@@ -404,6 +404,9 @@ function genTR() {
   const ed = -b * P / Q;
   const edRound = parseFloat(ed.toFixed(3));
   const newP = Math.round(P * 1.1);
+  /* newP is rounded to an integer to keep Q and TR whole, so the actual rise is
+     not 10% (it ranges 8-20% across the generated cases). State the real one. */
+  const pctRise = Math.round((newP - P) / P * 100);
   const newQ = Math.max(0, a - b * newP);
   const TR0 = P * Q;
   const TR1 = newP * newQ;
@@ -413,7 +416,7 @@ function genTR() {
   return {
     type: 'tr',
     given: `Q = ${a} − ${b}P, current price P = ${P}`,
-    question: `The demand function is \\(Q = ${a} - ${b}P\\) and the current price is \\(P = ${P}\\). The firm considers raising price by 10% (to \\(P' = ${newP}\\)). What happens to total revenue? By how much does TR change? (Enter the change in TR, negative if it falls.)`,
+    question: `The demand function is \\(Q = ${a} - ${b}P\\) and the current price is \\(P = ${P}\\). The firm considers raising price by ${pctRise}% (to \\(P' = ${newP}\\)). What happens to total revenue? By how much does TR change? (Enter the change in TR, negative if it falls.)`,
     answerKey: trDiff,
     tolerance: 0.5,
     inputLabel: 'ΔTR =',

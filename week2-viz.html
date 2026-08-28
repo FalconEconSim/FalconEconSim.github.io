@@ -1284,13 +1284,19 @@ function redrawIC2DAtU0(type, alpha, u0) {
     var _lox = labelOffX, _loy = labelOffY, _ancY = anchorYPos;
     function updateLblPos() {
       if (!gl || !lbl.parentNode) return;
+      /* Set the text first: the width is needed to keep the label in bounds. */
+      lbl.textContent = mrsTextFn();
       var gx = gl.X() + _lox, gy = gl.Y() + _loy;
       var coords = new JXG.Coords(JXG.COORDS_BY_USER, [gx, gy], icBoard2D);
       var px = coords.scrCoords[1], py = coords.scrCoords[2];
+      /* The glider is draggable and these labels are long ('MRS = 0 (horizontal
+         arm)'), so without a clamp the label runs off the right edge of the
+         board. When it would overflow, flip it to the left of the glider. */
+      var cw = container.clientWidth, lw = lbl.offsetWidth;
+      if (lw) px = Math.max(4, Math.min(px, cw - lw - 4));
       lbl.style.left = px + 'px';
       lbl.style.top  = py + 'px';
       lbl.style.transform = (_ancY === 'top') ? 'translateY(0)' : 'translateY(-100%)';
-      lbl.textContent = mrsTextFn();
     }
 
     gl.on('drag', updateLblPos);
@@ -3367,7 +3373,7 @@ function buildCornerExplorer() {
                   <input type="range" id="ic-u0" min="0.3" max="5.0" step="any" value="2.0" aria-label="Utility level U0" />
                 </div>
                 <div class="ctrl" id="alpha-ctrl">
-                  <label><span class="tip-icon" data-tip="α is the exponent on X in U = XᵅY¹⁻ᵅ. Higher α means stronger preference for X. The consumer always spends fraction α of income on X regardless of prices; watch the IC tilt as you adjust.">i</span> α (Cobb-Douglas spending share on X)<span class="ctrl-val" id="alpha-val">0.5</span></label>
+                  <label><span class="tip-icon" data-tip="α is the exponent on X in U = XᵅY¹⁻ᵅ. Higher α means stronger preference for X. The consumer always spends fraction α of income on X regardless of prices; watch the IC tilt as you adjust.">i</span> α (Cobb-Douglas spending share on X)&nbsp;<span class="ctrl-val" id="alpha-val">0.5</span></label>
                   <input type="range" id="ic-alpha" min="0.1" max="0.9" step="any" value="0.5" aria-label="Alpha: Cobb-Douglas spending share on X" />
                 </div>
               </div>
@@ -3474,11 +3480,11 @@ function buildCornerExplorer() {
                 <input type="range" id="bc-I" min="40" max="200" step="any" value="100" title="Income I: higher I shifts both intercepts outward proportionally. Slope -Px/Py is unchanged." />
               </div>
               <div class="ctrl">
-                <label><span class="tip-icon" data-tip="Px only moves the X-intercept (I/Px). The Y-intercept I/Py is fixed because neither I nor Py changed. The line pivots inward around the Y-intercept and the slope steepens; X becomes relatively more expensive.">i</span> Price of X  <em>P<sub>X</sub></em><span class="ctrl-val" id="bc-Px-val">5</span></label>
+                <label><span class="tip-icon" data-tip="Px only moves the X-intercept (I/Px). The Y-intercept I/Py is fixed because neither I nor Py changed. The line pivots inward around the Y-intercept and the slope steepens; X becomes relatively more expensive.">i</span> Price of X  <em>P<sub>X</sub></em>&nbsp;<span class="ctrl-val" id="bc-Px-val">5</span></label>
                 <input type="range" id="bc-Px" min="1" max="20" step="any" value="5" title="Price of X (Px): higher Px moves the X-intercept inward. The line pivots around the Y-intercept. Slope steepens." />
               </div>
               <div class="ctrl">
-                <label><span class="tip-icon" data-tip="Py only moves the Y-intercept (I/Py). The X-intercept I/Px is fixed because neither I nor Px changed. The line pivots inward around the X-intercept and the slope flattens; Y becomes relatively more expensive.">i</span> Price of Y  <em>P<sub>Y</sub></em><span class="ctrl-val" id="bc-Py-val">4</span></label>
+                <label><span class="tip-icon" data-tip="Py only moves the Y-intercept (I/Py). The X-intercept I/Px is fixed because neither I nor Px changed. The line pivots inward around the X-intercept and the slope flattens; Y becomes relatively more expensive.">i</span> Price of Y  <em>P<sub>Y</sub></em>&nbsp;<span class="ctrl-val" id="bc-Py-val">4</span></label>
                 <input type="range" id="bc-Py" min="1" max="20" step="any" value="4" title="Price of Y (Py): higher Py moves the Y-intercept inward. The line pivots around the X-intercept. Slope flattens." />
               </div>
             </div>
@@ -3699,15 +3705,15 @@ function buildCornerExplorer() {
                 <input type="range" id="opt-I" min="20" max="200" step="any" value="80" title="Income I: shifts the budget line out. Optimal bundle moves along the income expansion path." />
               </div>
               <div class="ctrl">
-                <label><span class="tip-icon" data-tip="Higher Px pivots the budget line inward around the Y-intercept. X* = aI/Px falls, but the spending share a on X stays constant, the consumer buys less X but spends the same fraction of income on it.">i</span> <em>P<sub>X</sub></em><span class="ctrl-val" id="opt-Px-val">5</span></label>
+                <label><span class="tip-icon" data-tip="Higher Px pivots the budget line inward around the Y-intercept. X* = aI/Px falls, but the spending share a on X stays constant, the consumer buys less X but spends the same fraction of income on it.">i</span> <em>P<sub>X</sub></em>&nbsp;<span class="ctrl-val" id="opt-Px-val">5</span></label>
                 <input type="range" id="opt-Px" min="1" max="20" step="any" value="5" title="Price of X: X becomes more expensive. For Cobb-Douglas, X* falls but spending share stays constant." />
               </div>
               <div class="ctrl">
-                <label><span class="tip-icon" data-tip="Higher Py pivots the budget line inward around the X-intercept. Y* = (1-a)I/Py falls, but the spending share 1-a on Y stays constant. This is the Cobb-Douglas fixed-share property.">i</span> <em>P<sub>Y</sub></em><span class="ctrl-val" id="opt-Py-val">4</span></label>
+                <label><span class="tip-icon" data-tip="Higher Py pivots the budget line inward around the X-intercept. Y* = (1-a)I/Py falls, but the spending share 1-a on Y stays constant. This is the Cobb-Douglas fixed-share property.">i</span> <em>P<sub>Y</sub></em>&nbsp;<span class="ctrl-val" id="opt-Py-val">4</span></label>
                 <input type="range" id="opt-Py" min="1" max="20" step="any" value="4" title="Price of Y: Y becomes more expensive. For Cobb-Douglas, Y* falls but spending share stays constant." />
               </div>
               <div class="ctrl" id="opt-alpha-ctrl">
-                <label><span class="tip-icon" data-tip="a is the spending share on X. X* = aI/Px and Y* = (1-a)I/Py. Higher a shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
+                <label><span class="tip-icon" data-tip="a is the spending share on X. X* = aI/Px and Y* = (1-a)I/Py. Higher a shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)&nbsp;<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
                 <input type="range" id="opt-alpha" min="0.1" max="0.9" step="any" value="0.5" title="Alpha a: spending share on X = a. Higher a ? more X at the optimum. ICs become steeper." />
               </div>
             </div>
@@ -3795,19 +3801,19 @@ function buildCornerExplorer() {
           </div>
           <div class="viz-controls">
             <div class="ctrl">
-              <label><span class="tip-icon" data-tip="Sets where the orange Bundle starts. At the optimum MUx/Px = MUy/Py. If the bundle is off the budget line drag it up to the green line first, then slide along it until the ratios equalize.">i</span> Starting dollars on X<span class="ctrl-val" id="bfb-spendX-val">50</span></label>
+              <label><span class="tip-icon" data-tip="Sets where the orange Bundle starts. At the optimum MUx/Px = MUy/Py. If the bundle is off the budget line drag it up to the green line first, then slide along it until the ratios equalize.">i</span> Starting dollars on X&nbsp;<span class="ctrl-val" id="bfb-spendX-val">50</span></label>
               <input type="range" id="bfb-spendX" min="5" max="95" step="any" value="50" aria-label="Starting dollars allocated to good X" />
             </div>
             <div class="ctrl">
-              <label><span class="tip-icon" data-tip="Higher Px reduces MUx/Px, making Y relatively more attractive per dollar. If MUx/Px falls below MUy/Py the action panel will tell you to shift spending toward Y.">i</span> \(P_X\)<span class="ctrl-val" id="bfb-Px-val">5</span></label>
+              <label><span class="tip-icon" data-tip="Higher Px reduces MUx/Px, making Y relatively more attractive per dollar. If MUx/Px falls below MUy/Py the action panel will tell you to shift spending toward Y.">i</span> \(P_X\)&nbsp;<span class="ctrl-val" id="bfb-Px-val">5</span></label>
               <input type="range" id="bfb-Px" min="1" max="15" step="any" value="5" title="Px: higher price of X reduces MU(X)/Px, so MU(Y)/Py > MU(X)/Px → shift spending to Y." />
             </div>
             <div class="ctrl">
-              <label><span class="tip-icon" data-tip="Higher Py reduces MUy/Py, making X relatively more attractive per dollar. If MUy/Py falls below MUx/Px the action panel will tell you to shift spending toward X.">i</span> \(P_Y\)<span class="ctrl-val" id="bfb-Py-val">4</span></label>
+              <label><span class="tip-icon" data-tip="Higher Py reduces MUy/Py, making X relatively more attractive per dollar. If MUy/Py falls below MUx/Px the action panel will tell you to shift spending toward X.">i</span> \(P_Y\)&nbsp;<span class="ctrl-val" id="bfb-Py-val">4</span></label>
               <input type="range" id="bfb-Py" min="1" max="15" step="any" value="4" title="Py: higher price of Y reduces MU(Y)/Py, so MU(X)/Px > MU(Y)/Py → shift spending to X." />
             </div>
             <div class="ctrl">
-              <label><span class="tip-icon" data-tip="Higher α strengthens preference for X: MUx = α · Y/X rises at any bundle. This shifts the optimum to the right and raises MUx/Px relative to MUy/Py until a new equilibrium is reached.">i</span> \(\alpha\)<span class="ctrl-val" id="bfb-alpha-val">0.50</span></label>
+              <label><span class="tip-icon" data-tip="Higher α strengthens preference for X: MUx = α · Y/X rises at any bundle. This shifts the optimum to the right and raises MUx/Px relative to MUy/Py until a new equilibrium is reached.">i</span> \(\alpha\)&nbsp;<span class="ctrl-val" id="bfb-alpha-val">0.50</span></label>
               <input type="range" id="bfb-alpha" min="0.1" max="0.9" step="any" value="0.5" title="a: Cobb-Douglas exponent on X. Higher a = stronger preference for X = higher MU(X) at any bundle." />
             </div>
           </div>

@@ -54,7 +54,7 @@
       .append('line').attr('x1', D3PAD.left).attr('x2', D3W - D3PAD.right)
       .attr('y1', function (d) { return scY(d); }).attr('y2', function (d) { return scY(d); })
       .attr('stroke', '#f0f0f0').attr('stroke-width', 1);
-    svg.append('g').attr('transform', 'translate(0,' + (D3H - D3PAD.bottom) + ')')
+    svg.append('g').attr('class', 'd3-xaxis').attr('transform', 'translate(0,' + (D3H - D3PAD.bottom) + ')')
       .call(d3.axisBottom(scX).ticks(8).tickSize(4).tickFormat(fmtX || null))
       .call(function (gg) { gg.select('.domain').attr('stroke', '#ccc'); gg.selectAll('.tick line').attr('stroke', '#ccc'); gg.selectAll('.tick text').attr('fill', '#8a8a8a').attr('font-size', 10); });
     svg.append('g').attr('transform', 'translate(' + D3PAD.left + ',0)')
@@ -62,6 +62,27 @@
       .call(function (gg) { gg.select('.domain').attr('stroke', '#ccc'); gg.selectAll('.tick line').attr('stroke', '#ccc'); gg.selectAll('.tick text').attr('fill', '#8a8a8a').attr('font-size', 10); });
     if (xLabel) svg.append('text').attr('x', D3PAD.left + (D3W - D3PAD.left - D3PAD.right) / 2).attr('y', D3H - 8).attr('text-anchor', 'middle').attr('fill', '#666').attr('font-size', 11).text(xLabel);
     if (yLabel) svg.append('text').attr('transform', 'rotate(-90)').attr('x', -(D3PAD.top + (D3H - D3PAD.top - D3PAD.bottom) / 2)).attr('y', 15).attr('text-anchor', 'middle').attr('fill', '#666').attr('font-size', 11).text(yLabel);
+  };
+
+  /* Figures that mark a moving quantity on the x-axis (e.g. 'Firm A: 68') draw
+     that label on the same row as the static ticks. When the marker lands on or
+     beside a tick the two run together and read as one value. Hide just the
+     ticks the markers cover. Pass the marker positions in SCREEN x. */
+  window.d3HideTicksNear = function (svg, labels, pad) {
+    pad = pad == null ? 8 : pad;   /* also clears merely-adjacent ticks */
+    var boxes = (labels || []).map(function (l) {
+      var n = l && l.node ? l.node() : l;
+      return n && n.getBoundingClientRect ? n.getBoundingClientRect() : null;
+    }).filter(Boolean);
+    if (!boxes.length) return;
+    svg.select('g.d3-xaxis').selectAll('.tick text').each(function () {
+      var r = this.getBoundingClientRect();
+      var hit = boxes.some(function (b) {
+        return r.left < b.right + pad && r.right > b.left - pad &&
+               r.top < b.bottom + pad && r.bottom > b.top - pad;
+      });
+      d3.select(this).attr('opacity', hit ? 0 : 1);
+    });
   };
 
   // A straight segment between two data points.
