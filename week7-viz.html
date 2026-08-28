@@ -572,6 +572,25 @@ function toC7(x,y,W,H,xR,yR){
   return[ML+(x-xR[0])/(xR[1]-xR[0])*pw, MT+(yR[1]-y)/(yR[1]-yR[0])*ph];
 }
 
+/* Round tick values (1/2/5 x 10^k). The previous code cut each range into four
+   equal steps, so axes read as arbitrary numbers and the printed label did not
+   match the tick's true position (a tick at 1.375 was painted "1.4", and on the
+   y-axis toFixed(0) turned 11.25 into "11"). */
+function niceTicks(lo, hi, target) {
+  const span = hi - lo;
+  if (!(span > 0)) return [lo];
+  const raw = span / (target || 4);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const nrm = raw / mag;
+  const step = (nrm < 1.5 ? 1 : nrm < 3 ? 2 : nrm < 7 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) {
+    out.push(Math.abs(v) < step * 1e-6 ? 0 : +v.toFixed(6));
+  }
+  return out;
+}
+function fmtTick(v) { return Number.isInteger(v) ? String(v) : String(+v.toFixed(2)); }
+
 function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
   if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
   const[ox,oy]=toC7(xR[0],yR[0],W,H,xR,yR);
@@ -580,8 +599,7 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
   // Horizontal grid lines at 4 ticks
   const ny=4;
   ctx.save();
-  for(let i=0;i<=ny;i++){
-    const yv=yR[0]+i*(yR[1]-yR[0])/ny;
+  for(const yv of niceTicks(yR[0],yR[1],ny)){
     const[,cy]=toC7(xR[0],yv,W,H,xR,yR);
     ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(ox,cy);ctx.lineTo(x1,cy);ctx.stroke();
@@ -593,16 +611,14 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
   // Tick text
   const nx=4;
   ctx.font="12px 'DM Sans',sans-serif";ctx.fillStyle='#8b95a5';
-  for(let i=0;i<=nx;i++){
-    const xv=xR[0]+i*(xR[1]-xR[0])/nx;
+  for(const xv of niceTicks(xR[0],xR[1],5)){
     const[cx]=toC7(xv,yR[0],W,H,xR,yR);
     ctx.textAlign='center';
-    ctx.fillText(Math.round(xv*10)/10,cx,oy+13);
+    ctx.fillText(fmtTick(xv),cx,oy+13);
   }
-  for(let i=0;i<=ny;i++){
-    const yv=yR[0]+i*(yR[1]-yR[0])/ny;
+  for(const yv of niceTicks(yR[0],yR[1],ny)){
     const[,cy]=toC7(xR[0],yv,W,H,xR,yR);
-    ctx.textAlign='right';ctx.fillText(yv.toFixed(0),ox-4,cy+3);
+    ctx.textAlign='right';ctx.fillText(fmtTick(yv),ox-4,cy+3);
   }
   // Axis labels
   ctx.fillStyle='#666';ctx.font="13px 'DM Sans',sans-serif";

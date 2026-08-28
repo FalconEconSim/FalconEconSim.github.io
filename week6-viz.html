@@ -547,13 +547,32 @@ function toC(x,y,W,H,xR,yR){
   return [ML+(x-xR[0])/(xR[1]-xR[0])*pw, MT+(yR[1]-y)/(yR[1]-yR[0])*ph];
 }
 
+/* Round tick values (1/2/5 x 10^k). The previous code cut each range into four
+   equal steps, so axes read as arbitrary numbers and the printed label did not
+   match the tick's true position (a tick at 1.375 was painted "1.4", and on the
+   y-axis toFixed(0) turned 11.25 into "11"). */
+function niceTicks(lo, hi, target) {
+  const span = hi - lo;
+  if (!(span > 0)) return [lo];
+  const raw = span / (target || 4);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const nrm = raw / mag;
+  const step = (nrm < 1.5 ? 1 : nrm < 3 ? 2 : nrm < 7 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) {
+    out.push(Math.abs(v) < step * 1e-6 ? 0 : +v.toFixed(6));
+  }
+  return out;
+}
+function fmtTick(v) { return Number.isInteger(v) ? String(v) : String(+v.toFixed(2)); }
+
 function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
   if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
   ctx.save();
   // Grid lines at 4 y-ticks
-  const ys=(yR[1]-yR[0])/4;
-  for(let i=1;i<=4;i++){
-    const v=yR[0]+i*ys; const [,py]=toC(xR[0],v,W,H,xR,yR);
+  for(const v of niceTicks(yR[0],yR[1],4)){
+    if(v<=yR[0]) continue;
+    const [,py]=toC(xR[0],v,W,H,xR,yR);
     ctx.strokeStyle="rgba(28,36,51,0.07)"; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(W-MR,py); ctx.stroke();
   }
@@ -563,14 +582,13 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
   // Tick text
   ctx.fillStyle='#8b95a5'; ctx.font='12px DM Sans,sans-serif'; ctx.textAlign='center';
-  const xs=(xR[1]-xR[0])/4;
-  for(let i=0;i<=4;i++){
-    const v=xR[0]+i*xs; const [px]=toC(v,yR[0],W,H,xR,yR);
-    ctx.fillText(v%1===0?v:v.toFixed(1),px,H-MB+12);
+  for(const v of niceTicks(xR[0],xR[1],5)){
+    const [px]=toC(v,yR[0],W,H,xR,yR);
+    ctx.fillText(fmtTick(v),px,H-MB+12);
   }
-  for(let i=0;i<=4;i++){
-    const v=yR[0]+i*ys; const [,py]=toC(xR[0],v,W,H,xR,yR);
-    ctx.textAlign='right'; ctx.fillText(v%1===0?v:v.toFixed(1),ML-5,py+3);
+  for(const v of niceTicks(yR[0],yR[1],4)){
+    const [,py]=toC(xR[0],v,W,H,xR,yR);
+    ctx.textAlign='right'; ctx.fillText(fmtTick(v),ML-5,py+3);
   }
   // Axis labels
   ctx.fillStyle="#4a5566"; ctx.font="16px DM Sans,sans-serif";
