@@ -734,14 +734,32 @@ function eColor(ed) {
   return lerpColor('#1f6fb2', '#e6a817', e);
 }
 
+/* Round tick values (1/2/2.5/5 x 10^k). The old code cut the range into four
+   equal steps and printed Math.round(v), so a tick physically at 11.25 was
+   labelled "11": the number did not match its own position, and the values
+   read as arbitrary (0, 11, 23, 34, 45) next to the rest of the site. */
+function niceTicks(lo, hi, target) {
+  const span = hi - lo;
+  if (!(span > 0)) return [lo];
+  const raw = span / (target || 4);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const nrm = raw / mag;
+  const step = (nrm < 1.5 ? 1 : nrm < 3 ? 2 : nrm < 7 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) {
+    out.push(Math.abs(v) < step * 1e-6 ? 0 : +v.toFixed(6));
+  }
+  return out;
+}
+function fmtTick(v) { return Number.isInteger(v) ? String(v) : v.toFixed(1); }
+
 function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
   ctx.save();
   // horizontal grid lines
   ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
-  const yStepG = (yR[1] - yR[0]) / 4;
-  for (let i = 1; i <= 4; i++) {
-    const v = yR[0] + i * yStepG;
+  for (const v of niceTicks(yR[0], yR[1], 4)) {
+    if (v <= yR[0]) continue;
     const [, py] = toC(xR[0], v, W, H, xR, yR);
     ctx.beginPath(); ctx.moveTo(ML, py); ctx.lineTo(W - MR, py); ctx.stroke();
   }
@@ -763,21 +781,17 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   ctx.textAlign = 'center';
 
   // x ticks
-  const xStep = (xR[1] - xR[0]) / 4;
-  for (let i = 0; i <= 4; i++) {
-    const v = xR[0] + i * xStep;
+  for (const v of niceTicks(xR[0], xR[1], 5)) {
     const [px] = toC(v, yR[0], W, H, xR, yR);
-    ctx.fillText(Math.round(v), px, H - MB + 13);
+    ctx.fillText(fmtTick(v), px, H - MB + 13);
     ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(px, H-MB); ctx.lineTo(px, H-MB+4); ctx.stroke();
   }
   // y ticks
-  const yStep = (yR[1] - yR[0]) / 4;
-  for (let i = 0; i <= 4; i++) {
-    const v = yR[0] + i * yStep;
+  for (const v of niceTicks(yR[0], yR[1], 4)) {
     const [, py] = toC(xR[0], v, W, H, xR, yR);
     ctx.textAlign = 'right';
-    ctx.fillText(Math.round(v), ML - 5, py + 3);
+    ctx.fillText(fmtTick(v), ML - 5, py + 3);
     ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(ML, py); ctx.lineTo(ML-4, py); ctx.stroke();
   }

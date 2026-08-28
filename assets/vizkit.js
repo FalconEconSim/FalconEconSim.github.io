@@ -106,10 +106,24 @@
       .attr('font-weight', opts.weight != null ? opts.weight : 600)
       .attr('fill', opts.color || EC.slate).text(txt);
     var bb = t.node().getBBox(), px = 3, py = 1.5;
-    svg.insert('rect', function () { return t.node(); })
+    var bgRect = svg.insert('rect', function () { return t.node(); })
       .attr('x', bb.x - px).attr('y', bb.y - py)
       .attr('width', bb.width + 2 * px).attr('height', bb.height + 2 * py).attr('rx', 3)
       .attr('fill', '#fff').attr('fill-opacity', opts.bg != null ? opts.bg : 0.86);
+    /* getBBox can run before the webfont has loaded, in which case the backing
+       box is measured against the fallback face and comes out narrower than the
+       text that finally renders. The overhang then sits on bare curve (Fig
+       12.1's 'Peach reserve $2,000' had the E[WTP] line through its first
+       letter). Re-measure once the font is actually in. */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        try {
+          var b2 = t.node().getBBox();
+          bgRect.attr('x', b2.x - px).attr('y', b2.y - py)
+                .attr('width', b2.width + 2 * px).attr('height', b2.height + 2 * py);
+        } catch (e) {}
+      });
+    }
     return t;
   };
 

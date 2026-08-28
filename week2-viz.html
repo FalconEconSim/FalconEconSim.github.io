@@ -524,6 +524,10 @@ tr:hover td { background: #f9fafb; }
 td:first-child { font-weight: 500; color: var(--ink); }
 
 /* ─── RESPONSIVE ─── */
+/* Figure panels are laid out with INLINE grid-template-columns, which no
+   stylesheet rule can beat without !important. Below this width the chart
+   column collapsed: Figs 2.2/2.3 rendered 0x0 next to their 360px readout. */
+@media (max-width: 760px) { .fig-cols { grid-template-columns: 1fr !important; } }
 @media (max-width: 880px) {
   
   
@@ -769,8 +773,19 @@ function jxgLabelOverlay(containerId, board) {
       .text(function(d){ return d.label; });
     lblGs = gsEnter.merge(gsSel);
     /* keep box/text in sync for nodes that already existed (color/label/width may change) */
-    lblGs.select('rect').attr('width', function(d){ return d.lw; }).attr('stroke', function(d){ return d.color; });
-    lblGs.select('text').attr('x', function(d){ return d.lw/2; }).attr('fill', function(d){ return d.color; }).text(function(d){ return d.label; });
+    lblGs.select('rect').attr('stroke', function(d){ return d.color; });
+    lblGs.select('text').attr('fill', function(d){ return d.color; }).text(function(d){ return d.label; });
+    /* lw is a hand-guessed box width. Where it is narrower than the text, the
+       glyphs hang outside their own white box and land straight on the curve
+       (Fig 2.2's 'slope = -1.25' was struck through by the budget line).
+       Measure the rendered text and grow the box to fit it. */
+    lblGs.each(function(d){
+      var t = d3.select(this).select('text').node();
+      if (!t || !t.getComputedTextLength) return;
+      try { var need = t.getComputedTextLength() + 12; if (need > d.lw) d.lw = need; } catch (e) {}
+    });
+    lblGs.select('rect').attr('width', function(d){ return d.lw; });
+    lblGs.select('text').attr('x', function(d){ return d.lw/2; });
 
     sim.nodes(nodes);
     sim.alpha(0.7).restart();
@@ -3385,7 +3400,7 @@ function buildCornerExplorer() {
 
             <div style="border-top:1px solid var(--rule-strong);">
               <!-- Two canvases side by side -->
-              <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule-strong);">
+              <div class="fig-cols" style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule-strong);">
                 <div style="border-right:1px solid var(--rule-strong);">
                   <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);padding:0.5rem 0.8rem 0.2rem;">3D Utility Surface</div>
                   <div id="jxg-ic-3d" role="img" aria-label="3D utility surface showing indifference curves as contour slices" style="width:100%;aspect-ratio:1/1;"></div>
@@ -3489,7 +3504,7 @@ function buildCornerExplorer() {
               </div>
             </div>
             <div class="viz-note">The shaded triangle is the affordable set. Use the sliders to change income or prices and watch the intercepts move.</div>
-            <div class="viz-two-col" style="grid-template-columns:1fr 360px">
+            <div class="viz-two-col fig-cols" style="grid-template-columns:1fr 360px">
               <div class="viz-panel-left">
                 <div id="jxg-budget" role="img" aria-label="Interactive budget constraint graph showing affordable bundles of X and Y" style="width:100%;aspect-ratio:1/1;"></div>
               </div>
@@ -3597,7 +3612,7 @@ function buildCornerExplorer() {
               <input type="range" id="shift-mag" min="5" max="80" step="any" value="30" aria-label="Magnitude of income or price change as a percentage" />
             </div>
           </div>
-          <div class="viz-two-col" style="grid-template-columns:1fr 360px">
+          <div class="viz-two-col fig-cols" style="grid-template-columns:1fr 360px">
             <div class="viz-panel-left">
               <div id="jxg-shifts" role="img" aria-label="Budget line shifts and pivots explorer showing income and price change effects" style="width:100%;aspect-ratio:1/1;"></div>
             </div>

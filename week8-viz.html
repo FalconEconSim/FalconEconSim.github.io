@@ -787,11 +787,22 @@ function d3HaloLabel(g,x,y,txt,opts){
     .attr('fill',opts.color||EC.slate).text(txt);
   var bb=t.node().getBBox();
   var px=opts.padX!=null?opts.padX:2.5, py=opts.padY!=null?opts.padY:1;
-  g.insert('rect',function(){return t.node();})
+  var bgRect=g.insert('rect',function(){return t.node();})
     .attr('x',bb.x-px).attr('y',bb.y-py)
     .attr('width',bb.width+2*px).attr('height',bb.height+2*py).attr('rx',2.5)
     .attr('fill','#ffffff').attr('fill-opacity',opts.bgOpacity!=null?opts.bgOpacity:0.85)
     .attr('stroke',opts.stroke||'none').attr('stroke-width',0.7).attr('stroke-opacity',0.4);
+  /* getBBox can run before the webfont loads, leaving the backing box narrower
+     than the text that finally renders, so the overhang sits on bare curve.
+     Re-measure once the font is in. */
+  if(document.fonts&&document.fonts.ready){
+    document.fonts.ready.then(function(){
+      try{ var b2=t.node().getBBox();
+        bgRect.attr('x',b2.x-px).attr('y',b2.y-py)
+              .attr('width',b2.width+2*px).attr('height',b2.height+2*py);
+      }catch(e){}
+    });
+  }
   return t;
 }
 
