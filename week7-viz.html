@@ -446,7 +446,7 @@ function drawForceLabel(ctx, lbl) {
     ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx + ldx * lt, cy + ldy * lt); ctx.stroke();
     ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
-  ctx.font = '500 ' + FS + 'px "DM Sans",system-ui,sans-serif';
+  ctx.font = '500 ' + FS + 'px "Libre Franklin",system-ui,sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6;    // wide enough that the halo closes between letters
@@ -510,7 +510,7 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
   ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox,y2);ctx.stroke();
   // Tick text
   const nx=4;
-  ctx.font="12px 'DM Sans',sans-serif";ctx.fillStyle='#8b95a5';
+  ctx.font="12px 'Libre Franklin',sans-serif";ctx.fillStyle='#8b95a5';
   for(const xv of niceTicks(xR[0],xR[1],5)){
     const[cx]=toC7(xv,yR[0],W,H,xR,yR);
     ctx.textAlign='center';
@@ -521,7 +521,7 @@ function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
     ctx.textAlign='right';ctx.fillText(fmtTick(yv),ox-4,cy+3);
   }
   // Axis labels
-  ctx.fillStyle='#666';ctx.font="13px 'DM Sans',sans-serif";
+  ctx.fillStyle='#666';ctx.font="13px 'Libre Franklin',sans-serif";
   if(xLabel){ctx.textAlign='center';ctx.fillText(xLabel,ox+(x1-ox)/2,H-4);}
   if(yLabel){ctx.save();ctx.translate(12,y2+(oy-y2)/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(yLabel,0,0);ctx.restore();}
   ctx.restore();
@@ -605,7 +605,7 @@ function v71Draw(){
     const gLblQ71=Math.min(8, trQmaxBase*0.55);
     const[glx71,gly71]=toC7(gLblQ71,V71_P_BASE*gLblQ71,W,HA,xR,yRA);
     ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1f6fb2';
-    ctxA.font='12px DM Sans,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
+    ctxA.font='12px Libre Franklin,system-ui,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
     ctxA.fillText('TR', glx71+4, gly71-4);
     ctxA.restore();
   }
@@ -628,7 +628,7 @@ function v71Draw(){
   ctxA.moveTo(tx0,ty0);ctxA.lineTo(tx1,ty1);
   ctxA.strokeStyle='#1f6fb2';ctxA.lineWidth=3;ctxA.stroke();
 
-  ctxA.font='bold 13px DM Sans,sans-serif';
+  ctxA.font='bold 13px Libre Franklin,system-ui,sans-serif';
   let qTC=8; while(qTC>0.6 && v71TC(qTC,tfc,ms)>yRA[1]*0.9) qTC-=0.05;
   const[tcLx,tcLy]=toC7(qTC,v71TC(qTC,tfc,ms),W,HA,xR,yRA);
   const trLblQ = Math.min(8, trQmax*0.85);
@@ -660,7 +660,7 @@ function v71Draw(){
   if(tc_val<=yRA[1])dot7(ctxA,curX,toC7(q,tc_val,W,HA,xR,yRA)[1],5,EC.red);
   if(tr_val<=yRA[1])dot7(ctxA,curX,toC7(q,tr_val,W,HA,xR,yRA)[1],5,'#1f6fb2');
   ctxA.fillStyle=mc>P?EC.red:EC.green;
-  ctxA.font='bold 13px DM Sans,sans-serif';ctxA.textAlign='left';
+  ctxA.font='bold 13px Libre Franklin,system-ui,sans-serif';ctxA.textAlign='left';
   const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
   // Fixed top-left status, not curX+6: tracking the point ran this annotation
   // into the "TC" curve label near the top-right intersection.
@@ -766,14 +766,14 @@ function d3MakeSvg(wrapId){
   return d3.select('#'+wrapId).append('svg')
     .attr('viewBox',`0 0 ${D3W} ${D3H}`)
     .style('width','100%').style('display','block')
-    .style('font-family',"'DM Sans',system-ui,sans-serif");
+    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
 }
 function d3MakeSvg2(wrapId){
   d3.select('#'+wrapId).selectAll('svg').remove();
   return d3.select('#'+wrapId).append('svg')
     .attr('viewBox',`0 0 ${D3W} ${D3H2}`)
     .style('width','100%').style('display','block')
-    .style('font-family',"'DM Sans',system-ui,sans-serif");
+    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
 }
 function d3AddAxes(svg,scX,scY,xLabel,yLabel){
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
@@ -781,10 +781,10 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
   if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
 }
@@ -794,10 +794,10 @@ function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H2-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
   if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
 }
@@ -952,7 +952,7 @@ function v72DrawUpdate(P){
   const profitColor=profit>=0?EC.green:EC.red;
   const profitWord=profit>=0?'profit':'loss';
   document.getElementById('v72-calc-box').innerHTML=
-    `<div style="font-family:'DM Sans',system-ui,sans-serif;">
+    `<div style="font-family:'Libre Franklin',system-ui,sans-serif;">
       <div style="font-weight:700;color:var(--unit-ink);font-size:0.8rem;text-transform: none;letter-spacing: normal;margin-bottom:0.4rem;">The Calculation</div>
       <div style="font-size:1.0rem;font-weight:600;color:var(--text);margin-bottom:0.5rem;">
         Profit = (P* &minus; SAC) &times; q*&nbsp; = &nbsp;($${P.toFixed(2)} &minus; $${sacQ.toFixed(2)}) &times; ${qStar.toFixed(2)}&nbsp; = &nbsp;<span style="color:${marginColor}">$${margin.toFixed(2)}</span> &times; ${qStar.toFixed(2)} &nbsp;=&nbsp; <span style="color:${profitColor}">${profit>=0?'+':'−'}$${Math.abs(profit).toFixed(2)}</span>
@@ -1066,7 +1066,7 @@ function v73Draw_OLD_UNUSED(P){
     ctx.strokeStyle=col;ctx.lineWidth=3;ctx.stroke();
     const ql=fn===SMC7?7:fn===SAC7?6:5;
     const[ax,ay]=toC7(ql,fn(ql),W,H,xR,yR);
-    ctx.font='bold 12px DM Sans,sans-serif';
+    ctx.font='bold 12px Libre Franklin,system-ui,sans-serif';
     const tw=ctx.measureText(lbl).width;
     curveLbls73.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize: 13,bold:true,w:tw+6,h:12});
   }
@@ -1386,13 +1386,13 @@ function v78DrawMath(n){
   document.getElementById('v78-math-display').innerHTML=`
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.9rem;">
       <div style="flex:1;min-width:220px;font-family:var(--font-body);font-variant-numeric:tabular-nums;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
-        <div style="font-weight:700;color:var(--unit-ink);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Individual Firm Supply</div>
+        <div style="font-weight:700;color:var(--unit-ink);margin-bottom:0.35rem;font-family:'Libre Franklin',sans-serif;">Individual Firm Supply</div>
         <div>Set P = SMC: &nbsp;P = q&sup2; &minus; 4q + 7</div>
         <div style="margin-top:0.2rem;">Solve: &nbsp;<strong>q* = 2 + &radic;(P &minus; 3)</strong> &nbsp;for P &ge; $4</div>
         <div style="margin-top:0.35rem;color:var(--ink-soft);font-size:0.79rem;">Linear approx: q &asymp; (P &minus; 4) / 2</div>
       </div>
       <div style="flex:1;min-width:220px;font-family:var(--font-body);font-variant-numeric:tabular-nums;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
-        <div style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Market Supply (${n} firms)</div>
+        <div style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-family:'Libre Franklin',sans-serif;">Market Supply (${n} firms)</div>
         <div>Q<sub>mkt</sub> = n &times; q* = ${n} &times; (P &minus; 4) / 2</div>
         <div style="margin-top:0.35rem;color:var(--ink-soft);font-size:0.79rem;">At P = $8: Q = ${n} &times; 2 = ${n*2}</div>
       </div>
@@ -1400,10 +1400,10 @@ function v78DrawMath(n){
     <table style="width:100%;border-collapse:collapse;font-size:0.87rem;">
       <thead>
         <tr style="background:var(--off-white);border-bottom:2px solid var(--rule-strong);">
-          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'DM Sans',sans-serif;">Price P</th>
-          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'DM Sans',sans-serif;">Firm q* = (P&minus;4)/2</th>
-          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'DM Sans',sans-serif;">Multiply</th>
-          <th style="padding:0.45rem 0.8rem;text-align:center;color:var(--unit-ink);font-family:'DM Sans',sans-serif;">Market Q = n &times; q*</th>
+          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'Libre Franklin',sans-serif;">Price P</th>
+          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'Libre Franklin',sans-serif;">Firm q* = (P&minus;4)/2</th>
+          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'Libre Franklin',sans-serif;">Multiply</th>
+          <th style="padding:0.45rem 0.8rem;text-align:center;color:var(--unit-ink);font-family:'Libre Franklin',sans-serif;">Market Q = n &times; q*</th>
         </tr>
       </thead>
       <tbody style="font-family:var(--font-body);font-variant-numeric:tabular-nums;">${rows}</tbody>

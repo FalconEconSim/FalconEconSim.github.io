@@ -415,7 +415,7 @@ function drawForceLabel(ctx, lbl) {
     ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx + ldx * lt, cy + ldy * lt); ctx.stroke();
     ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
-  ctx.font = '500 ' + FS + 'px "DM Sans",system-ui,sans-serif';
+  ctx.font = '500 ' + FS + 'px "Libre Franklin",system-ui,sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6;    // wide enough that the halo closes between letters
@@ -474,7 +474,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
   // Tick text
-  ctx.fillStyle='#8b95a5'; ctx.font='12px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#8b95a5'; ctx.font='12px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
   for(const v of niceTicks(xR[0],xR[1],5)){
     const [px]=toC(v,yR[0],W,H,xR,yR);
     ctx.fillText(fmtTick(v),px,H-MB+12);
@@ -484,7 +484,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
     ctx.textAlign='right'; ctx.fillText(fmtTick(v),ML-5,py+3);
   }
   // Axis labels
-  ctx.fillStyle="#4a5566"; ctx.font="16px DM Sans,sans-serif";
+  ctx.fillStyle="#4a5566"; ctx.font="16px Libre Franklin,system-ui,sans-serif";
   ctx.textAlign='center'; ctx.fillText(xLbl||'q',W/2,H-4);
   ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'$',0,0); ctx.restore(); ctx.restore();
@@ -571,7 +571,7 @@ function v61Draw(Lcur,Kcur){
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
   });
   const [icLx,icLy]=toC(0,Math.min(TCopt/v,AXIS_MAX),W,H,xR,yR);
-  ctx.font='13px DM Sans,sans-serif';
+  ctx.font='13px Libre Franklin,system-ui,sans-serif';
   // Anchor label to a point on the isoquant near L=AXIS_MAX*0.7
   const iqL=AXIS_MAX*0.7, iqK=q*q/iqL;
   const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
@@ -593,7 +593,7 @@ function v61Draw(Lcur,Kcur){
     ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font='13px DM Sans,sans-serif';
+    ctx.font='13px Libre Franklin,system-ui,sans-serif';
     const optLbls=[
       {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:18,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize: 13,bold:false},
       {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:18,text:'Cost minimised!',color:'#2f5c3a',fontSize: 13,bold:false},
@@ -621,7 +621,7 @@ function v61Draw(Lcur,Kcur){
   const atOpt=onIsoquant&&atTangency;
   const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
   dot6(ctx,bx,by,8,atOpt?'#2f5c3a':EC.red,'#fff');
-  ctx.font='13px DM Sans,sans-serif';
+  ctx.font='13px Libre Franklin,system-ui,sans-serif';
   const dotCol=atOpt?'#2f5c3a':EC.red;
   // One short verdict at the dot. The (L,K) coordinate and the MRTS/(w/v)
   // numbers both live in the readout panel below, so repeating them here only
@@ -905,7 +905,7 @@ window._initFig65=function initFig65(){
   const svg=d3.select('#cvs65-wrap').append('svg')
     .attr('viewBox',`0 0 ${W} ${H}`)
     .style('width','100%').style('display','block')
-    .style('font-family',"'DM Sans',system-ui,sans-serif");
+    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
 
   // Grid
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
@@ -931,10 +931,10 @@ window._initFig65=function initFig65(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('Quantity (q)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1139,7 +1139,7 @@ window._initFig66=function initFig66(){
   const svg=d3.select('#cvs66-wrap').append('svg')
     .attr('viewBox',`0 0 ${W} ${H}`)
     .style('width','100%').style('display','block')
-    .style('font-family',"'DM Sans',system-ui,sans-serif");
+    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
 
   // Grid
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
@@ -1155,10 +1155,10 @@ window._initFig66=function initFig66(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(7).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('q (output)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1317,7 +1317,7 @@ window._initFig68=function initFig68(){
   const svg=d3.select('#cvs68-wrap').append('svg')
     .attr('viewBox',`0 0 ${W} ${H}`)
     .style('width','100%').style('display','block')
-    .style('font-family',"'DM Sans',system-ui,sans-serif");
+    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
 
   // Grid
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
@@ -1348,10 +1348,10 @@ window._initFig68=function initFig68(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('L (labor)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1622,7 +1622,7 @@ window._initFig610=function initFig610(){
   const svg=d3.select('#cvs610-wrap').append('svg')
     .attr('viewBox',`0 0 ${W} ${H}`)
     .style('width','100%').style('display','block')
-    .style('font-family',"'DM Sans',system-ui,sans-serif");
+    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
 
   // clip path
   svg.append('defs').append('clipPath').attr('id','clip610')
@@ -1646,8 +1646,8 @@ window._initFig610=function initFig610(){
   const qstarDot=svg.append('circle').attr('r',7).attr('fill','#1f6fb2').attr('stroke','white').attr('stroke-width',1.5);
 
   // Shading labels
-  const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',13).attr('font-family',"'DM Sans',sans-serif");
-  const diseconLbl=svg.append('text').attr('fill','rgba(231,76,60,0.85)').attr('font-size',13).attr('font-family',"'DM Sans',sans-serif");
+  const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',13).attr('font-family',"'Libre Franklin',sans-serif");
+  const diseconLbl=svg.append('text').attr('fill','rgba(231,76,60,0.85)').attr('font-size',13).attr('font-family',"'Libre Franklin',sans-serif");
 
   // Axes groups (rebuilt per draw via scales)
   const xAxisG=svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`);
@@ -1688,9 +1688,9 @@ window._initFig610=function initFig610(){
 
     // Axes
     xAxisG.call(d3.axisBottom(scX).ticks(10).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
     yAxisG.call(d3.axisLeft(scY).ticks(6).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
     xLblEl.attr('x',PAD.left+(W-PAD.left-PAD.right)/2);
 
     // AC curve points
