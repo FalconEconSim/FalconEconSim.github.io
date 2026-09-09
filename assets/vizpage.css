@@ -12,7 +12,7 @@
 /* Prefixed to outrank shared.css's html[data-ds="v2"] p rule, which is
    (0,1,2) and would otherwise force every classed <p> back to --t-body. */
 html[data-ds="v2"] .eyebrow {
-  font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase;
+  font-size: var(--t-small); letter-spacing: normal; text-transform: none;
   color: var(--unit-ink); margin-bottom: var(--s-3);
 }
 html[data-ds="v2"] .lede {
@@ -20,7 +20,7 @@ html[data-ds="v2"] .lede {
   color: var(--ink-soft); margin-top: var(--s-4);
 }
 html[data-ds="v2"] .byline {
-  font-size: var(--t-body); color: var(--ink-faint); margin-top: var(--s-3);
+  font-size: var(--t-body); color: var(--ink-soft); margin-top: var(--s-3);
 }
 .page-hd { margin-bottom: var(--s-9); }
 .page-hd > div { position: relative; }
@@ -37,7 +37,7 @@ html[data-ds="v2"] .byline {
 .fig-state:empty { display: none; }
 .readout-row { display: flex; flex-wrap: wrap; gap: var(--s-5) var(--s-6); }
 .readout-col { flex: 0 1 auto; }
-.readout-label { font-size: var(--t-caption); color: var(--ink-faint); letter-spacing: 0.04em; text-transform: uppercase; }
+.readout-label { font-size: var(--t-caption); color: var(--ink-soft); letter-spacing: normal; text-transform: none; }
 .readout-val { font-family: var(--font-mono); font-size: var(--t-body-sm); color: var(--unit-ink); font-variant-numeric: tabular-nums; }
 
 /* ── Figure control deck ─────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ canvas { display: block; width: 100%; cursor: default; }
 .quiz-btns { display: flex; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
 .quiz-btn {
   padding: 0.6rem 1rem; font: 500 var(--t-small)/1 var(--font-body);
-  border: 1px solid var(--rule-strong); border-radius: var(--radius);
+  border: 1px solid var(--edge); border-radius: var(--radius);
   cursor: pointer; background: var(--paper-raised); color: var(--ink);
   transition: background var(--dur-state) var(--ease-out),
               border-color var(--dur-state) var(--ease-out),
@@ -181,7 +181,7 @@ canvas { display: block; width: 100%; cursor: default; }
   border-top: 1px solid var(--rule2);
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: var(--s-3);
-  font-size: var(--t-small); color: var(--ink-faint);
+  font-size: var(--t-small); color: var(--ink-soft);
 }
 .site-foot a { color: var(--ink-soft) !important; text-decoration: none; }
 .site-foot a:hover { color: var(--unit-ink) !important; }
@@ -208,7 +208,7 @@ canvas { display: block; width: 100%; cursor: default; }
   font: 500 var(--t-caption)/1 var(--font-body);
   color: var(--ink-soft);
   background: var(--paper-raised);
-  border: 1px solid var(--rule-strong);
+  border: 1px solid var(--edge);
   border-radius: var(--radius);
   cursor: pointer; white-space: nowrap;
   transition: color var(--dur-state) var(--ease-out),
@@ -307,14 +307,15 @@ html[data-ds="v2"] .fig-hd h3 {
    dividers rendered as unstyled default text with the wrong alignment. Homing
    it here fixes every viz page uniformly (matching the week8 reference). */
 .sec-divider {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  margin: 3.2rem 0 0;
-  padding-bottom: 0.4rem;
+  /* Was 0.72rem (11.5px) mono uppercase with tracking, which is three of the
+     named tells in one label and well under the standard's own type floor. */
+  font-size: var(--t-body-sm);
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: var(--s-9) 0 var(--s-5);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--rule2);
+  max-width: var(--measure);
 }
 
 /* Self-contained explanation block placed after a figure: a "reading the graph"
@@ -323,8 +324,368 @@ html[data-ds="v2"] .fig-hd h3 {
 .explain { margin-top: var(--s-4); }
 .explain .ex-h {
   font-family: var(--font-mono); font-size: var(--t-caption); font-weight: 600;
-  letter-spacing: 0.06em; text-transform: uppercase; color: var(--unit-ink);
+  letter-spacing: normal; text-transform: none; color: var(--unit-ink);
   margin: var(--s-3) 0 var(--s-1);
 }
 .explain p { font-size: var(--t-body-sm); line-height: 1.65; color: var(--ink-soft); margin: 0; }
 .explain p + .ex-h { margin-top: var(--s-4); }
+
+
+/* ── unified figure system ───────────────────────────────────────────────────
+   week2-viz and week3-viz ran a second figure system: every figure sat in a
+   .viz-wrapper with a click-to-collapse .viz-header bar (capsule badge + mono
+   uppercase title + chevron), and its panels were bordered .viz-panel boxes
+   with their own mono uppercase caption bars inside. That is a box in a box in
+   a box, and none of the other nine viz pages had it, so the two pages also
+   missed the wide-band promotion below and were stuck at the 38rem reading
+   measure. Both are now on the same structure as the other nine. The classes
+   below are the shapes those two pages needed that the shared system lacked.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Learning-objective reference, lifted out of the "Fig 3.2 · LO6" dot string
+   so the figure label and the objective are two pieces of information rather
+   than one run-on label. */
+.fig-lo {
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* Syllabus-section heading (week2-viz groups its figures under § 2.1-2.4 and
+   friends). Same shape as .fig-hd one level up. */
+.sec-hd { display: flex; align-items: baseline; gap: var(--s-3); margin-bottom: var(--s-4); }
+.sec-hd h2 { margin: 0; }
+.sec-n { font-size: var(--t-small); color: var(--ink-soft); white-space: nowrap; }
+
+/* Chart beside its numeric readout. Was an inline
+   `style="grid-template-columns:2fr 1fr"` repeated per figure. */
+.fig-split { display: grid; grid-template-columns: 2fr 1fr; gap: var(--s-4); align-items: start; }
+@media (max-width: 900px) { .fig-split { grid-template-columns: 1fr; } }
+
+/* The readout column beside a chart. No border: the chart's own card is the
+   one container this idea gets. */
+.fig-readout {
+  display: flex; flex-direction: column; gap: var(--s-3);
+  padding: var(--s-4);
+  background: var(--paper-sunk);
+  border-radius: var(--radius);
+  font-size: var(--t-small);
+}
+
+/* Give the two migrated pages the same wide-band promotion the other nine get. */
+@media (min-width: 1200px) {
+  .sec.page > .fig-split,
+  .sec.page > .sec-hd { grid-column: wide-start / wide-end; }
+  .sec.page > .sec-hd { grid-column: text-start / text-end; }
+}
+
+/* A panel's caption and its chart are one grid cell, not two. The caption sits
+   above the chart as plain sentence-case text (it used to be a mono uppercase
+   bar inside the chart's own border). */
+.fig-cell { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
+.fig-cell > .fig-plot { margin: 0; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BENCH: the figure stays on screen while you read about it.
+   Every figure section used to be a vertical sandwich: a paragraph, then the
+   chart, then the controls, then two more paragraphs, then a callout. By the
+   time a student reached "the red line sits above it by the marginal external
+   cost", the red line was off the top of the screen.
+   The section is now two columns. Prose scrolls on the left. The chart and its
+   controls sit in a bay on the right that sticks to the viewport, so the
+   sentence and the thing it describes are visible at the same time.
+   No scroll-jacking and no scroll-linked animation: this is position: sticky
+   and nothing else, which is why it needs no reduced-motion escape hatch and
+   cannot trap a keyboard user.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.fig-sec { margin-bottom: var(--s-10); }
+
+@media (min-width: 1080px) {
+  .sec.page.fig-sec {
+    display: grid;
+    grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+    column-gap: var(--s-7);
+    align-items: start;
+  }
+  /* Override the .page column system for these two children only. */
+  .sec.page.fig-sec > .fig-prose { grid-column: 1; min-width: 0; }
+  .sec.page.fig-sec > .fig-bay   { grid-column: 2; min-width: 0; }
+
+  .fig-bay-inner {
+    position: sticky;
+    top: 4.5rem;
+  }
+  /* A bay taller than the viewport must scroll with the page, not clip. */
+  @supports (height: 100dvh) {
+    .fig-bay-inner { max-height: calc(100dvh - 6rem); overflow: visible; }
+  }
+}
+
+/* The prose column holds the reading measure; it does not stretch to the
+   column width just because the column is there. */
+.fig-prose > * { max-width: var(--measure); }
+.fig-prose > * + * { margin-top: var(--s-4); }
+.fig-prose > .explain,
+.fig-prose > .insight-box,
+.fig-prose > .step-box { margin-top: var(--s-5); }
+
+/* Inside the bay the chart, its controls and its readouts are one card again,
+   the way the nine-page system already had them, just now in a column of its
+   own instead of under the text. */
+.fig-bay-inner > .fig-plot { border-radius: var(--radius) var(--radius) 0 0; }
+.fig-bay-inner > .ctrl-row,
+.fig-bay-inner > .fig-state:not(:empty),
+.fig-bay-inner > .readout-row {
+  background: var(--paper-sunk);
+  margin: 0;
+  padding: var(--s-4) var(--s-5);
+}
+.fig-bay-inner > .ctrl-row { border-top: 1px solid var(--rule2); align-items: flex-start; }
+.fig-bay-inner > .ctrl-row:last-child,
+.fig-bay-inner > .fig-state:not(:empty):last-child,
+.fig-bay-inner > .readout-row:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding-bottom: var(--s-5);
+}
+.fig-bay-inner > .seg-btns,
+.fig-bay-inner > .quiz-btns { margin-bottom: var(--s-3); }
+.fig-bay-inner > .panel-label { margin-bottom: var(--s-2); }
+
+/* Below the split, the section stacks: prose, then figure. The bay stops being
+   sticky so a phone does not end up with a pinned chart eating the screen. */
+@media (max-width: 1079px) {
+  .fig-bay-inner { position: static; max-height: none; }
+  .fig-prose { margin-bottom: var(--s-5); }
+}
+
+
+/* ── mobile containment ──────────────────────────────────────────────────────
+   Two real overflows found by measuring at 390px, not by reading the code:
+   week2-viz pushed 127px past the viewport because a readout value holds a
+   MathJax container that will not shrink, and week3-viz pushed 16px because
+   the figure's Expand control is absolutely positioned against a box that is
+   already at the viewport edge.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* A readout is a row of label/value pairs. Values that cannot shrink (rendered
+   math, long numbers) scroll inside their own cell rather than widening the
+   page. */
+.readout-row, .readout-col, .fig-state { min-width: 0; }
+.readout-val, .fig-state, .delta-nums {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.readout-val mjx-container,
+.fig-state mjx-container { max-width: 100%; }
+
+@media (max-width: 700px) {
+  /* The figure's Expand control comes inside the padding box. */
+  .figzoom-btn { right: var(--s-2) !important; }
+  /* JSXGraph boards draw beyond their own box while dragging; clip to the card. */
+  .fig-plot, .fig-bay-inner, .jxgbox { max-width: 100%; overflow-x: hidden; }
+  /* Anything still wider than the screen scrolls in its own box (DESIGN 7). */
+  .two-col-panels, .three-col-panels, .fig-split { max-width: 100%; }
+}
+
+/* ── mobile containment, round two ───────────────────────────────────────────
+   Measured at 390px rather than guessed:
+   - the injected "Expand" control sits in .fig-hd with margin-left:auto, so on
+     a narrow screen it was pushed past the right edge of a row that could not
+     wrap;
+   - .fig-readout and the scoreboard table have content with a min-content
+     width wider than a phone, and a grid item defaults to min-width:auto, so
+     the column refused to shrink and took the page with it.
+   ─────────────────────────────────────────────────────────────────────────── */
+.fig-hd { flex-wrap: wrap; }
+.fig-split > *, .two-col-panels > *, .three-col-panels > *, .fig-cell > * { min-width: 0; }
+.fig-readout { min-width: 0; }
+.fig-readout table, .scoreboard table { width: 100%; }
+
+@media (max-width: 700px) {
+  .figzoom-btn { margin-left: 0; }
+  /* Wide tables scroll in their own box; the page never does (DESIGN 7). */
+  .fig-readout, .scoreboard { overflow-x: auto; }
+  .fig-readout table, .scoreboard table { min-width: 0; }
+  /* Rendered math is the one thing that genuinely cannot reflow. */
+  mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+}
+
+/* Chart beside a fixed-width readout. week2-viz carried this as an inline
+   `grid-template-columns:1fr 360px`, which beat every responsive rule and made
+   the page 102px wider than a phone. */
+.chart-plus-readout { grid-template-columns: minmax(0, 1fr) 360px; }
+@media (max-width: 1000px) { .chart-plus-readout { grid-template-columns: minmax(0, 1fr); } }
+
+/* Things that genuinely cannot reflow scroll inside their own box. */
+.readout-row { flex-wrap: wrap; }
+.readout-val { min-width: 0; max-width: 100%; }
+.math-block { overflow-x: auto; }
+@media (max-width: 700px) {
+  .fig-prose table, .explain table { display: block; overflow-x: auto; max-width: 100%; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   FIGURE ROLLOUT: the sizing rules from the dev_week2_21 prototype, applied to
+   every figure on the site.
+
+   THE BUG THIS FIXES, AND WHY IT HID FOR SO LONG
+   week2-viz averaged a 154px plot on a 1440px screen. The cause was not the
+   page width: it was that the in-figure splits (chart beside its readout, two
+   panels side by side) were switched by MEDIA queries. A media query asks how
+   wide the WINDOW is. Inside a 591px figure bay on a 1440px screen the window
+   is wide, so the two-column rule stayed on and the chart was handed whatever
+   was left after a 360px readout. Roughly 200px.
+   Container queries ask how wide the CONTAINER is, which is the question that
+   was always being asked. That is the whole reason the container-query variant
+   was worth having.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* The bay is the container. Containment goes on the OUTER element, never on
+   .fig-bay-inner, because that one is position:sticky and layout containment
+   interferes with sticky. */
+.fig-bay { container-type: inline-size; container-name: figbay; }
+
+/* Single column until the container itself is genuinely wide enough. */
+.fig-bay .chart-plus-readout,
+.fig-bay .fig-split,
+.fig-bay .two-col-panels,
+.fig-bay .three-col-panels { grid-template-columns: minmax(0, 1fr); }
+
+@container figbay (min-width: 700px) {
+  .fig-bay .two-col-panels { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .fig-bay .fig-split,
+  .fig-bay .chart-plus-readout { grid-template-columns: minmax(0, 1.7fr) minmax(210px, 1fr); }
+}
+@container figbay (min-width: 1020px) {
+  .fig-bay .three-col-panels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* A plot should not be squat. Matches the prototype's clamp. */
+.fig-bay .fig-plot { min-height: clamp(300px, 34vh, 460px); }
+.fig-bay .fig-plot.square { min-height: 0; }
+
+/* The prose column was taking 42% of every figure section. Giving the bay four
+   more points is the cheapest width the chart can be handed. */
+@media (min-width: 1080px) {
+  .sec.page.fig-sec { grid-template-columns: minmax(0, 38fr) minmax(0, 62fr); }
+}
+
+/* Figure pages are diagrams, not prose, so they get more of a large screen
+   than the reading measure allows. This is the empty-margin complaint. */
+@media (min-width: 1500px) { html[data-ds="v2"] .layout { --page-w: 82rem; } }
+@media (min-width: 1800px) { html[data-ds="v2"] .layout { --page-w: 92rem; } }
+
+/* ── in-figure type floor ────────────────────────────────────────────────────
+   Figure labels were rendering as small as 7px. These reach every label drawn
+   as DOM or SVG text. Canvas-drawn text cannot be reached from CSS and is
+   listed separately in the rollout notes. */
+.fig-plot text, .jxgbox text, .demo-svg-wrap text,
+.fig-bay svg text { font-size: 13px; }
+.fig-plot .JXGtext, .jxgbox .JXGtext { font-size: 14px !important; }
+.fig-plot text[font-size], .demo-svg-wrap text[font-size],
+.fig-bay svg text[font-size] { font-size: 13px !important; }
+
+/* Curve and axis weights, matching the prototype. */
+.fig-bay svg .domain, .fig-bay svg .axis path, .fig-bay svg .axis line { stroke-width: 1.4px; }
+
+/* Two more multi-panel wrappers that the first pass missed, plus the containers
+   they sit in. .md-panels lives inside .bleed-wide and .two-col inside
+   .fig-prose, so neither was inside the .fig-bay container and both kept
+   splitting at container widths far too narrow for it. */
+.bleed-wide, .fig-prose { container-type: inline-size; container-name: figbay; }
+.fig-bay .md-panels, .fig-bay .two-col,
+.bleed-wide .md-panels, .fig-prose .two-col { grid-template-columns: minmax(0, 1fr); }
+@container figbay (min-width: 700px) {
+  .two-col,
+  .fig-bay .two-col,
+  .fig-prose .two-col, .bleed-wide .two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* Fig 4.8 declares three columns in its own page styles, and it is right to:
+   the market demand curve is the horizontal sum of the two beside it, so the
+   three belong in one row where the sum can be read across. The redesign
+   fallback was more specific than the page rule and had been stacking them
+   into one 768px-wide column of 3:1 letterboxes. */
+@container figbay (min-width: 740px) {
+  .md-panels,
+  .fig-bay .md-panels,
+  .bleed-wide .md-panels,
+  .fig-prose .md-panels {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* A handful of sections have their plot in the prose column rather than the
+   bay, because the plot is wrapped in a layout div the partition did not know
+   about. Those sections stop splitting, so the plot gets the full width
+   instead of 38% of it. */
+/* Sections whose plot ended up in the prose column get their two children
+   spanning the whole grid instead of sitting in one 38% track.
+   The first attempt overrode grid-template-columns on .sec.page, which ALSO
+   carries the named-line grid from the design system (text-start, wide-start).
+   Replacing the columns deleted those names, so every child that referenced
+   them was auto-placed into implicit columns: a control row ended up 48px
+   wide with its buttons hanging 31px past the page. Span the tracks, do not
+   redefine them. */
+.sec.page.fig-sec:has(.fig-prose .fig-plot) > .fig-prose,
+.sec.page.fig-sec:has(.fig-prose .fig-plot) > .fig-bay { grid-column: 1 / -1; }
+.sec.page.fig-sec:has(.fig-prose .fig-plot) > .fig-prose > * { max-width: none; }
+.sec.page.fig-sec:has(.fig-prose .fig-plot) > .fig-prose > p,
+.sec.page.fig-sec:has(.fig-prose .fig-plot) > .fig-prose > .explain,
+.sec.page.fig-sec:has(.fig-prose .fig-plot) > .fig-prose > .insight-box { max-width: var(--measure); }
+
+/* Controls must not be able to push a figure past its container. A <select>
+   with long option text has a large intrinsic width and was overflowing the
+   bay by 211px once the bay became a container. Flex and grid children default
+   to min-width:auto, which is what lets that happen. */
+.ctrl-row { min-width: 0; }
+.ctrl-row > * { min-width: 0; max-width: 100%; }
+.ctrl { min-width: 0; max-width: 100%; }
+.sel, .num-in, select { max-width: 100%; }
+.ctrl-label { min-width: 0; overflow-wrap: anywhere; }
+
+/* d3 sets font-size on the axis GROUP, not on each <text>, so a rule targeting
+   text alone never reached it and the tick numbers stayed at d3's 10px
+   default. Match the attribute wherever it sits. */
+.fig-bay svg [font-size], .fig-plot svg [font-size],
+.demo-svg-wrap svg [font-size], .fig-bay svg g.tick { font-size: 13px !important; }
+
+/* A comparison table in the prose column is wider than the column and was
+   being clipped, not scrolled. Tables scroll inside their own box at every
+   width, not only on phones (DESIGN 7). */
+.fig-prose table, .explain table, .fig-bay table {
+  display: block; max-width: 100%; overflow-x: auto;
+  border-collapse: collapse;
+}
+
+/* ── prose column: content that had to be scrolled sideways ───────────────
+   Two things in the prose column were wider than the column at every desktop
+   width, so both ended up as little horizontal scrollers inside the text: a
+   two-up formula block (needs 458px, has 365px) and a five-column comparison
+   table (needs 419px). Scrolling a formula sideways to read the second half
+   is the "laid out for a phone" complaint in miniature. Stack the formulas
+   and tighten the table instead. */
+
+/* The two halves are set as an inline 1fr 1fr grid, so this has to outrank an
+   inline style. One condition per row reads the same and fits. */
+.fig-prose .math-block > div[style*="grid"] {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 1.1rem !important;
+  max-width: 100% !important;
+}
+
+/* Five columns of short words: the default cell padding, not the words, is
+   what overflows. */
+.fig-prose table { font-size: 0.78rem; }
+.fig-prose table th,
+.fig-prose table td { padding-right: 0.4rem; }
+
+/* Fig 10.2 is a one-dimensional diagram: two vendors on a number line. The
+   300px floor that keeps ordinary plots from going squat just adds a band of
+   empty panel under it, so this one opts out. */
+#sec-102 .fig-plot { min-height: 0; }

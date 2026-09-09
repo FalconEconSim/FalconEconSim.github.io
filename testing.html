@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <title>Testing: Visual Experiments &middot; EC224 Dev</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <style>
     .test-hero { padding: 2.4rem 0 1.6rem; border-bottom: 1px solid var(--rule); position: relative; }
     .test-ghost { position: absolute; right: 0; top: 0.8rem; font-size: 5rem; font-weight: 700; color: #f0f0f0; line-height: 1; user-select: none; pointer-events: none; font-family: var(--mono); }
-    .dev-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #fef3c7; border: 1px solid #d97706; color: #92400e; border-radius: 5px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.15rem 0.55rem; margin-bottom: 0.65rem; }
+    .dev-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #fef3c7; border: 1px solid #d97706; color: #92400e; border-radius: 5px; font-size: 0.7rem; font-weight: 600; letter-spacing: normal; text-transform: none; padding: 0.15rem 0.55rem; margin-bottom: 0.65rem; }
     .test-title { font-size: 1.9rem; font-weight: 600; line-height: 1.2; color: var(--text); margin-bottom: 0.3rem; }
     .test-subtitle { font-size: 0.92rem; color: var(--muted); line-height: 1.6; max-width: 720px; margin-bottom: 0.9rem; }
     .test-section { border-top: 2px solid var(--rule); padding-top: 2.2rem; margin-top: 2.8rem; }
     .test-section-hdr { font-size: 1.15rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
-    .test-section-num { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 4px; margin-right: 0.55rem; }
+    .test-section-num { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 4px; margin-right: 0.55rem; }
     .test-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.2rem; }
     .card-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
     .card-grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
@@ -35,24 +36,24 @@
     .slider-row label { font-size:0.84rem; color:var(--muted); white-space:nowrap; }
     .slider-row .sv { font-family:var(--mono); font-size:0.84rem; font-weight:600; color:var(--accent); min-width:3.5ch; }
     .slider-row input[type=range] { flex:1; max-width:280px; accent-color:var(--accent); }
-    .slider-row .hint { font-size:0.72rem; color:#bbb; }
+    .slider-row .hint { font-size:0.72rem; color:#5f6875; }
     .card-grid-3 { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 700px) { .card-grid-3 { grid-template-columns: repeat(3, 1fr); } }
 
     /* ── original D3 demo styles (section 7) ── */
     .approach-section { border-top: 2px solid var(--rule); padding-top: 2.2rem; margin-top: 2.8rem; }
     .approach-hdr { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-    .approach-num { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 4px; }
+    .approach-num { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 4px; }
     .approach-title { font-size: 1.2rem; font-weight: 600; color: var(--text); line-height: 1.3; }
     .approach-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1rem; }
     .tradeoff-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.1rem; }
     .tradeoff-pill { font-size: 0.72rem; font-weight: 500; border-radius: 99px; padding: 0.18rem 0.65rem; border: 1px solid; }
-    .pill-pro  { color: #16a34a; background: #f0fdf4; border-color: #86efac; }
+    .pill-pro  { color: #167c3a; background: #f0fdf4; border-color: #86efac; }
     .pill-con  { color: #b91c1c; background: #fef2f2; border-color: #fca5a5; }
     .pill-note { color: var(--muted); background: var(--off-white); border-color: var(--rule); }
     .demo-wrap { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: #fff; }
     .demo-toolbar { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.85rem; background: var(--off-white); border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
-    .demo-toolbar-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: auto; }
+    .demo-toolbar-label { font-size: 0.7rem; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--muted); margin-right: auto; }
     .viz-btn { font-size: 0.76rem; font-weight: 600; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--rule); background: white; color: var(--text); cursor: pointer; font-family: var(--font); }
     .viz-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
     .demo-svg-wrap { padding: 1rem; }
@@ -64,19 +65,6 @@
 </head>
 <body>
 
-<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
-<nav class="left-nav" id="leftNav" aria-label="Course weeks">
-  <div class="left-nav-header">EC224</div>
-  <ul>
-    <li class="left-nav-item published"><a href="week1.html">Week 1</a></li>
-    <li class="left-nav-item published"><a href="week2.html">Week 2</a></li>
-    <li class="left-nav-item published"><a href="week3.html">Week 3</a></li>
-    <li class="left-nav-item published"><a href="week4.html">Week 4</a></li>
-    <li class="left-nav-item published"><a href="week5.html">Week 5</a></li>
-    <li class="left-nav-item published"><a href="week6.html">Week 6</a></li>
-    <li class="left-nav-item published"><a href="week7.html">Week 7</a></li>
-  </ul>
-</nav>
 
 <div class="top-bar" id="topBar">
   <div class="top-bar-left">
@@ -84,7 +72,7 @@
     <div class="top-bar-divider"></div>
     <div class="breadcrumb"><a href="index.html">EC224</a><span class="breadcrumb-sep">&#x203A;</span><span>Visual Tests</span></div>
   </div>
-  <button class="left-nav-toggle" onclick="openLN()">&#9776;&nbsp; Weeks</button>
+  <button class="left-nav-toggle" data-nav-open>&#9776;&nbsp; Weeks</button>
 </div>
 
 <main class="main" style="max-width:1300px;">
@@ -366,8 +354,6 @@
 </main>
 
 <script>
-function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
-function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
 // ================================================================
 // SHARED DRAWING UTILITIES
@@ -866,7 +852,7 @@ function drawCostFig(cvsId, {fontSize=11, resolver=resolveB, labelDrawer=drawSty
   const [,axY]=toC(0,0,W,H,xR,yR);
   if(qstar){
     const [qsX]=toC(qstar,Pc,W,H,xR,yR);
-    ctx.strokeStyle='#bbb'; ctx.lineWidth=0.8; ctx.setLineDash([4,3]);
+    ctx.strokeStyle='#5f6875'; ctx.lineWidth=0.8; ctx.setLineDash([4,3]);
     ctx.beginPath(); ctx.moveTo(qsX,mrY); ctx.lineTo(qsX,axY); ctx.stroke(); ctx.setLineDash([]);
   }
 
@@ -1696,32 +1682,32 @@ function startLive(cvsId,{springK=0.08,damping=0.86,lineStr=0.38,pad=8,alphaDeca
 // ================================================================
 function drawAll(){
   // Section 1: sizes (default 11px font, approach B, style A)
-  drawCostFig('sz-a',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
-  drawCostFig('sz-b',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
-  drawCostFig('sz-c',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
-  drawCostFig('sz-d',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('sz-a',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('sz-b',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('sz-c',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('sz-d',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA});
 
   // Section 2: font sizes (all 420px canvas, approach B, style A)
-  drawCostFig('fs-a',{fontSize:9, resolver:resolveB,labelDrawer:drawStyleA});
-  drawCostFig('fs-b',{fontSize:11,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('fs-a',{fontSize: 13, resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('fs-b',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA});
   drawCostFig('fs-c',{fontSize:13,resolver:resolveB,labelDrawer:drawStyleA});
   drawCostFig('fs-d',{fontSize:15,resolver:resolveB,labelDrawer:drawStyleA});
 
   // Section 3: force label approaches (all 12px, style A)
-  drawCostFig('fl-a',{fontSize:12,resolver:resolveA,labelDrawer:drawStyleA});
-  drawCostFig('fl-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA});
-  drawCostFig('fl-c',{fontSize:12,resolver:resolveC,labelDrawer:drawStyleA});
-  drawCostFig('fl-d',{fontSize:12,resolver:resolveD,labelDrawer:drawStyleA});
-  drawCostFig('fl-e',{fontSize:12,resolver:resolveE,labelDrawer:drawStyleA});
-  drawCostFig('fl-f',{fontSize:12,resolver:resolveF,labelDrawer:drawStyleA});
-  drawCostFig('fl-g',{fontSize:12,resolver:resolveG,labelDrawer:drawStyleA});
-  drawCostFig('fl-h',{fontSize:12,resolver:resolveH,labelDrawer:drawStyleA});
+  drawCostFig('fl-a',{fontSize: 13,resolver:resolveA,labelDrawer:drawStyleA});
+  drawCostFig('fl-b',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('fl-c',{fontSize: 13,resolver:resolveC,labelDrawer:drawStyleA});
+  drawCostFig('fl-d',{fontSize: 13,resolver:resolveD,labelDrawer:drawStyleA});
+  drawCostFig('fl-e',{fontSize: 13,resolver:resolveE,labelDrawer:drawStyleA});
+  drawCostFig('fl-f',{fontSize: 13,resolver:resolveF,labelDrawer:drawStyleA});
+  drawCostFig('fl-g',{fontSize: 13,resolver:resolveG,labelDrawer:drawStyleA});
+  drawCostFig('fl-h',{fontSize: 13,resolver:resolveH,labelDrawer:drawStyleA});
 
   // Section 4: label styles (all 12px, approach B)
-  drawCostFig('ls-a',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA});
-  drawCostFig('ls-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleB});
-  drawCostFig('ls-c',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleC});
-  drawCostFig('ls-d',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleD});
+  drawCostFig('ls-a',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA});
+  drawCostFig('ls-b',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleB});
+  drawCostFig('ls-c',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleC});
+  drawCostFig('ls-d',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleD});
 
   // Section 5: shading bug
   drawShadingDemo('sh-a', false);
@@ -1731,23 +1717,23 @@ function drawAll(){
 // ── Section 3 slider ──────────────────────────────────────────
 function redrawS3(P){
   document.getElementById('s3-val').textContent = fmtP(P);
-  drawCostFig('fl-a',{fontSize:12,resolver:resolveA,labelDrawer:drawStyleA,P});
-  drawCostFig('fl-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA,P});
-  drawCostFig('fl-c',{fontSize:12,resolver:resolveC,labelDrawer:drawStyleA,P});
-  drawCostFig('fl-d',{fontSize:12,resolver:resolveD,labelDrawer:drawStyleA,P});
-  drawCostFig('fl-e',{fontSize:12,resolver:resolveE,labelDrawer:drawStyleA,P});
-  drawCostFig('fl-f',{fontSize:12,resolver:resolveF,labelDrawer:drawStyleA,P});
-  drawCostFig('fl-g',{fontSize:12,resolver:resolveG,labelDrawer:drawStyleA,P});
-  drawCostFig('fl-h',{fontSize:12,resolver:resolveH,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-a',{fontSize: 13,resolver:resolveA,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-b',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-c',{fontSize: 13,resolver:resolveC,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-d',{fontSize: 13,resolver:resolveD,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-e',{fontSize: 13,resolver:resolveE,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-f',{fontSize: 13,resolver:resolveF,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-g',{fontSize: 13,resolver:resolveG,labelDrawer:drawStyleA,P});
+  drawCostFig('fl-h',{fontSize: 13,resolver:resolveH,labelDrawer:drawStyleA,P});
 }
 
 // ── Section 4 slider ──────────────────────────────────────────
 function redrawS4(P){
   document.getElementById('s4-val').textContent = fmtP(P);
-  drawCostFig('ls-a',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleA,P});
-  drawCostFig('ls-b',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleB,P});
-  drawCostFig('ls-c',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleC,P});
-  drawCostFig('ls-d',{fontSize:12,resolver:resolveB,labelDrawer:drawStyleD,P});
+  drawCostFig('ls-a',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleA,P});
+  drawCostFig('ls-b',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleB,P});
+  drawCostFig('ls-c',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleC,P});
+  drawCostFig('ls-d',{fontSize: 13,resolver:resolveB,labelDrawer:drawStyleD,P});
 }
 
 window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
@@ -1765,5 +1751,6 @@ window.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
 }));
 window.addEventListener('resize', drawAll);
 </script>
+<script src="assets/nav.js" defer></script>
 </body>
 </html>

@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <title>Week 3: Interactive Visualizations · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="assets/vizpage.css" />
   <script src="assets/figkit.js"></script>
@@ -34,8 +35,8 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 
   <style>
     :root {
-      --bg:#f7f7f7; --bg-card:#fff; --ink:#1a1a1a; --ink-light:#6b6b6b;
-      --faint:#9aa3b2; --accent:#1f6fb2; --accent-lt:#eff4ff;
+      --bg:#f7f7f7; --bg-card:#fff; --ink:#1a1a1a; --ink-light: #4a5257;
+      --faint:#5f6875; --accent:#1f6fb2; --accent-lt:#eff4ff;
       --rule:#e4e4e4; --green:#2f5c3a; --red:var(--d-second); --amber:var(--amber); --purple:var(--unit-ink);
     }
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -54,9 +55,9 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
       display:flex; align-items:center; justify-content:space-between; gap:1rem;
     }
     .nav-left { display:flex; align-items:center; gap:0.75rem; }
-    .nav-course { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); }
+    .nav-course { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing: normal; text-transform: none; color: var(--ink-soft); }
     .nav-sep { color:var(--rule-strong); font-size: var(--t-small); }
-    .nav-week { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--unit-ink); letter-spacing:0.08em; }
+    .nav-week { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--unit-ink); letter-spacing: normal; }
     .nav-title { font-size: var(--t-caption); color:var(--ink-light); font-style:italic; }
     .nav-home { font-size: var(--t-caption); color:var(--unit-ink); text-decoration:none; }
     .nav-home:hover { text-decoration:underline; }
@@ -68,7 +69,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     .nav-ln-btn:hover { border-color:var(--unit-ink); color:var(--unit-ink); background:var(--accent-lt); }
 
     .week-hero { padding:3rem 2rem 2.5rem; max-width:1100px; margin:0 auto; border-bottom:1px solid var(--rule-strong); }
-    .week-tag { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase; color: var(--unit-ink); margin-bottom: var(--s-3); max-width: var(--measure-wide); }
+    .week-tag { font-size: var(--t-small); letter-spacing: normal; text-transform: none; color: var(--unit-ink); margin-bottom: var(--s-3); max-width: var(--measure-wide); }
     .week-hero h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight: 700; line-height:1.18; color:var(--ink); margin-bottom:0.6rem; }
     .week-hero .intro { font-size: var(--t-body-sm); color:var(--ink-light); max-width:660px; }
 
@@ -81,43 +82,26 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     .main-content { padding:2.5rem 2.5rem 5rem; min-width:0; }
     .section-block { margin-bottom:4.5rem; scroll-margin-top:70px; }
     .section-block h2 { font-size: var(--t-h2); font-weight: 700; color:var(--ink); margin-bottom:0.35rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent-lt); }
-    .section-intro { font-size: var(--t-body); color: var(--ink); line-height: var(--lh-body); margin-bottom: var(--s-6); max-width: var(--measure); }
-    .section-number { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--unit-ink); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:0.25rem; }
-
-    .viz-wrapper { background:var(--bg-card); border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; margin:1.5rem 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
-    .viz-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.1rem; background:#f4f6fa; border-bottom:1px solid var(--rule-strong); cursor:pointer; user-select:none; }
-    .viz-header:focus-visible { outline:3px solid var(--unit-ink); outline-offset:2px; border-radius:4px; }
-    .fig-num-badge { font-family:var(--font-mono); font-size: var(--t-caption); font-weight: 500; letter-spacing:0.08em; text-transform:uppercase; background:var(--accent-lt); color:var(--unit-ink); border:1px solid rgba(26,86,219,0.2); border-radius:20px; padding:2px 8px; flex-shrink:0; }
-    .viz-title { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.07em; text-transform:uppercase; color:var(--unit-ink); margin-left:0.75rem; flex:1; }
-    .fig-chevron { color:var(--faint); font-size: var(--t-caption); transition:transform 0.2s; }
-    .viz-wrapper.collapsed .fig-chevron { transform:rotate(-90deg); }
-    .viz-wrapper.collapsed .viz-body { display:none; }
-    .viz-body { padding:1.4rem; }
-
-    .viz-controls { display:flex; flex-wrap:wrap; gap:1.2rem; align-items:flex-end; margin-bottom:1.2rem; padding:0.9rem 1.1rem; background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:6px; }
     .ctrl-group { display:flex; flex-direction:column; gap:0.28rem; min-width:130px; }
-    .ctrl-group label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); display:flex; align-items:center; gap:4px; }
+    .ctrl-group label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing: normal; text-transform: none; color:var(--ink-light); display:flex; align-items:center; gap:4px; }
     .ctrl-val { font-family:var(--font-mono); font-size: var(--t-small); color:var(--unit-ink); font-weight: 500; }
     input[type="range"] { -webkit-appearance:none; width:100%; height:4px; background:var(--accent-lt); border-radius:2px; outline:none; cursor:pointer; }
     input[type="range"]:focus-visible { outline:3px solid var(--unit-ink); outline-offset:4px; border-radius:3px; }
     input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--unit-ink); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.18); }
 
     .viz-two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    .viz-panel { background:var(--bg-card); border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; }
-    .viz-panel-label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); padding:0.5rem 0.8rem; background:#f8f9fb; border-bottom:1px solid var(--rule-strong); }
-
     .jxgbox { background:#fff !important; border:none !important; border-radius:0 !important; }
     .draggable-label { cursor:move; }
-    .d3-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; font-family:'DM Sans',system-ui,sans-serif; }
+    .d3-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; font-family:var(--font-body); }
     .d3-overlay .draggable-label { pointer-events:auto; }
 
     .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; padding:0.8rem; }
     .stat-box { background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:5px; padding:0.55rem 0.75rem; }
-    .stat-label { font-size: var(--t-caption); color: var(--ink-faint); }
+    .stat-label { font-size: var(--t-caption); color: var(--ink-soft); }
     .stat-val { font-family:var(--font-mono); font-size: var(--t-small); font-weight: 500; color:var(--ink); }
 
     .scoreboard { background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:6px; padding:0.9rem 1rem; margin-top:0.75rem; }
-    .sb-title { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.1em; text-transform:uppercase; color:var(--faint); margin-bottom:0.55rem; }
+    .sb-title { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing: normal; text-transform: none; color: var(--ink-soft); margin-bottom:0.55rem; }
     .sb-row { display:flex; justify-content:space-between; align-items:center; gap:0.6rem; padding:0.32rem 0; border-bottom:1px solid var(--rule-strong); font-size: var(--t-caption); }
     .sb-row:last-child { border-bottom:none; font-weight: 500; }
     .sb-row .sb-lbl { color:var(--ink-light); }
@@ -144,13 +128,13 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     .quiz-btn.incorrect { background:#fee2e2; border-color:#fc8181; color:#991b1b; }
     .quiz-btn.revealed { background:var(--accent-lt); border-color:var(--unit-ink); color:var(--unit-ink); }
     .quiz-feedback { background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:6px; padding:0.75rem 1rem; font-size: var(--t-small); color:var(--ink-light); line-height:1.65; margin-bottom:0.75rem; }
-    .quiz-score { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--ink-faint); margin-bottom:0.5rem; }
+    .quiz-score { font-family:var(--font-mono); font-size: var(--t-caption); color:var(--ink-soft); margin-bottom:0.5rem; }
     .quiz-next { font-family:var(--font-body); font-size: var(--t-caption); font-weight: 500; padding:0.35rem 1rem; border:1px solid var(--unit-ink); border-radius:6px; background:var(--unit-ink); color:#fff; cursor:pointer; transition:opacity 0.15s; }
     .quiz-next:hover { opacity:0.85; }
 
     /* Toggle switch */
     .toggle-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.8rem; }
-    .toggle-label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-light); }
+    .toggle-label { font-family:var(--font-mono); font-size: var(--t-caption); letter-spacing: normal; text-transform: none; color:var(--ink-light); }
     .toggle-switch { display:flex; background:#f0f3f8; border:1px solid var(--rule-strong); border-radius:6px; overflow:hidden; }
     .toggle-opt {
       padding:0.32rem 0.9rem; font-family:var(--font-body); font-size: var(--t-caption); font-weight: 500;
@@ -172,7 +156,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     /* Inline grid-template-columns on the figure panels cannot be overridden
        without !important. Below this width Fig 3.2 collapsed to a 17px sliver
        beside its scoreboard. */
-    @media (max-width:760px) { .fig-cols { grid-template-columns: 1fr !important; } }
+    
     @media (max-width:620px) {
       .viz-two-col { grid-template-columns:1fr; }
     }
@@ -186,143 +170,6 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 <body>
 
 <!-- Left nav -->
-<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
-<nav class="left-nav" id="leftNav" aria-label="Course weeks">
-  <div class="left-nav-header">EC224</div>
-  <ul>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 1</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week1.html">Overview</a></li>
-          <li><a href="week1-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 2</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week2.html">Overview</a></li>
-          <li><a href="week2-viz.html">Visualizations</a></li>
-          <li><a href="week2-practice.html">Practice</a></li>
-          <li><a href="week2-slides.html">Slides</a></li>
-          <li><a href="week2-videos.html">Videos</a></li>
-          <li><a href="week2-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published active">
-      <details class="ln-wk" open>
-        <summary>Week 3</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week3.html">Overview</a></li>
-          <li><a class="on" aria-current="page" href="week3-viz.html">Visualizations</a></li>
-          <li><a href="week3-practice.html">Practice</a></li>
-          <li><a href="week3-slides.html">Slides</a></li>
-          <li><a href="week3-videos.html">Videos</a></li>
-          <li><a href="week3-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 4</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week4.html">Overview</a></li>
-          <li><a href="week4-viz.html">Visualizations</a></li>
-          <li><a href="week4-practice.html">Practice</a></li>
-          <li><a href="week4-slides.html">Slides</a></li>
-          <li><a href="week4-videos.html">Videos</a></li>
-          <li><a href="week4-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 5</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week5.html">Overview</a></li>
-          <li><a href="week5-viz.html">Visualizations</a></li>
-          <li><a href="week5-slides.html">Slides</a></li>
-          <li><a href="week5-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 6</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week6.html">Overview</a></li>
-          <li><a href="week6-viz.html">Visualizations</a></li>
-          <li><a href="week6-slides.html">Slides</a></li>
-          <li><a href="week6-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 7</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week7.html">Overview</a></li>
-          <li><a href="week7-viz.html">Visualizations</a></li>
-          <li><a href="week7-slides.html">Slides</a></li>
-          <li><a href="week7-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 8</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week8.html">Overview</a></li>
-          <li><a href="week8-viz.html">Visualizations</a></li>
-          <li><a href="week8-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 9</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week9.html">Overview</a></li>
-          <li><a href="week9-viz.html">Visualizations</a></li>
-          <li><a href="week9-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 10</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week10.html">Overview</a></li>
-          <li><a href="week10-viz.html">Visualizations</a></li>
-          <li><a href="week10-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 11</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week11.html">Overview</a></li>
-          <li><a href="week11-viz.html">Visualizations</a></li>
-          <li><a href="week11-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 12</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week12.html">Overview</a></li>
-          <li><a href="week12-viz.html">Visualizations</a></li>
-          <li><a href="week12-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-  </ul>
-</nav>
 
 <!-- Top bar (shared chrome, matches week4 to week8) -->
 <div class="topbar">
@@ -331,7 +178,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
   <a href="week3.html">Week 3</a>
   <span class="crumb-sep">/</span>
   <span class="crumb-here">Visualizations</span>
-  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+  <span class="topbar-end"><button class="btn" data-nav-open>All weeks</button></span>
 </div>
   </div>
 </div>
@@ -347,14 +194,14 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 
   <!-- Sidebar TOC -->
   <nav class="rail" aria-label="Figures on this page">
-    <div class="rail-hd">Figures</div>
-    <nav id="toc-nav">
-      <a href="#sec-demand"   class="toc-link">Fig 3.1 · Demand Derivation</a>
-      <a href="#sec-slutsky"  class="toc-link">Fig 3.2 · Slutsky Decomposition</a>
-      <a href="#sec-income"   class="toc-link">Fig 3.3 · Income Effects</a>
-      <a href="#sec-drill"    class="toc-link">Fig 3.4 · Shift vs. Movement</a>
-      <a href="#sec-cross"    class="toc-link">Fig 3.5 · Cross-Price Explorer</a>
-    </nav>
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-demand"><span>3.1</span><span class="rail-title">Two-Panel Demand Derivation</span></a></li>
+      <li><a href="#sec-slutsky"><span>3.2</span><span class="rail-title">Slutsky Decomposition Explorer</span></a></li>
+      <li><a href="#sec-income"><span>3.3</span><span class="rail-title">Income Effects &amp; Demand Shifts</span></a></li>
+      <li><a href="#sec-drill"><span>3.4</span><span class="rail-title">Shift vs. Movement</span></a></li>
+      <li><a href="#sec-cross"><span>3.5</span><span class="rail-title">Cross-Price Explorer</span></a></li>
+    </ol>
   </nav>
 
   <!-- Main content -->
@@ -363,56 +210,29 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 1 · Two-Panel Demand Derivation
          ═══════════════════════════════════════════════════════ -->
-    <section class="sec page" id="sec-demand">
-      <span class="section-number">Fig 3.1 · LO2 &amp; LO3</span>
-      <h2>Two-Panel Demand Derivation</h2>
-      <p class="section-intro">Every price of X pins down one optimal bundle on the left. Now let's change the price of X and see what changes. As we lower the price step by step, the budget line pivots outward, the consumer finds a new indifference curve, and a new optimal point emerges. That bundle's X-coordinate is then plotted on the right, building the demand curve one point at a time.</p>
-
-      <div class="viz-wrapper" id="vw-demand">
-        <div class="viz-header fig-header-row" onclick="toggleViz('vw-demand')">
-          <span class="fig-num-badge">Fig 3.1</span>
-          <span class="viz-title">▸ Two-Panel Demand Derivation</span>
-          <span class="fig-chevron">▾</span>
-        </div>
-        <div class="viz-body">
-          <!-- Video + speed controls -->
-          <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.75rem;line-height:0;">
+    <section class="sec page fig-sec" id="sec-demand">
+      <div class="fig-prose">
+        <div class="fig-hd">
+        <span class="fig-n">Fig 3.1</span>
+        <h3>Two-Panel Demand Derivation</h3>
+        <span class="fig-lo">LO2 &amp; LO3</span>
+      </div>
+        <p class="fig-intro">Every price of X pins down one optimal bundle on the left. Now let's change the price of X and see what changes. As we lower the price step by step, the budget line pivots outward, the consumer finds a new indifference curve, and a new optimal point emerges. That bundle's X-coordinate is then plotted on the right, building the demand curve one point at a time.</p>
+        <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.75rem;line-height:0;">
             <video id="v1-video" data-autoplay controls playsinline preload="metadata"
               style="width:100%;display:block;border-radius:10px;">
               <source src="assets/demand-derivation.mp4" type="video/mp4">
               Your browser does not support HTML5 video.
             </video>
           </div>
-          <!-- Playback speed controls -->
-          <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.85rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.85rem;flex-wrap:wrap;">
             <span style="font-family:var(--font-mono);font-size: var(--t-caption);color:var(--ink-light);">Playback speed:</span>
             <button class="v1-speed-btn" data-rate="0.5" onclick="v1SetRate(0.5)" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
             <button class="v1-speed-btn active-rate" data-rate="1" onclick="v1SetRate(1)" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.6rem;border:1px solid var(--unit-ink);border-radius:5px;background:var(--accent-lt);color:var(--unit-ink);cursor:pointer;">1x</button>
             <button class="v1-speed-btn" data-rate="2" onclick="v1SetRate(2)" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
           </div>
-          <!-- Narration box: above both panels -->
-          <div id="v1-narration" style="font-size: var(--t-body);font-weight: 500;color:var(--ink);background:var(--accent-lt);border-left:4px solid var(--unit-ink);border-radius:0 8px 8px 0;padding:1rem 1.3rem;margin-bottom:1rem;line-height:1.65;min-height:3.8rem;"></div>
-
-          <!-- Two-panel canvas area -->
-          <div class="fig-cols" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
-            <div style="border:1px solid var(--rule-strong);border-radius:8px;overflow:hidden;background:#fff;">
-              <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">Utility Maximization</div>
-              <div id="cv1-left-wrap" style="position:relative;">
-                <canvas id="cv1-left" style="width:100%;display:block;"></canvas>
-                <div id="cv1-left-ov" class="d3-overlay"></div>
-              </div>
-            </div>
-            <div style="border:1px solid var(--rule-strong);border-radius:8px;overflow:hidden;background:#fff;">
-              <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">Demand Curve</div>
-              <div id="cv1-right-wrap" style="position:relative;">
-                <canvas id="cv1-right" style="width:100%;display:block;"></canvas>
-                <div id="cv1-right-ov" class="d3-overlay"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Controls -->
-          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+        <div id="v1-narration" style="font-size: var(--t-body);font-weight: 500;color:var(--ink);background:var(--accent-lt);border-left:4px solid var(--unit-ink);border-radius:0 8px 8px 0;padding:1rem 1.3rem;margin-bottom:1rem;line-height:1.65;min-height:3.8rem;"></div>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
             <button id="v1-play-btn" onclick="v1PlayPause()" style="font-family:var(--font-body);font-size: var(--t-caption);font-weight: 500;padding:0.38rem 1rem;border:1px solid var(--unit-ink);border-radius:6px;background:var(--unit-ink);color:#fff;cursor:pointer;">Play</button>
             <button onclick="v1StepBack()" style="font-family:var(--font-body);font-size: var(--t-caption);font-weight: 500;padding:0.38rem 0.8rem;border:1px solid var(--rule-strong);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">&larr; Back</button>
             <button onclick="v1StepFwd()" style="font-family:var(--font-body);font-size: var(--t-caption);font-weight: 500;padding:0.38rem 0.8rem;border:1px solid var(--rule-strong);border-radius:6px;background:#fff;color:var(--text);cursor:pointer;">Next &rarr;</button>
@@ -421,7 +241,26 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
             <button onclick="v1SetSpeed(0.5)" id="v1-sp-05" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.55rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
             <button onclick="v1SetSpeed(1)" id="v1-sp-1" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.55rem;border:1px solid var(--unit-ink);border-radius:5px;background:var(--accent-lt);color:var(--unit-ink);cursor:pointer;">1x</button>
             <button onclick="v1SetSpeed(2)" id="v1-sp-2" style="font-family:var(--font-mono);font-size: var(--t-caption);padding:0.22rem 0.55rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
-            <span id="v1-step-counter" style="font-family:var(--font-mono);font-size: var(--t-caption);color:var(--faint);margin-left:auto;">Step 0 / 4</span>
+            <span id="v1-step-counter" style="font-family:var(--font-mono);font-size: var(--t-caption);color: var(--ink-soft);margin-left:auto;">Step 0 / 4</span>
+          </div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="two-col-panels">
+            <div class="fig-plot">
+              <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform: none;letter-spacing: normal;color: var(--ink-soft);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">Utility Maximization</div>
+              <div id="cv1-left-wrap" style="position:relative;">
+                <canvas id="cv1-left" style="width:100%;display:block;"></canvas>
+                <div id="cv1-left-ov" class="d3-overlay"></div>
+              </div>
+            </div>
+            <div class="fig-plot">
+              <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform: none;letter-spacing: normal;color: var(--ink-soft);padding:0.4rem 0.6rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">Demand Curve</div>
+              <div id="cv1-right-wrap" style="position:relative;">
+                <canvas id="cv1-right" style="width:100%;display:block;"></canvas>
+                <div id="cv1-right-ov" class="d3-overlay"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -430,35 +269,37 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 2 · Slutsky Decomposition
          ═══════════════════════════════════════════════════════ -->
-    <section class="sec page" id="sec-slutsky">
-      <span class="section-number">Fig 3.2 · LO6</span>
-      <h2>Slutsky Decomposition Explorer</h2>
-      <p class="section-intro">Any price change can be split into a substitution effect (SE) - moving along the original IC at new prices - and an income effect (IE) - shifting between ICs due to changed real income. Use the slider to vary the new price and watch the decomposition update live.</p>
-
-      <div class="viz-wrapper" id="vw-slutsky">
-        <div class="viz-header fig-header-row" onclick="toggleViz('vw-slutsky')">
-          <span class="fig-num-badge">Fig 3.2</span>
-          <span class="viz-title">▸ Slutsky Decomposition Explorer</span>
-          <span class="fig-chevron">▾</span>
-        </div>
-        <div class="viz-body">
-          <div class="viz-controls">
+    <section class="sec page fig-sec" id="sec-slutsky">
+      <div class="fig-prose">
+        <div class="fig-hd">
+        <span class="fig-n">Fig 3.2</span>
+        <h3>Slutsky Decomposition Explorer</h3>
+        <span class="fig-lo">LO6</span>
+      </div>
+        <p class="fig-intro">Any price change can be split into a substitution effect (SE) - moving along the original IC at new prices - and an income effect (IE) - shifting between ICs due to changed real income. Use the slider to vary the new price and watch the decomposition update live.</p>
+        <div class="callout common-mistake" style="margin-top:1rem;">
+            <strong>Remember:</strong> The compensated budget line has the <em>new</em> slope (-P<sub>X,new</sub>/P<sub>Y</sub>) but provides just enough income to maintain the original utility U<sub>A</sub>. Point C is its tangency with the original IC. SE is always negative for own-price increases.
+          </div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row">
             <div class="ctrl">
               <label>New P<sub>X</sub> = <span class="ctrl-val" id="v2-px-val">$1.50</span></label>
               <input type="range" id="v2-px" min="0.5" max="6" step="any" value="1.5" aria-label="New price of X" />
             </div>
             <div style="font-size: var(--t-caption);color:var(--ink-light);align-self:center;">
-              Fixed original: <strong>P<sub>X</sub> = $3</strong> &nbsp;·&nbsp; <strong>I = $60</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
+              Fixed original: <strong>P<sub>X</sub> = $3</strong> <span class="foot-sep"></span> <strong>I = $60</strong> <span class="foot-sep"></span> <strong>P<sub>Y</sub> = $3</strong>
             </div>
           </div>
-          <div class="fig-cols" style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
-            <div class="viz-panel">
-              <div class="viz-panel-label">Three budget lines · Two ICs</div>
+          <div class="fig-split">
+            <div class="fig-cell"><div class="panel-label">Three budget lines · Two ICs</div>
+            <div class="fig-plot">
               <div id="jxg-v2-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
                 <div id="jxg-v2" role="img" aria-label="Slutsky decomposition graph showing substitution and income effects of a price change" style="width:100%;height:100%;"></div>
                 <div id="jxg-v2-ov" class="d3-overlay"></div>
               </div>
-            </div>
+            </div></div>
             <div>
               <div class="scoreboard">
                 <div class="sb-title">Slutsky Scoreboard</div>
@@ -484,9 +325,6 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
               </div>
             </div>
           </div>
-          <div class="callout common-mistake" style="margin-top:1rem;">
-            <strong>Remember:</strong> The compensated budget line has the <em>new</em> slope (-P<sub>X,new</sub>/P<sub>Y</sub>) but provides just enough income to maintain the original utility U<sub>A</sub>. Point C is its tangency with the original IC. SE is always negative for own-price increases.
-          </div>
         </div>
       </div>
     </section>
@@ -494,19 +332,24 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
     <!-- ═══════════════════════════════════════════════════════
          SECTION 3 · Income Effects & Demand Shifts
          ═══════════════════════════════════════════════════════ -->
-    <section class="sec page" id="sec-income">
-      <span class="section-number">Fig 3.3 · LO4 &amp; LO5</span>
-      <h2>Income Effects &amp; Demand Shifts</h2>
-      <p class="section-intro">A change in income shifts the entire demand curve. Toggle between a normal good (rising income shifts demand rightward) and an inferior good (rising income shifts demand leftward), and watch the income expansion path trace out.</p>
-
-      <div class="viz-wrapper" id="vw-income">
-        <div class="viz-header fig-header-row" onclick="toggleViz('vw-income')">
-          <span class="fig-num-badge">Fig 3.3</span>
-          <span class="viz-title">▸ Income Effects &amp; Demand Shifts</span>
-          <span class="fig-chevron">▾</span>
-        </div>
-        <div class="viz-body">
-          <div class="viz-controls">
+    <section class="sec page fig-sec" id="sec-income">
+      <div class="fig-prose">
+        <div class="fig-hd">
+        <span class="fig-n">Fig 3.3</span>
+        <h3>Income Effects &amp; Demand Shifts</h3>
+        <span class="fig-lo">LO4 &amp; LO5</span>
+      </div>
+        <p class="fig-intro">A change in income shifts the entire demand curve. Toggle between a normal good (rising income shifts demand rightward) and an inferior good (rising income shifts demand leftward), and watch the income expansion path trace out.</p>
+        <div class="stat-grid" style="margin-top:0.8rem;">
+            <div class="readout-col"><div class="readout-label">X* (optimal)</div><div class="readout-val" id="v3-xstar">-</div></div>
+            <div class="readout-col"><div class="readout-label">Y* (optimal)</div><div class="readout-val" id="v3-ystar">-</div></div>
+            <div class="readout-col"><div class="readout-label">∂X*/∂I (sign)</div><div class="readout-val" id="v3-dxi">-</div></div>
+            <div class="readout-col"><div class="readout-label">Demand shift direction</div><div class="readout-val" id="v3-shift">-</div></div>
+          </div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row">
             <div class="ctrl">
               <label>Income I = <span class="ctrl-val" id="v3-i-val">$80</span></label>
               <input type="range" id="v3-income" min="40" max="120" step="any" value="80" aria-label="Income I" />
@@ -519,32 +362,25 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
               </div>
             </div>
             <div style="font-size: var(--t-caption);color:var(--ink-light);align-self:center;">
-              Fixed: <strong>P<sub>X</sub> = $2</strong> &nbsp;·&nbsp; <strong>P<sub>Y</sub> = $3</strong>
+              Fixed: <strong>P<sub>X</sub> = $2</strong> <span class="foot-sep"></span> <strong>P<sub>Y</sub> = $3</strong>
             </div>
           </div>
-          <div class="viz-two-col">
-            <div class="viz-panel">
-              <div class="viz-panel-label">IC / Budget Constraint + Expansion Path</div>
+          <div class="two-col-panels">
+            <div class="fig-cell"><div class="panel-label">IC / Budget Constraint + Expansion Path</div>
+            <div class="fig-plot">
               <div id="jxg-v3-left-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
                 <div id="jxg-v3-left" role="img" aria-label="Indifference curve and budget constraint with income expansion path" style="width:100%;height:100%;"></div>
                 <div id="jxg-v3-left-ov" class="d3-overlay"></div>
               </div>
-            </div>
-            <div class="viz-panel">
-              <div class="viz-panel-label">Demand Curve Shift (at P<sub>X</sub> = $2)</div>
+            </div></div>
+            <div class="fig-cell"><div class="panel-label">Demand Curve Shift (at P<sub>X</sub> = $2)</div>
+            <div class="fig-plot">
               <div id="jxg-v3-right-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
                 <div id="jxg-v3-right" role="img" aria-label="Demand curve shift showing effect of income change at fixed price Px = $2" style="width:100%;height:100%;"></div>
                 <div id="jxg-v3-right-ov" class="d3-overlay"></div>
               </div>
-            </div>
+            </div></div>
           </div>
-          <div class="stat-grid" style="margin-top:0.8rem;">
-            <div class="readout-col"><div class="readout-label">X* (optimal)</div><div class="readout-val" id="v3-xstar">-</div></div>
-            <div class="readout-col"><div class="readout-label">Y* (optimal)</div><div class="readout-val" id="v3-ystar">-</div></div>
-            <div class="readout-col"><div class="readout-label">∂X*/∂I (sign)</div><div class="readout-val" id="v3-dxi">-</div></div>
-            <div class="readout-col"><div class="readout-label">Demand shift direction</div><div class="readout-val" id="v3-shift">-</div></div>
-          </div>
-          <!-- old / new / change readout, baseline is income I0 = $80 -->
           <div id="v3-delta" class="delta-bar"></div>
         </div>
       </div>
@@ -554,40 +390,41 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
          SECTION 4 · Shift vs. Movement Drill
          ═══════════════════════════════════════════════════════ -->
     <section class="sec page" id="sec-drill">
-      <span class="section-number">Fig 3.4 · LO2, LO3 &amp; LO4</span>
-      <h2>Shift vs. Movement Drill</h2>
-      <p class="section-intro">The demand curve for X plots P<sub>X</sub> on the vertical axis and Q<sub>X</sub> on the horizontal axis - everything else is held fixed. So a change in P<sub>X</sub> itself simply slides the consumer along the existing curve (a <em>movement</em>). Any other change - income, the price of another good, tastes, number of buyers - alters how much X is demanded <em>at every price</em>, which shifts the entire curve. Read each scenario below and decide which of the two it is; the explanation tells you why.</p>
-
-      <div class="viz-wrapper" id="vw-drill">
-        <div class="viz-header fig-header-row" onclick="toggleViz('vw-drill')">
-          <span class="fig-num-badge">Fig 3.4</span>
-          <span class="viz-title">▸ Shift vs. Movement Drill</span>
-          <span class="fig-chevron">▾</span>
-        </div>
-        <div class="viz-body">
-          <div id="drill-root"></div>
-        </div>
+      <div class="fig-hd">
+        <span class="fig-n">Fig 3.4</span>
+        <h3>Shift vs. Movement Drill</h3>
+        <span class="fig-lo">LO2, LO3 &amp; LO4</span>
       </div>
+      <p class="fig-intro">The demand curve for X plots P<sub>X</sub> on the vertical axis and Q<sub>X</sub> on the horizontal axis - everything else is held fixed. So a change in P<sub>X</sub> itself simply slides the consumer along the existing curve (a <em>movement</em>). Any other change - income, the price of another good, tastes, number of buyers - alters how much X is demanded <em>at every price</em>, which shifts the entire curve. Read each scenario below and decide which of the two it is; the explanation tells you why.</p>
+
+      
+        
+        
+          <div id="drill-root"></div>
+        
+      
     </section>
 
     <!-- ═══════════════════════════════════════════════════════
          SECTION 5 · Cross-Price & Demand Function Explorer
          ═══════════════════════════════════════════════════════ -->
-    <section class="sec page" id="sec-cross">
-      <span class="section-number">Fig 3.5 · LO1 &amp; LO4</span>
-      <h2>Cross-Price &amp; Demand Function Explorer</h2>
-      <p class="section-intro">Two types of price effects show up on a demand diagram - and they look completely different. Moving the <strong>own price</strong> (P<sub>X</sub>) traces a path <em>along</em> the existing demand curve: quantity adjusts, but the curve itself stays put. Changing the <strong>cross price</strong> (P<sub>Y</sub>, the price of another good) <em>shifts the entire curve</em> - at every possible P<sub>X</sub>, demand for X is now higher or lower than before.</p>
-      <p class="section-intro" style="margin-top:0.6rem;">Why the difference? The demand curve for X already embeds a fixed P<sub>Y</sub>. When P<sub>Y</sub> changes, that embedded assumption breaks - you need a whole new curve. The direction of the shift reveals the relationship: if X and Y are <strong>substitutes</strong> (think Pepsi vs Coke), a higher P<sub>Y</sub> makes X look relatively cheaper and shifts demand for X <em>rightward</em>. If they are <strong>complements</strong> (think coffee and milk), a higher P<sub>Y</sub> makes the combination more expensive and shifts demand for X <em>leftward</em>.</p>
-      <p class="section-intro" style="margin-top:0.6rem;color:var(--unit-ink);font-weight: 500;">Try this: set the relationship to <em>Substitutes</em>, then hold P<sub>X</sub> fixed and raise P<sub>Y</sub>. Watch the demand curve shift right - meaning at the same P<sub>X</sub>, consumers now want <em>more</em> X because Y just got more expensive. Then switch to <em>Complements</em> and repeat: the shift reverses.</p>
-
-      <div class="viz-wrapper" id="vw-cross">
-        <div class="viz-header fig-header-row" onclick="toggleViz('vw-cross')">
-          <span class="fig-num-badge">Fig 3.5</span>
-          <span class="viz-title">▸ Cross-Price &amp; Demand Function Explorer</span>
-          <span class="fig-chevron">▾</span>
-        </div>
-        <div class="viz-body">
-          <div class="viz-controls">
+    <section class="sec page fig-sec" id="sec-cross">
+      <div class="fig-prose">
+        <div class="fig-hd">
+        <span class="fig-n">Fig 3.5</span>
+        <h3>Cross-Price &amp; Demand Function Explorer</h3>
+        <span class="fig-lo">LO1 &amp; LO4</span>
+      </div>
+        <p class="fig-intro">Two types of price effects show up on a demand diagram - and they look completely different. Moving the <strong>own price</strong> (P<sub>X</sub>) traces a path <em>along</em> the existing demand curve: quantity adjusts, but the curve itself stays put. Changing the <strong>cross price</strong> (P<sub>Y</sub>, the price of another good) <em>shifts the entire curve</em> - at every possible P<sub>X</sub>, demand for X is now higher or lower than before.</p>
+        <p class="fig-intro" style="margin-top:0.6rem;">Why the difference? The demand curve for X already embeds a fixed P<sub>Y</sub>. When P<sub>Y</sub> changes, that embedded assumption breaks - you need a whole new curve. The direction of the shift reveals the relationship: if X and Y are <strong>substitutes</strong> (think Pepsi vs Coke), a higher P<sub>Y</sub> makes X look relatively cheaper and shifts demand for X <em>rightward</em>. If they are <strong>complements</strong> (think coffee and milk), a higher P<sub>Y</sub> makes the combination more expensive and shifts demand for X <em>leftward</em>.</p>
+        <p class="fig-intro" style="margin-top:0.6rem;color:var(--unit-ink);font-weight: 500;">Try this: set the relationship to <em>Substitutes</em>, then hold P<sub>X</sub> fixed and raise P<sub>Y</sub>. Watch the demand curve shift right - meaning at the same P<sub>X</sub>, consumers now want <em>more</em> X because Y just got more expensive. Then switch to <em>Complements</em> and repeat: the shift reverses.</p>
+        <div class="callout key-idea" style="margin-top:1rem;">
+            <strong>Key distinction:</strong> Moving the P<sub>X</sub> slider causes a <em>movement along</em> the demand curve (the current point slides). Moving P<sub>Y</sub> or I <em>shifts</em> the entire curve.
+          </div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row">
             <div class="ctrl">
               <label>P<sub>X</sub> = <span class="ctrl-val" id="v5-px-val">$4.00</span></label>
               <input type="range" id="v5-px" min="1" max="8" step="any" value="4" aria-label="Price of X" />
@@ -608,10 +445,10 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
               </div>
             </div>
           </div>
-          <div class="fig-cols" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="two-col-panels">
             <div>
               <div style="background:#f8f9fb;border:1px solid var(--rule-strong);border-radius:6px;padding:1rem 1.2rem;font-size: var(--t-small);line-height:1.8;">
-                <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin-bottom:0.5rem;">Live Demand Function</div>
+                <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform: none;letter-spacing: normal;color: var(--ink-soft);margin-bottom:0.5rem;">Live Demand Function</div>
                 <div id="v5-formula" style="font-size: var(--t-small);line-height:2;"></div>
               </div>
               <div class="stat-grid" style="margin-top:0.6rem;">
@@ -621,16 +458,13 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
                 <div class="readout-col"><div class="readout-label">Curve effect of P<sub>Y</sub></div><div class="readout-val" id="v5-pyeff">-</div></div>
               </div>
             </div>
-            <div class="viz-panel">
-              <div class="viz-panel-label">Demand Curve for X (own price effect)</div>
+            <div class="fig-cell"><div class="panel-label">Demand Curve for X (own price effect)</div>
+            <div class="fig-plot">
               <div id="jxg-v5-wrap" style="position:relative;width:100%;aspect-ratio:1/1;">
                 <div id="jxg-v5" role="img" aria-label="Demand curve for good X showing own-price effect and cross-price demand shift" style="width:100%;height:100%;"></div>
                 <div id="jxg-v5-ov" class="d3-overlay"></div>
               </div>
-            </div>
-          </div>
-          <div class="callout key-idea" style="margin-top:1rem;">
-            <strong>Key distinction:</strong> Moving the P<sub>X</sub> slider causes a <em>movement along</em> the demand curve (the current point slides). Moving P<sub>Y</sub> or I <em>shifts</em> the entire curve.
+            </div></div>
           </div>
         </div>
       </div>
@@ -652,27 +486,8 @@ function nn(n, d) {
   if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
   return (Math.round(n*100)/100).toFixed(2);
 }
-function toggleViz(id) {
-  var wrapper = document.getElementById(id);
-  wrapper.classList.toggle('collapsed');
-  var hdr = wrapper.querySelector('.viz-header');
-  if (hdr) hdr.setAttribute('aria-expanded', String(!wrapper.classList.contains('collapsed')));
-}
 
-/* ── Keyboard support for collapsible figure headers ── */
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.viz-header.fig-header-row').forEach(function(hdr) {
-    hdr.setAttribute('tabindex', '0');
-    hdr.setAttribute('role', 'button');
-    hdr.setAttribute('aria-expanded', 'true');
-    hdr.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        hdr.click();
-      }
-    });
-  });
-});
+
 function toggleExpand(hdr) {
   const body = hdr.nextElementSibling;
   body.classList.toggle('open');
@@ -700,7 +515,7 @@ function freeB(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } ret
 /* ============================================================
    D3 SVG force-label overlay helpers
    (matches the S6/S8 "gold standard" pattern from testing.html:
-    white rounded-rect boxes, font-size 9 weight 600 'DM Sans',
+    white rounded-rect boxes, font-size 9 weight 600 'Libre Franklin',
     dashed thin connectors, NO anchor dot, forceCollide + forceX/Y
     anchored springs, smooth alphaTarget drag.)
 
@@ -723,7 +538,7 @@ function d3OverlaySvg(ovId) {
   const svg = d3.select(wrap).append('svg')
     .attr('viewBox', `0 0 ${w} ${h}`)
     .style('width', '100%').style('height', '100%').style('display', 'block')
-    .style('font-family', "'DM Sans',system-ui,sans-serif")
+    .style('font-family', "var(--font-body)")
     .style('overflow', 'visible');
   return { svg, w, h };
 }
@@ -878,7 +693,7 @@ window.addEventListener('resize', setSize);
 
 /* ---- D3 SVG label overlay (draggable force-labels over the canvas panels) ----
    Matches the S6/S8 gold-standard styling: white rounded-rect boxes,
-   font-size 9 / weight 600 'DM Sans', dashed thin connectors, no anchor dot. */
+   font-size 9 / weight 600 'Libre Franklin', dashed thin connectors, no anchor dot. */
 let v1OvL = null, v1OvR = null; // {svg,w,h,nodes,gs,conns,sim}
 
 function v1RebuildOverlay() {
@@ -1040,7 +855,7 @@ function v1DrawLeftAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
   ctx.fillStyle = '#8b95a5';
-  ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
+  ctx.font = (10*dpr) + "px var(--font-body)";
   ctx.textAlign = 'left';
   ctx.fillText('X', W - MR + 3*dpr, oy + 4*dpr);
   ctx.textAlign = 'center';
@@ -1052,7 +867,7 @@ function v1DrawRightAxisLabels(ctx, c) {
   const { dpr, W, H, ML, MB, MT, MR } = c;
   const ox = ML, oy = H - MB;
   ctx.fillStyle = '#8b95a5';
-  ctx.font = (10*dpr) + "px 'DM Sans',system-ui,sans-serif";
+  ctx.font = (10*dpr) + "px var(--font-body)";
   ctx.textAlign = 'left';
   ctx.fillText('Qty', W - MR + 3*dpr, oy + 4*dpr);
   ctx.textAlign = 'center';
@@ -1167,7 +982,7 @@ function v1DrawCanvas(animProg) {
     ctxR.beginPath(); ctxR.moveTo(rx, origRy + 5*dpr); ctxR.lineTo(rx, origRy - 4*dpr); ctxR.stroke();
 
     ctxR.fillStyle = col;
-    ctxR.font = `bold ${9*dpr}px 'DM Sans',system-ui,sans-serif`;
+    ctxR.font = `bold ${9*dpr}px var(--font-body)`;
     ctxR.textAlign = 'right';
     ctxR.fillText('$' + px, origRx - 7*dpr, ry + 3*dpr);
     const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
@@ -1201,7 +1016,7 @@ function v1DrawCanvas(animProg) {
     ctxR.beginPath(); ctxR.moveTo(rx, origRy + 8*dpr); ctxR.lineTo(rx, origRy - 6*dpr); ctxR.stroke();
 
     ctxR.fillStyle = col;
-    ctxR.font = `bold ${9*dpr}px 'DM Sans',system-ui,sans-serif`;
+    ctxR.font = `bold ${9*dpr}px var(--font-body)`;
     ctxR.textAlign = 'right';
     ctxR.fillText('$' + px, origRx - 10*dpr, ry + 4*dpr);
     ctxR.textAlign = 'center';
@@ -1436,8 +1251,8 @@ function drawV2() {
     boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.17],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
   });
   const b = v2b;
   // Horizontal grid lines
@@ -1445,8 +1260,8 @@ function drawV2() {
   for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
     b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
-  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize: 13,color:'#8b95a5',fixed:true});
 
   // Budget lines
   const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:EC.steel,strokeWidth:2,fixed:true});
@@ -1468,7 +1283,7 @@ function drawV2() {
   // Points A, C, B
   [{x:d.XA,y:d.YA,n:'A',c:EC.steel},{x:d.XC,y:d.YC,n:'C',c:EC.purple},{x:d.XB,y:d.YB,n:'B',c:EC.red}]
     .forEach(p => b.create('point',[p.x,p.y],{size:5,fillColor:p.c,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:p.n,withLabel:true,label:{fontSize:9,color:p.c,offset:[7,7]}}));
+      name:p.n,withLabel:true,label:{fontSize: 13,color:p.c,offset:[7,7]}}));
 
   // SE/IE brackets on X axis
   /* Below the x-axis TICK LABELS, not just below the axis: at -0.03 the
@@ -1490,7 +1305,7 @@ function drawV2() {
   document.getElementById('v2-type').textContent = isNorm ? 'Normal Good' : 'Inferior Good';
 
   // Curve-name + bracket labels as a draggable D3 SVG force-label overlay
-  // (white rounded-rect boxes, 9px/600 'DM Sans', dashed connectors, S6/S8 style)
+  // (white rounded-rect boxes, 9px/600 'Libre Franklin', dashed connectors, S6/S8 style)
   d3v2InitOverlay(b, {
     segOrig, segHicks, segNew, segSE, segIE,
     xiA, yi, xiHicks, yHicksInt, xiB,
@@ -1626,15 +1441,15 @@ function initViz3() {
     boundingbox:[-2,ymax,xmax,-2],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
   });
   v3b2 = JXG.JSXGraph.initBoard('jxg-v3-right',{
     boundingbox:[-2,7,xmax,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
   });
 
   const b1 = v3b1, b2 = v3b2;
@@ -1646,10 +1461,10 @@ function initViz3() {
   for (let gy = 1; gy <= 6; gy++) {
     b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
-  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize:10,color:'#8b95a5',fixed:true});
-  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
-  b2.create('text',[-1.5,6.5,'P'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize: 13,color:'#8b95a5',fixed:true});
 
   // Draw expansion path (static dashed line). Its label is rendered by the
   // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
@@ -1706,7 +1521,7 @@ function initViz3() {
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
     v3Pt = b1.create('point',[xs,ys],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize:9,color:EC.red,offset:[14,-18]}});
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize: 13,color:EC.red,offset:[14,-18]}});
 
     // Right panel: draw demand curve at current I
     [v3D0, v3D0drop, v3D0pt, v3D0lbl, v3D1, v3D2, v3RefPt, v3D1lbl].forEach(o => {
@@ -1737,14 +1552,14 @@ function initViz3() {
       v3D0 = b2.create('functiongraph',[dFn(V3_I0),0.1,xmax],
         {strokeColor:'#1f6fb2',strokeWidth:1.6,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
       v3D0drop = b2.create('segment',[[xs0,0],[xs0,V3_Px]],
-        {strokeColor:'#9aa3b2',strokeWidth:1,dash:2,strokeOpacity:0.5,fixed:true,highlight:false});
+        {strokeColor:'#5f6875',strokeWidth:1,dash:2,strokeOpacity:0.5,fixed:true,highlight:false});
       v3D0pt = b2.create('point',[xs0,V3_Px],
-        {size:3,fillColor:'#9aa3b2',strokeColor:'#fff',strokeWidth:1,fixed:true,withLabel:false,highlight:false});
+        {size:3,fillColor:'#5f6875',strokeColor:'#fff',strokeWidth:1,fixed:true,withLabel:false,highlight:false});
       v3D0lbl = mkLbl(V3_I0, 'D', true, 3.1);
     }
 
     v3D1 = b2.create('functiongraph',[dFn(I),0.1,xmax],{strokeColor:'#1f6fb2',strokeWidth:2,fixed:true});
-    v3D2 = b2.create('segment',[[qAt2(I),0],[qAt2(I),V3_Px]],{strokeColor:'#9aa3b2',strokeWidth:1,dash:2,fixed:true});
+    v3D2 = b2.create('segment',[[qAt2(I),0],[qAt2(I),V3_Px]],{strokeColor:'#5f6875',strokeWidth:1,dash:2,fixed:true});
     v3RefPt = b2.create('point',[qAt2(I),V3_Px],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
       name:'●',withLabel:false});
     v3D1lbl = mkLbl(I, shifted ? 'D′' : 'D', false, 4.7);
@@ -1943,16 +1758,16 @@ function initViz5() {
     boundingbox:[-2,8.8,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize:9,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
   });
   const b = v5b;
   // Horizontal grid lines (price 0-8)
   for (let gy = 1; gy <= 8; gy++) {
     b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[76,-0.3,'X'],{fontSize:10,color:'#8b95a5',fixed:true});
-  b.create('text',[-1.5,8.3,'P'],{fontSize:10,color:'#8b95a5',fixed:true});
+  b.create('text',[76,-0.3,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b.create('text',[-1.5,8.3,'P'],{fontSize: 13,color:'#8b95a5',fixed:true});
 
   redrawV5();
 
@@ -2000,7 +1815,7 @@ function redrawV5() {
       {strokeColor:'#1f6fb2',strokeWidth:1.4,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
     const gpy = 5.5, gx = safAdjBase / gpy;
     v5GhostLbl = b.create('text',[gx + 0.6, gpy + 0.3, 'D'],
-      {fontSize:11,color:'#1f6fb2',fixed:true,highlight:false,
+      {fontSize: 13,color:'#1f6fb2',fixed:true,highlight:false,
        cssStyle:'font-weight: 500;opacity:0.5;'});
   }
 
@@ -2010,7 +1825,7 @@ function redrawV5() {
   // Current point
   const curX = safAdj / v5Px;
   v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize:9,color:EC.red,offset:[7,5]}});
+    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize: 13,color:EC.red,offset:[7,5]}});
 
   // "D"/"D′" demand-curve name label as a draggable D3 SVG force-label overlay
   // (S6/S8 gold-standard style), anchored to a point on the curve.
@@ -2044,13 +1859,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([document.body]);
 });
 
-function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
-function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 </script>
   <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
   <script src="assets/autoplay-video.js"></script>
   <script src="assets/deltabar.js"></script>
+<script src="assets/nav.js" defer></script>
+<script src="assets/figlabels.js" defer></script>
 </body>
 </html>

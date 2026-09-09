@@ -211,7 +211,7 @@
   function injectWidgetCss() {
     if (CSS_INJECTED) return; CSS_INJECTED = true;
     var css =
-".ecbot{--ec:#1a56db;font-family:'DM Sans',system-ui,-apple-system,sans-serif;color:#1a1a1a;" +
+".ecbot{--ec:#1a56db;font-family:'Libre Franklin',system-ui,-apple-system,sans-serif;color:#1a1a1a;" +
 "border:1px solid #e4e4e4;border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.06);max-width:600px;}" +
 ".ecbot-head{padding:.8rem 1.05rem;border-bottom:1px solid #eee;font-weight:600;font-size:.96rem;display:flex;align-items:center;gap:.5rem;}" +
 ".ecbot-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex:0 0 auto;}" +
@@ -235,7 +235,7 @@
 ".ecbot-follow{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;}" +
 ".ecbot-chip{font-size:.74rem;color:#444;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:3px 10px;cursor:pointer;}" +
 ".ecbot-chip:hover{background:#e5e7eb;}" +
-".ecbot-typing{display:inline-flex;gap:3px;}.ecbot-typing span{width:6px;height:6px;border-radius:50%;background:#bbb;animation:ecbot-blink 1.2s infinite both;}" +
+".ecbot-typing{display:inline-flex;gap:3px;}.ecbot-typing span{width:6px;height:6px;border-radius:50%;background:#5f6875;animation:ecbot-blink 1.2s infinite both;}" +
 ".ecbot-typing span:nth-child(2){animation-delay:.2s;}.ecbot-typing span:nth-child(3){animation-delay:.4s;}" +
 "@keyframes ecbot-blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}" +
 ".ecbot-form{display:flex;gap:.5rem;padding:.7rem;border-top:1px solid #eee;}" +

@@ -45,7 +45,7 @@
     return d3.select('#' + wrapId).append('svg')
       .attr('viewBox', '0 0 ' + w + ' ' + h)
       .style('width', '100%').style('display', 'block')
-      .style('font-family', "'DM Sans',system-ui,sans-serif");
+      .style('font-family', "var(--font-body)");
   };
 
   // Axes for a caller-supplied pair of linear scales on the standard frame.

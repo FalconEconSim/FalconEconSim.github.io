@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="robots" content="noindex" />
   <title>[DEV · Claude] Week 3 Visualizations - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script defer src="assets/dev/d3kit.js"></script>
@@ -19,24 +20,21 @@
     .dev-banner a{color:#92400e;text-decoration:underline;}
     .viz-hero{padding:2.6rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
     .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
-    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
     .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;position:relative;z-index:1;}
     .viz-instructor{font-size:0.9rem;color:var(--muted);}
     .viz-bridge{font-size:0.92rem;color:var(--muted);line-height:1.7;max-width:680px;margin-top:0.7rem;}
     .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
-    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--muted);margin-bottom:0.6rem;}
     .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
     .toc li{font-size:0.855rem;color:var(--muted);}
     .toc a{color:var(--accent);text-decoration:none;}
     .toc a:hover{text-decoration:underline;}
-    .sec-divider{font-family:var(--mono);font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:3.2rem 0 0;padding-bottom:0.4rem;}
     .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
     .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
-    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
     .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
-    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
     .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
-    .panel-label{font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule);}
     .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
     .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
     .viz-slider-label{font-family:var(--mono);font-size:0.75rem;color:var(--muted);white-space:nowrap;}
@@ -45,12 +43,11 @@
     .viz-slider-val{font-family:var(--mono);font-size:0.82rem;color:var(--accent);min-width:42px;}
     .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
     .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
-    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
-    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:#c0392b;}
+    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#167c3a;}
+    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:#93301f;}
     .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
     .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
     .readout-col{flex:1;min-width:90px;}
-    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
     .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
     .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
     .insight-box.gold{background:#fdf8ec;border-color:#e6cf94;}
@@ -103,7 +100,7 @@
     </nav>
   </div>
 
-  <div class="sec-divider">Section 1 &middot; Deriving Demand</div>
+  <div class="sec-divider">Deriving Demand</div>
 
   <!-- FIG 3.1 -->
   <section class="fig-section" id="sec-31">
@@ -130,7 +127,7 @@
     <div class="insight-box"><strong>That is the demand curve:</strong> each price you set produces one optimal X*, and the locus of (P<sub>X</sub>, X*) pairs <em>is</em> the demand curve. Demand is derived, not assumed.</div>
   </section>
 
-  <div class="sec-divider">Section 2 &middot; Decomposing a Price Change</div>
+  <div class="sec-divider">Decomposing a Price Change</div>
 
   <!-- FIG 3.2 -->
   <section class="fig-section" id="sec-32">
@@ -172,7 +169,7 @@
     <div class="insight-box"><strong>Shift, not movement:</strong> a higher income shifts demand right at every price. Only a change in the good's own price moves you <em>along</em> a fixed demand curve.</div>
   </section>
 
-  <div class="sec-divider">Section 3 &middot; Practice</div>
+  <div class="sec-divider">Practice</div>
 
   <!-- FIG 3.4 -->
   <section class="fig-section" id="sec-34">
@@ -196,7 +193,7 @@
     <p class="fig-intro">
       The Cobb-Douglas demand function is X* = &alpha;M/P<sub>X</sub>. Change P<sub>X</sub> to <em>move along</em> the curve;
       change income M or the preference weight &alpha; to <em>shift / rotate</em> the whole curve. The faint
-      <span style="color:#9aa3b2;">ghost</span> is the baseline.
+      <span style="color:#5f6875;">ghost</span> is the baseline.
     </p>
     <div class="cvs-wrap"><div class="demo-svg-wrap" id="cvs35-wrap"></div></div>
     <div class="viz-ctrl-row">
@@ -222,7 +219,7 @@
       Type a question about demand, the Slutsky/Hicks split, or anything from Week&nbsp;3. The assistant answers
       <em>only</em> from the EC224 course pages, then gives you a <strong>&ldquo;show me on the page&rdquo;</strong> pill that
       opens the source jumped straight to the relevant lines. If it&rsquo;s not in the course materials, it says so, and
-      shows no links. <span style="color:#9aa3b2;">(Embedded demo of <code>assets/chatbot.js</code>.)</span>
+      shows no links. <span style="color:#5f6875;">(Embedded demo of <code>assets/chatbot.js</code>.)</span>
     </p>
     <div id="week3-bot" style="margin:0 auto;"></div>
   </section>
@@ -233,7 +230,7 @@
 </main>
 
 <script>
-const COL = { ic:'#7d3c98', icGhost:'#cbb8dd', budget:'#1e8449', opt:'#c0392b', demand:'#1a56db', ghost:'#9aa3b2', sub:'#1e8449', inc:'#d4813a' };
+const COL = { ic:'#7d3c98', icGhost:'#cbb8dd', budget:'#1e8449', opt:'#c0392b', demand:'#1a56db', ghost:'#5f6875', sub:'#1e8449', inc:'#d4813a' };
 const A_PREF=0.5, PY=6;   // shared Cobb-Douglas params for derivation figures
 
 // ── FIG 3.1: Two-panel demand derivation (stacked SVGs, aligned X axes) ──

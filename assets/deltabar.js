@@ -45,13 +45,13 @@
       '.delta-label{font-size:0.7rem;font-weight:600;letter-spacing:0.06em;',
       '  text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;',
       '  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
-      '.delta-nums{font-family:var(--mono);font-size:0.9rem;display:flex;',
+      '.delta-nums{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.9375rem;display:flex;',
       '  align-items:baseline;gap:0.35rem;flex-wrap:wrap;}',
       '.delta-was{color:var(--muted);text-decoration:line-through;',
       '  text-decoration-thickness:1px;opacity:0.75;}',
       '.delta-arrow{color:var(--muted);font-size:0.8rem;}',
       '.delta-now{color:var(--text);font-weight:700;}',
-      '.delta-chg{font-family:var(--mono);font-size:0.78rem;font-weight:600;',
+      '.delta-chg{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.8125rem;font-weight:500;',
       '  margin-top:0.2rem;display:flex;align-items:center;gap:0.25rem;}',
       /* Use the site's semantic tokens rather than inventing another red.
          Fallbacks keep this working if shared.css is ever not loaded, and the

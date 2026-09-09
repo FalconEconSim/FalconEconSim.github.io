@@ -23,11 +23,9 @@
   // saturated blue circle. Colours are hardcoded because the diagram is
   // full-colour like the covers, not tinted by the button's text colour.
   var FAB_ICON =
-    '<svg viewBox="0 0 40 40" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path d="M11 7 V31 H35" stroke="#1c2433" stroke-opacity="0.30" stroke-width="2"/>' +
-    '<path d="M15 13 L31 28" stroke="#c85a3c" stroke-width="3"/>' +
-    '<path d="M15 28 L31 13" stroke="#1f6fb2" stroke-width="3"/>' +
-    '<circle cx="23" cy="20.5" r="2.7" fill="#2f5c3a"/></svg>';
+    '<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round" aria-hidden="true">' +
+    '<path d="M10 7 V36 H41" stroke="currentColor" stroke-opacity="0.55" stroke-width="2.4" fill="none"/><path d="M15 13 L36 31" stroke="#c85a3c" stroke-width="3.4"/><path d="M15 31 L36 13" stroke="#1f6fb2" stroke-width="3.4"/><circle cx="25.5" cy="22" r="3.4" fill="#2f7d55"/>' +
+    '</svg>';
 
   // The four-point sparkle is the standard "AI" signal (Gemini, Copilot,
   // Notion AI all use it). It replaces the old "24/7" pill, which read as a
@@ -47,12 +45,10 @@
   // The same diagram in the site's data palette (blue demand, orange-red
   // supply) on a tinted card, matching the week covers.
   var MINI_LOGO =
-    '<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<rect x="3" y="3" width="42" height="42" rx="9" fill="#eaf2f8"/>' +
-    '<path d="M14 11 V34 H37" stroke="#1c2433" stroke-opacity="0.35" stroke-width="1.8"/>' +
-    '<path d="M17 15 L34 31" stroke="#c85a3c" stroke-width="2.6"/>' +
-    '<path d="M17 31 L34 15" stroke="#1f6fb2" stroke-width="2.6"/>' +
-    '<circle cx="25.5" cy="23" r="2.4" fill="#2f5c3a"/></svg>';
+    '<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round" aria-hidden="true">' +
+    '<rect x="2" y="2" width="44" height="44" rx="9" fill="#e7eaf0"/>' +
+    '<path d="M10 7 V36 H41" stroke="currentColor" stroke-opacity="0.55" stroke-width="2.1" fill="none"/><path d="M15 13 L36 31" stroke="#c85a3c" stroke-width="3"/><path d="M15 31 L36 13" stroke="#1f6fb2" stroke-width="3"/><circle cx="25.5" cy="22" r="3.4" fill="#2f7d55"/>' +
+    '</svg>';
 
   var EXPAND_ICON =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
@@ -65,17 +61,17 @@
 // with the colour diagram inside. No saturated-blue circle, no pulsing ring
 // (both read as a third-party support widget rather than part of the course).
 ".ecfab-btn{position:fixed;right:22px;bottom:22px;z-index:9998;width:62px;height:62px;border-radius:18px;" +
-"cursor:pointer;background:#eaf2f8;border:1.5px solid #0b4f8f;box-shadow:0 8px 22px rgba(11,79,143,.20);" +
+"cursor:pointer;background:#ffffff;border:1.5px solid #7a1f5c;box-shadow:0 8px 22px rgba(122,31,92,.18);" +
 "display:flex;align-items:center;justify-content:center;transition:transform .16s,box-shadow .16s;-webkit-tap-highlight-color:transparent;}" +
-".ecfab-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(11,79,143,.30);}" +
-".ecfab-btn svg{width:38px;height:38px;}" +
+".ecfab-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(122,31,92,.28);}" +
+".ecfab-btn svg{width:40px;height:40px;}" +
 // The AI sparkle sits in the corner where the "24/7" pill used to be.
 ".ecfab-badge{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;" +
-"background:#0b4f8f;color:#fff;border:2px solid #fbf9f6;display:flex;align-items:center;justify-content:center;" +
-"box-shadow:0 2px 7px rgba(11,79,143,.35);pointer-events:none;}" +
+"background:#7a1f5c;color:#fff;border:2px solid #eff1ee;display:flex;align-items:center;justify-content:center;" +
+"box-shadow:0 2px 7px rgba(122,31,92,.32);pointer-events:none;}" +
 ".ecfab-badge svg{width:13px;height:13px;}" +
 ".ecfab-open .ecfab-badge{display:none;}" +
-".ecfab-label{position:fixed;right:92px;bottom:37px;z-index:9998;background:#111827;color:#fff;font-size:.78rem;font-weight:600;" +
+".ecfab-label{position:fixed;right:92px;bottom:37px;z-index:9998;background:#14181b;color:#fff;font-size:.8125rem;font-weight:500;" +
 "padding:7px 12px;border-radius:10px;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.22);opacity:0;transform:translateX(8px);" +
 "pointer-events:none;transition:opacity .16s,transform .16s;}" +
 ".ecfab-label::after{content:'';position:absolute;right:-5px;top:50%;margin-top:-5px;border:5px solid transparent;border-left-color:#111827;}" +
@@ -84,14 +80,14 @@
 ".ecfab-pop{position:fixed;right:22px;bottom:92px;z-index:9998;width:372px;max-width:calc(100vw - 32px);height:526px;" +
 "max-height:calc(100vh - 130px);background:#fff;border:1px solid #e4e4e4;border-radius:16px;box-shadow:0 18px 50px rgba(15,23,42,.28);" +
 "display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;" +
-"transition:opacity .18s,transform .18s;font-family:'DM Sans',system-ui,-apple-system,sans-serif;}" +
+"transition:opacity .18s,transform .18s;font-family:'Libre Franklin',system-ui,-apple-system,sans-serif;}" +
 ".ecfab-open .ecfab-pop{opacity:1;transform:none;pointer-events:auto;}" +
 ".ecfab-head{display:flex;align-items:center;gap:.6rem;padding:.7rem .85rem;border-bottom:1px solid #eee;" +
 "background:linear-gradient(180deg,#f8faff,#fff);}" +
 ".ecfab-mini{width:32px;height:32px;flex:0 0 auto;}" +
 ".ecfab-htxt{line-height:1.15;min-width:0;}" +
 ".ecfab-title{font-weight:600;font-size:.95rem;color:#1a1a1a;}" +
-".ecfab-sub{font-size:.7rem;color:#8a8a8a;}" +
+".ecfab-sub{font-size:.8125rem;color:#5f6875;}" +
 ".ecfab-actions{margin-left:auto;display:flex;gap:.3rem;flex:0 0 auto;}" +
 ".ecfab-iconbtn{border:1px solid #e5e7eb;background:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#374151;" +
 "display:inline-flex;align-items:center;justify-content:center;transition:all .12s;}" +
@@ -100,7 +96,7 @@
 ".ecfab-iconbtn.x{font-size:1.15rem;line-height:1;font-weight:400;}" +
 ".ecfab-body{flex:1;min-height:0;display:flex;}" +
 ".ecfab-body>.ecbot{flex:1;min-width:0;}" +
-".ecfab-foot{padding:.5rem .8rem;border-top:1px solid #f0f0f0;font-size:.72rem;color:#6b7280;text-align:center;background:#fafafa;}" +
+".ecfab-foot{padding:.5rem .8rem;border-top:1px solid #f0f0f0;font-size:.8125rem;color:#6b7280;text-align:center;background:#fafafa;}" +
 ".ecfab-foot a{color:#2563eb;text-decoration:none;font-weight:600;}" +
 ".ecfab-foot a:hover{text-decoration:underline;}" +
 /* Dark mode for the popup chrome (the inner .ecbot themes itself in
@@ -112,10 +108,10 @@
 'html[data-theme="dark"] .ecfab-pop{background:#15171c;border-color:#2c313a;box-shadow:0 18px 50px rgba(0,0,0,.6);}' +
 'html[data-theme="dark"] .ecfab-head{background:linear-gradient(180deg,#1d2027,#15171c);border-bottom-color:#2c313a;}' +
 'html[data-theme="dark"] .ecfab-title{color:#e7e9ee;}' +
-'html[data-theme="dark"] .ecfab-sub{color:#9aa3b2;}' +
+'html[data-theme="dark"] .ecfab-sub{color:#5f6875;}' +
 'html[data-theme="dark"] .ecfab-iconbtn{background:#1d2027;border-color:#2c313a;color:#c3c8d2;}' +
 'html[data-theme="dark"] .ecfab-iconbtn:hover{border-color:#6ea0ff;color:#6ea0ff;background:#22304a;}' +
-'html[data-theme="dark"] .ecfab-foot{background:#1d2027;border-top-color:#2c313a;color:#9aa3b2;}' +
+'html[data-theme="dark"] .ecfab-foot{background:#1d2027;border-top-color:#2c313a;color:#5f6875;}' +
 'html[data-theme="dark"] .ecfab-foot a{color:#6ea0ff;}' +
 /* On phones the figures fill the width, so the floating button sat on top of
    figure content (a slider value at the bottom-right of week6 Fig 6.1, for

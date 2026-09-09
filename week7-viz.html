@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <title>Week 7: Interactive Visualizations - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="assets/vizpage.css" />
   <script src="assets/figkit.js"></script>
@@ -17,48 +18,45 @@
     .draggable-label{cursor:move;}
     .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule-strong);position:relative;}
     .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
-    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--unit-ink);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--unit-ink);margin-bottom:0.4rem;position:relative;z-index:1;}
     .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;position:relative;z-index:1;}
-    .viz-instructor{font-size:0.9rem;color:var(--ink-faint);}
+    .viz-instructor{font-size:0.9rem;color:var(--ink-soft);}
     .toc{background:var(--off-white);border:1px solid var(--rule-strong);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
-    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:0.6rem;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--ink-soft);margin-bottom:0.6rem;}
     .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
-    .toc li{font-size:0.855rem;color:var(--ink-faint);}
+    .toc li{font-size:0.855rem;color:var(--ink-soft);}
     .toc a{color:var(--unit-ink);text-decoration:none;}
     .toc a:hover{text-decoration:underline;}
     .fig-section{border-top:2px solid var(--rule-strong);padding-top:2.5rem;margin-top:3rem;}
     .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
-    .fig-label{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--unit-ink);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-label{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--unit-ink);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
     .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
-    .fig-intro { font-size: var(--t-body); color: var(--ink); line-height: var(--lh-body); margin-bottom: var(--s-6); }
     .cvs-wrap{border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;background:#fff;}
     canvas{display:block;width:100%;cursor:default;}
     .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
     .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
-    .viz-slider-label{font-family:var(--font-mono);font-size:0.75rem;color:var(--ink-faint);white-space:nowrap;}
+    .viz-slider-label{font-family:var(--font-mono);font-size:0.75rem;color:var(--ink-soft);white-space:nowrap;}
     .viz-slider{width:130px;accent-color:var(--unit-ink);}
     .viz-slider:focus-visible{outline:3px solid var(--unit-ink);outline-offset:3px;border-radius:3px;}
     .viz-slider-val{font-family:var(--font-mono);font-size:0.82rem;color:var(--unit-ink);min-width:36px;}
     .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule-strong);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
     .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--unit-ink);color:var(--unit-ink);}
     .viz-btn.red{background:#fff5f5;border-color:#fcc;color:var(--d-second);}
-    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;}
+    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#167c3a;}
     .viz-readout{background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
     .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
     .readout-col{flex:1;min-width:110px;}
-    .readout-label{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-faint);}
     .readout-val{font-size:1.05rem;font-weight:600;color:var(--unit-ink);font-family:var(--font-mono);}
     .two-col-panels{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
-    .panel-label{font-family:var(--font-mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-faint);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule-strong);}
     .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
     .step-box{background:#f8fafb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;display:none;}
     .step-box.visible{display:block;}
     .scenario-tabs{display:flex;gap:0.5rem;margin-bottom:1rem;}
-    .scenario-tab{font-size:0.78rem;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--rule-strong);background:var(--off-white);color:var(--ink-faint);cursor:pointer;}
+    .scenario-tab{font-size:0.78rem;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--rule-strong);background:var(--off-white);color:var(--ink-soft);cursor:pointer;}
     .scenario-tab.active{background:var(--unit-ink);color:#fff;border-color:var(--unit-ink);}
     .hub-footer{border-top:1px solid var(--rule-strong);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
-    .hub-footer-left{font-size:0.82rem;color:var(--ink-faint);}
-    .hub-footer-left a{color:var(--ink-faint);text-decoration:none;}
+    .hub-footer-left{font-size:0.82rem;color:var(--ink-soft);}
+    .hub-footer-left a{color:var(--ink-soft);text-decoration:none;}
     .hub-footer-left a:hover{color:var(--unit-ink);}
     .footer-logo{height:22px;opacity:0.5;}
     @media(max-width:580px){.two-col-panels{grid-template-columns:1fr;}}
@@ -66,143 +64,6 @@
 </head>
 <body>
 
-<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
-<nav class="left-nav" id="leftNav" aria-label="Course weeks">
-  <div class="left-nav-header">EC224</div>
-  <ul>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 1</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week1.html">Overview</a></li>
-          <li><a href="week1-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 2</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week2.html">Overview</a></li>
-          <li><a href="week2-viz.html">Visualizations</a></li>
-          <li><a href="week2-practice.html">Practice</a></li>
-          <li><a href="week2-slides.html">Slides</a></li>
-          <li><a href="week2-videos.html">Videos</a></li>
-          <li><a href="week2-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 3</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week3.html">Overview</a></li>
-          <li><a href="week3-viz.html">Visualizations</a></li>
-          <li><a href="week3-practice.html">Practice</a></li>
-          <li><a href="week3-slides.html">Slides</a></li>
-          <li><a href="week3-videos.html">Videos</a></li>
-          <li><a href="week3-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 4</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week4.html">Overview</a></li>
-          <li><a href="week4-viz.html">Visualizations</a></li>
-          <li><a href="week4-practice.html">Practice</a></li>
-          <li><a href="week4-slides.html">Slides</a></li>
-          <li><a href="week4-videos.html">Videos</a></li>
-          <li><a href="week4-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 5</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week5.html">Overview</a></li>
-          <li><a href="week5-viz.html">Visualizations</a></li>
-          <li><a href="week5-slides.html">Slides</a></li>
-          <li><a href="week5-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 6</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week6.html">Overview</a></li>
-          <li><a href="week6-viz.html">Visualizations</a></li>
-          <li><a href="week6-slides.html">Slides</a></li>
-          <li><a href="week6-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published active">
-      <details class="ln-wk" open>
-        <summary>Week 7</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week7.html">Overview</a></li>
-          <li><a class="on" aria-current="page" href="week7-viz.html">Visualizations</a></li>
-          <li><a href="week7-slides.html">Slides</a></li>
-          <li><a href="week7-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 8</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week8.html">Overview</a></li>
-          <li><a href="week8-viz.html">Visualizations</a></li>
-          <li><a href="week8-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 9</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week9.html">Overview</a></li>
-          <li><a href="week9-viz.html">Visualizations</a></li>
-          <li><a href="week9-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 10</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week10.html">Overview</a></li>
-          <li><a href="week10-viz.html">Visualizations</a></li>
-          <li><a href="week10-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 11</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week11.html">Overview</a></li>
-          <li><a href="week11-viz.html">Visualizations</a></li>
-          <li><a href="week11-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 12</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week12.html">Overview</a></li>
-          <li><a href="week12-viz.html">Visualizations</a></li>
-          <li><a href="week12-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-  </ul>
-</nav>
 
 
 <div class="topbar">
@@ -211,7 +72,7 @@
   <a href="week7.html">Week 7</a>
   <span class="crumb-sep">/</span>
   <span class="crumb-here">Visualizations</span>
-  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+  <span class="topbar-end"><button class="btn" data-nav-open>All weeks</button></span>
 </div>
 
 <div class="layout">
@@ -219,13 +80,13 @@
   <nav class="rail" aria-label="Figures on this page">
     <div class="rail-hd">This week</div>
     <ol>
-      <li><a href="#sec-71"><span>7.1</span>Profit Landscape (TR vs TC)</a></li>
-      <li><a href="#sec-72"><span>7.2</span>Profit Rectangle Anatomy</a></li>
-      <li><a href="#sec-73"><span>7.3</span>Shutdown Decision Zone Map</a></li>
-      <li><a href="#sec-75"><span>7.5</span>Supply Curve Emergence</a></li>
-      <li><a href="#sec-77"><span>7.7</span>Three-Panel Demand Shock</a></li>
-      <li><a href="#sec-78"><span>7.8</span>Market Supply Builder</a></li>
-      <li><a href="#sec-79"><span>7.9</span>Long-Run Entry/Exit Machine</a></li>
+      <li><a href="#sec-71"><span>7.1</span><span class="rail-title">Profit Landscape (TR vs TC)</span></a></li>
+      <li><a href="#sec-72"><span>7.2</span><span class="rail-title">Profit Rectangle Anatomy</span></a></li>
+      <li><a href="#sec-73"><span>7.3</span><span class="rail-title">Shutdown Decision Zone Map</span></a></li>
+      <li><a href="#sec-75"><span>7.5</span><span class="rail-title">Supply Curve Emergence</span></a></li>
+      <li><a href="#sec-77"><span>7.7</span><span class="rail-title">Three-Panel Demand Shock</span></a></li>
+      <li><a href="#sec-78"><span>7.8</span><span class="rail-title">Market Supply Builder</span></a></li>
+      <li><a href="#sec-79"><span>7.9</span><span class="rail-title">Long-Run Entry/Exit Machine</span></a></li>
     </ol>
   </nav>
 
@@ -233,25 +94,31 @@
   <header class="page page-hd">
     <div>
       <span class="numeral">07</span>
-      <p class="eyebrow">Week 7 &middot; Interactive Visualizations</p>
       <h1>Profit Maximization &amp; the Competitive Firm</h1>
       <p class="byline">Prof. Naveen Sunder</p>
     </div>
   </header>
 
   <!-- FIG 7.1 -->
-  <section class="sec page" id="sec-71">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-71">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 7.1</span>
       <h3>Profit Landscape (TR vs TC)</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       The firm earns profit wherever TR &gt; TC. Drag the price slider to change the slope of the TR line (revenue from
       each unit sold). The vertical gap between TR and TC is shaded green when positive and red when negative. The bottom
       panel shows the profit curve directly. Drag the vertical cursor to see MR vs MC at any quantity, and find q* where
       the slopes are equal (MR = MC).
     </p>
-    <div class="two-col-panels">
+        <div class="insight-box">
+      <strong>Key insight:</strong> The firm maximizes profit where MR = MC (the revenue from one more unit exactly equals its cost). To the left of q*, MR &gt; MC (produce more). To the right, MC &gt; MR (cut back).
+    </div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="two-col-panels">
       <div class="panel cvs-wrap">
         <div class="panel-label">Total Revenue (TR) vs Total Cost (TC)</div>
         <canvas id="cvs71a"></canvas>
@@ -261,7 +128,7 @@
         <canvas id="cvs71b"></canvas>
       </div>
     </div>
-    <div class="ctrl-row">
+          <div class="ctrl-row">
       <div class="ctrl">
         <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v71-p-val">$10.00</span></span>
         <input type="range" class="ctrl-track" id="v71-p" min="3.5" max="15" step="any" value="10" oninput="v71Update()" aria-label="Market price P*">
@@ -276,24 +143,27 @@
       </div>
       <button class="btn" onclick="v71Reset()">Reset</button>
     </div>
-    <div class="fig-state" id="v71-readout"></div>
-    <div class="insight-box">
-      <strong>Key insight:</strong> The firm maximizes profit where MR = MC (the revenue from one more unit exactly equals its cost). To the left of q*, MR &gt; MC (produce more). To the right, MC &gt; MR (cut back).
-    </div>
-  </section>
+          <div class="fig-state" id="v71-readout"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- FIG 7.2 -->
-  <section class="sec page" id="sec-72">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-72">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 7.2</span>
       <h3>Profit Rectangle Anatomy</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       The profit rectangle has height = P* &minus; SAC(q*) and width = q*. The area = total profit. Use the price slider
       to change P*. Toggle "Show Common Mistakes" to see ghost rectangles using SAVC or SMC as the bottom edge (both wrong).
     </p>
-    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs72-wrap"></div></div>
-    <div class="ctrl-row">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs72-wrap"></div></div>
+          <div class="ctrl-row">
       <div class="ctrl">
         <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v72-p-val">$7.00</span></span>
         <input type="range" class="ctrl-track" id="v72-p" min="2" max="12" step="any" value="7" oninput="v72Update()" aria-label="Market price P* for profit rectangle">
@@ -301,55 +171,64 @@
       <button class="btn" id="v72-mistakes-btn" onclick="v72ToggleMistakes()">Show Common Mistakes</button>
       <button class="btn" onclick="resetV72Labels()">Reset labels</button>
     </div>
-    <div class="fig-state" id="v72-readout"></div>
-    <div class="fig-state" id="v72-calc-box"></div>
-  </section>
+          <div class="fig-state" id="v72-readout"></div>
+          <div class="fig-state" id="v72-calc-box"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- FIG 7.3 -->
-  <section class="sec page" id="sec-73">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-73">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 7.3</span>
       <h3>Shutdown Decision Zone Map</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Use the price slider to set P*. The colored zone shows whether the firm should shut down, operate at a loss,
       break even, or earn positive profit. The algebraic proof of the shutdown rule (right) always stays visible:
       it never changes. What changes is the price you choose, and therefore which zone (and which decision) applies.
     </p>
-    <div class="two-col-panels">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="two-col-panels">
       <div class="fig-plot"><div class="demo-svg-wrap" id="cvs73-wrap"></div></div>
       <div style="padding:1rem;background:#f8fafb;border:1px solid var(--rule-strong);border-radius:10px;display:flex;flex-direction:column;gap:0.5rem;">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--unit-ink);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Algebraic Proof: When to Produce <span style="font-weight:500;text-transform:none;letter-spacing:normal;color:#888;">(this logic never changes, only the price below does)</span></div>
+        <div style="font-size:0.78rem;font-weight:700;color:var(--unit-ink);text-transform: none;letter-spacing: normal;margin-bottom:0.25rem;">Algebraic Proof: When to Produce <span style="font-weight:500;text-transform:none;letter-spacing:normal;color:#5f6875;">(this logic never changes, only the price below does)</span></div>
         <div id="v73-proof-step0" style="font-size:0.88rem;line-height:1.7;color:var(--text);">Produce if operating loss &lt; shutdown loss:</div>
         <div id="v73-proof-step1" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 1:</strong> Profits &gt; &minus;TFC &nbsp;&rarr;&nbsp; keep producing</div>
         <div id="v73-proof-step2" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 2:</strong> TR &minus; TVC &minus; TFC &gt; &minus;TFC</div>
         <div id="v73-proof-step3" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 3:</strong> TR &minus; TVC &gt; 0 &nbsp;&rarr;&nbsp; TR &gt; TVC</div>
         <div id="v73-proof-step4" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 4:</strong> P&middot;q &gt; AVC&middot;q</div>
         <div id="v73-proof-step5" style="font-size:0.88rem;line-height:1.7;color:var(--unit-ink);font-weight:700;"><strong>Conclusion: P &gt; AVC</strong> &nbsp;&#10003;&nbsp; produce whenever price covers average variable cost; shut down otherwise.</div>
-        <div id="v73-zone-label" style="margin-top:auto;padding:0.6rem 0.9rem;border-radius:7px;font-size:0.85rem;font-weight:600;background:#f0fdf4;color:#16a34a;"></div>
+        <div id="v73-zone-label" style="margin-top:auto;padding:0.6rem 0.9rem;border-radius:7px;font-size:0.85rem;font-weight:600;background:#f0fdf4;color:#167c3a;"></div>
       </div>
     </div>
-    <div class="ctrl-row">
+          <div class="ctrl-row">
       <div class="ctrl">
         <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v73-p-val">$6.00</span></span>
         <input type="range" class="ctrl-track" id="v73-p" min="0" max="10" step="any" value="6" oninput="v73Update()" aria-label="Market price P* for shutdown decision">
       </div>
       <button class="btn" onclick="resetV73Labels()">Reset labels</button>
     </div>
-  </section>
+        </div>
+      </div>
+    </section>
 
   <!-- FIG 7.5 -->
-  <section class="sec page" id="sec-75">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-75">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 7.5</span>
       <h3>Supply Curve Emergence</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Watch the price sweep upward from zero. Below the shutdown price (min(SAVC) = $4), the firm supplies nothing.
       Once price crosses $4, the SMC curve becomes the supply curve and each (q, P) point traces out in the right
       panel, building the supply curve dot by dot.
     </p>
-    <div class="insight-box" style="margin-top:0;margin-bottom:0.9rem;">
+        <div class="insight-box" style="margin-top:0;margin-bottom:0.9rem;">
       <strong>The core idea: how we get a supply curve out of a cost curve.</strong>
       <ol style="margin:0.4rem 0 0.2rem 1.1rem;padding:0;line-height:1.7;">
         <li>Pick a price <em>P</em>.</li>
@@ -361,25 +240,34 @@
       <strong>That's why the SMC curve (above the shutdown point) <em>is</em> the firm's supply curve</strong>:
       profit-maximization (P = SMC) directly maps each price to the quantity the firm will supply at that price.
     </div>
-    <div class="fig-plot" style="background:#000;border-radius:10px;overflow:hidden;">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot" style="background:#000;border-radius:10px;overflow:hidden;">
       <video id="v75-video" data-autoplay controls playsinline preload="metadata" style="width:100%;display:block;"
         src="media/videos/fig75_supply_emergence_manim/1080p60/SupplyEmergence.mp4">
         Your browser does not support HTML5 video.
       </video>
     </div>
-  </section>
+        </div>
+      </div>
+    </section>
 
   <!-- FIG 7.7 -->
-  <section class="sec page" id="sec-77">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-77">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 7.7</span>
       <h3>Three-Panel Demand Shock</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       The market mechanism has three linked panels: the typical firm (left), the market (center), and the typical consumer
       (right). Choose a shock scenario and click through the steps to see how causality flows from consumer to market to firm.
     </p>
-    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row" style="margin-bottom:0.75rem;">
       <select class="ctrl-track" id="v77-scenario" onchange="v77Reset()" style="width:auto;font-size:0.82rem;padding:4px 8px;">
         <option value="sub">Price of Substitute Rises</option>
         <option value="sub_fall">Price of Substitute Falls</option>
@@ -389,49 +277,62 @@
         <option value="input_fall">Input Price Falls</option>
       </select>
     </div>
-    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs77-wrap"></div></div>
-    <div class="ctrl-row">
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs77-wrap"></div></div>
+          <div class="ctrl-row">
       <button class="btn" id="v77-step-btn" onclick="v77NextStep()">Step 1: Consumer Effect &rarr;</button>
       <button class="btn" onclick="v77Reset()">Reset</button>
     </div>
-    <div class="fig-state" id="v77-readout">Choose a scenario and click through the steps to trace the causal chain.</div>
-  </section>
+          <div class="fig-state" id="v77-readout">Choose a scenario and click through the steps to trace the causal chain.</div>
+        </div>
+      </div>
+    </section>
 
   <!-- FIG 7.8 -->
-  <section class="sec page" id="sec-78">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-78">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 7.8</span>
       <h3>Market Supply Builder</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Market supply is the <strong>horizontal sum</strong> of all individual firm supply curves: at each price, add up
       the quantities each firm wants to supply. Adjust the number of firms to see exactly how the arithmetic works.
     </p>
-    <div id="v78-math-display"></div>
-    <div class="ctrl-row">
+        <div id="v78-math-display"></div>
+        <div class="insight-box"><strong>Key insight:</strong> At each price, add quantities across all firms; never add prices. If each of n identical firms supplies q units, market supply is Q = n &times; q. The market supply curve is flatter (more elastic) than any individual firm's supply curve and shifts right as n grows.</div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row">
       <div class="ctrl">
         <span class="ctrl-label">Number of firms n: <span class="ctrl-value" id="v78-n-val">10</span></span>
         <input type="range" class="ctrl-track" id="v78-n" min="1" max="50" step="1" value="10" oninput="v78Update()" aria-label="Number of firms n in market">
       </div>
     </div>
-    <div class="fig-state" id="v78-readout"></div>
-    <div class="insight-box"><strong>Key insight:</strong> At each price, add quantities across all firms; never add prices. If each of n identical firms supplies q units, market supply is Q = n &times; q. The market supply curve is flatter (more elastic) than any individual firm's supply curve and shifts right as n grows.</div>
-  </section>
+          <div class="fig-state" id="v78-readout"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- FIG 7.9 -->
-  <section class="sec page" id="sec-79">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-79">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 7.9</span>
       <h3>Long-Run Entry/Exit Machine</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Start with 150 firms earning a healthy profit (P* &asymp; $6.40 &gt; SAC, green rectangle visible). Click "Run Entry" to
       watch new firms enter, market supply shift right, price fall, and the profit rectangle shrink toward zero at long-run
       equilibrium (n &asymp; 297, P* &asymp; $5.51 = minimum SAC). Click "Run Exit" to start instead from an industry with
       <em>too many</em> firms (n = 450): price is below SAC, the rectangle turns red (a loss), and firms exit until
       the same zero-profit equilibrium is reached from above.
     </p>
-    <div class="two-col-panels">
+        <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly, just not earning excess returns.</div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="two-col-panels">
       <div class="fig-plot">
         <div class="panel-label">Market (Supply and Demand)</div>
         <div class="demo-svg-wrap" id="cvs79a-wrap"></div>
@@ -441,23 +342,22 @@
         <div class="demo-svg-wrap" id="cvs79b-wrap"></div>
       </div>
     </div>
-    <div class="ctrl-row">
+          <div class="ctrl-row">
       <button class="viz-btn green" onclick="v79RunEntry()">Run Entry (n=150 &rarr; 297, profit &rarr; 0)</button>
       <button class="viz-btn red" onclick="v79RunExit()">Run Exit (n=450 &rarr; 297, loss &rarr; 0)</button>
       <button class="btn" onclick="v79Reset()">Reset to n=150</button>
       <button class="btn" onclick="resetV79Labels()">Reset labels</button>
     </div>
-    <div class="fig-state" id="v79-readout"></div>
-    <!-- old / new / change readout, baseline is the n at which the current run started
-         (150 for entry, 450 for exit, matching the button that was clicked) -->
-    <div id="v79-delta" class="delta-bar"></div>
-    <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly, just not earning excess returns.</div>
-  </section>
+          <div class="fig-state" id="v79-readout"></div>
+          <div id="v79-delta" class="delta-bar"></div>
+        </div>
+      </div>
+    </section>
 
   <footer class="site-foot">
     <div class="hub-footer-left">
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
-      &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
+      <span class="foot-sep"></span> EC224 Intermediate Microeconomics
     </div>
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
@@ -735,8 +635,8 @@ function v71Draw(){
   const[trlx,trly]=toC7(trLblQ,P*trLblQ,W,HA,xR,yRA);
   const trText71=pShifted71?'TR′':'TR';
   const lbls71=[
-    {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:EC.red,fontSize:10,bold:true},
-    {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText(trText71).width+8,h:13,text:trText71,color:'#1f6fb2',fontSize:10,bold:true},
+    {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:EC.red,fontSize: 13,bold:true},
+    {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText(trText71).width+8,h:13,text:trText71,color:'#1f6fb2',fontSize: 13,bold:true},
   ];
   resolveLabels(lbls71,linePts71,80,6,{x0:8,y0:8,x1:W-12,y1:HA-12});
   lbls71.forEach(l=>drawForceLabel(ctxA,l));
@@ -881,10 +781,10 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
   if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
 }
@@ -894,10 +794,10 @@ function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H2-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
   if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
 }
@@ -1053,7 +953,7 @@ function v72DrawUpdate(P){
   const profitWord=profit>=0?'profit':'loss';
   document.getElementById('v72-calc-box').innerHTML=
     `<div style="font-family:'DM Sans',system-ui,sans-serif;">
-      <div style="font-weight:700;color:var(--unit-ink);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">The Calculation</div>
+      <div style="font-weight:700;color:var(--unit-ink);font-size:0.8rem;text-transform: none;letter-spacing: normal;margin-bottom:0.4rem;">The Calculation</div>
       <div style="font-size:1.0rem;font-weight:600;color:var(--text);margin-bottom:0.5rem;">
         Profit = (P* &minus; SAC) &times; q*&nbsp; = &nbsp;($${P.toFixed(2)} &minus; $${sacQ.toFixed(2)}) &times; ${qStar.toFixed(2)}&nbsp; = &nbsp;<span style="color:${marginColor}">$${margin.toFixed(2)}</span> &times; ${qStar.toFixed(2)} &nbsp;=&nbsp; <span style="color:${profitColor}">${profit>=0?'+':'−'}$${Math.abs(profit).toFixed(2)}</span>
       </div>
@@ -1168,7 +1068,7 @@ function v73Draw_OLD_UNUSED(P){
     const[ax,ay]=toC7(ql,fn(ql),W,H,xR,yR);
     ctx.font='bold 12px DM Sans,sans-serif';
     const tw=ctx.measureText(lbl).width;
-    curveLbls73.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize:9,bold:true,w:tw+6,h:12});
+    curveLbls73.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize: 13,bold:true,w:tw+6,h:12});
   }
   drawCurve73(SAVC7,'#f39c12','SAVC');
   drawCurve73(SAC7,EC.slate,'SAC');
@@ -1418,7 +1318,7 @@ function v77Draw(){
     const ox=D3PAD.left+i*(pw+10);
     const oy=D3PAD.top, bot=D3H-D3PAD.bottom;
     g.append('rect').attr('x',ox).attr('y',oy).attr('width',pw).attr('height',bot-oy).attr('fill','none').attr('stroke','#e0e4f0').attr('stroke-width',1);
-    g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).attr('fill','var(--ink-faint)').text(label);
+    g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).attr('fill','var(--ink-soft)').text(label);
     // Demand (down-slope, blue) and Supply (up-slope, red)
     g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1f6fb2').attr('stroke-width',2);
     g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke',EC.red).attr('stroke-width',2);
@@ -1485,16 +1385,16 @@ function v78DrawMath(n){
   }
   document.getElementById('v78-math-display').innerHTML=`
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.9rem;">
-      <div style="flex:1;min-width:220px;font-family:'DM Mono',monospace;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
+      <div style="flex:1;min-width:220px;font-family:var(--font-body);font-variant-numeric:tabular-nums;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
         <div style="font-weight:700;color:var(--unit-ink);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Individual Firm Supply</div>
         <div>Set P = SMC: &nbsp;P = q&sup2; &minus; 4q + 7</div>
         <div style="margin-top:0.2rem;">Solve: &nbsp;<strong>q* = 2 + &radic;(P &minus; 3)</strong> &nbsp;for P &ge; $4</div>
-        <div style="margin-top:0.35rem;color:var(--ink-faint);font-size:0.79rem;">Linear approx: q &asymp; (P &minus; 4) / 2</div>
+        <div style="margin-top:0.35rem;color:var(--ink-soft);font-size:0.79rem;">Linear approx: q &asymp; (P &minus; 4) / 2</div>
       </div>
-      <div style="flex:1;min-width:220px;font-family:'DM Mono',monospace;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
+      <div style="flex:1;min-width:220px;font-family:var(--font-body);font-variant-numeric:tabular-nums;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
         <div style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;">Market Supply (${n} firms)</div>
         <div>Q<sub>mkt</sub> = n &times; q* = ${n} &times; (P &minus; 4) / 2</div>
-        <div style="margin-top:0.35rem;color:var(--ink-faint);font-size:0.79rem;">At P = $8: Q = ${n} &times; 2 = ${n*2}</div>
+        <div style="margin-top:0.35rem;color:var(--ink-soft);font-size:0.79rem;">At P = $8: Q = ${n} &times; 2 = ${n*2}</div>
       </div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:0.87rem;">
@@ -1506,7 +1406,7 @@ function v78DrawMath(n){
           <th style="padding:0.45rem 0.8rem;text-align:center;color:var(--unit-ink);font-family:'DM Sans',sans-serif;">Market Q = n &times; q*</th>
         </tr>
       </thead>
-      <tbody style="font-family:'DM Mono',monospace;">${rows}</tbody>
+      <tbody style="font-family:var(--font-body);font-variant-numeric:tabular-nums;">${rows}</tbody>
     </table>`;
   document.getElementById('v78-readout').innerHTML=
     `<strong>Horizontal summation:</strong> At P = $8, each of ${n} firms supplies q* = 2 units, so market supply Q = ${n} &times; 2 = <strong>${n*2} units</strong>. Add quantities at each price, never add prices.`;
@@ -1765,8 +1665,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.cvs-wrap:has(canvas)').forEach(el=>ro.observe(el));
 });
 
-function openLN(){document.getElementById('leftNav').classList.add('open');document.getElementById('lnOverlay').classList.add('open');}
-function closeLN(){document.getElementById('leftNav').classList.remove('open');document.getElementById('lnOverlay').classList.remove('open');}
 /* Section rail: mark the figure currently being read (DESIGN 2.2). Scrolls the
    strip itself on mobile, never scrollIntoView, which walks up and drags the
    whole page while the reader is scrolling it. */
@@ -1799,5 +1697,7 @@ function closeLN(){document.getElementById('leftNav').classList.remove('open');d
   <script src="assets/ask-widget.js"></script>
   <script src="assets/deltabar.js"></script>
   <script src="assets/autoplay-video.js"></script>
+<script src="assets/nav.js" defer></script>
+<script src="assets/figlabels.js" defer></script>
 </body>
 </html>

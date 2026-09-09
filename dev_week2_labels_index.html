@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="en-US"><head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<title>Fig 2.4: ten label treatments</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+<style>
+:root{--paper:#eff1ee;--card:#fff;--ink:#14181b;--soft:#4a5257;--rule:#d8dcd7;--accent:#7a1f5c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Libre Franklin',Helvetica,Arial,sans-serif;
+ font-size:1.0625rem;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:62rem;margin:0 auto;padding:2rem 2rem 5rem}
+h1{font-size:1.75rem;font-weight:600;letter-spacing:-.015em;margin-bottom:.5rem}
+.sub{color:var(--soft);max-width:66ch;margin-bottom:1.25rem}
+.fixed{background:var(--card);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+ padding:1rem 1.25rem;margin:0 0 2rem;max-width:72ch}
+.fixed h2{font-size:1rem;font-weight:600;margin-bottom:.5rem}
+.fixed ul{margin:0 0 0 1.1rem;font-size:1rem;color:var(--soft)}
+.fixed li+li{margin-top:.35rem}
+ol{list-style:none;display:grid;gap:.75rem}
+ol a{display:grid;grid-template-columns:2.25rem 1fr;gap:1rem;align-items:baseline;background:var(--card);
+ border-radius:8px;padding:1rem 1.25rem;text-decoration:none;color:var(--ink);transition:box-shadow .15s}
+ol a:hover{box-shadow:0 6px 18px rgba(20,24,27,.09)}
+ol a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.n{font-variant-numeric:tabular-nums;color:var(--soft);font-size:.9375rem}
+.nm{font-weight:600;margin-bottom:.2rem;display:block}
+.ds{font-size:.9375rem;color:var(--soft);display:block}
+.tr{font-size:.875rem;color:var(--soft);display:block;margin-top:.3rem;font-style:italic}
+.back{display:inline-block;margin-bottom:1.25rem;color:var(--accent);font-size:.9375rem}
+</style></head><body><div class="wrap">
+<a class="back" href="dev_week2_index.html">&lsaquo; The ten layout approaches</a>
+<h1>Fig 2.4, ten label treatments</h1>
+<p class="sub">Layout is held at the ratio split you picked, so the only thing changing here is how the two curve labels are placed. Try each with "Price of X down" at a high magnitude, which is the state that crowds the corner hardest.</p>
+<div class="fixed"><h2>Fixed in all ten</h2><ul>
+<li><b>Label type is 15px, up from 13px.</b> Tick numbers are 14px, up from 9px on the live site.</li>
+<li><b>The Y axis title is no longer clipped.</b> The board reserves explicit headroom in pixels for it.</li>
+<li><b>The X axis title is out of the tick lane.</b> It used to sit next to the last tick number; axis titles now sit past the end of each arrow in room reserved for them.</li>
+<li><b>Labels are real DOM elements now, measured before they are placed.</b> Placing them as chart text meant the code never knew how wide a label actually was, which is why they kept meeting the axis.</li>
+</ul></div>
+<ol>
+<li><a href="dev_week2_11.html"><span class="n">11</span><span><span class="nm">Opaque plate</span><span class="ds">The label carries its own white background and a thin border in its curve colour, so whatever is behind it stops mattering. Placed on the normal to its curve, with the side chosen by measured clearance.</span><span class="tr">Simplest thing that cannot be overlapped. Costs a small rectangle per label.</span></span></a></li>
+<li><a href="dev_week2_12.html"><span class="n">12</span><span><span class="nm">Halo, no box</span><span class="ds">No rectangle at all. The glyphs are ringed in the paper colour so the label stays readable where it crosses a line, without adding another box to a figure that already has several.</span><span class="tr">Lightest on the eye. Reads slightly less crisply where it sits directly on a thick curve.</span></span></a></li>
+<li><a href="dev_week2_13.html"><span class="n">13</span><span><span class="nm">Relaxation (the d3 idea)</span><span class="ds">The label starts on the normal and is then pushed out of every obstacle it touches, over 220 iterations, with a weak spring back to its anchor. Obstacles are both curves, both axes, every tick number box and the other label.</span><span class="tr">This is the one you described. It reacts to the real rendered box, but the result depends on the starting state, so it is not perfectly reproducible.</span></span></a></li>
+<li><a href="dev_week2_14.html"><span class="n">14</span><span><span class="nm">Out to the right margin</span><span class="ds">Labels leave the plot entirely and stack in the margin, each joined to its curve by a leader. Collision stops being a thing that has to be solved.</span><span class="tr">Guaranteed clean. Costs horizontal room and makes the eye travel.</span></span></a></li>
+<li><a href="dev_week2_15.html"><span class="n">15</span><span><span class="nm">At the end of the line</span><span class="ds">Each label sits just past where its own curve stops, the way a time series is labelled. No leader needed because the label continues the line.</span><span class="tr">Very natural to read. Only works where the curve ends inside the frame.</span></span></a></li>
+<li><a href="dev_week2_16.html"><span class="n">16</span><span><span class="nm">Set into the curve</span><span class="ds">The plate sits on the line and masks the segment underneath, the way a contour map breaks a contour to fit its number.</span><span class="tr">Unambiguous about which line it belongs to. Interrupts the curve, which matters more on a curve than on a straight budget line.</span></span></a></li>
+<li><a href="dev_week2_17.html"><span class="n">17</span><span><span class="nm">One corner legend</span><span class="ds">No per-curve labels at all. A single block in the corner the data never reaches, with a line swatch for each series.</span><span class="tr">Nothing can collide with anything. The reader has to match colour to line themselves.</span></span></a></li>
+<li><a href="dev_week2_18.html"><span class="n">18</span><span><span class="nm">Compass search</span><span class="ds">Eight directions around the anchor times three distances. Every candidate is scored on measured clearance from curves, axes, tick numbers, other labels and the frame edge. Best score wins.</span><span class="tr">Same inputs always give the same placement, which the relaxation cannot promise. Easier to reason about when a figure looks wrong.</span></span></a></li>
+<li><a href="dev_week2_19.html"><span class="n">19</span><span><span class="nm">Right-hand rail</span><span class="ds">A rail inside the figure but outside the plot. Labels are ordered by where their curve sits vertically and nudged apart, so their order always matches the order of the lines.</span><span class="tr">Predictable and tidy. Like the margin, it spends width.</span></span></a></li>
+<li><a href="dev_week2_20.html"><span class="n">20</span><span><span class="nm">Plate plus compass</span><span class="ds">The opaque plate from 11 placed by the scoring from 18, with a slightly finer search: twelve directions times four distances.</span><span class="tr">My pick for production: it cannot be overlapped, it cannot drift, and it degrades gracefully when the plot is crowded.</span></span></a></li>
+</ol>
+</div></body></html>

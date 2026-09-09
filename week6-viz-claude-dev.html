@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="robots" content="noindex" />
   <title>[DEV · Claude] Week 6 Visualizations · Costs - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script defer src="assets/dev/d3kit.js"></script>
@@ -19,29 +20,26 @@
     .dev-banner a{color:#92400e;text-decoration:underline;}
     .viz-hero{padding:2.6rem 0 2rem;border-bottom:1px solid var(--rule);position:relative;}
     .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
-    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
+    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--accent);margin-bottom:0.4rem;position:relative;z-index:1;}
     .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:600px;margin-bottom:0.3rem;position:relative;z-index:1;}
     .viz-instructor{font-size:0.9rem;color:var(--muted);}
     .viz-bridge{font-size:0.92rem;color:var(--muted);line-height:1.7;max-width:680px;margin-top:0.7rem;}
     .toc{background:var(--off-white);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
-    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--muted);margin-bottom:0.6rem;}
     .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
     .toc li{font-size:0.855rem;color:var(--muted);}
     .toc a{color:var(--accent);text-decoration:none;}
     .toc a:hover{text-decoration:underline;}
-    .sec-divider{font-family:var(--mono);font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:3.2rem 0 0;padding-bottom:0.4rem;}
     .fig-section{border-top:2px solid var(--rule);padding-top:2.5rem;margin-top:3rem;}
     .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;flex-wrap:wrap;}
-    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
+    .fig-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
     .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
-    .fig-intro{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;}
-    .fig-collapse-btn{margin-left:auto;font-family:var(--mono);font-size:0.68rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);background:var(--off-white);border:1px solid var(--rule);border-radius:6px;padding:3px 10px;cursor:pointer;}
+    .fig-collapse-btn{margin-left:auto;font-family:var(--mono);font-size:0.68rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--muted);background:var(--off-white);border:1px solid var(--rule);border-radius:6px;padding:3px 10px;cursor:pointer;}
     .fig-collapse-btn:hover{border-color:var(--accent);color:var(--accent);}
     .fig-body[hidden]{display:none;}
     .cvs-wrap{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
     .cvs-wrap.square{max-width:470px;margin-left:auto;margin-right:auto;}
     .cvs-wrap.wide{max-width:840px;margin-left:auto;margin-right:auto;}
-    .panel-label{font-family:var(--mono);font-size:0.64rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.4rem 0.6rem;background:var(--off-white);border-bottom:1px solid var(--rule);}
     .panel-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
     @media(max-width:640px){.panel-grid-2{grid-template-columns:1fr;}}
     .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
@@ -58,7 +56,6 @@
     .viz-readout{background:var(--off-white);border:1px solid var(--rule);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
     .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
     .readout-col{flex:1;min-width:96px;}
-    .readout-label{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
     .readout-val{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);}
     .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
     .insight-box.gold{background:#fdf8ec;border-color:#e6cf94;}
@@ -120,7 +117,7 @@
     </nav>
   </div>
 
-  <div class="sec-divider">Section 1 &middot; The cheapest way to produce</div>
+  <div class="sec-divider">The cheapest way to produce</div>
 
   <!-- FIG C.1 -->
   <section class="fig-section" id="sec-c1">
@@ -182,7 +179,7 @@
     </div>
   </section>
 
-  <div class="sec-divider">Section 2 &middot; The short-run cost family</div>
+  <div class="sec-divider">The short-run cost family</div>
 
   <!-- FIG C.3 -->
   <section class="fig-section" id="sec-c3">
@@ -227,7 +224,7 @@
     </div>
   </section>
 
-  <div class="sec-divider">Section 3 &middot; Applications</div>
+  <div class="sec-divider">Applications</div>
 
   <!-- FIG C.5 -->
   <section class="fig-section" id="sec-c5">
@@ -237,7 +234,7 @@
     <p class="fig-intro">
       You manage a firm producing a fixed output q. Raise the minimum wage and the <strong style="color:#d4813a;">isocost</strong>
       line rotates steeper. The cost-minimizing bundle slides up the isoquant toward <strong>more capital, less labor</strong>.
-      The faint <span style="color:#9aa3b2;">ghost</span> is where you started. Substitution toward automation, drawn live.
+      The faint <span style="color:#5f6875;">ghost</span> is where you started. Substitution toward automation, drawn live.
     </p>
     <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
       <div class="viz-slider-group"><span class="viz-slider-label">Min wage w:</span>
@@ -259,7 +256,7 @@
     <div class="fig-body" id="c6-body">
     <p class="fig-intro">
       Pick an average-cost shape. The tool marks q* (the <strong>efficient scale</strong> where AC is lowest), shades
-      <strong style="color:#1e8449;">economies of scale</strong> to its left and <strong style="color:#c0392b;">diseconomies</strong>
+      <strong style="color:#1e8449;">economies of scale</strong> to its left and <strong style="color:#93301f;">diseconomies</strong>
       to its right, and (on toggle) overlays MC, which always crosses AC at its minimum.
     </p>
     <div class="viz-ctrl-row" style="margin-bottom:0.75rem;">
@@ -287,7 +284,7 @@
 </main>
 
 <script>
-const COL = { iso:'#1a56db', isoGhost:'#a9c2f0', isocost:'#d4813a', opt:'#c0392b', ghost:'#9aa3b2',
+const COL = { iso:'#1a56db', isoGhost:'#a9c2f0', isocost:'#d4813a', opt:'#c0392b', ghost:'#5f6875',
   mc:'#c0392b', avc:'#1e8449', atc:'#1a56db', afc:'#7d3c98', lrac:'#2c3e50', purple:'#7d3c98',
   tc:'#1a56db', capital:'#2c3e50', econ:'#1e8449', disecon:'#c0392b' };
 
@@ -348,8 +345,8 @@ function c1Draw(){
   // optimal isocost
   d3Seg(svg,sx,sy,0,C/v,C/w,0,COL.isocost,2.4);
   // guides + optimum
-  svg.append('line').attr('x1',sx(Ls)).attr('y1',sy(Ks)).attr('x2',sx(Ls)).attr('y2',sy(0)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
-  svg.append('line').attr('x1',sx(Ls)).attr('y1',sy(Ks)).attr('x2',sx(0)).attr('y2',sy(Ks)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
+  svg.append('line').attr('x1',sx(Ls)).attr('y1',sy(Ks)).attr('x2',sx(Ls)).attr('y2',sy(0)).attr('stroke','#5f6875').attr('stroke-dasharray','4,4');
+  svg.append('line').attr('x1',sx(Ls)).attr('y1',sy(Ks)).attr('x2',sx(0)).attr('y2',sy(Ks)).attr('stroke','#5f6875').attr('stroke-dasharray','4,4');
   svg.append('circle').attr('cx',sx(Ls)).attr('cy',sy(Ks)).attr('r',6).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
   d3HaloLabel(svg,sx(Ls),sy(0)+13,'L*='+Ls.toFixed(1),{color:COL.opt});
   d3HaloLabel(svg,pad.left+2,sy(Ks)-5,'K*='+Ks.toFixed(1),{color:COL.opt,anchor:'start'});
@@ -605,7 +602,7 @@ function c6Draw(){
   if(C6.mc) d3Curve(svg,sx,sy,mc,lo,hi,COL.mc,2.0,'5,3');
   d3Curve(svg,sx,sy,ac,lo,hi,COL.atc,2.6);
   if(hasMin){
-    svg.append('line').attr('x1',sx(qStar)).attr('y1',sy(acMin)).attr('x2',sx(qStar)).attr('y2',sy(0)).attr('stroke','#bbb').attr('stroke-dasharray','4,4');
+    svg.append('line').attr('x1',sx(qStar)).attr('y1',sy(acMin)).attr('x2',sx(qStar)).attr('y2',sy(0)).attr('stroke','#5f6875').attr('stroke-dasharray','4,4');
     svg.append('circle').attr('cx',sx(qStar)).attr('cy',sy(acMin)).attr('r',5.5).attr('fill',COL.opt).attr('stroke','#fff').attr('stroke-width',1.6);
     d3HaloLabel(svg,sx(qStar),sy(0)+13,'q* = '+qStar.toFixed(1),{color:COL.opt});
     d3HaloLabel(svg,sx(qStar*0.5),sy(yMax*0.5),'economies',{color:COL.econ,size:10,weight:600});

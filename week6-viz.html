@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <title>Week 6: Interactive Visualizations - EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="assets/vizpage.css" />
   <script src="assets/figkit.js"></script>
@@ -17,25 +18,24 @@
     .draggable-label { cursor: move; }
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule-strong); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
-    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--unit-ink); margin-bottom:0.4rem; position:relative; z-index:1; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing: normal; text-transform: none; color:var(--unit-ink); margin-bottom:0.4rem; position:relative; z-index:1; }
     .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
-    .viz-instructor { font-size:0.9rem; color:var(--ink-faint); }
+    .viz-instructor { font-size:0.9rem; color:var(--ink-soft); }
     .toc { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
-    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:0.6rem; }
+    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing: normal; text-transform: none; color:var(--ink-soft); margin-bottom:0.6rem; }
     .toc ol { margin:0; padding-left:0.5rem; display:flex; flex-direction:column; gap:0.28rem; }
-    .toc li { font-size:0.855rem; color:var(--ink-faint); }
+    .toc li { font-size:0.855rem; color:var(--ink-soft); }
     .toc a { color:var(--unit-ink); text-decoration:none; }
     .toc a:hover { text-decoration:underline; }
     .fig-section { border-top:2px solid var(--rule-strong); padding-top:2.5rem; margin-top:3rem; }
     .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
-    .fig-label { font-family:var(--font-mono); font-size:0.7rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--unit-ink); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
+    .fig-label { font-family:var(--font-mono); font-size:0.7rem; font-weight:600; letter-spacing: normal; text-transform: none; color:var(--unit-ink); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
     .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
-    .fig-intro { font-size: var(--t-body); color: var(--ink); line-height: var(--lh-body); margin-bottom: var(--s-6); }
     .cvs-wrap { border:1px solid var(--rule-strong); border-radius:10px; overflow:hidden; background:#fff; }
     canvas { display:block; width:100%; cursor:default; }
     .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
     .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
-    .viz-slider-label { font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-faint); white-space:nowrap; }
+    .viz-slider-label { font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-soft); white-space:nowrap; }
     .viz-slider { width:130px; accent-color:var(--unit-ink); }
     .viz-slider:focus-visible { outline:3px solid var(--unit-ink); outline-offset:3px; border-radius:3px; }
     .viz-slider-val { font-family:var(--font-mono); font-size:0.82rem; color:var(--unit-ink); min-width:36px; }
@@ -44,163 +44,24 @@
     .viz-readout { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
     .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
     .readout-col { flex:1; min-width:110px; }
-    .readout-label { font-size: var(--t-caption); color: var(--ink-faint); }
     .readout-val { font-size:1.05rem; font-weight:600; color:var(--unit-ink); font-family:var(--font-mono); }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
-    .panel-label { font-family:var(--font-mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-faint); padding:0.4rem 0.6rem; background:var(--off-white); border-bottom:1px solid var(--rule-strong); }
     .hub-footer { border-top:1px solid var(--rule-strong); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
-    .hub-footer-left { font-size:0.82rem; color:var(--ink-faint); }
-    .hub-footer-left a { color:var(--ink-faint); text-decoration:none; }
+    .hub-footer-left { font-size:0.82rem; color:var(--ink-soft); }
+    .hub-footer-left a { color:var(--ink-soft); text-decoration:none; }
     .hub-footer-left a:hover { color:var(--unit-ink); }
     .footer-logo { height:22px; opacity:0.5; }
     .v61-steps { background:#f8fafb; border:1px solid var(--rule-strong); border-radius:8px; padding:0.9rem 1.1rem; margin-top:0.75rem; font-size:0.875rem; line-height:1.8; display:none; }
     .v61-steps.visible { display:block; }
     .v61-step { margin-bottom:0.35rem; }
     .v61-step-num { font-family:var(--font-mono); font-size:0.72rem; font-weight:600; color:var(--unit-ink); background:var(--accent-light); padding:1px 6px; border-radius:3px; margin-right:0.4rem; }
-    .v62-form-note { font-size:0.84rem; color:var(--ink-faint); line-height:1.65; margin-top:0.6rem; padding:0.65rem 0.9rem; background:var(--off-white); border:1px solid var(--rule-strong); border-radius:7px; }
+    .v62-form-note { font-size:0.84rem; color:var(--ink-soft); line-height:1.65; margin-top:0.6rem; padding:0.65rem 0.9rem; background:var(--off-white); border:1px solid var(--rule-strong); border-radius:7px; }
     .viz-select { font-family:var(--font-mono); font-size:0.82rem; border:1px solid var(--rule-strong); border-radius:6px; padding:4px 8px; background:var(--off-white); color:var(--text); cursor:pointer; }
     @media(max-width:580px){ .two-col { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 
-<div class="left-nav-overlay" id="lnOverlay" onclick="closeLN()"></div>
-<nav class="left-nav" id="leftNav" aria-label="Course weeks">
-  <div class="left-nav-header">EC224</div>
-  <ul>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 1</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week1.html">Overview</a></li>
-          <li><a href="week1-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 2</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week2.html">Overview</a></li>
-          <li><a href="week2-viz.html">Visualizations</a></li>
-          <li><a href="week2-practice.html">Practice</a></li>
-          <li><a href="week2-slides.html">Slides</a></li>
-          <li><a href="week2-videos.html">Videos</a></li>
-          <li><a href="week2-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 3</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week3.html">Overview</a></li>
-          <li><a href="week3-viz.html">Visualizations</a></li>
-          <li><a href="week3-practice.html">Practice</a></li>
-          <li><a href="week3-slides.html">Slides</a></li>
-          <li><a href="week3-videos.html">Videos</a></li>
-          <li><a href="week3-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 4</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week4.html">Overview</a></li>
-          <li><a href="week4-viz.html">Visualizations</a></li>
-          <li><a href="week4-practice.html">Practice</a></li>
-          <li><a href="week4-slides.html">Slides</a></li>
-          <li><a href="week4-videos.html">Videos</a></li>
-          <li><a href="week4-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 5</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week5.html">Overview</a></li>
-          <li><a href="week5-viz.html">Visualizations</a></li>
-          <li><a href="week5-slides.html">Slides</a></li>
-          <li><a href="week5-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published active">
-      <details class="ln-wk" open>
-        <summary>Week 6</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week6.html">Overview</a></li>
-          <li><a class="on" aria-current="page" href="week6-viz.html">Visualizations</a></li>
-          <li><a href="week6-slides.html">Slides</a></li>
-          <li><a href="week6-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 7</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week7.html">Overview</a></li>
-          <li><a href="week7-viz.html">Visualizations</a></li>
-          <li><a href="week7-slides.html">Slides</a></li>
-          <li><a href="week7-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 8</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week8.html">Overview</a></li>
-          <li><a href="week8-viz.html">Visualizations</a></li>
-          <li><a href="week8-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 9</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week9.html">Overview</a></li>
-          <li><a href="week9-viz.html">Visualizations</a></li>
-          <li><a href="week9-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 10</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week10.html">Overview</a></li>
-          <li><a href="week10-viz.html">Visualizations</a></li>
-          <li><a href="week10-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 11</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week11.html">Overview</a></li>
-          <li><a href="week11-viz.html">Visualizations</a></li>
-          <li><a href="week11-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-    <li class="left-nav-item published">
-      <details class="ln-wk">
-        <summary>Week 12</summary>
-        <ul class="left-nav-sub">
-          <li><a href="week12.html">Overview</a></li>
-          <li><a href="week12-viz.html">Visualizations</a></li>
-          <li><a href="week12-flashcards.html">Flashcards</a></li>
-        </ul>
-      </details>
-    </li>
-  </ul>
-</nav>
 
 
 <div class="topbar">
@@ -209,7 +70,7 @@
   <a href="week6.html">Week 6</a>
   <span class="crumb-sep">/</span>
   <span class="crumb-here">Visualizations</span>
-  <span class="topbar-end"><button class="btn" onclick="openLN()">All weeks</button></span>
+  <span class="topbar-end"><button class="btn" data-nav-open>All weeks</button></span>
 </div>
 
 <div class="layout">
@@ -217,12 +78,12 @@
   <nav class="rail" aria-label="Figures on this page">
     <div class="rail-hd">This week</div>
     <ol>
-      <li><a href="#sec-6-1"><span>6.1</span>Cost Minimisation Sandbox</a></li>
-      <li><a href="#sec-6-2"><span>6.2</span>Two-Panel Cost Derivation</a></li>
-      <li><a href="#sec-6-5"><span>6.5</span>SR vs LR Cost Curves</a></li>
-      <li><a href="#sec-6-6"><span>6.6</span>LRAC Envelope Builder</a></li>
-      <li><a href="#sec-6-8"><span>6.8</span>Minimum Wage Automation Simulator</a></li>
-      <li><a href="#sec-6-10"><span>6.10</span>Efficient Scale Finder</a></li>
+      <li><a href="#sec-6-1"><span>6.1</span><span class="rail-title">Cost Minimisation Sandbox</span></a></li>
+      <li><a href="#sec-6-2"><span>6.2</span><span class="rail-title">Two-Panel Cost Derivation</span></a></li>
+      <li><a href="#sec-6-5"><span>6.5</span><span class="rail-title">SR vs LR Cost Curves</span></a></li>
+      <li><a href="#sec-6-6"><span>6.6</span><span class="rail-title">LRAC Envelope Builder</span></a></li>
+      <li><a href="#sec-6-8"><span>6.8</span><span class="rail-title">Minimum Wage Automation Simulator</span></a></li>
+      <li><a href="#sec-6-10"><span>6.10</span><span class="rail-title">Efficient Scale Finder</span></a></li>
     </ol>
   </nav>
 
@@ -231,22 +92,28 @@
   <header class="page page-hd">
     <div>
       <span class="numeral">06</span>
-      <p class="eyebrow">Week 6 &middot; Interactive Visualizations</p>
       <h1>Cost Theory</h1>
       <p class="byline">Prof. Naveen Sunder</p>
     </div>
   </header>
 
   <!-- Fig 6.1 - COST MINIMISATION SANDBOX -->
-  <section class="sec page" id="sec-6-1">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-6-1">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 6.1</span>
       <h3>Cost Minimisation Sandbox</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Set the wage w, rental rate v, and target output q using the sliders. Then drag the dot on the graph to your best guess for the cost-minimising bundle (L, K). The dot turns green when you find the tangency. When you are ready to check your work, click "Show Optimal Bundle" to see the step-by-step solution.
     </p>
-    <div class="ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
+        <div class="v61-steps" id="v61-steps">
+      <div id="v61-steps-content"></div>
+    </div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row" style="flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
       <div class="ctrl">
         <span class="ctrl-label">Wage w: <span class="ctrl-value" id="v61-w-val">4</span></span>
         <input type="range" class="ctrl-track" id="v61-w" min="1" max="10" step="any" value="4" oninput="v61Update()" aria-label="Wage rate w">
@@ -261,34 +128,26 @@
       </div>
       <button class="btn" id="v61-show-btn" onclick="v61ShowOptimal()">Show Optimal Bundle</button>
     </div>
-    <div class="fig-plot" style="max-width:682px;margin-left:auto;margin-right:auto;"><canvas id="cvs61" height="320"></canvas></div>
-    <div class="fig-state" id="v61-readout"></div>
-    <div class="v61-steps" id="v61-steps">
-      <div id="v61-steps-content"></div>
-    </div>
-  </section>
+          <div class="fig-plot" style="max-width:682px;margin-left:auto;margin-right:auto;"><canvas id="cvs61" height="320"></canvas></div>
+          <div class="fig-state" id="v61-readout"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- Fig 6.2 - TWO-PANEL COST DERIVATION -->
-  <section class="sec page" id="sec-6-2">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-6-2">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 6.2</span>
       <h3>Two-Panel Cost Derivation</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Left panel: isoquant map with the expanding isocost sweeping across output levels. Right panel: TC(q) curve building itself point by point. Step through output levels to watch each cost-minimising bundle map to a TC value.
     </p>
-    <div class="ctrl-row" style="margin-bottom:0.5rem;">
-      <span class="ctrl-label">Production function:</span>
-      <select class="sel" id="v62-form" onchange="v62FormChange()">
-        <option value="cd">Cobb-Douglas: Q = K^(1/2) &middot; L^(1/2)</option>
-        <option value="subs">Perfect Substitutes: Q = L + K</option>
-        <option value="comp">Perfect Complements: Q = min(L, K)</option>
-      </select>
-    </div>
-    <div class="v62-form-note" id="v62-form-note">
+        <div class="v62-form-note" id="v62-form-note">
       Cobb-Douglas production: each input is imperfectly substitutable. The expansion path is a ray through the origin, meaning the firm scales both inputs proportionally as output rises. The TC curve is linear in q (constant returns to scale here).
     </div>
-    <div class="two-col" style="margin-top:0.75rem;">
+        <div class="two-col" style="margin-top:0.75rem;">
       <div class="fig-plot">
         <div class="panel-label">Isoquant map + isocost</div>
         <canvas id="cvs62a" height="260"></canvas>
@@ -298,26 +157,43 @@
         <canvas id="cvs62b" height="260"></canvas>
       </div>
     </div>
-    <div class="ctrl-row">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row" style="margin-bottom:0.5rem;">
+      <span class="ctrl-label">Production function:</span>
+      <select class="sel" id="v62-form" onchange="v62FormChange()">
+        <option value="cd">Cobb-Douglas: Q = K^(1/2) &middot; L^(1/2)</option>
+        <option value="subs">Perfect Substitutes: Q = L + K</option>
+        <option value="comp">Perfect Complements: Q = min(L, K)</option>
+      </select>
+    </div>
+          <div class="ctrl-row">
       <button class="btn" onclick="v62CtrlPlay()">&#9654; Play</button>
       <button class="btn" onclick="v62CtrlStep(-1)">&#8592; Prev</button>
       <button class="btn" onclick="v62CtrlStep(1)">Next &#8594;</button>
       <button class="btn" onclick="v62CtrlReset()">&#8635; Reset</button>
-      <span id="v62-status" style="font-family:var(--font-mono);font-size:0.76rem;color:var(--ink-faint);flex:1;text-align:center;"></span>
+      <span id="v62-status" style="font-family:var(--font-mono);font-size:0.76rem;color:var(--ink-soft);flex:1;text-align:center;"></span>
     </div>
-    <div class="fig-state" id="v62-readout"></div>
-  </section>
+          <div class="fig-state" id="v62-readout"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- Fig 6.5 - SR vs LR COST CURVES -->
-  <section class="sec page" id="sec-6-5">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-6-5">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 6.5</span>
       <h3>SR vs LR Cost Curves</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Short-run Marginal Cost (SMC), Average Variable Cost (AVC), Average Total Cost (ATC), and Average Fixed Cost (AFC) are drawn simultaneously. The Total Fixed Cost (TFC) slider shows how fixed costs shift ATC upward but leave SMC and AVC unchanged. A toggle overlays the Long-Run Average Cost (LRAC) for comparison. All five short-run curve properties in one diagram.
     </p>
-    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row" style="margin-bottom:0.75rem;">
       <div class="ctrl">
         <span class="ctrl-label">TFC: <span class="ctrl-value" id="v65-tfc-val">100</span></span>
         <input type="range" class="ctrl-track" id="v65-tfc" min="10" max="200" step="any" value="100" oninput="v65Update()" aria-label="Total fixed cost TFC">
@@ -325,55 +201,65 @@
       <button class="btn" id="v65-lr-btn" onclick="v65ToggleLR()">Show LRAC</button>
       <button class="btn" onclick="window.resetFig65&&window.resetFig65()">Reset labels</button>
     </div>
-    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs65-wrap"></div></div>
-    <div class="fig-state" id="v65-readout"></div>
-  </section>
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs65-wrap"></div></div>
+          <div class="fig-state" id="v65-readout"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- Fig 6.6 - LRAC ENVELOPE BUILDER -->
-  <section class="sec page" id="sec-6-6">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-6-6">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 6.6</span>
       <h3>LRAC Envelope Builder</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Each SRAC curve corresponds to a different fixed level of capital (K = 1, 2, 3, 4, ...). The LRAC is the lower envelope of all SRAC curves: at each output level, the long-run optimum is whichever fixed-capital option is cheapest. Watch the animation below, then explore the interactive builder.
     </p>
-    <!-- Manim animation -->
-    <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:1rem;line-height:0;">
+        <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:1rem;line-height:0;">
       <video data-autoplay controls playsinline preload="metadata" style="width:100%;display:block;border-radius:10px;max-height:520px;object-fit:contain;">
         <source src="media/videos/fig66_lrac_manim/1080p60/LRACEnvelope.mp4" type="video/mp4">
         Your browser does not support HTML5 video.
       </video>
     </div>
-    <!-- Interactive canvas -->
-    <p class="fig-intro" style="margin-top:0">Interactive builder: drag the slider to add more plant sizes and see the LRAC approach a smooth curve.</p>
-    <div class="ctrl-row" style="margin-bottom:0.5rem;">
+        <p class="fig-intro" style="margin-top:0">Interactive builder: drag the slider to add more plant sizes and see the LRAC approach a smooth curve.</p>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row" style="margin-bottom:0.5rem;">
       <div class="ctrl">
         <span class="ctrl-label">Number of SRAC curves: <span class="ctrl-value" id="v66-nk-val">4</span></span>
         <input type="range" class="ctrl-track" id="v66-nk" min="1" max="8" step="1" value="4" oninput="v66Update()" style="width:160px;" aria-label="Number of SRAC curves">
       </div>
       <button class="btn" onclick="window.resetFig66&&window.resetFig66()">Reset labels</button>
     </div>
-    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs66-wrap"></div></div>
-    <div class="fig-state" id="v66-readout"></div>
-  </section>
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs66-wrap"></div></div>
+          <div class="fig-state" id="v66-readout"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- Fig 6.8 - MINIMUM WAGE AUTOMATION SIMULATOR -->
-  <section class="sec page" id="sec-6-8">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-6-8">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 6.8</span>
       <h3>Minimum Wage Automation Simulator</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Imagine you manage a firm. Currently, the government's minimum wage is exactly what you're paying your workers. Now the government passes a law raising the minimum wage. What do you think happens?
     </p>
-    <p class="fig-intro" style="margin-top:-0.75rem;">
+        <p class="fig-intro" style="margin-top:-0.75rem;">
       Think about it: if labor suddenly costs more, what would a cost-conscious manager do? Would you use the same amount of labor? Or would you try to use less labor and substitute toward capital?
     </p>
-    <p class="fig-intro" style="margin-top:-0.75rem;">
+        <p class="fig-intro" style="margin-top:-0.75rem;">
       Use the wage slider below to see the effect. Watch how the isocost line rotates, and see where the new cost-minimising bundle lands. Does it match your intuition?
     </p>
-    <div class="ctrl-row" style="margin-bottom:0.75rem;">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row" style="margin-bottom:0.75rem;">
       <div class="ctrl">
         <span class="ctrl-label">Min wage w: <span class="ctrl-value" id="v68-w-val">3</span></span>
         <input type="range" class="ctrl-track" id="v68-w" min="1" max="12" step="any" value="3" oninput="v68Update()" aria-label="Minimum wage w">
@@ -384,22 +270,27 @@
       </div>
       <button class="btn" onclick="window.resetFig68&&window.resetFig68()">Reset labels</button>
     </div>
-    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs68-wrap"></div></div>
-    <div class="fig-state" id="v68-readout"></div>
-    <!-- old / new / change readout, baseline is w = v = $3 -->
-    <div id="v68-delta" class="delta-bar"></div>
-  </section>
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs68-wrap"></div></div>
+          <div class="fig-state" id="v68-readout"></div>
+          <div id="v68-delta" class="delta-bar"></div>
+        </div>
+      </div>
+    </section>
 
   <!-- Fig 6.10 - EFFICIENT SCALE FINDER -->
-  <section class="sec page" id="sec-6-10">
-    <div class="fig-hd">
+  <section class="sec page fig-sec" id="sec-6-10">
+      <div class="fig-prose">
+        <div class="fig-hd">
       <span class="fig-n">Fig 6.10</span>
       <h3>Efficient Scale Finder</h3>
     </div>
-    <p class="fig-intro">
+        <p class="fig-intro">
       Choose a preset average cost function from the dropdown. The tool plots AC, marks q* (the efficient scale), and shades economies of scale in green and diseconomies in red. Toggle "Show Marginal Cost" to overlay the MC curve and see where it crosses AC at the minimum.
     </p>
-    <div class="ctrl-row" style="margin-bottom:0.75rem;flex-wrap:wrap;gap:0.75rem;">
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="ctrl-row" style="margin-bottom:0.75rem;flex-wrap:wrap;gap:0.75rem;">
       <div style="display:flex;flex-direction:column;gap:0.3rem;">
         <span class="ctrl-label">AC function:</span>
         <select class="sel" id="v610-preset" onchange="v610Draw()" style="max-width:320px;">
@@ -418,15 +309,17 @@
       <button class="btn" id="v610-mc-btn" onclick="v610ToggleMC()">Show Marginal Cost</button>
       <button class="btn" onclick="window.resetFig610&&window.resetFig610()">Reset labels</button>
     </div>
-    <div class="fig-plot"><div class="demo-svg-wrap" id="cvs610-wrap"></div></div>
-    <div class="fig-state" id="v610-readout"></div>
-  </section>
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs610-wrap"></div></div>
+          <div class="fig-state" id="v610-readout"></div>
+        </div>
+      </div>
+    </section>
 
   <footer class="site-foot">
     <div class="hub-footer-left">
       <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
-      &nbsp;&middot;&nbsp; EC224 Intermediate Microeconomics
-      &nbsp;&middot;&nbsp; <a href="week6.html">Back to Week 6</a>
+      <span class="foot-sep"></span> EC224 Intermediate Microeconomics
+      <span class="foot-sep"></span> <a href="week6.html">Back to Week 6</a>
     </div>
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
@@ -680,8 +573,8 @@ function v61Draw(Lcur,Kcur){
   const iqL=AXIS_MAX*0.7, iqK=q*q/iqL;
   const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
   const lbls61=[
-    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width*1.45+8,h:18,text:'Isoquant Q = '+q,color:'#1f6fb2',fontSize:9,bold:false},
-    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width*1.45+8,h:18,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize:9,bold:false},
+    {ax:iqAx,ay:iqAy,x:iqAx+12,y:iqAy-8,w:ctx.measureText('Isoquant Q = '+q).width*1.45+8,h:18,text:'Isoquant Q = '+q,color:'#1f6fb2',fontSize: 13,bold:false},
+    {ax:icLx,ay:icLy,x:icLx+8,y:icLy-8,w:ctx.measureText('Isocost TC* = '+opt.TC.toFixed(1)).width*1.45+8,h:18,text:'Isocost TC* = '+opt.TC.toFixed(1),color:EC.red,fontSize: 13,bold:false},
   ];
 
   // NOTE: the isoquant/isocost labels (lbls61) are NOT resolved/drawn here.
@@ -699,8 +592,8 @@ function v61Draw(Lcur,Kcur){
     ctx.setLineDash([]);
     ctx.font='13px DM Sans,sans-serif';
     const optLbls=[
-      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:18,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize:9,bold:false},
-      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:18,text:'Cost minimised!',color:'#2f5c3a',fontSize:9,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:18,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize: 13,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:18,text:'Cost minimised!',color:'#2f5c3a',fontSize: 13,bold:false},
     ];
     // Resolve isoquant + isocost + optimal labels together; keep above the x-axis.
     const all61=lbls61.concat(optLbls);
@@ -738,7 +631,7 @@ function v61Draw(Lcur,Kcur){
   linePts61.push([bx,by]);
   const verdict = atOpt ? 'Cost minimised!' : (!onIsoquant ? 'Not on isoquant yet' : 'MRTS ≠ w/v');
   const verdictCol = atOpt ? '#2f5c3a' : '#8b95a5';
-  dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText(verdict).width*1.45+8,h:18,text:verdict,color:verdictCol,fontSize:9,bold:false});
+  dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText(verdict).width*1.45+8,h:18,text:verdict,color:verdictCol,fontSize: 13,bold:false});
   // Resolve isoquant + isocost + drag labels together; keep above the x-axis.
   const all61=lbls61.concat(dragLbls);
   resolveLabels(all61,linePts61,120,6,{x0:8,y0:8,x1:W-12,y1:H-52});
@@ -754,7 +647,7 @@ function v61Draw(Lcur,Kcur){
     '<div class="readout-col"><div class="readout-label">TC = wL + vK</div><div class="readout-val">'+TC.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2f5c3a">'+opt.TC.toFixed(2)+'</div></div>' +
     '</div>' +
-    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-faint)">' +
+    '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-soft)">' +
     (atOpt?'Cost minimised: MRTS = w/v. This is the cheapest way to produce Q='+q+'.':
       'Not optimal. Drag the dot toward the tangency where MRTS = w/v = '+(wv).toFixed(2)+'. Click "Show Optimal Bundle" when ready.') +
     '</div>';
@@ -1019,7 +912,7 @@ window._initFig65=function initFig65(){
 
   // Curve path elements (ordered: LRAC behind, then others)
   const lracPath=svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',1.8).attr('stroke-dasharray','5,3').attr('opacity',0);
-  const afcPath=svg.append('path').attr('fill','none').attr('stroke','var(--ink-faint)').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
+  const afcPath=svg.append('path').attr('fill','none').attr('stroke','var(--ink-soft)').attr('stroke-width',1.8).attr('stroke-dasharray','4,3');
   const avcPath=svg.append('path').attr('fill','none').attr('stroke',EC.green).attr('stroke-width',2);
   // Ghost ATC (faded, dashed, thinner): re-evaluated at the baseline TFC so
   // raising/lowering TFC leaves the original ATC on screen for comparison.
@@ -1035,10 +928,10 @@ window._initFig65=function initFig65(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('Quantity (q)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1180,7 +1073,7 @@ window._initFig65=function initFig65(){
       '<div class="readout-col"><div class="readout-label">Efficient scale q* (min ATC)</div><div class="readout-val">q*='+Math.sqrt(tfc).toFixed(1)+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">Variable cost (TVC) formula</div><div class="readout-val" style="font-size:0.75rem;">q²</div></div>' +
       '</div>' +
-      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-faint)">Key property: SMC always passes through the minimum of ATC and AVC. Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.</div>';
+      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-soft)">Key property: SMC always passes through the minimum of ATC and AVC. Changing TFC shifts ATC upward but leaves SMC and AVC unchanged. LRAC = Long-Run Average Cost.</div>';
   }
 
   // Initial build
@@ -1259,10 +1152,10 @@ window._initFig66=function initFig66(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(7).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('q (output)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1371,7 +1264,7 @@ window._initFig66=function initFig66(){
 
     const lracMin2=2*Math.sqrt(V66_W*V66_V);
     document.getElementById('v66-readout').innerHTML=
-      '<div style="font-size:0.84rem;color:var(--ink-faint);line-height:1.7;">' +
+      '<div style="font-size:0.84rem;color:var(--ink-soft);line-height:1.7;">' +
       'In the long run, we can choose any capital level. At each output level, we pick whichever fixed-capital option is cheapest. The LRAC (thick blue) is the lower envelope of all SRAC curves. ' +
       'With Q = K^0.5·L^0.5, w = '+V66_W+', v = '+V66_V+': SRAC(q,K) = '+V66_W+'q/K + '+V66_V+'K/q. ' +
       'The analytical LRAC = 2·sqrt(w·v) = $'+lracMin2.toFixed(2)+' (constant). Add more curves to see the discrete envelope approach this smooth floor.' +
@@ -1452,10 +1345,10 @@ window._initFig68=function initFig68(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
     .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('L (labor)');
   svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
@@ -1585,7 +1478,7 @@ window._initFig68=function initFig68(){
     /* The old/new K/L and TC columns that used to live here are now the delta
        bar above, which shows the same values plus how far they moved. */
     document.getElementById('v68-readout').innerHTML=
-      '<div style="font-size:0.84rem;color:var(--ink-faint)">' +
+      '<div style="font-size:0.84rem;color:var(--ink-soft)">' +
       (w>wBase&&v===vBase?'Wage rose from $'+wBase+' to $'+w+'. The firm substitutes capital for labor: K/L rises from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
         w<wBase&&v===vBase?'Wage fell below baseline. The firm substitutes labor for capital: K/L falls from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'.':
         w>wBase&&v>vBase?'Both costs rose. K/L changes from '+kl_old.toFixed(2)+' to '+kl_new.toFixed(2)+'. Total cost rises to $'+optNew.TC.toFixed(2)+'.':
@@ -1792,9 +1685,9 @@ window._initFig610=function initFig610(){
 
     // Axes
     xAxisG.call(d3.axisBottom(scX).ticks(10).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
     yAxisG.call(d3.axisLeft(scY).ticks(6).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-faint)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'DM Sans',sans-serif");});
     xLblEl.attr('x',PAD.left+(W-PAD.left-PAD.right)/2);
 
     // AC curve points
@@ -1915,7 +1808,7 @@ window._initFig610=function initFig610(){
       '<div class="readout-col"><div class="readout-label">Efficient scale q*</div><div class="readout-val">'+(qstar?qstar.toFixed(2):'n/a')+'</div></div>' +
       '<div class="readout-col"><div class="readout-label">Min AC</div><div class="readout-val">$'+(acstar<Infinity?acstar.toFixed(2):'n/a')+'</div></div>' +
       '</div>' +
-      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-faint)">'+preset.desc+'</div>';
+      '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-soft)">'+preset.desc+'</div>';
   }
 
   draw610();
@@ -1926,8 +1819,6 @@ window._initFig610=function initFig610(){
 // ======================================================================
 // BOOT
 // ======================================================================
-function openLN()  { document.getElementById('leftNav').classList.add('open'); document.getElementById('lnOverlay').classList.add('open'); }
-function closeLN() { document.getElementById('leftNav').classList.remove('open'); document.getElementById('lnOverlay').classList.remove('open'); }
 
 function redrawAll6() {
   // v61Draw() (no args) re-renders at the CURRENT dot position; calling
@@ -1988,5 +1879,7 @@ window.addEventListener('resize', () => {
   <script src="assets/ask-widget.js"></script>
   <script src="assets/deltabar.js"></script>
   <script src="assets/autoplay-video.js"></script>
+<script src="assets/nav.js" defer></script>
+<script src="assets/figlabels.js" defer></script>
 </body>
 </html>
