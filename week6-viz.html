@@ -418,7 +418,7 @@ function drawForceLabel(ctx, lbl) {
   ctx.font = '500 ' + FS + 'px "DM Sans",system-ui,sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3.5;
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6;    // wide enough that the halo closes between letters
   ctx.strokeText(text, cx, cy);
   ctx.fillStyle = color;
   ctx.fillText(text, cx, cy);
@@ -551,7 +551,10 @@ function v61Draw(Lcur,Kcur){
   for(let l=0.4;l<=AXIS_MAX;l+=0.05){
     const k=q*q/l; if(k>AXIS_MAX||k<0.05){first=true;continue;}
     const [cx,cy]=toC(l,k,W,H,xR,yR);
-    if(l%2<0.05) linePts61.push([cx,cy]);
+    /* Sample the isoquant densely enough for the label resolver to see it as
+       a curve rather than seven scattered dots: at every second unit of L a
+       label could settle in the gap between samples and land on the line. */
+    if(l%0.5<0.05) linePts61.push([cx,cy]);
     first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
   }
   ctx.stroke();

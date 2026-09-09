@@ -433,6 +433,61 @@
     }
   }
 
+  /* Map a point from screen coordinates into the user space of an element,
+     so a leader drawn as a sibling of the label lands where it should even
+     inside a scaled viewBox or a transformed group. */
+  function toUser(parent, sx, sy) {
+    try {
+      var svg = parent.ownerSVGElement || parent;
+      var m = parent.getScreenCTM && parent.getScreenCTM();
+      if (!m || !svg.createSVGPoint) return null;
+      var pt = svg.createSVGPoint();
+      pt.x = sx; pt.y = sy;
+      var p = pt.matrixTransform(m.inverse());
+      return { x: p.x, y: p.y };
+    } catch (e) { return null; }
+  }
+
+  /* Where a segment from an outside point first meets a box, so the leader
+     stops at the label instead of running under it. */
+  function edgePoint(box, fromX, fromY) {
+    var cx = box.left + box.width / 2, cy = box.top + box.height / 2;
+    var dx = fromX - cx, dy = fromY - cy;
+    if (!dx && !dy) return { x: cx, y: cy };
+    var tx = dx ? (box.width / 2 + 2) / Math.abs(dx) : Infinity;
+    var ty = dy ? (box.height / 2 + 2) / Math.abs(dy) : Infinity;
+    var t = Math.min(tx, ty, 1);
+    return { x: cx + dx * t, y: cy + dy * t };
+  }
+
+  var LEADER_MIN = 28;   /* px: below this the label still reads as attached */
+
+  /* fromScreen is where the label was before it was moved. */
+  function leader(el, fromScreenX, fromScreenY, colour) {
+    var parent = el.parentNode;
+    if (!parent || !parent.ownerSVGElement) return;
+    var box = el.getBoundingClientRect();
+    if (!box.width) return;
+    var cx = box.left + box.width / 2, cy = box.top + box.height / 2;
+    var far = Math.sqrt((cx - fromScreenX) * (cx - fromScreenX) + (cy - fromScreenY) * (cy - fromScreenY));
+    if (far < LEADER_MIN) return;
+    var stop = edgePoint(box, fromScreenX, fromScreenY);
+    var a = toUser(parent, fromScreenX, fromScreenY);
+    var b = toUser(parent, stop.x, stop.y);
+    if (!a || !b) return;
+    var sc = userScale(el);
+    var ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    ln.setAttribute('data-fl-leader', '1');
+    ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
+    ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+    ln.setAttribute('stroke', colour || '#4a5257');
+    ln.setAttribute('stroke-width', (0.9 / (sc.x || 1)).toFixed(3));
+    ln.setAttribute('stroke-dasharray', (3 / (sc.x || 1)).toFixed(2) + ',' + (2.5 / (sc.x || 1)).toFixed(2));
+    ln.setAttribute('opacity', '0.5');
+    ln.setAttribute('pointer-events', 'none');
+    parent.insertBefore(ln, parent.firstChild);
+  }
+
   function placeIn(host) {
     var w = host.clientWidth, h = host.clientHeight;
     if (!w || !h) return 0;
@@ -443,7 +498,7 @@
        ADDS to an existing translate, running twice without resetting made
        labels drift further each time. So: drop every plate, put every label
        back where the figure drew it, then decide again from scratch. */
-    host.querySelectorAll('[data-fl-plate]').forEach(function (r) { r.remove(); });
+    host.querySelectorAll('[data-fl-plate], [data-fl-leader]').forEach(function (r) { r.remove(); });
 
     var all = [], backedOnes = [], tickRects = [];
     host.querySelectorAll('svg text, .JXGtext').forEach(function (t) {
@@ -499,9 +554,12 @@
         }
       }
 
+      var wasBox = t.getBoundingClientRect();
+      var fromX = wasBox.left + wasBox.width / 2, fromY = wasBox.top + wasBox.height / 2;
       if (best && best.sc > startClear + 0.5) {
         move(t, best.x - r0.x, best.y - r0.y);
         moved++;
+        leader(t, fromX, fromY, colour);
       }
       /* Whether or not it found somewhere better, a label this close to ink
          gets a plate so it stays readable over whatever is behind it. */
@@ -543,9 +601,13 @@
         }
       }
       if (picked) {
+        var nb = t.getBoundingClientRect();
+        var nFromX = nb.left + nb.width / 2, nFromY = nb.top + nb.height / 2;
         shiftEl(t, picked.x - r0.x, picked.y - r0.y);
         if (own) shiftEl(own, picked.x - r0.x, picked.y - r0.y);
         moved++;
+        var nc = (t.getAttribute && t.getAttribute('fill')) || '#4a5257';
+        leader(t, nFromX, nFromY, nc);
       }
       var rf = relToHost(t, host);
       grid.markRect(rf.x, rf.y, rf.w, rf.h);
