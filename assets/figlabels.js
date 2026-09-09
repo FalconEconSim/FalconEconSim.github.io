@@ -488,6 +488,36 @@
     parent.insertBefore(ln, parent.firstChild);
   }
 
+  /* Text belonging to a legend: either inside a group named as one, or
+     sitting immediately to the right of a small square colour swatch, which
+     is what a legend row looks like whatever it is called. */
+  function inLegend(el) {
+    var n = el;
+    for (var i = 0; i < 4 && n && n.getAttribute; i++) {
+      var c = n.getAttribute('class') || '';
+      if (typeof c !== 'string') c = (c.baseVal || '');
+      if (/legend|swatch|\bkey\b/i.test(c)) return true;
+      n = n.parentElement;
+    }
+    var par = el.parentNode;
+    if (!par || !par.children) return false;
+    var b = el.getBoundingClientRect();
+    if (!b.width) return false;
+    for (var j = 0; j < par.children.length; j++) {
+      var k = par.children[j];
+      if (!k.tagName || k.tagName.toLowerCase() !== 'rect') continue;
+      if (k.hasAttribute('data-fl-plate')) continue;
+      var rb = k.getBoundingClientRect();
+      if (rb.width < 6 || rb.width > 20) continue;
+      if (Math.abs(rb.height - rb.width) > 4) continue;
+      if (Math.abs((rb.top + rb.height / 2) - (b.top + b.height / 2)) > 10) continue;
+      if (rb.right > b.left + 4) continue;
+      if (b.left - rb.right > 24) continue;
+      return true;
+    }
+    return false;
+  }
+
   function placeIn(host) {
     var w = host.clientWidth, h = host.clientHeight;
     if (!w || !h) return 0;
@@ -503,7 +533,7 @@
     var all = [], backedOnes = [], tickRects = [];
     host.querySelectorAll('svg text, .JXGtext').forEach(function (t) {
       if (!isCurveLabel(t) || isAxisTitle(t)) return;
-      if (!shown(t)) return;
+      if (!shown(t) || inLegend(t)) return;
       if (inAxisMargin(t, host)) return;
       if (alreadyBacked(t, host)) { resetPair(t); backedOnes.push(t); return; }
       resetLabel(t); all.push(t);
@@ -675,7 +705,7 @@
     var fixed = 0;
     host.querySelectorAll('svg text, .JXGtext').forEach(function (t) {
       if (!isTitleish(t, host)) return;
-      if (!shown(t)) return;
+      if (!shown(t) || inLegend(t)) return;
       /* Reset to where the figure drew it before deciding anything, so repeat
          runs cannot accumulate offsets. */
       resetLabel(t);

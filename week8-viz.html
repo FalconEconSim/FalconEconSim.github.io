@@ -1632,8 +1632,13 @@ function v810Init(){
   const legX=D3W-D3PAD.right-134, legY=D3PAD.top+2;
   const legItems=[{color:FILL_CS,stroke:STROKE_CS,label:'Consumer Surplus (CS)'},{color:FILL_PS,stroke:STROKE_PS,label:'Profit / Transfer'},{color:FILL_DWL,stroke:STROKE_DWL,label:'Deadweight Loss / Loss'}];
   const legG=v810svg.append('g').attr('class','v810-legend');
-  legG.append('rect').attr('x',legX-6).attr('y',legY-4).attr('width',140).attr('height',legItems.length*18+8).attr('fill','rgba(255,255,255,0.92)').attr('stroke','#c9c2b6').attr('rx',4);
+  const legBox=legG.append('rect').attr('x',legX-6).attr('y',legY-4).attr('width',140).attr('height',legItems.length*18+8).attr('fill','rgba(255,255,255,0.92)').attr('stroke','#c9c2b6').attr('rx',4);
   legItems.forEach((item,i)=>{const ry=legY+i*18+2;legG.append('rect').attr('x',legX).attr('y',ry).attr('width',12).attr('height',12).attr('fill',item.color).attr('stroke',item.stroke).attr('stroke-width',0.8).attr('rx',2);legG.append('text').attr('x',legX+16).attr('y',ry+10).attr('font-size',12).attr('fill','#555').text(item.label);});
+  /* Size the box to the words rather than guessing: at 140 the longest label
+     ran past the right border. */
+  var legMax=0;
+  legG.selectAll('text').each(function(){ try { legMax=Math.max(legMax,this.getComputedTextLength()); } catch(e){} });
+  if (legMax) legBox.attr('width', Math.max(140, legMax + 30));
   v810dyn._price=v810svg.append('line').attr('stroke-width',2).attr('stroke-dasharray','5,3');
   v810nodes=[
     d3Node('D',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
