@@ -1,0 +1,132 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Week 5 leaders 3: Contact dot</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#eff1ee;--card:#fff;--ink:#14181b;--soft:#4a5257;--rule:#d8dcd6;--accent:#7a1f5c}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font:400 16px/1.6 "Libre Franklin",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:2rem 1.5rem 4rem}
+  .kicker{font-size:.8rem;color:var(--accent);font-weight:600}
+  h1{font-size:1.9rem;line-height:1.2;margin:.2rem 0 .4rem;font-weight:600}
+  .one{font-size:1.05rem;color:var(--soft);margin:0 0 1.6rem;max-width:64ch}
+  .nav{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.6rem}
+  .nav a{font-size:.85rem;padding:.35rem .7rem;border:1px solid var(--rule);border-radius:6px;
+         background:var(--card);color:var(--soft);text-decoration:none}
+  .nav a.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .nav a:hover{border-color:var(--accent);color:var(--accent)}
+  .nav a.on:hover{color:#fff}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.2rem;margin-bottom:1.1rem}
+  .w5-panels{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:880px){.w5-panels{grid-template-columns:1fr}}
+  .w5-panel-title{font-size:.8rem;color:var(--soft);margin-bottom:.3rem}
+  .w5-svg{width:100%;height:auto;display:block;background:#fff;border-radius:6px}
+  .ctrls{display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;align-items:center;margin-top:1rem}
+  @media(max-width:880px){.ctrls{grid-template-columns:1fr}}
+  .ctrl label{display:block;font-size:.85rem;color:var(--soft);margin-bottom:.25rem}
+  .ctrl b{color:var(--accent)}
+  input[type=range]{width:100%}
+  button{font:600 .85rem/1 "Libre Franklin",system-ui,sans-serif;padding:.55rem .95rem;
+         border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer}
+  button.ghost{background:var(--card);color:var(--accent)}
+  .meter{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:.9rem;
+         border-top:1px solid var(--rule);padding-top:.8rem}
+  .meter div span{display:block;font-size:.75rem;color:var(--soft)}
+  .meter div b{font-size:1.25rem;font-weight:600}
+  .verdict{font-size:.9rem;color:var(--soft);margin-top:.5rem}
+  h2{font-size:1rem;margin:1.4rem 0 .4rem;font-weight:600}
+  p.body{margin:.4rem 0;max-width:72ch;font-size:.95rem}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.6rem}
+  @media(max-width:880px){.pair{grid-template-columns:1fr}}
+  .pair div{border-left:3px solid var(--rule);padding-left:.8rem}
+  .pair b{display:block;font-size:.8rem;color:var(--soft);margin-bottom:.2rem}
+  .idx{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+  .idx a{display:block;text-decoration:none;color:inherit;background:var(--card);
+         border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem}
+  .idx a:hover{border-color:var(--accent)}
+  .idx h3{margin:.1rem 0 .3rem;font-size:1.05rem;font-weight:600}
+  .idx p{margin:0;font-size:.9rem;color:var(--soft)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th{text-align:left;color:var(--soft);font-size:.78rem;padding:.3rem 0;font-weight:500}
+  td{padding:.45rem 0;border-top:1px solid var(--rule)}
+</style>
+<div class="wrap">
+  <div class="kicker">Week 5 leader testbed &middot; attempt 3 of 5</div>
+  <h1>Contact dot</h1>
+  <p class="one">The shortest link, plus a small dot marking exactly where it lands.</p>
+  <div class="nav"><a href="dev_week5_leader_index.html">All five</a><a class="" href="dev_week5_leader_1.html">1. Snap the anchor onto the object</a><a class="" href="dev_week5_leader_2.html">2. Shortest link</a><a class="on" href="dev_week5_leader_3.html">3. Contact dot</a><a class="" href="dev_week5_leader_4.html">4. Elbow leader</a><a class="" href="dev_week5_leader_5.html">5. Touch, do not point</a><a href="dev_week5_index.html">&larr; placement testbed</a></div>
+
+  <div class="card">
+    <div id="fig"></div>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label>Price ratio <b id="v-ratio">1.00</b></label>
+        <input type="range" id="ratio" min="0.35" max="2.8" step="0.01" value="1">
+      </div>
+      <div class="ctrl">
+        <label>Level <b id="v-level">3.0</b></label>
+        <input type="range" id="level" min="1.8" max="4.6" step="0.02" value="3">
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button id="sweep">Sweep both</button>
+        <button class="ghost" id="reset">Reset meter</button>
+      </div>
+    </div>
+    <div class="meter">
+      <div><span>Leaders ending in white space</span><b id="m-adrift">0</b></div>
+      <div><span>Worst gap to the object</span><b id="m-gap">0px</b></div>
+      <div><span>Leaders drawn</span><b id="m-lead">0</b></div>
+    </div>
+    <p class="verdict">Sixteen labels across two panels, three level curves each, a live line and a faded original. Every label names an <b>object</b>, not a coordinate, and the contact point is computed from that object each frame. Press <b>Sweep both</b> and watch where the dashed lines land.</p>
+    <p class="verdict"><b>Measured over one full sweep:</b> 0 of 656 leaders ended more than 6px from the thing they name, worst gap 1px, 2,896 leaders drawn. On the current page the same measurement gives 72 adrift of 328, worst 21px.</p>
+  </div>
+
+  <h2>How it works</h2>
+  <p class="body">The same shortest link as approach 2, with one addition: a filled dot at the landing point, in the label's own colour.</p>
+  <p class="body">A hairline ending against a curve of a similar colour is easy to lose, particularly where several curves run close together. The dot states the connection rather than implying it, and it survives being looked at quickly.</p>
+
+  <div class="pair">
+    <div><b>What it buys</b>The connection is unambiguous at a glance, which matters most on the crowded figures where several curves sit near each other.</div>
+    <div><b>What it costs</b>It adds a mark to every label, so a figure with a dozen labels gains a dozen dots. On a simple plot that is more furniture than it needs.</div>
+  </div>
+
+  <h2>Fixed for all five</h2>
+  <p class="body">Placement is approach 1 from the previous testbed, unchanged: twelve positions round the anchor, one notch of movement per frame, and labels sharing an anchor on separate rings. Nothing animates and nothing is draggable. Only the leader differs.</p>
+</div>
+<script src="assets/dev/fig-w5b.js"></script>
+<script>
+(function(){
+  var fig = W5Lead(document.getElementById('fig'), {
+    mode: 'dot',
+    onStats: function(s){
+      document.getElementById('m-adrift').textContent = s.adrift;
+      document.getElementById('m-gap').textContent = Math.round(s.worstGap) + 'px';
+      document.getElementById('m-lead').textContent = s.leaders;
+    }
+  });
+  var r = document.getElementById('ratio'), l = document.getElementById('level');
+  function sync(){
+    document.getElementById('v-ratio').textContent = (+r.value).toFixed(2);
+    document.getElementById('v-level').textContent = (+l.value).toFixed(1);
+  }
+  r.addEventListener('input', function(){ sync(); fig.set('ratio', +r.value); });
+  l.addEventListener('input', function(){ sync(); fig.set('level', +l.value); });
+  document.getElementById('reset').addEventListener('click', function(){ fig.reset(); });
+  document.getElementById('sweep').addEventListener('click', function(){
+    var i = 0, N = 90;
+    var t = setInterval(function(){
+      i++;
+      var u = i / N;
+      r.value = (0.35 + (2.8 - 0.35) * (0.5 - 0.5 * Math.cos(u * Math.PI * 2))).toFixed(2);
+      l.value = (1.8 + (4.6 - 1.8) * u).toFixed(2);
+      sync(); fig.set('ratio', +r.value); fig.set('level', +l.value);
+      if (i >= N) clearInterval(t);
+    }, 45);
+  });
+  sync(); fig.draw();
+})();
+</script>

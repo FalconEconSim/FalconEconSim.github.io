@@ -1,0 +1,91 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Week 5 leader testbed</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#eff1ee;--card:#fff;--ink:#14181b;--soft:#4a5257;--rule:#d8dcd6;--accent:#7a1f5c}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font:400 16px/1.6 "Libre Franklin",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:2rem 1.5rem 4rem}
+  .kicker{font-size:.8rem;color:var(--accent);font-weight:600}
+  h1{font-size:1.9rem;line-height:1.2;margin:.2rem 0 .4rem;font-weight:600}
+  .one{font-size:1.05rem;color:var(--soft);margin:0 0 1.6rem;max-width:64ch}
+  .nav{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.6rem}
+  .nav a{font-size:.85rem;padding:.35rem .7rem;border:1px solid var(--rule);border-radius:6px;
+         background:var(--card);color:var(--soft);text-decoration:none}
+  .nav a.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .nav a:hover{border-color:var(--accent);color:var(--accent)}
+  .nav a.on:hover{color:#fff}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.2rem;margin-bottom:1.1rem}
+  .w5-panels{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:880px){.w5-panels{grid-template-columns:1fr}}
+  .w5-panel-title{font-size:.8rem;color:var(--soft);margin-bottom:.3rem}
+  .w5-svg{width:100%;height:auto;display:block;background:#fff;border-radius:6px}
+  .ctrls{display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;align-items:center;margin-top:1rem}
+  @media(max-width:880px){.ctrls{grid-template-columns:1fr}}
+  .ctrl label{display:block;font-size:.85rem;color:var(--soft);margin-bottom:.25rem}
+  .ctrl b{color:var(--accent)}
+  input[type=range]{width:100%}
+  button{font:600 .85rem/1 "Libre Franklin",system-ui,sans-serif;padding:.55rem .95rem;
+         border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer}
+  button.ghost{background:var(--card);color:var(--accent)}
+  .meter{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:.9rem;
+         border-top:1px solid var(--rule);padding-top:.8rem}
+  .meter div span{display:block;font-size:.75rem;color:var(--soft)}
+  .meter div b{font-size:1.25rem;font-weight:600}
+  .verdict{font-size:.9rem;color:var(--soft);margin-top:.5rem}
+  h2{font-size:1rem;margin:1.4rem 0 .4rem;font-weight:600}
+  p.body{margin:.4rem 0;max-width:72ch;font-size:.95rem}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.6rem}
+  @media(max-width:880px){.pair{grid-template-columns:1fr}}
+  .pair div{border-left:3px solid var(--rule);padding-left:.8rem}
+  .pair b{display:block;font-size:.8rem;color:var(--soft);margin-bottom:.2rem}
+  .idx{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+  .idx a{display:block;text-decoration:none;color:inherit;background:var(--card);
+         border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem}
+  .idx a:hover{border-color:var(--accent)}
+  .idx h3{margin:.1rem 0 .3rem;font-size:1.05rem;font-weight:600}
+  .idx p{margin:0;font-size:.9rem;color:var(--soft)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th{text-align:left;color:var(--soft);font-size:.78rem;padding:.3rem 0;font-weight:500}
+  td{padding:.45rem 0;border-top:1px solid var(--rule)}
+</style>
+<div class="wrap">
+  <div class="kicker">Week 5 leader testbed</div>
+  <h1>Five ways to make the leader arrive</h1>
+  <p class="one">Placement is settled: approach 1, twelve slots and one notch of movement at a time. What is left is the dashed line, which sometimes stops in white space. These are five ways of fixing that, on a deliberately harder figure.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">Why it misses</h2>
+    <p class="body">The leader is drawn from the anchor the label was given. Measured over 41 frames on the current page, 72 of 328 leaders ended more than 6px from anything drawn, and the failures are not spread around: the curve labels anchor to a real sampled point on their curve and land at 0px, while the two straight-line labels anchor to a hand-picked coordinate that was never on the line and miss by up to 21px in 28 of 41 frames.</p>
+    <p class="body">So the line is not wrong, the target is. All five attempts below start from the same change: a label names an <b>object</b> rather than a coordinate, and the point of contact is computed from that object every frame. They differ in what they do with it.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Measured, the same sweep for all five</h2>
+    <table>
+      <tr><th>Attempt</th><th>Leaders ending in white space</th><th>Worst gap</th><th>Leaders drawn</th></tr>
+      <tr><td>1. Snap the anchor onto the object</td><td>0 of 656</td><td>1px</td><td>2,896</td></tr><tr><td>2. Shortest link</td><td>0 of 656</td><td>1px</td><td>2,896</td></tr><tr><td>3. Contact dot</td><td>0 of 656</td><td>1px</td><td>2,896</td></tr><tr><td>4. Elbow leader</td><td>0 of 656</td><td>1px</td><td>2,896</td></tr><tr><td>5. Touch, do not point</td><td>0 of 324</td><td>1px</td><td>1,364</td></tr>
+      <tr style="color:var(--soft)"><td>The current page</td><td>72 of 328</td><td>21px</td><td>328</td></tr>
+    </table>
+    <p class="body" style="margin-top:.7rem">Sixteen labels, two panels, swept through the full range of both sliders.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">One thing the harder figure exposed</h2>
+    <p class="body">Sixteen labels instead of eight is enough to strain the placement itself. On this figure two labels end up overlapping in 25 frames of 61, which never happened on the simpler one. That is the placement, not the leader: all five attempts overlap identically.</p>
+    <p class="body">Letting a boxed-in label step out one ring clears it completely, 0 frames of 61, but it costs steadiness: moves over 25px go from 12 to 46 and the biggest from 49px to 92px. Since you said the placement works as it is, I have left it alone rather than trade that away inside a page about leaders. It is a separate call, and the numbers are here when you want to make it.</p>
+  </div>
+
+  <div class="idx">
+    <a href="dev_week5_leader_1.html"><h3>1. Snap the anchor onto the object</h3><p>The anchor a figure declares is moved onto the thing it names before anything is drawn.</p></a>
+    <a href="dev_week5_leader_2.html"><h3>2. Shortest link</h3><p>The leader goes to whichever point of the object is closest to where the label actually ended up.</p></a>
+    <a href="dev_week5_leader_3.html"><h3>3. Contact dot</h3><p>The shortest link, plus a small dot marking exactly where it lands.</p></a>
+    <a href="dev_week5_leader_4.html"><h3>4. Elbow leader</h3><p>Straight out of the side of the label, then a turn and a straight run to the object.</p></a>
+    <a href="dev_week5_leader_5.html"><h3>5. Touch, do not point</h3><p>Labels sit close enough to read as attached, and only the ones pushed away get a leader at all.</p></a>
+  </div>
+</div>
