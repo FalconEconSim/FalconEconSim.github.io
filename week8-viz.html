@@ -1653,16 +1653,25 @@ function v810Init(){
   const acPts=d3.range(2.6,21,0.25).map(q=>[scX(q),scY(50/q+2)]).filter(p=>p[1]>=D3PAD.top);
   v810svg.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2).attr('d',d3.line()(acPts));
   // Fixed top-right legend
-  const legX=D3W-D3PAD.right-134, legY=D3PAD.top+2;
   const legItems=[{color:FILL_CS,stroke:STROKE_CS,label:'Consumer Surplus (CS)'},{color:FILL_PS,stroke:STROKE_PS,label:'Profit / Transfer'},{color:FILL_DWL,stroke:STROKE_DWL,label:'Deadweight Loss / Loss'}];
+  const legFs=(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(v810svg):12;
+  const legRow=Math.round(legFs*1.45), legSw=Math.round(legFs*0.8);
   const legG=v810svg.append('g').attr('class','v810-legend');
-  const legBox=legG.append('rect').attr('x',legX-6).attr('y',legY-4).attr('width',140).attr('height',legItems.length*18+8).attr('fill','rgba(255,255,255,0.92)').attr('stroke','#c9c2b6').attr('rx',4);
-  legItems.forEach((item,i)=>{const ry=legY+i*18+2;legG.append('rect').attr('x',legX).attr('y',ry).attr('width',12).attr('height',12).attr('fill',item.color).attr('stroke',item.stroke).attr('stroke-width',0.8).attr('rx',2);legG.append('text').attr('x',legX+16).attr('y',ry+10).attr('font-size',12).attr('fill','#555').text(item.label);});
-  /* Size the box to the words rather than guessing: at 140 the longest label
-     ran past the right border. */
-  var legMax=0;
-  legG.selectAll('text').each(function(){ try { legMax=Math.max(legMax,this.getComputedTextLength()); } catch(e){} });
-  if (legMax) legBox.attr('width', Math.max(140, legMax + 30));
+  const legBox=legG.append('rect').attr('fill','rgba(255,255,255,0.92)').attr('stroke','#c9c2b6').attr('rx',4);
+  const legTexts=legItems.map(item=>legG.append('text').attr('font-size',legFs).attr('fill','#555').text(item.label));
+  /* Measure the words, then place the box by its RIGHT edge so it grows in
+     from the margin instead of out past it. */
+  let legMax=0;
+  legTexts.forEach(t=>{ try { legMax=Math.max(legMax,t.node().getComputedTextLength()); } catch(e){} });
+  const legW=Math.max(140,legMax+legSw+26);
+  const legX=Math.max(D3PAD.left+8, D3W-D3PAD.right-legW+6), legY=D3PAD.top+2;
+  legBox.attr('x',legX-6).attr('y',legY-4).attr('width',legW).attr('height',legItems.length*legRow+10);
+  legItems.forEach((item,i)=>{
+    const ry=legY+i*legRow+2;
+    legG.append('rect').attr('x',legX).attr('y',ry).attr('width',legSw).attr('height',legSw)
+      .attr('fill',item.color).attr('stroke',item.stroke).attr('stroke-width',0.8).attr('rx',2);
+    legTexts[i].attr('x',legX+legSw+5).attr('y',ry+legSw*0.85);
+  });
   v810dyn._price=v810svg.append('line').attr('stroke-width',2).attr('stroke-dasharray','5,3');
   v810nodes=[
     d3Node('D',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
