@@ -1,0 +1,74 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Week 5 label testbed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#eff1ee;--card:#fff;--ink:#14181b;--soft:#4a5257;--rule:#d8dcd6;--accent:#7a1f5c}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font:400 16px/1.6 "Libre Franklin",system-ui,-apple-system,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:2rem 1.5rem 4rem}
+  .kicker{font-size:.8rem;letter-spacing:.02em;color:var(--accent);font-weight:600}
+  h1{font-size:1.9rem;line-height:1.2;margin:.2rem 0 .4rem;font-weight:600}
+  .one{font-size:1.05rem;color:var(--soft);margin:0 0 1.6rem;max-width:62ch}
+  .nav{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.6rem}
+  .nav a{font-size:.85rem;padding:.35rem .7rem;border:1px solid var(--rule);border-radius:6px;
+         background:var(--card);color:var(--soft);text-decoration:none}
+  .nav a.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .nav a:hover{border-color:var(--accent);color:var(--accent)}
+  .nav a.on:hover{color:#fff}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.2rem;margin-bottom:1.1rem}
+  .w5-panels{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:820px){.w5-panels{grid-template-columns:1fr}}
+  .w5-panel-title{font-size:.82rem;color:var(--soft);margin-bottom:.3rem}
+  .w5-svg{width:100%;height:auto;display:block;background:#fff;border-radius:6px}
+  .ctrls{display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;align-items:center;margin-top:1rem}
+  @media(max-width:820px){.ctrls{grid-template-columns:1fr}}
+  .ctrl label{display:block;font-size:.85rem;color:var(--soft);margin-bottom:.25rem}
+  .ctrl b{color:var(--accent)}
+  input[type=range]{width:100%}
+  button{font:600 .85rem/1 "Libre Franklin",system-ui,sans-serif;padding:.55rem .95rem;
+         border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer}
+  button.ghost{background:var(--card);color:var(--accent)}
+  .meter{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:.9rem;
+         border-top:1px solid var(--rule);padding-top:.8rem}
+  .meter div span{display:block;font-size:.75rem;color:var(--soft)}
+  .meter div b{font-size:1.25rem;font-weight:600}
+  .verdict{font-size:.9rem;color:var(--soft);margin-top:.5rem}
+  h2{font-size:1rem;margin:1.4rem 0 .4rem;font-weight:600}
+  p.body{margin:.4rem 0;max-width:70ch;font-size:.95rem}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.6rem}
+  @media(max-width:820px){.pair{grid-template-columns:1fr}}
+  .pair div{border-left:3px solid var(--rule);padding-left:.8rem}
+  .pair b{display:block;font-size:.8rem;color:var(--soft);margin-bottom:.2rem}
+  .idx{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+  .idx a{display:block;text-decoration:none;color:inherit;background:var(--card);
+         border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem}
+  .idx a:hover{border-color:var(--accent)}
+  .idx h3{margin:.1rem 0 .3rem;font-size:1.05rem;font-weight:600}
+  .idx p{margin:0;font-size:.9rem;color:var(--soft)}
+</style>
+<div class="wrap">
+  <div class="kicker">Week 5 label testbed</div>
+  <h1>Five ways to place a label</h1>
+  <p class="one">Same figure, same content, same slider, five different rules for deciding where a label goes. All five place the label at once and none of them can be dragged: they differ only in how steady the label looks while the slider moves.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">The problem they are answering</h2>
+    <p class="body">Placement is currently worked out fresh on every redraw, and each solve is independent of the last. When two candidate positions score almost the same, a small change in the curves flips the winner and the label crosses the plot. Sweeping one slider through 24 steps on Fig 5.7 teleports 8 of its 27 labels, 66 times in total, with single jumps up to 197px.</p>
+    <p class="body">The research calls this temporal coherence, and it is a known failure of applying a static placement algorithm frame by frame. Each page below carries a live meter so you can see for yourself how often a label jumps.</p>
+  </div>
+
+  <div class="card"><h2 style="margin-top:0">Measured, the same sweep for all five</h2><table style="width:100%;border-collapse:collapse;font-size:.9rem"><tr style="text-align:left;color:var(--soft);font-size:.78rem"><th style="padding:.3rem 0">Approach</th><th>Jumps</th><th>Biggest jump</th><th>Frames where two labels overlapped</th></tr><tr style="border-top:1px solid var(--rule)"><td style="padding:.45rem 0">1. Sticky slots</td><td>27</td><td>29px</td><td>38 of 61</td></tr><tr style="border-top:1px solid var(--rule)"><td style="padding:.45rem 0">2. Labels at the end of the line</td><td>8</td><td>46px</td><td>0 of 61</td></tr><tr style="border-top:1px solid var(--rule)"><td style="padding:.45rem 0">3. Boundary rail</td><td>0</td><td>0px</td><td>0 of 61</td></tr><tr style="border-top:1px solid var(--rule)"><td style="padding:.45rem 0">4. Welded offset</td><td>0</td><td>0px</td><td>0 of 61, but a label is hidden in 32 of 61</td></tr><tr style="border-top:1px solid var(--rule)"><td style="padding:.45rem 0">5. Lanes</td><td>0</td><td>0px</td><td>0 of 61</td></tr><tr style="border-top:2px solid var(--rule);color:var(--soft)"><td style="padding:.45rem 0">The site as it is today</td><td>66</td><td>197px</td><td>not measured</td></tr></table><p class="body" style="margin-top:.7rem">A jump is counted only where a label moved much further than its anchor did, so a label travelling with the point it names is not penalised. The last row is the current Fig 5.7 over a shorter sweep, for scale.</p></div>
+
+  <div class="idx">
+    <a href="dev_week5_1.html"><h3>1. Sticky slots</h3><p>Twelve fixed places around the anchor, and it may only ever step to the next one along.</p></a>
+    <a href="dev_week5_2.html"><h3>2. Labels at the end of the line</h3><p>The name sits at the end of the line it names, the way most newsrooms label a line chart.</p></a>
+    <a href="dev_week5_3.html"><h3>3. Boundary rail</h3><p>Every label lives in a fixed column beside the plot, joined to its anchor by a leader.</p></a>
+    <a href="dev_week5_4.html"><h3>4. Welded offset</h3><p>The offset is chosen once and then welded to the anchor. Clashes hide a label rather than move it.</p></a>
+    <a href="dev_week5_5.html"><h3>5. Lanes</h3><p>Each label owns a horizontal band. It slides left and right with its anchor but never changes row.</p></a>
+  </div>
+</div>
