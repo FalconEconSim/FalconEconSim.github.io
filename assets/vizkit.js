@@ -30,7 +30,7 @@
 
   // Standard frame + fills (welfare-region convention, matches week 8).
   window.D3W = 680; window.D3H = 560;
-  window.D3PAD = { top: 28, right: 36, bottom: 46, left: 56 };
+  window.D3PAD = { top: 28, right: 36, bottom: 54, left: 86 };
   window.LABEL_H = 15;
   window.FILL_CS = 'rgba(31,111,178,0.20)';  window.STROKE_CS = EC.primary;
   window.FILL_PS = 'rgba(160,120,0,0.30)';   window.STROKE_PS = EC.transfer;
@@ -56,12 +56,12 @@
       .attr('stroke', '#f0f0f0').attr('stroke-width', 1);
     svg.append('g').attr('class', 'd3-xaxis').attr('transform', 'translate(0,' + (D3H - D3PAD.bottom) + ')')
       .call(d3.axisBottom(scX).ticks(8).tickSize(4).tickFormat(fmtX || null))
-      .call(function (gg) { gg.select('.domain').attr('stroke', '#ccc'); gg.selectAll('.tick line').attr('stroke', '#ccc'); gg.selectAll('.tick text').attr('fill', '#8a8a8a').attr('font-size', 10); });
+      .call(function (gg) { gg.select('.domain').attr('stroke', '#ccc'); gg.selectAll('.tick line').attr('stroke', '#ccc'); gg.selectAll('.tick text').attr('fill', '#8a8a8a').attr('font-size', (window.EC224Place && EC224Place.tickSize) ? EC224Place.tickSize(svg) : 12); });
     svg.append('g').attr('transform', 'translate(' + D3PAD.left + ',0)')
       .call(d3.axisLeft(scY).ticks(6).tickSize(4).tickFormat(fmtY || null))
-      .call(function (gg) { gg.select('.domain').attr('stroke', '#ccc'); gg.selectAll('.tick line').attr('stroke', '#ccc'); gg.selectAll('.tick text').attr('fill', '#8a8a8a').attr('font-size', 10); });
-    if (xLabel) svg.append('text').attr('x', D3PAD.left + (D3W - D3PAD.left - D3PAD.right) / 2).attr('y', D3H - 8).attr('text-anchor', 'middle').attr('fill', '#666').attr('font-size', 11).text(xLabel);
-    if (yLabel) svg.append('text').attr('transform', 'rotate(-90)').attr('x', -(D3PAD.top + (D3H - D3PAD.top - D3PAD.bottom) / 2)).attr('y', 15).attr('text-anchor', 'middle').attr('fill', '#666').attr('font-size', 11).text(yLabel);
+      .call(function (gg) { gg.select('.domain').attr('stroke', '#ccc'); gg.selectAll('.tick line').attr('stroke', '#ccc'); gg.selectAll('.tick text').attr('fill', '#8a8a8a').attr('font-size', (window.EC224Place && EC224Place.tickSize) ? EC224Place.tickSize(svg) : 12); });
+    if (xLabel) svg.append('text').attr('x', D3PAD.left + (D3W - D3PAD.left - D3PAD.right) / 2).attr('y', D3H - 8).attr('text-anchor', 'middle').attr('fill', '#666').attr('font-size', (window.EC224Place && EC224Place.tickSize) ? EC224Place.tickSize(svg) * 1.06 : 13).text(xLabel);
+    if (yLabel) svg.append('text').attr('transform', 'rotate(-90)').attr('x', -(D3PAD.top + (D3H - D3PAD.top - D3PAD.bottom) / 2)).attr('y', 19).attr('text-anchor', 'middle').attr('fill', '#666').attr('font-size', (window.EC224Place && EC224Place.tickSize) ? EC224Place.tickSize(svg) * 1.06 : 13).text(yLabel);
   };
 
   /* Figures that mark a moving quantity on the x-axis (e.g. 'Firm A: 68') draw
@@ -102,7 +102,9 @@
     opts = opts || {};
     var t = svg.append('text').attr('x', x).attr('y', y)
       .attr('text-anchor', opts.anchor || 'middle')
-      .attr('font-size', opts.size || 11)
+      .attr('font-size', (window.EC224Place && EC224Place.haloFont)
+                          ? EC224Place.haloFont(svg, opts.size || 11)
+                          : (opts.size || 11))
       .attr('font-weight', opts.weight != null ? opts.weight : 600)
       .attr('fill', opts.color || EC.slate).text(txt);
     var bb = t.node().getBBox(), px = 3, py = 1.5;

@@ -582,8 +582,18 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 // ═════════════════════════════════════════════════════════════════════════
 // SHARED D3 SVG HELPERS  (adapted from week7-viz.html / testing.html S6/S8)
 // ═════════════════════════════════════════════════════════════════════════
-const D3W=680,D3H=560,D3H2=620,D3PAD={top:28,right:36,bottom:44,left:54};
-const LABEL_H=15;
+const D3W=680,D3H=560,D3H2=620,D3PAD={top:28,right:36,bottom:52,left:70};
+const LABEL_H=15;          /* fallback, until a figure measures its own */
+/* Text size for one figure's labels, in this page's units, remembered on the
+   node list so each figure carries its own. */
+function d3Metrics(svg,nodes){
+  let m={font:12,height:LABEL_H};
+  try{ if(window.EC224Place&&EC224Place.labelSize) m=EC224Place.labelSize(svg,nodes.length); }catch(e){}
+  nodes._fs=m.font; nodes._lh=m.height;
+  return m;
+}
+function d3LH(nodes){ return (nodes&&nodes._lh)||LABEL_H; }
+function d3FS(nodes){ return (nodes&&nodes._fs)||12; }
 
 // Welfare-region fill convention (filled-region diagrams, new for week 8):
 //   CS  → blue  (#1f6fb2) @ ~0.22
@@ -614,14 +624,14 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel,fmtY){
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
     .append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right)
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
-  svg.append('g').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
+  svg.append('g').attr('class','d3-xaxis').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4).tickFormat(fmtY||null)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
-  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
-  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
+  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(xLabel);
+  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',19).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(yLabel);
 }
 // A straight line between two data points.
 function d3Seg(svg,scX,scY,x1,y1,x2,y2,color,sw,dash){
@@ -633,13 +643,14 @@ function d3Seg(svg,scX,scY,x1,y1,x2,y2,color,sw,dash){
 function d3AddLabels(svg,nodes,sim){
   if(sim&&sim._cfg){sim._cfg.svg=svg;nodes._place=sim._cfg;}   // the placer needs the ink to dodge
   const conns=svg.selectAll(null).data(nodes).enter()
-    .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+    .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
   const gs=svg.selectAll(null).data(nodes).enter()
     .append('g').attr('class','fig-label');
-  gs.append('rect').attr('height',LABEL_H).attr('rx',3)
+  const M=d3Metrics(svg,nodes);
+  gs.append('rect').attr('height',M.height).attr('rx',3)
     .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
-  gs.append('text').attr('y',LABEL_H-4)
-    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
+  gs.append('text').attr('y',M.height*0.74)
+    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',M.font).attr('font-weight',600)
     .text(d=>d.label);
   d3SizeLabels(gs);
   return {conns,gs};
@@ -650,9 +661,9 @@ function d3AddLabels(svg,nodes,sim){
 function d3MakeSim(nodes){
   return EC224Place.staticSim(nodes,{
     origin:"topleft",
-    w:d=>d.lw, h:()=>LABEL_H,
+    w:d=>d.lw, h:()=>d3LH(nodes),
     bounds:{x0:D3PAD.left-4,y0:D3PAD.top,x1:D3W-4,y1:D3H-D3PAD.bottom},
-    prefer:d=>d.boxOff?{x:-d.lw/2+d.boxOff.x,y:-LABEL_H/2+d.boxOff.y}:null
+    prefer:d=>d.boxOff?{x:-d.lw/2+d.boxOff.x,y:-d3LH(nodes)/2+d.boxOff.y}:null
   });
 }
 function d3TickClamp(nodes,gs,conns){
@@ -661,17 +672,18 @@ function d3TickClamp(nodes,gs,conns){
   EC224Place.reflow(nodes,nodes._place);
   nodes.forEach(d=>{
     d.x=Math.max(D3PAD.left-4,Math.min(D3W-d.lw-4,d.x));
-    d.y=Math.max(D3PAD.top,Math.min(D3H-D3PAD.bottom-LABEL_H,d.y));
+    d.y=Math.max(D3PAD.top,Math.min(D3H-D3PAD.bottom-d3LH(nodes),d.y));
   });
   gs.attr('transform',d=>`translate(${d.x},${d.y})`);
-  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+d3LH(nodes)/2);
 }
 // Size each label box to the text inside it.
 function d3SizeLabels(gs){
+  const pad=Math.max(12,Math.round(d3FS(gs.data())*1.15));
   gs.each(function(d){
     var t=this.querySelector('text');
     if(!t)return;
-    try{var w=t.getComputedTextLength();if(w)d.lw=Math.max(22,Math.round(w+14));}catch(e){}
+    try{var w=t.getComputedTextLength();if(w)d.lw=Math.max(22,Math.round(w+pad));}catch(e){}
   });
   gs.select('rect').attr('width',d=>d.lw);
   gs.select('text').attr('x',d=>d.lw/2);
@@ -702,7 +714,9 @@ function d3HaloLabel(g,x,y,txt,opts){
   opts=opts||{};
   var t=g.append('text').attr('x',x).attr('y',y)
     .attr('text-anchor',opts.anchor||'middle')
-    .attr('font-size',opts.size||9)
+    .attr('font-size',(window.EC224Place&&EC224Place.haloFont)
+                       ? EC224Place.haloFont(g,opts.size||9)
+                       : (opts.size||9))
     .attr('font-weight',opts.weight!=null?opts.weight:600)
     .attr('fill',opts.color||EC.slate).text(txt);
   var bb=t.node().getBBox();
@@ -762,8 +776,10 @@ function v81Rebuild(){
   // axis tick markers for current price/quantity (drawn into a static group, moved on draw)
   v81dyn._xTick =v81svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',2);
   v81dyn._yTick =v81svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',2);
-  v81dyn._xLbl  =v81svg.append('text').attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).attr('fill',EC.indicator);
-  v81dyn._yLbl  =v81svg.append('text').attr('text-anchor','end').attr('font-size',12).attr('font-weight',600).attr('fill',EC.indicator);
+  const v81Fs=(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(v81svg):12;
+  v81dyn._xLbl  =v81svg.append('text').attr('text-anchor','middle').attr('font-size',v81Fs).attr('font-weight',600).attr('fill',EC.indicator);
+  v81dyn._yLbl  =v81svg.append('text').attr('text-anchor','end').attr('font-size',v81Fs).attr('font-weight',600).attr('fill',EC.indicator);
+  v81dyn._xAxisG=v81svg.select('.d3-xaxis');
   // Ghost D / S (faded, dashed, thinner): the secondary sliders (demand
   // intercept a, supply minimum price b) genuinely shift these lines, so the
   // baseline (a=20, b=4) is left on screen for comparison when they differ.
@@ -790,7 +806,7 @@ function v81Rebuild(){
   v81dyn._qDot =v81svg.append('circle').attr('r',5).attr('fill',EC.indicator).attr('stroke','#fff').attr('stroke-width',1.5);
   const dLbl=(aShifted81?'D′':'D')+': P='+a+'−Q', sLbl=(bShifted81?'S′':'S')+': P='+b+'+Q';
   v81nodes=[
-    d3Node('D','#1f6fb2',dLbl,dLbl.length*5+6,scX(a*0.72),scY(a*0.08)),
+    d3Node('D','#1f6fb2',dLbl,dLbl.length*5+6,scX(a*0.72),scY(a*0.28)),
     d3Node('S',EC.green,sLbl,sLbl.length*5+6,scX(Qstar+2),scY(Pstar+2)),
     d3Node('CS','#1f6fb2','CS',26,scX(Qstar*0.3),scY(Pstar+(a-Pstar)*0.5)),
     d3Node('PS',EC.gold,'PS',26,scX(Qstar*0.3),scY(b+(Pstar-b)*0.5)),
@@ -837,7 +853,11 @@ function v81Draw(){
   // axis tick marks at Qtr (x-axis) and P (y-axis)
   v81dyn._xTick.attr('x1',scX(Qtr)).attr('x2',scX(Qtr)).attr('y1',scY(0)).attr('y2',scY(0)+7);
   v81dyn._yTick.attr('x1',D3PAD.left-7).attr('x2',D3PAD.left).attr('y1',scY(P)).attr('y2',scY(P));
-  v81dyn._xLbl.attr('x',scX(Qtr)).attr('y',scY(0)+16).text(Qtr.toFixed(1));
+  v81dyn._xLbl.attr('x',scX(Qtr)).attr('y',scY(0)+20).text(Qtr.toFixed(1));
+  /* hide the static tick this marker is standing on, or the two numbers print
+     over each other and read as one */
+  if(v81dyn._xAxisG&&!v81dyn._xAxisG.empty())
+    v81dyn._xAxisG.selectAll('.tick text').attr('opacity',d=>Math.abs(scX(d)-scX(Qtr))<22?0:1);
   v81dyn._yLbl.attr('x',D3PAD.left-2).attr('y',scY(P)+3).text('$'+P.toFixed(1));
   d3MoveAnchor(v81nodes.find(n=>n.id==='CS'),scX(Math.max(0.4,Qtr*0.35)),scY((a+P)/2));
   d3MoveAnchor(v81nodes.find(n=>n.id==='PS'),scX(Math.max(0.4,Qtr*0.35)),scY((b+P)/2));
@@ -993,7 +1013,7 @@ function resetV82Labels(){d3ScatterLabels(v82nodes,v82sim);}
 let v83sim=null; // kept null so registerSliderSim lambdas in INIT don't throw
 let v83panelAL=null,v83panelAR=null,v83panelBL=null,v83panelBR=null;
 function v83MakePanel(wrapId){
-  const W=340,H=280,PAD={top:22,right:18,bottom:38,left:44};
+  const W=340,H=292,PAD={top:22,right:18,bottom:50,left:44};
   const svg=d3MakeSvgWH(wrapId,W,H);
   const xS=d3.scaleLinear().domain([0,20]).range([PAD.left,W-PAD.right]);
   const yS=d3.scaleLinear().domain([0,22]).range([H-PAD.bottom,PAD.top]);
@@ -1059,7 +1079,7 @@ function v83DrawFreeTrade(p,Pw){
   d3HaloLabel(dyn,p.PAD.left+4,yS(Pw)-3,'Pw=$'+Pw.toFixed(0),{anchor:'start',color:EC.indicator,size:8,weight:600});
   const CS_new=0.5*(20-Pw)*(20-Pw), PS_new=0.5*QS*QS;
   d3HaloLabel(dyn,xS(QD*0.3),yS((20+Pw)/2),'CS=$'+CS_new.toFixed(0),{color:'#1f6fb2',size:10,weight:700});
-  if(QS>1.5) d3HaloLabel(dyn,xS(QS)+6,yS((4+Pw)/2),'PS=$'+PS_new.toFixed(0),{anchor:'start',color:EC.gold,size:10,weight:700});
+  if(QS>1.5) d3HaloLabel(dyn,xS(QS*0.3),yS(4+(Pw-4)*0.62),'PS=$'+PS_new.toFixed(0),{color:EC.gold,size:10,weight:700});
 }
 function v83DrawTariff(p,Pw,t){
   const {xS,yS,dyn}=p;
@@ -1093,7 +1113,7 @@ function v83DrawTariff(p,Pw,t){
   }
   const CS_eff=0.5*(20-Peff)*(20-Peff), PS_eff=0.5*QS_eff*QS_eff;
   d3HaloLabel(dyn,xS(QD_eff*0.28),yS((20+Peff)/2),'CS=$'+CS_eff.toFixed(0),{color:'#1f6fb2',size:10,weight:700});
-  if(QS_eff>1.5) d3HaloLabel(dyn,xS(QS_eff)+6,yS((4+Peff)/2),'PS=$'+PS_eff.toFixed(0),{anchor:'start',color:EC.gold,size:10,weight:700});
+  if(QS_eff>1.5) d3HaloLabel(dyn,xS(QS_eff*0.3),yS(4+(Peff-4)*0.62),'PS=$'+PS_eff.toFixed(0),{color:EC.gold,size:10,weight:700});
 }
 function v83Init(){
   v83panelAL=v83MakePanel('cvs83a-wrap');
@@ -1721,8 +1741,8 @@ function v811Init(){
   // Force-sim labels for static curves
   v811nodes=[
     d3Node('D811',STROKE_CS,'D',22,scX(1.5),scY(18.5)),
-    d3Node('MR811',EC.indicator,'MR',26,scX(8.5),scY(3.5)),
-    d3Node('MC811',EC.green,'MC',26,scX(19.5),scY(2.3)),
+    d3Node('MR811',EC.indicator,'MR',26,scX(8.5),scY(3)),
+    d3Node('MC811',EC.green,'MC',26,scX(19.5),scY(2)),
     d3Node('AC811',EC.red,'AC',26,scX(4.5),scY(50/4.5+2),{boxOff:{x:34,y:6}}),
   ];
   v811sim=d3MakeSim(v811nodes);

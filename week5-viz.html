@@ -422,7 +422,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 // ══════════════════════════════════════════════════════════════════════
 // SHARED CANVAS UTILITIES
 // ══════════════════════════════════════════════════════════════════════
-const ML=52, MR=20, MT=20, MB=44;
+const ML=68, MR=20, MT=20, MB=52;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
 function resolveLabels(items, linePts=[], iter=150, pad=6) {
@@ -455,7 +455,7 @@ function resolveLabels(items, linePts=[], iter=150, pad=6) {
 function drawForceLabel(ctx, lbl) {
   const {x,y,ax,ay,text,color='#4a5566',fontSize=9,bold=false} = lbl;
   ctx.save();
-  ctx.font='bold 12px Libre Franklin,system-ui,sans-serif';
+  ctx.font='bold 16px Libre Franklin,system-ui,sans-serif';
   if (Math.hypot(x-ax,y-ay)>5) {
     /* Stop the leader at the label's border, not its centre: run it to the
        centre and the dashed line is drawn straight through the text, since the
@@ -545,7 +545,7 @@ function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
   ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
-  ctx.fillStyle="#8b95a5"; ctx.font="15px Libre Franklin,system-ui,sans-serif"; ctx.textAlign='center';
+  ctx.fillStyle="#8b95a5"; ctx.font="17px Libre Franklin,system-ui,sans-serif"; ctx.textAlign='center';
   for(const v of niceTicks(xR[0],xR[1],5)){
     const [px]=toC(v,yR[0],W,H,xR,yR);
     ctx.fillText(fmtTick(v),px,H-MB+17);
@@ -558,7 +558,7 @@ function drawAxesSt(ctx, W, H, xR, yR, xLbl, yLbl) {
     ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(ML-4,py); ctx.stroke();
   }
-  ctx.fillStyle="#4a5566"; ctx.font="16px Libre Franklin,system-ui,sans-serif";
+  ctx.fillStyle="#4a5566"; ctx.font="18px Libre Franklin,system-ui,sans-serif";
   ctx.textAlign='center'; ctx.fillText(xLbl||'L',W/2,H-6);
   ctx.save(); ctx.translate(13,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'K',0,0); ctx.restore();
@@ -620,7 +620,7 @@ function ecTween(key, dur, onStep, ease) {
    type, so D5_K rescales those numbers rather than making us edit fifteen
    width formulas. 13px against our 512-736px plots is the same optical size as
    MLU's 16px against its 790-1100px plots. */
-const D5_FS = 13;
+const D5_FS = 18;   /* curve-label type, matching the prototype */
 const D5_K = D5_FS / 9;
 const D5_LABEL_H = D5_FS + 5;
 const d5w = d => d.lw * D5_K;
@@ -794,7 +794,7 @@ function d5AddLabels(svg, nodes, sim) {
   }
   const conns = svg.append('g').selectAll('line').data(nodes).enter()
     .append('line')
-    .attr('stroke', d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+    .attr('stroke', d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
   const gs = svg.append('g').selectAll('g').data(nodes).enter()
     .append('g').attr('class','fig-label');
   // A transparent rect the size of the text, kept as the box the placement
@@ -1179,7 +1179,7 @@ function v51Draw() {
     ctxA.restore();
     const gL=9.3, [glx,gly]=toC(gL,tpBase(gL),W,HA,xR,yRA);
     ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1f6fb2';
-    ctxA.font='12px Libre Franklin,system-ui,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
+    ctxA.font='16px Libre Franklin,system-ui,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
     ctxA.fillText('TP', glx+3, gly-6);
     ctxA.restore();
   }
@@ -1197,7 +1197,7 @@ function v51Draw() {
     // point, so it never bunches with the "TP =" / "slope =" point labels (which
     // it did in the top-right corner at max labor).
     const idL = L > 5 ? 3.2 : 8.5, [ilx,ily]=toC(idL,tp(idL),W,HA,xR,yRA);
-    ctxA.save(); ctxA.fillStyle='#1f6fb2'; ctxA.font='bold 13px Libre Franklin,system-ui,sans-serif';
+    ctxA.save(); ctxA.fillStyle='#1f6fb2'; ctxA.font='bold 16px Libre Franklin,system-ui,sans-serif';
     ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
     ctxA.fillText(kShifted?'TP′':'TP', ilx+3, ily-6);
     ctxA.restore();
@@ -1231,7 +1231,7 @@ function v51Draw() {
 
   // Phase label (corner, fixed, no collision)
   const phaseLabel=form.phase(mplL,L);
-  ctxA.fillStyle=EC.purple; ctxA.font='bold 13px Libre Franklin,system-ui,sans-serif'; ctxA.textAlign='right'; ctxA.textBaseline='alphabetic';
+  ctxA.fillStyle=EC.purple; ctxA.font='bold 16px Libre Franklin,system-ui,sans-serif'; ctxA.textAlign='right'; ctxA.textBaseline='alphabetic';
   ctxA.fillText(phaseLabel,W-MR-4,HA-MB-6);
 
   // Drop line
@@ -1263,7 +1263,7 @@ function v51Draw() {
        moving either off its own curve. */
     const gLb=9.3, [glbx,glby]=toC(gLb,mplBase(gLb),W,HB,xR,yRB);
     ctxB.save(); ctxB.globalAlpha=0.55; ctxB.fillStyle=EC.red;
-    ctxB.font='12px Libre Franklin,system-ui,sans-serif'; ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
+    ctxB.font='16px Libre Franklin,system-ui,sans-serif'; ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
     ctxB.fillText('MPL', glbx+3, glby+11);
     ctxB.restore();
   }
@@ -1279,7 +1279,7 @@ function v51Draw() {
   ctxB.strokeStyle=EC.red; ctxB.lineWidth=3; ctxB.stroke();
   {
     const idLb=9.3, [ilbx,ilby]=toC(idLb,mpl(idLb),W,HB,xR,yRB);
-    ctxB.save(); ctxB.fillStyle=EC.red; ctxB.font='bold 13px Libre Franklin,system-ui,sans-serif';
+    ctxB.save(); ctxB.fillStyle=EC.red; ctxB.font='bold 16px Libre Franklin,system-ui,sans-serif';
     ctxB.textAlign='left'; ctxB.textBaseline='alphabetic';
     // Lifted only when a ghost is on screen to share the space with it.
     ctxB.fillText(kShifted?'MPL′':'MPL', ilbx+3, ilby-(kShifted?4:0));
@@ -1732,9 +1732,10 @@ function v54Draw() {
   const ovlA=v54EnsureOverlayA(W,H54);
   if(ovlA){
     const mplLblTxt='MPL falls as L rises (K='+Kfix+' fixed)';
-    // Anchor in the open space above the curve's flat tail, not on the curve
-    // itself (where the line ran straight through the caption).
-    const [mplax,mpaly]=toC(7.5,1.5,W,H54,xRa,yRa);
+    // Anchored on the curve at L=7.5, where the tail has flattened. The box
+    // is kept off the line by the placer, so the leader has something real
+    // to reach: pointed at open air it read as a line drawn to nothing.
+    const [mplax,mpaly]=toC(7.5,b*v54CD(Kfix,7.5,a,b)/7.5,W,H54,xRa,yRa);
     const nCap=ovlA.nodes[0];
     nCap.label=mplLblTxt; nCap.lw=Math.max(60,mplLblTxt.length*5.2+10);
     d5MoveAnchor(nCap,mplax,mpaly);
@@ -2194,16 +2195,21 @@ function v58Draw() {
   if(cvs.width!==Math.round(W*dpr)||cvs.height!==Math.round(H*dpr)){cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);cvs.style.height=H+'px';}
   const ctx=cvs.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
-  const xR=[0,10],yR=[0,10];
+  // The scaled point (lambda*L, lambda*K) reaches 24 while K and L only reach
+  // 8, so the frame grows to keep it on the plot. It used to be drawn off the
+  // canvas: no red dot, no ray, and the "scaled inputs" label was left
+  // pointing hundreds of pixels outside the figure.
+  const hi=Math.max(10,Math.ceil(Math.max(Lpt,Kpt)*lam*1.1));
+  const xR=[0,hi],yR=[0,hi];
   drawAxesSt(ctx,W,H,xR,yR,'L','K');
 
   // Isoquant map
   const qBase=v58Q(Kpt,Lpt,A,a,b);
   [qBase*0.5,qBase,qBase*2].forEach((q,qi)=>{
     ctx.beginPath(); let first=true; ctx.strokeStyle=['#9dc0dc','#1f6fb2','#9dc0dc'][qi]; ctx.lineWidth=qi===1?3:2;
-    for(let l=0.2;l<=10;l+=0.05){
+    for(let l=hi/500;l<=hi;l+=hi/400){
       const K=Math.pow(q/(A*Math.pow(l,b)),1/a);
-      if(K>10||K<0.1){first=true;continue;}
+      if(K>hi||K<hi/500){first=true;continue;}
       const [cx,cy]=toC(l,K,W,H,xR,yR);
       first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
     }
@@ -2328,7 +2334,7 @@ function v59Draw() {
     ctx.restore();
     const gL59=Lmax*0.4, [glx59,gly59]=toC(gL59,v59TP(gL59,V59_K_BASE),W,H,xR,yR);
     ctx.save(); ctx.globalAlpha=0.55; ctx.fillStyle='#1f6fb2';
-    ctx.font='12px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
     ctx.fillText('TP', glx59, gly59-6);
     ctx.restore();
   }
@@ -2343,7 +2349,7 @@ function v59Draw() {
   ctx.stroke();
   {
     const idL59=Lmax*0.4, [ilx59,ily59]=toC(idL59,v59TP(idL59,v59K),W,H,xR,yR);
-    ctx.save(); ctx.fillStyle='#1f6fb2'; ctx.font='bold 13px Libre Franklin,system-ui,sans-serif';
+    ctx.save(); ctx.fillStyle='#1f6fb2'; ctx.font='bold 16px Libre Franklin,system-ui,sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='alphabetic';
     ctx.fillText(kShifted59?'TP′':'TP', ilx59, ily59-6);
     ctx.restore();
@@ -2368,7 +2374,7 @@ function v59Draw() {
     const [ax]=toC(v59L,0,W,H,xR,yR);
     ctx.setLineDash([3,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ax,H-MB); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle='#2f5c3a'; ctx.font='12px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='#2f5c3a'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
     ctx.fillText(`L=${v59L}`,ax,H-MB+12);
   }
 }

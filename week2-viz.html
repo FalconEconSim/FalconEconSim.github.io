@@ -570,7 +570,10 @@ document.addEventListener('DOMContentLoaded', () => {
    and re-projects user-coordinate anchors to fresh pixel coordinates, so the
    connector lines always track the curves precisely.
    ============================================================================= */
-var OV_LABEL_H = 15;
+/* Curve-label type, matching the prototype: 18px, and a box to hold it. The
+   overlay is drawn 1:1 over the board, so these are the sizes on screen. */
+var OV_FS = 18;
+var OV_LABEL_H = 27;
 
 function jxgLabelOverlay(containerId, board) {
   var container = document.getElementById(containerId);
@@ -780,7 +783,7 @@ function jxgLabelOverlay(containerId, board) {
     conns = conns.enter()
       .append('line').attr('class', 'ovconn')
       .attr('stroke', function(d){ return d.color; })
-      .attr('stroke-width', 0.9).attr('stroke-dasharray', '4,3').attr('opacity', 0.55)
+      .attr('stroke-width', 0.9).attr('stroke-dasharray', '4,3').attr('opacity', 0.55).attr('data-place-leader',1)
       .merge(conns);
 
     var gsSel = svg.selectAll('.ovlbl').data(nodes, function(d){ return d.id; });
@@ -789,9 +792,9 @@ function jxgLabelOverlay(containerId, board) {
       .append('g').attr('class', 'ovlbl fig-label');
     gsEnter.append('rect').attr('width', function(d){ return d.lw; }).attr('height', OV_LABEL_H).attr('rx', 3)
       .attr('fill', 'white').attr('stroke', function(d){ return d.color; }).attr('stroke-width', 0.8).attr('opacity', 0.95);
-    gsEnter.append('text').attr('x', function(d){ return d.lw/2; }).attr('y', OV_LABEL_H - 4)
+    gsEnter.append('text').attr('x', function(d){ return d.lw/2; }).attr('y', OV_LABEL_H * 0.74)
       .attr('text-anchor', 'middle').attr('fill', function(d){ return d.color; })
-      .attr('font-size', 12).attr('font-weight', 600)
+      .attr('font-size', OV_FS).attr('font-weight', 600)
       .text(function(d){ return d.label; });
     lblGs = gsEnter.merge(gsSel);
     /* keep box/text in sync for nodes that already existed (color/label/width may change) */
@@ -804,7 +807,7 @@ function jxgLabelOverlay(containerId, board) {
     lblGs.each(function(d){
       var t = d3.select(this).select('text').node();
       if (!t || !t.getComputedTextLength) return;
-      try { var need = t.getComputedTextLength() + 12; if (need > d.lw) d.lw = need; } catch (e) {}
+      try { var need = t.getComputedTextLength() + OV_FS * 1.15; if (need > d.lw) d.lw = need; } catch (e) {}
     });
     lblGs.select('rect').attr('width', function(d){ return d.lw; });
     lblGs.select('text').attr('x', function(d){ return d.lw/2; });
@@ -844,11 +847,11 @@ function mkBoard(id, bbox) {
     defaultAxes: {
       x: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize: 13, color:'#8b95a5', offset:[0,-8]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize: 16, color:'#8b95a5', offset:[0,-8]}}
       },
       y: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize: 13, color:'#8b95a5', offset:[-8,0]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize: 16, color:'#8b95a5', offset:[-8,0]}}
       }
     }
   });
@@ -953,7 +956,7 @@ function initICExplorer() {
     projection:  'central',
     zAxis: {
       strokeColor:'#ccc', withLabel:true, name:'U',
-      label:{offset:[5,0], color:C.blue, fontSize: 13},
+      label:{offset:[5,0], color:C.blue, fontSize: 16},
       ticks:{label:{visible:false}}
     }
   });
@@ -1258,7 +1261,7 @@ function redrawIC2DAtU0(type, alpha, u0) {
           if (gx <= 0.01 || a <= 0 || a >= 1) return '';
           return 'MRS = ' + (a * gy / ((1 - a) * gx)).toFixed(3);
         }
-      ], {fontSize: 13, color: C.amber, fixed: false, highlight: false,
+      ], {fontSize: 16, color: C.amber, fixed: false, highlight: false,
           anchorX: 'left', anchorY: 'bottom'});
     }
     /* Reset glider to equal-goods point (x=y=u0) so MRS=1 by default */
@@ -1426,11 +1429,11 @@ function mkBoard(id, bbox) {
     defaultAxes: {
       x: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize: 13, color:'#8b95a5', offset:[0,-8]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize: 16, color:'#8b95a5', offset:[0,-8]}}
       },
       y: {
         withLabel: false,
-        ticks: {strokeColor:'#ccc', label:{fontSize: 13, color:'#8b95a5', offset:[-8,0]}}
+        ticks: {strokeColor:'#ccc', label:{fontSize: 16, color:'#8b95a5', offset:[-8,0]}}
       }
     }
   });
@@ -1638,7 +1641,7 @@ function initUtilitySurface() {
     zPlaneRear:{visible:false},
     projection:'central',
     zAxis:{withLabel:true,name:'U',
-      label:{offset:[5,0],color:C.blue,fontSize: 13},
+      label:{offset:[5,0],color:C.blue,fontSize: 16},
       ticks:{label:{visible:false}}}
   });
 
@@ -2075,7 +2078,7 @@ function buildOptimumBoard() {
   optObjects.push(optBoard.create('point',[xs,ys],{
     color:C.red,size:7,fixed:true,
     name:'Optimum',
-    withLabel:true,label:{offset:[9,6],fontSize: 13},highlight:false
+    withLabel:true,label:{offset:[9,6],fontSize: 16},highlight:false
   }));
 
   optBoard.update();
@@ -2176,7 +2179,7 @@ function buildBFBBoard() {
   var freeBundle=mupBoard.create('point',[initBX, initBY],{
     name:'Bundle',size:8,
     fillColor:C.amber,strokeColor:'#fff',strokeWidth:2,
-    withLabel:true,label:{offset:[10,6],fontSize: 13,color:C.amber},
+    withLabel:true,label:{offset:[10,6],fontSize: 16,color:C.amber},
     showInfobox:false,fixed:false
   });
   bfbFreeBundle=freeBundle;
@@ -2184,7 +2187,7 @@ function buildBFBBoard() {
   /* Optimum marker - red, distinct from teal budget line */
   var optPt=mupBoard.create('point',[_xOpt,_yOpt],{
     color:C.red,size:7,fixed:true,highlight:false,
-    name:'Optimum',withLabel:true,label:{offset:[9,6],fontSize: 13}
+    name:'Optimum',withLabel:true,label:{offset:[9,6],fontSize: 16}
   });
   bfbObjects.push(optPt);
 
@@ -2466,7 +2469,7 @@ function buildMRSSlider() {
   var glider = mrsBoard.create('glider', [px0, py0, ic], {
     name: 'P', size: 7,
     fillColor: EC.amber, strokeColor: '#fff', strokeWidth: 2,
-    withLabel: true, label: { fontSize: 13, color: EC.amber, offset: [6, 8] },
+    withLabel: true, label: { fontSize: 16, color: EC.amber, offset: [6, 8] },
     showInfobox: false
   });
   mrsObjects.push(glider);
@@ -2510,7 +2513,7 @@ function buildMRSSlider() {
     function(){return glider.X() + triDx/2;},
     function(){return glider.Y() - 0.7;},
     'ΔX'
-  ], {fontSize: 13, color:'#2f5c3a', fixed:false, highlight:false, anchorX:'middle'});
+  ], {fontSize: 16, color:'#2f5c3a', fixed:false, highlight:false, anchorX:'middle'});
   mrsObjects.push(lblDx);
 
   /* ΔY label on vertical leg */
@@ -2522,7 +2525,7 @@ function buildMRSSlider() {
       return (gy + y2) / 2;
     },
     'ΔY'
-  ], {fontSize: 13, color:EC.red, fixed:false, highlight:false, anchorX:'left'});
+  ], {fontSize: 16, color:EC.red, fixed:false, highlight:false, anchorX:'left'});
   mrsObjects.push(lblDy);
 
   /* Drop lines */
@@ -2639,7 +2642,7 @@ function buildICCross() {
     /* Point A at crossing zone */
     var ptA = crossBoard.create('point', [xcross, ycross], {
       name:'A', size:6, fillColor:EC.red, strokeColor:'#fff', strokeWidth:2,
-      fixed:true, withLabel:true, label:{fontSize: 13,color:EC.red,offset:[5,5]}
+      fixed:true, withLabel:true, label:{fontSize: 16,color:EC.red,offset:[5,5]}
     });
     crossObjects.push(ptA);
 
@@ -2647,7 +2650,7 @@ function buildICCross() {
     var bx = 9;
     var ptB = crossBoard.create('point', [bx, Math.pow(u1/Math.pow(bx,a),1/b)], {
       name:'B', size:6, fillColor:EC.steel, strokeColor:'#fff', strokeWidth:2,
-      fixed:true, withLabel:true, label:{fontSize: 13,color:EC.steel,offset:[5,5]}
+      fixed:true, withLabel:true, label:{fontSize: 16,color:EC.steel,offset:[5,5]}
     });
     crossObjects.push(ptB);
 
@@ -2659,7 +2662,7 @@ function buildICCross() {
     }
     var ptC = crossBoard.create('point', [cx, Math.pow(u2/Math.pow(cx,a),1/b)], {
       name:'C', size:6, fillColor:EC.amber, strokeColor:'#fff', strokeWidth:2,
-      fixed:true, withLabel:true, label:{fontSize: 13,color:EC.amber,offset:[5,5]}
+      fixed:true, withLabel:true, label:{fontSize: 16,color:EC.amber,offset:[5,5]}
     });
     crossObjects.push(ptC);
 
@@ -2806,7 +2809,7 @@ function buildCornerExplorer() {
       size: 7, fillColor: EC.red, strokeColor: '#fff', strokeWidth: 2.5,
       fixed: true, highlight: false,
       name: '('+xStar.toFixed(1)+', '+yStar.toFixed(1)+')',
-      withLabel: true, label: { fontSize: 13, color: EC.red, offset: [8, 8] }
+      withLabel: true, label: { fontSize: 16, color: EC.red, offset: [8, 8] }
     });
     cornerObjects.push(optPt);
   }
@@ -3149,6 +3152,7 @@ function buildCornerExplorer() {
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
+          <div class="fig-hd"><span class="fig-n">Fig 2.1</span><h3>Indifference Curve Explorer</h3></div>
           <div id="sec-ic-types" style="scroll-margin-top:70px">
           
             
@@ -3156,7 +3160,6 @@ function buildCornerExplorer() {
             <div class="ctrl-row">
               <div class="ctrl" style="flex:1;min-width:100%">
                 <label>Preference type</label>
-        <div class="fig-hd"><span class="fig-n">Fig 2.1</span><h3>Indifference Curve Explorer</h3></div>
                 <div class="type-selector-row" id="ic-type-btns">
                   <button class="type-btn active" data-type="cobb">Cobb-Douglas</button>
                   <button class="type-btn" data-type="substitutes">Perfect Substitutes</button>
@@ -3359,10 +3362,10 @@ function buildCornerExplorer() {
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
+          <div class="fig-hd"><span class="fig-n">Fig 2.4</span><h3>Shift vs. Pivot Explorer</h3></div>
           <div class="ctrl-row" style="flex-direction:column;align-items:flex-start;gap:0.9rem">
             <div class="ctrl" style="width:100%">
               <label>Change type</label>
-        <div class="fig-hd"><span class="fig-n">Fig 2.4</span><h3>Shift vs. Pivot Explorer</h3></div>
               <div id="shift-btns" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.3rem">
                 <button class="shift-btn active" data-type="income-up">Income &uarr;</button>
                 <button class="shift-btn" data-type="income-down">Income &darr;</button>
@@ -3467,13 +3470,13 @@ function buildCornerExplorer() {
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
+          <div class="fig-hd"><span class="fig-n">Fig 2.5</span><h3>Consumer Optimum, Find the Best Bundle</h3></div>
           <div id="sec-optimum-viz" style="scroll-margin-top:70px">
           
             
             <div class="ctrl-row">
               <div class="ctrl">
                 <label>Utility type</label>
-        <div class="fig-hd"><span class="fig-n">Fig 2.5</span><h3>Consumer Optimum, Find the Best Bundle</h3></div>
                 <select id="opt-type">
                   <option value="cobb">Cobb-Douglas</option>
                   <option value="complements">Perfect Complements</option>
@@ -3725,10 +3728,10 @@ function buildCornerExplorer() {
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
+          <div class="fig-hd"><span class="fig-n">Fig 2.9</span><h3>Why ICs Cannot Cross</h3></div>
           <div class="ctrl-row">
             <div class="ctrl" style="flex:1">
               <label>Drag the inner IC upward to try to make them cross</label>
-        <div class="fig-hd"><span class="fig-n">Fig 2.9</span><h3>Why ICs Cannot Cross</h3></div>
               <input type="range" id="iccross-u2" min="2" max="9" step="any" value="3" aria-label="Inner indifference curve utility level, drag up to try to make curves cross" />
               <div style="display:flex;justify-content:space-between;font-size: var(--t-caption);color:var(--ink-soft);margin-top:2px;"><span>Inner IC low</span><span>Move up to cross</span></div>
             </div>

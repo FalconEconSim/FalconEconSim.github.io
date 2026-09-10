@@ -52,6 +52,11 @@
     var t = (el.textContent || '').trim();
     if (!t || t.length > 36) return false;
     if (isNumericLabel(t)) return false;
+    /* A lone symbol is a plot marker, not a name. Week 6 marks the old
+       optimum with a bold red cross, and plating it turned a mark on the
+       chart into what looked like a button to close something. Letters and
+       digits are exempt, so "D", "S" and "pi" are still labels. */
+    if (t.length <= 2 && !/[\p{L}\p{N}]/u.test(t)) return false;
     if (el.closest && el.closest('.tick, .domain, .axis-label, .readout-row, .fig-state, .ctrl-row')) return false;
     return true;
   }
@@ -75,6 +80,27 @@
     if (gx < 0 || gy < 0 || gx >= this.w || gy >= this.h) return true;   /* outside counts as blocked */
     return this.a[gy * this.w + gx] === 1;
   };
+  /* The nearest marked cell to a point, or null if there is none within
+     maxPx. Used to land a leader on something drawn rather than beside it. */
+  Grid.prototype.nearestMark = function (x, y, maxPx) {
+    var gx0 = (x / CELL) | 0, gy0 = (y / CELL) | 0;
+    var rings = Math.ceil(maxPx / CELL);
+    for (var r = 0; r <= rings; r++) {
+      var best = null;
+      for (var gy = gy0 - r; gy <= gy0 + r; gy++) {
+        for (var gx = gx0 - r; gx <= gx0 + r; gx++) {
+          if (r > 0 && gx !== gx0 - r && gx !== gx0 + r && gy !== gy0 - r && gy !== gy0 + r) continue;
+          if (gx < 0 || gy < 0 || gx >= this.w || gy >= this.h) continue;
+          if (!this.a[gy * this.w + gx]) continue;
+          var px = gx * CELL + CELL / 2, py = gy * CELL + CELL / 2;
+          var d = (px - x) * (px - x) + (py - y) * (py - y);
+          if (!best || d < best.d) best = { d: d, x: px, y: py };
+        }
+      }
+      if (best && Math.sqrt(best.d) <= maxPx) return { x: best.x, y: best.y };
+    }
+    return null;
+  };
   /* Distance in px from a rect to the nearest occupied cell, capped. */
   Grid.prototype.clearance = function (x, y, w, h) {
     var x0 = (x / CELL) | 0, y0 = (y / CELL) | 0;
@@ -93,7 +119,16 @@
 
   /* ---- obstacle collection -------------------------------------------- */
 
-  function addSvgInk(grid, svg, host) {
+  /* One walk of the geometry, feeding two grids at once, because reading a
+     canvas twice per plot per frame is far too slow to do casually.
+
+     They do not want the same thing. The obstacle grid wants everything a
+     label should keep off, filled regions included. The leader grid wants only
+     what a dashed line can sensibly point AT, which is a stroked curve or a
+     marker. The outline of an unstroked filled shape is nothing a reader can
+     see, and a leader landed on one stopped nineteen pixels short of anything
+     visible on Fig 8.3. */
+  function addSvgInk(grids, svg, host, strokeGrids) {
     var hb = host.getBoundingClientRect(), sb = svg.getBoundingClientRect();
     var sx = sb.width / (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal.width : sb.width || 1);
     var sy = sb.height / (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.height ? svg.viewBox.baseVal.height : sb.height || 1);
@@ -102,9 +137,11 @@
       var stroke = (el.getAttribute('stroke') || '').toLowerCase();
       var fill = (el.getAttribute('fill') || '').toLowerCase();
       var sw = parseFloat(el.getAttribute('stroke-width') || '1');
-      var inked = (stroke && stroke !== 'none' && sw >= 1.6) || (fill && fill !== 'none' && fill !== 'transparent');
-      if (!inked) return;
+      var stroked = !!(stroke && stroke !== 'none' && sw >= 1.6);
+      var filled = !!(fill && fill !== 'none' && fill !== 'transparent');
+      if (!stroked && !filled) return;
       if (el.closest('.tick, .domain')) return;
+      var want = stroked ? grids : strokeGrids || grids;
       try {
         if (typeof el.getTotalLength === 'function' && el.tagName.toLowerCase() !== 'rect') {
           var L = el.getTotalLength();
@@ -112,20 +149,20 @@
             var n = Math.min(400, Math.max(12, Math.round(L / 3)));
             for (var i = 0; i <= n; i++) {
               var p = el.getPointAtLength((L * i) / n);
-              grid.mark(ox + p.x * sx, oy + p.y * sy);
+              for (var k = 0; k < want.length; k++) want[k].mark(ox + p.x * sx, oy + p.y * sy);
             }
             return;
           }
         }
         var bb = el.getBBox();
-        grid.markRect(ox + bb.x * sx, oy + bb.y * sy, bb.width * sx, bb.height * sy);
+        for (var k2 = 0; k2 < want.length; k2++) want[k2].markRect(ox + bb.x * sx, oy + bb.y * sy, bb.width * sx, bb.height * sy);
       } catch (e) {}
     });
   }
 
   /* Canvas figures: read the pixels. This is what makes week4 and week5 work,
      where the curves are painted to a canvas and only the labels are SVG. */
-  function addCanvasInk(grid, cv, host) {
+  function addCanvasInk(grids, cv, host) {
     var hb = host.getBoundingClientRect(), cb = cv.getBoundingClientRect();
     if (!cb.width || !cb.height) return;
     var W = Math.min(cv.width || cb.width, 1400), H = Math.min(cv.height || cb.height, 1400);
@@ -145,7 +182,7 @@
         var r = data[i], g = data[i + 1], b = data[i + 2];
         /* Skip the paper and the faint gridlines: only real ink blocks. */
         if (r > 226 && g > 226 && b > 226) continue;
-        grid.mark(ox + x * sx, oy + y * sy);
+        for (var k = 0; k < grids.length; k++) grids[k].mark(ox + x * sx, oy + y * sy);
       }
     }
   }
@@ -460,14 +497,39 @@
     return { x: cx + dx * t, y: cy + dy * t };
   }
 
-  var LEADER_MIN = 28;   /* px: below this the label still reads as attached */
+  /* Can this label be given a leader at all? JSXGraph writes its point names
+     as absolutely positioned HTML, not as svg text, and a line can only be
+     drawn into an svg. Such a label has to stay near what it names, because
+     nothing else will tell the reader where it belongs: on Fig 3.2 the
+     bundle names A, B and C had been carried sixty to ninety pixels off their
+     own dots and were floating in clear space. */
+  function canLead(el) {
+    var p = el.parentNode;
+    return !!(p && p.ownerSVGElement);
+  }
 
-  /* fromScreen is where the label was before it was moved. */
-  function leader(el, fromScreenX, fromScreenY, colour) {
+  var LEADER_MIN = 28;   /* px: below this the label still reads as attached */
+  var LEADER_REACH = 30; /* px: how far the tail end may be pulled onto ink */
+
+  /* fromScreen is where the label was before it was moved.
+
+     Where it was is not necessarily where its subject is. A tick number sits
+     beside its tick, a caption sits in clear air near its curve, and a leader
+     drawn to that spot is a dashed line ending in white space, which is worse
+     than no leader at all. So the tail is pulled onto the nearest thing the
+     figure actually drew, and if there is nothing within reach, no leader is
+     drawn: the label keeps its plate and stands on its own. */
+  function leader(el, fromScreenX, fromScreenY, colour, ink, host) {
     var parent = el.parentNode;
     if (!parent || !parent.ownerSVGElement) return;
     var box = el.getBoundingClientRect();
     if (!box.width) return;
+    if (ink && host) {
+      var hb = host.getBoundingClientRect();
+      var near = ink.nearestMark(fromScreenX - hb.x, fromScreenY - hb.y, LEADER_REACH);
+      if (!near) return;
+      fromScreenX = near.x + hb.x; fromScreenY = near.y + hb.y;
+    }
     var cx = box.left + box.width / 2, cy = box.top + box.height / 2;
     var far = Math.sqrt((cx - fromScreenX) * (cx - fromScreenX) + (cy - fromScreenY) * (cy - fromScreenY));
     if (far < LEADER_MIN) return;
@@ -518,6 +580,40 @@
     return false;
   }
 
+  /* ---- the type floor -------------------------------------------------
+     Some figures set their text as small as 7. A stylesheet cannot fix that:
+     these plots are drawn in their own coordinates and scaled to fit, by about
+     0.87 on a full-width figure and 1.8 on a small panel, so one number in CSS
+     is a floor for one of them and a ceiling for the other. It used to be
+     written as a flat 13px !important, which is why every label on the site
+     came out the same size no matter what it asked for.
+
+     Here the scale is known, so the floor can be stated in the pixels a reader
+     sees and converted back into whatever each figure counts in. Text already
+     large enough is not touched. */
+  var MIN_TEXT_PX = 13;
+
+  function screenScale(el) {
+    try {
+      var m = el.getScreenCTM && el.getScreenCTM();
+      if (m) { var s = Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) || Math.hypot(m.a, m.b); if (s > 0.01) return s; }
+    } catch (e) {}
+    return 1;
+  }
+
+  function raiseTinyText(host) {
+    host.querySelectorAll('svg text').forEach(function (t) {
+      var declared = parseFloat(getComputedStyle(t).fontSize);
+      if (!declared || !isFinite(declared)) return;
+      var s = screenScale(t);
+      if (declared * s >= MIN_TEXT_PX - 0.25) return;
+      var want = MIN_TEXT_PX / s;
+      /* set it as a style, which beats the presentation attribute, and record
+         it so a redraw that recreates the node is handled the same way */
+      t.style.fontSize = (Math.round(want * 100) / 100) + 'px';
+    });
+  }
+
   function placeIn(host) {
     var w = host.clientWidth, h = host.clientHeight;
     if (!w || !h) return 0;
@@ -530,6 +626,8 @@
        back where the figure drew it, then decide again from scratch. */
     host.querySelectorAll('[data-fl-plate], [data-fl-leader]').forEach(function (r) { r.remove(); });
 
+    raiseTinyText(host);
+
     var all = [], backedOnes = [], tickRects = [];
     host.querySelectorAll('svg text, .JXGtext').forEach(function (t) {
       if (!isCurveLabel(t) || isAxisTitle(t)) return;
@@ -540,13 +638,24 @@
     });
 
     var grid = new Grid(w, h);
-    host.querySelectorAll('svg').forEach(function (s2) { addSvgInk(grid, s2, host); });
-    host.querySelectorAll('canvas').forEach(function (cv) { addCanvasInk(grid, cv, host); });
+    /* A second copy holding only what the figure drew, no text and no label
+       boxes. A leader has to end on a curve or a marker, and the full grid
+       cannot tell one from the other by the time the leaders are drawn. */
+    var ink = new Grid(w, h);
+    /* A third, holding only where labels have been put. Asking the full grid
+       whether a spot is free cannot distinguish a neighbouring label from the
+       curve a label is meant to sit beside. */
+    var taken = new Grid(w, h);
+    var inkGrids = [grid, ink];
+    /* a shape with a fill and no stroke goes only into the obstacle grid */
+    var obstacleOnly = [grid];
+    host.querySelectorAll('svg').forEach(function (s2) { addSvgInk(inkGrids, s2, host, obstacleOnly); });
+    host.querySelectorAll('canvas').forEach(function (cv) { addCanvasInk(inkGrids, cv, host); });
     host.querySelectorAll('svg text, .JXGtext').forEach(function (t) {
       if (isCurveLabel(t) && !isAxisTitle(t)) return;
       if (!shown(t)) return;
       var r = relToHost(t, host);
-      if (r.w) grid.markRect(r.x, r.y, r.w, r.h);
+      if (r.w) { grid.markRect(r.x, r.y, r.w, r.h); taken.markRect(r.x, r.y, r.w, r.h); }
       var v = (t.textContent || '').trim();
       if (r.w && isNumberish(v)) tickRects.push(r);
     });
@@ -563,25 +672,47 @@
       /* Leave well-placed labels completely alone. The point of this pass is
          to fix labels that collide, not to restyle every label on the site:
          plating a label that was already clear only adds a box to the figure. */
-      if (startClear >= CLEAR) { grid.markRect(r0.x, r0.y, r0.w, r0.h); return; }
+      if (startClear >= CLEAR) { grid.markRect(r0.x, r0.y, r0.w, r0.h); taken.markRect(r0.x, r0.y, r0.w, r0.h); return; }
 
       var colour = (t.getAttribute && t.getAttribute('fill')) || getComputedStyle(t).fill || getComputedStyle(t).color || '#14181b';
       if (!colour || colour === 'none') colour = '#14181b';
 
       var lb = ownerBounds(t, host);
-      var best = null;
-      for (var a = 0; a < 16; a++) {
-        for (var d = 1; d <= 6; d++) {
-          var ang = (Math.PI / 8) * a, dist = 16 * d;
-          var nx = r0.x + Math.cos(ang) * dist, ny = r0.y - Math.sin(ang) * dist;
-          if (nx < lb.x0 + 2 || ny < lb.y0 + 2 ||
-              nx + r0.w > lb.x1 - 2 || ny + r0.h > lb.y1 - 2) continue;
-          /* A label that travels a long way stops labelling the curve it
-             names. Distance is priced high enough that a merely-adequate
-             spot nearby beats a perfect one across the panel. */
-          var sc = grid.clearance(nx, ny, r0.w, r0.h) - dist * 0.09;
-          if (!best || sc > best.sc) best = { x: nx, y: ny, sc: sc };
+      /* Search rings around where the figure put the label.
+
+         How far it may travel depends on whether it can be joined back to its
+         subject by a line. JSXGraph writes its point names as HTML, and a line
+         can only be drawn into an svg, so those have nothing to connect them
+         once they leave: on Fig 3.2 the bundle names A, B and C had been
+         carried ninety pixels off their own dots and were floating in clear
+         space. They stay close. But close is no use if close is occupied, so
+         if the near rings turn up nothing genuinely clear, the range opens up
+         rather than leaving two labels printed on each other. */
+      function searchRings(reach) {
+        var found = null;
+        for (var a = 0; a < 16; a++) {
+          for (var d = 1; d <= reach; d++) {
+            var ang = (Math.PI / 8) * a, dist = 16 * d;
+            var nx = r0.x + Math.cos(ang) * dist, ny = r0.y - Math.sin(ang) * dist;
+            if (nx < lb.x0 + 2 || ny < lb.y0 + 2 ||
+                nx + r0.w > lb.x1 - 2 || ny + r0.h > lb.y1 - 2) continue;
+            /* A label that travels a long way stops labelling the curve it
+               names. Distance is priced high enough that a merely-adequate
+               spot nearby beats a perfect one across the panel. */
+            var sc = grid.clearance(nx, ny, r0.w, r0.h) - dist * 0.09;
+            /* Sitting on a curve is a readability problem the plate can cover.
+               Sitting on another label is not, so that costs much more than
+               the distance ever will. */
+            if (taken.clearance(nx, ny, r0.w, r0.h) === 0) sc -= 40;
+            if (!found || sc > found.sc) found = { x: nx, y: ny, sc: sc };
+          }
         }
+        return found;
+      }
+      var best = searchRings(canLead(t) ? 6 : 2);
+      if (!canLead(t) && (!best || best.sc < CLEAR)) {
+        var wider = searchRings(5);
+        if (wider && (!best || wider.sc > best.sc + 2)) best = wider;
       }
 
       var wasBox = t.getBoundingClientRect();
@@ -589,7 +720,7 @@
       if (best && best.sc > startClear + 0.5) {
         move(t, best.x - r0.x, best.y - r0.y);
         moved++;
-        leader(t, fromX, fromY, colour);
+        leader(t, fromX, fromY, colour, ink, host);
       }
       /* Whether or not it found somewhere better, a label this close to ink
          gets a plate so it stays readable over whatever is behind it. */
@@ -597,6 +728,7 @@
       sizePlate(rect, t, host);
       var rf = relToHost(t, host);
       grid.markRect(rf.x, rf.y, rf.w, rf.h);
+      taken.markRect(rf.x, rf.y, rf.w, rf.h);
     });
 
     /* Labels the figure already backs: readable as drawn, so left exactly
@@ -611,10 +743,15 @@
       }
       return false;
     }
+    function onALabel(r) { return taken.clearance(r.x, r.y, r.w, r.h) === 0; }
     backedOnes.forEach(function (t) {
       var r0 = relToHost(t, host);
       if (!r0.w) return;
-      if (!hitsTick(r0)) { grid.markRect(r0.x, r0.y, r0.w, r0.h); return; }
+      if (!hitsTick(r0) && !onALabel(r0)) {
+        grid.markRect(r0.x, r0.y, r0.w, r0.h);
+        taken.markRect(r0.x, r0.y, r0.w, r0.h);
+        return;
+      }
       var own = ownBackingRect(t);
       var lb = ownerBounds(t, host);
       var picked = null;
@@ -625,7 +762,11 @@
           if (nx < lb.x0 + 2 || ny < lb.y0 + 2 ||
               nx + r0.w > lb.x1 - 2 || ny + r0.h > lb.y1 - 2) continue;
           if (hitsTick({ x: nx, y: ny, w: r0.w, h: r0.h })) continue;
-          if (grid.clearance(nx, ny, r0.w, r0.h) < 6) continue;
+          if (onALabel({ x: nx, y: ny, w: r0.w, h: r0.h })) continue;
+          /* Already haloed, so it may sit on a curve where it has to: what it
+             may not do is sit on another label. Ink is preferred against, not
+             forbidden, or a crowded panel has nowhere left to put anything. */
+          if (grid.clearance(nx, ny, r0.w, r0.h) < 6 && d < 4) continue;
           picked = { x: nx, y: ny };
           break;
         }
@@ -637,10 +778,11 @@
         if (own) shiftEl(own, picked.x - r0.x, picked.y - r0.y);
         moved++;
         var nc = (t.getAttribute && t.getAttribute('fill')) || '#4a5257';
-        leader(t, nFromX, nFromY, nc);
+        leader(t, nFromX, nFromY, nc, ink, host);
       }
       var rf = relToHost(t, host);
       grid.markRect(rf.x, rf.y, rf.w, rf.h);
+      taken.markRect(rf.x, rf.y, rf.w, rf.h);
     });
 
     return moved;

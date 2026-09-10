@@ -523,7 +523,18 @@ function freeB(b) { if (b) { try { JXG.JSXGraph.freeBoard(b); } catch(e){} } ret
    label anchors (fx_anchor/fy_anchor) are supplied in that same
    CSS-pixel coordinate space by the caller (via toC()/scrCoords/etc).
    ============================================================ */
-const D3_LABEL_H = 15;
+const D3_LABEL_H = 15;     /* fallback, until a figure measures its own */
+/* Text size for one figure's labels, in this page's units, remembered on the
+   node list so each figure carries its own. A page holds figures of quite
+   different sizes and one number cannot serve them all. */
+function d3Metrics(svgish, nodes) {
+  let m = { font: 12, height: D3_LABEL_H };
+  try { if (window.EC224Place && EC224Place.labelSize) m = EC224Place.labelSize(svgish, nodes.length); } catch (e) {}
+  nodes._fs = m.font; nodes._lh = m.height;
+  return m;
+}
+function d3LH(nodes) { return (nodes && nodes._lh) || D3_LABEL_H; }
+function d3FS(nodes) { return (nodes && nodes._fs) || 12; }
 
 // Build (or rebuild) an SVG sized to the overlay div's current pixel box.
 // Returns {svg, w, h}. Caller should re-invoke on resize to keep in sync.
@@ -555,24 +566,26 @@ function d3OvAddLabels(svg, nodes, sim) {
   const conns = svg.selectAll(null).data(nodes).enter()
     .append('line')
     .attr('stroke', d => d.color).attr('stroke-width', 0.9)
-    .attr('stroke-dasharray', '4,3').attr('opacity', 0.55);
+    .attr('stroke-dasharray', '4,3').attr('opacity', 0.55).attr('data-place-leader', 1);
   const gs = svg.selectAll(null).data(nodes).enter()
     .append('g').attr('class', 'fig-label');
-  gs.append('rect').attr('height', D3_LABEL_H).attr('rx', 3)
+  const M = d3Metrics(svg, nodes);
+  gs.append('rect').attr('height', M.height).attr('rx', 3)
     .attr('fill', 'white').attr('stroke', d => d.color).attr('stroke-width', 0.8).attr('opacity', 0.95);
-  gs.append('text').attr('y', D3_LABEL_H - 4)
+  gs.append('text').attr('y', M.height * 0.74)
     .attr('text-anchor', 'middle').attr('fill', d => d.color)
-    .attr('font-size', 12).attr('font-weight', 600)
+    .attr('font-size', M.font).attr('font-weight', 600)
     .text(d => d.label);
   d3OvSizeLabels(gs);
   return { conns, gs };
 }
 // Size each label box to the text inside it.
 function d3OvSizeLabels(gs) {
+  var pad = Math.max(12, Math.round(d3FS(gs.data()) * 1.15));
   gs.each(function (d) {
     var t = this.querySelector('text');
     if (!t) return;
-    try { var w = t.getComputedTextLength(); if (w) d.lw = Math.max(22, Math.round(w + 14)); } catch (e) {}
+    try { var w = t.getComputedTextLength(); if (w) d.lw = Math.max(24, Math.round(w + pad)); } catch (e) {}
   });
   gs.select('rect').attr('width', d => d.lw);
   gs.select('text').attr('x', d => d.lw / 2);
@@ -583,8 +596,8 @@ function d3OvSizeLabels(gs) {
 function d3OvMakeSim(nodes) {
   return EC224Place.staticSim(nodes, {
     origin: "topleft",
-    w: d => d.lw, h: () => D3_LABEL_H,
-    prefer: d => d.boxOff ? {x:-d.lw/2+d.boxOff.x, y:-D3_LABEL_H/2+d.boxOff.y} : null
+    w: d => d.lw, h: () => d3LH(nodes),
+    prefer: d => d.boxOff ? {x:-d.lw/2+d.boxOff.x, y:-d3LH(nodes)/2+d.boxOff.y} : null
   });
 }
 
@@ -598,11 +611,16 @@ function d3OvTick(nodes, gs, conns, w, h, pad) {
   }
   nodes.forEach(d => {
     d.x = Math.max(pad.left, Math.min(w - d.lw - pad.right, d.x));
-    d.y = Math.max(pad.top,  Math.min(h - D3_LABEL_H - pad.bottom, d.y));
+    d.y = Math.max(pad.top,  Math.min(h - d3LH(nodes) - pad.bottom, d.y));
   });
   gs.attr('transform', d => `translate(${d.x},${d.y})`);
   conns.attr('x1', d => d.fx_anchor).attr('y1', d => d.fy_anchor)
-       .attr('x2', d => d.x + d.lw / 2).attr('y2', d => d.y + D3_LABEL_H / 2);
+       .attr('x2', d => d.x + d.lw / 2).attr('y2', d => d.y + d3LH(nodes) / 2)
+       /* A label the figure pinned is already sitting where it is meant to be,
+          under its own bracket. Its anchor is a spot chosen to hold the label
+          clear of the bracket, not a point on anything drawn, so a dashed line
+          to it would end in white space. */
+       .style('display', d => d.noLeader ? 'none' : null);
 }
 
 // Re-anchor a node to a new (ax,ay) anchor, translating its current position
@@ -820,7 +838,7 @@ function v1GetCtx() {
   if (!cvL || !cvR) return null;
   const dpr = window.devicePixelRatio || 1;
   const W = cvL.width, H = cvL.height;
-  const ML = 42*dpr, MR = 14*dpr, MT = 14*dpr, MB = 30*dpr;
+  const ML = 56*dpr, MR = 14*dpr, MT = 14*dpr, MB = 38*dpr;
   const pw = W - ML - MR, ph = H - MT - MB;
 
   // Left panel axes: X [0,35], Y [0,25]
@@ -993,7 +1011,7 @@ function v1DrawCanvas(animProg) {
     ctxR.beginPath(); ctxR.moveTo(rx, origRy + 5*dpr); ctxR.lineTo(rx, origRy - 4*dpr); ctxR.stroke();
 
     ctxR.fillStyle = col;
-    ctxR.font = `bold ${9*dpr}px var(--font-body)`;
+    ctxR.font = `bold ${14*dpr}px var(--font-body)`;
     ctxR.textAlign = 'right';
     ctxR.fillText('$' + px, origRx - 7*dpr, ry + 3*dpr);
     const xsDisp = xs % 1 === 0 ? xs.toFixed(0) : xs.toFixed(1);
@@ -1027,7 +1045,7 @@ function v1DrawCanvas(animProg) {
     ctxR.beginPath(); ctxR.moveTo(rx, origRy + 8*dpr); ctxR.lineTo(rx, origRy - 6*dpr); ctxR.stroke();
 
     ctxR.fillStyle = col;
-    ctxR.font = `bold ${9*dpr}px var(--font-body)`;
+    ctxR.font = `bold ${14*dpr}px var(--font-body)`;
     ctxR.textAlign = 'right';
     ctxR.fillText('$' + px, origRx - 10*dpr, ry + 4*dpr);
     ctxR.textAlign = 'center';
@@ -1262,8 +1280,8 @@ function drawV2() {
     boundingbox:[-xmax*0.08,ymax,xmax,-ymax*0.17],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}}}
   });
   const b = v2b;
   // Horizontal grid lines
@@ -1271,8 +1289,8 @@ function drawV2() {
   for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
     b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
-  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize: 16,color:'#8b95a5',fixed:true});
 
   // Budget lines
   const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:EC.steel,strokeWidth:2,fixed:true});
@@ -1294,7 +1312,7 @@ function drawV2() {
   // Points A, C, B
   [{x:d.XA,y:d.YA,n:'A',c:EC.steel},{x:d.XC,y:d.YC,n:'C',c:EC.purple},{x:d.XB,y:d.YB,n:'B',c:EC.red}]
     .forEach(p => b.create('point',[p.x,p.y],{size:5,fillColor:p.c,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:p.n,withLabel:true,label:{fontSize: 13,color:p.c,offset:[7,7]}}));
+      name:p.n,withLabel:true,label:{fontSize: 16,color:p.c,offset:[7,7]}}));
 
   // SE/IE brackets on X axis
   /* Below the x-axis TICK LABELS, not just below the axis: at -0.03 the
@@ -1362,14 +1380,33 @@ function d3v2InitOverlay(b, geo) {
     return d3OvNode(s.id, s.color, s.label, s.lw, ax, ay, {anchorKey:s.key});
   });
   /* SE and IE are not annotations that need to dodge anything: each sits under
-     its own bracket at a known spot. Left to the force sim they drift, and on
-     some runs settle back up on the x-axis tick labels. Pin them. */
-  nodes.forEach(n => {
-    if (n.id === 'se' || n.id === 'ie') {
+     its own bracket at a known spot, so they are pinned rather than placed.
+     The two brackets meet at the compensated bundle, though, and at some
+     incomes they are narrow enough that the two labels would print on top of
+     one another. A pinned label cannot be moved by the placer, so the one
+     case it cannot handle is handled here: drop the second onto its own row. */
+  /* Both brackets meet at the compensated bundle, and at some incomes they are
+     narrow enough that the two labels would print on top of one another. Run
+     on every board update, not once at build: the income slider moves both
+     brackets, so whether they collide changes as the reader drags. */
+  function pinBrackets() {
+    const two = nodes.filter(n => n.id === 'se' || n.id === 'ie');
+    two.forEach(n => {
+      n.noLeader = true;
       n.fx = n.x = n.fx_anchor - n.lw / 2;
-      n.fy = n.y = n.fy_anchor - D3_LABEL_H / 2;
+      n.fy = n.y = n.fy_anchor - d3LH(nodes) / 2;
+    });
+    if (two.length !== 2) return;
+    const [a, b] = two;
+    const gap = Math.abs((a.x + a.lw / 2) - (b.x + b.lw / 2)) - (a.lw + b.lw) / 2;
+    if (gap < 4) {
+      const lower = a.fx_anchor <= b.fx_anchor ? b : a;
+      /* upward, not down: these sit under the axis already and the tick
+         clamp would pull a lower row straight back onto its neighbour */
+      lower.fy = lower.y = lower.y - d3LH(nodes) - 4;
     }
-  });
+  }
+  pinBrackets();
   const sim = d3OvMakeSim(nodes);
   const { conns, gs } = d3OvAddLabels(svg, nodes, sim);
   sim.on('tick', () => d3OvTick(nodes, gs, conns, w, h));
@@ -1380,6 +1417,7 @@ function d3v2InitOverlay(b, geo) {
       const [ax,ay] = scr(anchors[n.anchorKey]);
       d3OvReanchor(n, ax, ay);
     });
+    pinBrackets();
     sim.alpha(0.3).restart();
   };
   b.on('update', updateHandler);
@@ -1452,15 +1490,15 @@ function initViz3() {
     boundingbox:[-2,ymax,xmax,-2],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}}}
   });
   v3b2 = JXG.JSXGraph.initBoard('jxg-v3-right',{
     boundingbox:[-2,7,xmax,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}}}
   });
 
   const b1 = v3b1, b2 = v3b2;
@@ -1472,10 +1510,10 @@ function initViz3() {
   for (let gy = 1; gy <= 6; gy++) {
     b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
-  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize: 13,color:'#8b95a5',fixed:true});
-  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
-  b2.create('text',[-1.5,6.5,'P'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize: 16,color:'#8b95a5',fixed:true});
 
   // Draw expansion path (static dashed line). Its label is rendered by the
   // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
@@ -1488,7 +1526,7 @@ function initViz3() {
     /* Anchor low on the ray: the optimum travels the ray from X*=10 (I=40)
        to X*=30 (I=120), so keep the label box left of X=10 at all incomes */
     v3IepAnchorX = xmax*0.12;
-    v3IepAnchorY = xmax*0.12*(V3_Px/V3_Py)+1.2;
+    v3IepAnchorY = xmax*0.12*(V3_Px/V3_Py);   // on the ray, not above it
     v3IepLabel = 'Income Expansion Path';
   } else {
     // Backward-bending: X decreases as I rises
@@ -1497,8 +1535,8 @@ function initViz3() {
     const pathX = pathPts.map(p=>p[0]);
     const pathY = pathPts.map(p=>p[1]);
     b1.create('curve',[pathX,pathY],{strokeColor:EC.purple,strokeWidth:1.5,dash:2,fixed:true});
-    v3IepAnchorX = v3Xstar(60)+0.5;
-    v3IepAnchorY = v3Ystar(60)+1;
+    v3IepAnchorX = v3Xstar(60);   // on the path, not beside it
+    v3IepAnchorY = v3Ystar(60);
     v3IepLabel = 'IEP (inferior)';
   }
 
@@ -1532,7 +1570,7 @@ function initViz3() {
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
     v3Pt = b1.create('point',[xs,ys],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize: 13,color:EC.red,offset:[14,-18]}});
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize: 16,color:EC.red,offset:[14,-18]}});
 
     // Right panel: draw demand curve at current I
     [v3D0, v3D0drop, v3D0pt, v3D0lbl, v3D1, v3D2, v3RefPt, v3D1lbl].forEach(o => {
@@ -1769,16 +1807,16 @@ function initViz5() {
     boundingbox:[-2,8.8,80,-0.4],
     axis:true,showNavigation:false,showCopyright:false,
     pan:{enabled:false},zoom:{enabled:false},
-    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}},
-                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 13,color:'#8b95a5'}}}}
+    defaultAxes:{x:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}},
+                 y:{withLabel:false,ticks:{strokeColor:'#ccc',label:{fontSize: 16,color:'#8b95a5'}}}}
   });
   const b = v5b;
   // Horizontal grid lines (price 0-8)
   for (let gy = 1; gy <= 8; gy++) {
     b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[76,-0.3,'X'],{fontSize: 13,color:'#8b95a5',fixed:true});
-  b.create('text',[-1.5,8.3,'P'],{fontSize: 13,color:'#8b95a5',fixed:true});
+  b.create('text',[76,-0.3,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b.create('text',[-1.5,8.3,'P'],{fontSize: 16,color:'#8b95a5',fixed:true});
 
   redrawV5();
 
@@ -1826,7 +1864,7 @@ function redrawV5() {
       {strokeColor:'#1f6fb2',strokeWidth:1.4,dash:2,strokeOpacity:0.45,fixed:true,highlight:false});
     const gpy = 5.5, gx = safAdjBase / gpy;
     v5GhostLbl = b.create('text',[gx + 0.6, gpy + 0.3, 'D'],
-      {fontSize: 13,color:'#1f6fb2',fixed:true,highlight:false,
+      {fontSize: 16,color:'#1f6fb2',fixed:true,highlight:false,
        cssStyle:'font-weight: 500;opacity:0.5;'});
   }
 
@@ -1836,7 +1874,7 @@ function redrawV5() {
   // Current point
   const curX = safAdj / v5Px;
   v5Pt = b.create('point',[curX,v5Px],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize: 13,color:EC.red,offset:[7,5]}});
+    name:`(${Xs.toFixed(1)},${v5Px.toFixed(1)})`,withLabel:true,label:{fontSize: 16,color:EC.red,offset:[7,5]}});
 
   // "D"/"D′" demand-curve name label as a draggable D3 SVG force-label overlay
   // (S6/S8 gold-standard style), anchored to a point on the curve.

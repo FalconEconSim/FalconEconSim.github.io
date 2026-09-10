@@ -755,8 +755,18 @@ function v72ToggleMistakes(){
   v72Update();
 }
 // ── D3 SVG helpers ────────────────────────────────────────────────────────
-const D3W=680,D3H=560,D3H2=620,D3PAD={top:28,right:36,bottom:44,left:54};
-const LABEL_H=15;
+const D3W=680,D3H=560,D3H2=620,D3PAD={top:28,right:36,bottom:52,left:70};
+const LABEL_H=15;          /* fallback, until a figure measures its own */
+/* Text size for one figure's labels, in this page's units, remembered on the
+   node list so each figure carries its own. */
+function d3Metrics(svg,nodes){
+  let m={font:12,height:LABEL_H};
+  try{ if(window.EC224Place&&EC224Place.labelSize) m=EC224Place.labelSize(svg,nodes.length); }catch(e){}
+  nodes._fs=m.font; nodes._lh=m.height;
+  return m;
+}
+function d3LH(nodes){ return (nodes&&nodes._lh)||LABEL_H; }
+function d3FS(nodes){ return (nodes&&nodes._fs)||12; }
 function d3MakeSvg(wrapId){
   d3.select('#'+wrapId).selectAll('svg').remove();
   return d3.select('#'+wrapId).append('svg')
@@ -777,12 +787,12 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
-  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
-  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
+  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(xLabel);
+  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',19).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(yLabel);
 }
 function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
   svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
@@ -790,20 +800,20 @@ function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
     .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
   svg.append('g').attr('transform',`translate(0,${D3H2-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
-  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(xLabel);
-  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',14).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text(yLabel);
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
+  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(xLabel);
+  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',19).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(yLabel);
 }
 function d3TickClamp2(nodes,gs,conns){
   nodes.forEach(d=>{
     d.x=Math.max(D3PAD.left-4,Math.min(D3W-d.lw-4,d.x));
-    d.y=Math.max(D3PAD.top,Math.min(D3H2-D3PAD.bottom-LABEL_H,d.y));
+    d.y=Math.max(D3PAD.top,Math.min(D3H2-D3PAD.bottom-d3LH(nodes),d.y));
   });
   gs.attr('transform',d=>`translate(${d.x},${d.y})`);
-  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+d3LH(nodes)/2);
 }
 function d3AddCurve(svg,fn,scX,scY,color,yMax,dash=''){
   const pts=[];
@@ -816,13 +826,14 @@ function d3AddCurve(svg,fn,scX,scY,color,yMax,dash=''){
 function d3AddLabels(svg,nodes,sim){
   if(sim&&sim._cfg){sim._cfg.svg=svg;nodes._place=sim._cfg;}
   const conns=svg.selectAll(null).data(nodes).enter()
-    .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+    .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
   const gs=svg.selectAll(null).data(nodes).enter()
     .append('g').attr('class','fig-label');
-  gs.append('rect').attr('height',LABEL_H).attr('rx',3)
+  const M=d3Metrics(svg,nodes);
+  gs.append('rect').attr('height',M.height).attr('rx',3)
     .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
-  gs.append('text').attr('y',LABEL_H-4)
-    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
+  gs.append('text').attr('y',M.height*0.74)
+    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',M.font).attr('font-weight',600)
     .text(d=>d.label);
   d3SizeLabels(gs);
   return {conns,gs};
@@ -830,10 +841,11 @@ function d3AddLabels(svg,nodes,sim){
 // Size each label box to the text inside it, rather than to a number typed
 // in at the call site against a typeface the site no longer uses.
 function d3SizeLabels(gs){
+  const pad=Math.max(12,Math.round(d3FS(gs.data())*1.15));
   gs.each(function(d){
     var t=this.querySelector('text');
     if(!t)return;
-    try{var w=t.getComputedTextLength();if(w)d.lw=Math.max(22,Math.round(w+14));}catch(e){}
+    try{var w=t.getComputedTextLength();if(w)d.lw=Math.max(22,Math.round(w+pad));}catch(e){}
   });
   gs.select('rect').attr('width',d=>d.lw);
   gs.select('text').attr('x',d=>d.lw/2);
@@ -841,20 +853,24 @@ function d3SizeLabels(gs){
 function d3MakeSim(nodes){
   return EC224Place.staticSim(nodes,{
     origin:"topleft",
-    w:d=>d.lw, h:()=>LABEL_H,
+    w:d=>d.lw, h:()=>d3LH(nodes),
     bounds:{x0:D3PAD.left-4,y0:D3PAD.top,x1:D3W-4,y1:D3H-D3PAD.bottom},
-    prefer:d=>d.boxOff?{x:-d.lw/2+d.boxOff.x,y:-LABEL_H/2+d.boxOff.y}:null
+    prefer:d=>d.boxOff?{x:-d.lw/2+d.boxOff.x,y:-d3LH(nodes)/2+d.boxOff.y}:null
   });
 }
 function d3TickClamp(nodes,gs,conns){
   if(gs)d3SizeLabels(gs);          // text may have changed since last frame
   EC224Place.reflow(nodes,nodes._place);   // solve against THIS frame's curves
   nodes.forEach(d=>{
-    d.x=Math.max(D3PAD.left-4,Math.min(D3W-d.lw-4,d.x));
-    d.y=Math.max(D3PAD.top,Math.min(D3H-D3PAD.bottom-LABEL_H,d.y));
+    // a label given its own panel is held inside it, not inside the figure
+    const b=d._b||d.panel;
+    const x0=b?b.x0:D3PAD.left-4, x1=b?b.x1:D3W-4;
+    const y0=b?b.y0:D3PAD.top,    y1=b?b.y1:D3H-D3PAD.bottom;
+    d.x=Math.max(x0,Math.min(x1-d.lw,d.x));
+    d.y=Math.max(y0,Math.min(y1-d3LH(nodes),d.y));
   });
   gs.attr('transform',d=>`translate(${d.x},${d.y})`);
-  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+d3LH(nodes)/2);
 }
 function d3Node(id,color,label,lw,ax,ay,extra={}){
   return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax,y:ay,...extra};
@@ -1305,10 +1321,14 @@ function v77InitSvg(){
   v77nodes=[];
   for(let i=0;i<3;i++){
     const ox=D3PAD.left+i*(pw+10);
-    v77nodes.push(d3Node('D'+i,'#1f6fb2','D',20,ox+pw-14,panelBot-20));
-    v77nodes.push(d3Node('S'+i,EC.red,'S',20,ox+pw-14,D3PAD.top+28));
+    /* the panel this label may live in, and nowhere else */
+    const box={x0:ox+2,y0:D3PAD.top+2,x1:ox+pw-2,y1:panelBot-2};
+    /* the far end of each curve, which is where it is drawn */
+    v77nodes.push(d3Node('D'+i,'#1f6fb2','D',20,ox+pw-10,panelBot-10,{panel:box}));
+    v77nodes.push(d3Node('S'+i,EC.red,'S',20,ox+pw-10,D3PAD.top+20,{panel:box}));
   }
   v77sim=d3MakeSim(v77nodes);
+  v77sim._cfg.bounds=d=>(d&&d.panel)||{x0:D3PAD.left-4,y0:D3PAD.top,x1:D3W-4,y1:D3H-D3PAD.bottom};
   const els=d3AddLabels(v77svg,v77nodes,v77sim);
   v77sim.on('tick',()=>d3TickClamp(v77nodes,els.gs,els.conns));
 }

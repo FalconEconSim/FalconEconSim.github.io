@@ -451,14 +451,25 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 // ══════════════════════════════════════════════════════════════════════
 // SHARED UTILITIES
 // ══════════════════════════════════════════════════════════════════════
-const ML=55, MR=25, MT=24, MB=42;
+const ML=70, MR=25, MT=24, MB=50;
 
 
 // ──────────────────────────────────────────────────────────────────────
 // D3 SVG FORCE-LABEL OVERLAY HELPERS (S6/S8 "gold standard" pattern,
 // adapted for canvases whose pixel size W×H is computed at draw-time)
 // ──────────────────────────────────────────────────────────────────────
-const D3_LABEL_H = 15;
+const D3_LABEL_H = 15;     /* fallback, until a figure measures its own */
+/* Text size for one figure's labels, in this page's units, remembered on the
+   node list so each figure carries its own. A page holds figures of quite
+   different sizes and one number cannot serve them all. */
+function d3Metrics(svgish, nodes) {
+  let m = { font: 12, height: D3_LABEL_H };
+  try { if (window.EC224Place && EC224Place.labelSize) m = EC224Place.labelSize(svgish, nodes.length); } catch (e) {}
+  nodes._fs = m.font; nodes._lh = m.height;
+  return m;
+}
+function d3LH(nodes) { return (nodes && nodes._lh) || D3_LABEL_H; }
+function d3FS(nodes) { return (nodes && nodes._fs) || 12; }
 
 // (Re)build the <svg> inside an overlay <div>, sized to the canvas's CSS
 // pixel dimensions W×H via viewBox (NOT the DPR-scaled internal resolution).
@@ -490,8 +501,8 @@ function d3LblNode(id, color, label, lw, ax, ay, extra={}) {
 function d3LabelSim(nodes) {
   return EC224Place.staticSim(nodes, {
     origin: "topleft",
-    w: d=>d.lw, h: ()=>D3_LABEL_H,
-    prefer: d=>d.boxOff ? {x:-d.lw/2+d.boxOff.x, y:-D3_LABEL_H/2+d.boxOff.y} : null
+    w: d=>d.lw, h: ()=>d3LH(nodes),
+    prefer: d=>d.boxOff ? {x:-d.lw/2+d.boxOff.x, y:-d3LH(nodes)/2+d.boxOff.y} : null
   });
 }
 
@@ -503,14 +514,15 @@ function d3LabelLayer(svg, nodes, simRef) {
   const conns = svg.selectAll(null).data(nodes).enter()
     .append('line')
     .attr('stroke', d=>d.color).attr('stroke-width', 0.9)
-    .attr('stroke-dasharray', '4,3').attr('opacity', 0.55);
+    .attr('stroke-dasharray', '4,3').attr('opacity', 0.55).attr('data-place-leader', 1);
   const gs = svg.selectAll(null).data(nodes).enter()
     .append('g').attr('class', 'fig-label');
-  gs.append('rect').attr('height', D3_LABEL_H).attr('rx', 3)
+  const M = d3Metrics(svg, nodes);
+  gs.append('rect').attr('height', M.height).attr('rx', 3)
     .attr('fill', 'white').attr('stroke', d=>d.color).attr('stroke-width', 0.8).attr('opacity', 0.95);
-  gs.append('text').attr('y', D3_LABEL_H-4)
+  gs.append('text').attr('y', M.height * 0.74)
     .attr('text-anchor', 'middle').attr('fill', d=>d.color)
-    .attr('font-size', 12).attr('font-weight', 600)
+    .attr('font-size', M.font).attr('font-weight', 600)
     .text(d=>d.label);
   d3SizeLabels(gs);
   return { conns, gs };
@@ -518,10 +530,11 @@ function d3LabelLayer(svg, nodes, simRef) {
 // Size each label box to the text inside it, rather than to a number typed
 // in at the call site against a typeface the site no longer uses.
 function d3SizeLabels(gs) {
+  var pad = Math.max(12, Math.round(d3FS(gs.data()) * 1.15));
   gs.each(function (d) {
     var t = this.querySelector('text');
     if (!t) return;
-    try { var w = t.getComputedTextLength(); if (w) d.lw = Math.max(22, Math.round(w + 14)); } catch (e) {}
+    try { var w = t.getComputedTextLength(); if (w) d.lw = Math.max(24, Math.round(w + pad)); } catch (e) {}
   });
   gs.select('rect').attr('width', d=>d.lw);
   gs.select('text').attr('x', d=>d.lw/2);
@@ -540,11 +553,11 @@ function d3LabelTick(nodes, gs, conns, W, H, left, right, top, bottom) {
   }
   nodes.forEach(d=>{
     d.x = Math.max(left-4, Math.min(W-right-d.lw+4, d.x));
-    d.y = Math.max(top, Math.min(H-bottom-D3_LABEL_H, d.y));
+    d.y = Math.max(top, Math.min(H-bottom-d3LH(nodes), d.y));
   });
   gs.attr('transform', d=>`translate(${d.x},${d.y})`);
   conns.attr('x1', d=>d.fx_anchor).attr('y1', d=>d.fy_anchor)
-       .attr('x2', d=>d.x+d.lw/2).attr('y2', d=>d.y+D3_LABEL_H/2);
+       .attr('x2', d=>d.x+d.lw/2).attr('y2', d=>d.y+d3LH(nodes)/2);
 }
 
 // Move a node's anchor to a new (ax,ay), translating x/y by the delta so
@@ -560,7 +573,28 @@ function d3MoveAnchor(node, ax, ay) {
 // Kept as a no-op. It used to keep the simulation warm while a slider was
 // held; each repaint now places every label outright, so there is nothing to
 // keep warm and the call sites can stay as they are.
-function d3WireSliderSmoothness(el, simRef) {}
+/* Re-place the labels after the figure has redrawn itself.
+
+   This was an empty stub left behind when the force simulation was removed,
+   and nothing else on the page asked for a repaint, so every label box and
+   every leader on week 4 stayed frozen where it was first placed while the
+   curves moved underneath. The figure's own oninput attribute was registered
+   when the element was parsed, well before this runs, so this listener fires
+   after the redraw and solves against the frame that is actually on screen. */
+function d3WireSliderSmoothness(el, simRef) {
+  if (!el || el._ec224Wired) return;
+  el._ec224Wired = true;
+  const settle = () => { const s = simRef && simRef(); if (s && s.settle) s.settle(); };
+  if (el.tagName === 'CANVAS') {
+    // dragged, not typed: follow the drag, and catch where it ends
+    el.addEventListener('pointermove', e => { if (e.buttons) settle(); });
+    el.addEventListener('pointerup', settle);
+    el.addEventListener('touchmove', settle, { passive: true });
+    return;
+  }
+  el.addEventListener('input', settle);
+  el.addEventListener('change', settle);
+}
 
 function setupCvs(id) {
   const cvs = document.getElementById(id);
@@ -571,13 +605,21 @@ function setupCvs(id) {
   // container width (width:100%), so a 480-wide backing was upscaled to ~768px
   // and rendered blurry (63% of native resolution at 2x DPI). Use the real
   // clientWidth (uncapped) and pin the display size to it so backing = display.
-  const W = cvs.clientWidth || cvs.parentElement?.clientWidth || 300;
+  // Measure the CONTAINER, never the canvas itself. Pinning cvs.style.width
+  // and then reading cvs.clientWidth back is self-referential: one wrong
+  // measurement, taken before the layout settled, was re-confirmed on every
+  // later resize and could never heal. Fig 4.8's builder was stuck with a
+  // 589-wide backing store stretched across 736 CSS pixels, which slid every
+  // curve 25px to the right of the label anchored to it.
+  const host = cvs.parentElement;
+  const W = Math.round((host && host.clientWidth) || cvs.clientWidth || 300);
   const H = Math.min(W, 480);   // preserve prior height behaviour (square on phones, 480-tall on desktop)
   const tw = Math.round(W * dpr), th = Math.round(H * dpr);
   if (cvs.width !== tw || cvs.height !== th) {
     cvs.width = tw; cvs.height = th;
   }
-  cvs.style.width = W + 'px';
+  // Width is left to the stylesheet's width:100%, so the box always matches
+  // the container that was just measured. Only the height needs stating.
   cvs.style.height = H + 'px';
   const ctx = cvs.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -677,7 +719,7 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   ctx.stroke();
 
   ctx.fillStyle = '#8b95a5';
-  ctx.font = '12px Libre Franklin,system-ui,sans-serif';
+  ctx.font = '16px Libre Franklin,system-ui,sans-serif';
   ctx.textAlign = 'center';
 
   // x ticks
@@ -697,7 +739,7 @@ function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
   }
 
   // axis labels
-  ctx.fillStyle = '#666'; ctx.font = '13px Libre Franklin,system-ui,sans-serif';
+  ctx.fillStyle = '#666'; ctx.font = '16px Libre Franklin,system-ui,sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(xLabel || 'Q', W/2, H - 4);
   ctx.save();
@@ -1067,6 +1109,12 @@ function v3GetB() {
 }
 function v3Q(P, b) { return Math.max(0, v3.a - (b||v3GetB())*P); }
 
+// The demand line's highest visible point: its price intercept when that is
+// on the plot, otherwise where it crosses the top of the frame.
+function v3TopOfLine(b, W, H, xR, yR) {
+  const Pl = Math.min(v3.a / b, yR[1] * 0.92);
+  return toC(v3.a - b * Pl, Pl, W, H, xR, yR);
+}
 function v3Draw() {
   const ctx=v3ctx, W=v3W, H=v3H;
   const b  = v3GetB();
@@ -1126,7 +1174,7 @@ function v3Draw() {
   dot(ctx, nx, ny, 8, '#1f6fb2', '#fff');
 
   // D3 SVG force label for demand curve
-  if (v3Nodes) d3MoveAnchor(v3Nodes[0], lx0, ly0);
+  if (v3Nodes) { const [ax,ay]=v3TopOfLine(b,W,H,xR3l,yR3l); d3MoveAnchor(v3Nodes[0], ax, ay); }
 
   const TRbase = Pb*Qb, TRnew = P*Q, deltaT = TRnew - TRbase;
   const ed = b===0||Qb===0 ? 0 : -b*Pb/Qb;
@@ -1165,7 +1213,7 @@ function v3Init() {
     const b=v3GetB();
     const xMax = Math.max(v3.a, 115);
     const xR3l=[0,xMax], yR3l=[0,55];   // fixed: both price sliders top out at 45
-    const [lx0,ly0]=toC(0, v3.a/b, v3W, v3H, xR3l, yR3l);
+    const [lx0,ly0]=v3TopOfLine(b, v3W, v3H, xR3l, yR3l);
     v3Nodes = [ d3LblNode('D', '#1f6fb2', 'D', 18, lx0, ly0, {boxOff:{x:20,y:6}}) ];
     v3Sim = d3LabelSim(v3Nodes);
     v3Lbl = d3LabelLayer(v3Svg, v3Nodes, ()=>v3Sim);
@@ -1225,7 +1273,7 @@ function v4Draw() {
     const y=midY-halfH*i/4;
     ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(W-MR,y); ctx.stroke();
     if(i%2===0){
-      ctx.fillStyle='#5f6875'; ctx.font='13px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+      ctx.fillStyle='#5f6875'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
       ctx.fillText((i*25>0?'+':'')+i*25+'%',ML-4,y+4);
     }
   }
@@ -1239,7 +1287,7 @@ function v4Draw() {
   // P bar (left)
   ctx.fillStyle = pChange>=0 ? 'rgba(231,76,60,0.8)' : 'rgba(39,174,96,0.8)';
   ctx.fillRect(cx-barW*1.6, pChange>=0 ? midY-pH : midY, barW, pH);
-  ctx.fillStyle='#333'; ctx.font='bold 14px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#333'; ctx.font='bold 17px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
   ctx.fillText('%ΔP', cx-barW*1.1, chartBot+14);
 
   // TR bar (right)
@@ -1255,17 +1303,19 @@ function v4Draw() {
   // elasticity badge — indented right of the y-axis so it clears the "+100%"
   // tick label in the top-left corner, and with a wider line gap so the two
   // lines read as a clean stacked badge.
-  ctx.fillStyle=eColor(ind.e); ctx.font='bold 16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='left';
+  ctx.fillStyle=eColor(ind.e); ctx.font='bold 18px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='left';
   ctx.fillText(`e = ${ind.e}`, ML+46, MT+14);
-  ctx.fillStyle='#555'; ctx.font='14px Libre Franklin,system-ui,sans-serif';
+  ctx.fillStyle='#555'; ctx.font='17px Libre Franklin,system-ui,sans-serif';
   ctx.fillText(ind.name, ML+46, MT+31);
 
   // bar value labels -- D3 SVG force labels (draggable, anchored to bar tops)
-  ctx.font='bold 14px Libre Franklin,system-ui,sans-serif';
+  ctx.font='bold 17px Libre Franklin,system-ui,sans-serif';
   const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
   const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
-  const pValLblY = pChange>=0 ? midY-pH-8 : midY+pH+14;
-  const tValLblY = trChange>=0 ? midY-tH-8 : midY+tH+14;
+  // On the bar's edge, not above it: a leader that stopped short of the bar,
+  // or pointed at empty air when the bar was zero-height, read as a mistake.
+  const pValLblY = pChange>=0 ? midY-pH : midY+pH;
+  const tValLblY = trChange>=0 ? midY-tH : midY+tH;
   if (v4Nodes) {
     const nP=v4Nodes[0], nT=v4Nodes[1];
     nP.label = pTxt; nP.color = pChange>=0?EC.red:EC.green;
@@ -1320,9 +1370,9 @@ function v4Init() {
     const halfH=midY-chartTop-2;
     const pH=Math.min(Math.abs(pChange)/100*halfH, halfH);
     const tH=Math.min(Math.abs(trChange)/100*halfH, halfH);
-    const pValLblY = pChange>=0 ? midY-pH-8 : midY+pH+14;
-    const tValLblY = trChange>=0 ? midY-tH-8 : midY+tH+14;
-    v4ctx.font='bold 14px Libre Franklin,system-ui,sans-serif';
+    const pValLblY = pChange>=0 ? midY-pH : midY+pH;
+    const tValLblY = trChange>=0 ? midY-tH : midY+tH;
+    v4ctx.font='bold 17px Libre Franklin,system-ui,sans-serif';
     const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
     const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
     v4Nodes = [
@@ -1333,6 +1383,7 @@ function v4Init() {
     v4Lbl = d3LabelLayer(v4Svg, v4Nodes, ()=>v4Sim);
     v4Sim.on('tick', ()=>d3LabelTick(v4Nodes, v4Lbl.gs, v4Lbl.conns, v4W, v4H, ML, MR, MT, MB));
     d3WireSliderSmoothness(document.getElementById('v4-dp'), ()=>v4Sim);
+    d3WireSliderSmoothness(document.getElementById('v4-ind'), ()=>v4Sim);
   }
 
   v4Draw();
@@ -1578,7 +1629,7 @@ function v7Init() {
   if (v7Svg) {
     const [,pyn]=toC(0, v7.Pnorm, v7W, v7H, xR7, yR7);
     const normTxt='normal $'+v7.Pnorm;
-    v7ctx.font='13px Libre Franklin,system-ui,sans-serif';
+    v7ctx.font='16px Libre Franklin,system-ui,sans-serif';
     v7Nodes = [ d3LblNode('normal', '#9aa3b0', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn) ];
     v7Sim = d3LabelSim(v7Nodes);
     v7Lbl = d3LabelLayer(v7Svg, v7Nodes, ()=>v7Sim);
@@ -1636,7 +1687,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
-  ctx.fillStyle='#5f6875'; ctx.font='12px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#5f6875'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
   ctx.fillText('Q',W-MR2,H-MB2+3);
   ctx.textAlign='right'; ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
 
@@ -1652,7 +1703,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
     const [,cy]=toXY(0,choke);
     ctx.strokeStyle='#5f6875'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(ML2-4,cy); ctx.lineTo(ML2,cy); ctx.stroke();
-    ctx.fillStyle='#8b95a5'; ctx.font='10px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+    ctx.fillStyle='#8b95a5'; ctx.font='14px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
     // Just the dollar value: on a single consumer's demand the y-intercept IS
     // the choke price, so the full word overflowed the narrow left margin.
     ctx.fillText(`$${choke.toFixed(0)}`,ML2-5,cy+3);
@@ -1663,7 +1714,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   const midQ=a-b*midP;
   const [mlx,mly]=toXY(midQ,midP);
   const formula=b===1?`Q = ${a} − P`:`Q = ${a} − ${b}P`;
-  ctx.font='bold 10px Libre Franklin,system-ui,sans-serif';
+  ctx.font='bold 14px Libre Franklin,system-ui,sans-serif';
   const fW=ctx.measureText(formula).width;
   {
     const ov = v8aGetOverlay(canvasId, W, H);
@@ -1691,7 +1742,7 @@ function v8aPanelDraw(canvasId, color, a, b, P, label) {
   ctx.setLineDash([]);
 
   // P label on y-axis (skip if too close to choke label)
-  ctx.fillStyle=color; ctx.font='bold 12px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle=color; ctx.font='bold 16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
   if (P>0.5 && Math.abs(P-choke)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
 
   // Q label on x-axis
@@ -1721,7 +1772,7 @@ function v8aMarketDraw(P) {
   ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
-  ctx.fillStyle='#5f6875'; ctx.font='12px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#5f6875'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
   ctx.fillText('Q',W-MR2,H-MB2+3); ctx.textAlign='right';
   ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
 
@@ -1752,7 +1803,7 @@ function v8aMarketDraw(P) {
   // Compact dollar-value ticks in the margin; the "Qm=30-P" and "kink P=$12"
   // force-labels already carry the choke/kink naming, so the full words here
   // were both redundant and overflowing the narrow left margin.
-  ctx.fillStyle='#8b95a5'; ctx.font='10px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle='#8b95a5'; ctx.font='14px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
   ctx.fillText('$30',ML2-4,cy30+3);
 
   // P=12: Consumer 2's choke price (kink)
@@ -1765,7 +1816,7 @@ function v8aMarketDraw(P) {
   dot(ctx,kx,ky,5,'var(--ink-soft)','#fff');
 
   // D3 SVG draggable force labels: kink label + formula segments
-  ctx.font='bold 10px Libre Franklin,system-ui,sans-serif';
+  ctx.font='bold 14px Libre Franklin,system-ui,sans-serif';
   const [ulx,uly]=toXY(v8aQmarket(23),23);
   const [llx,lly]=toXY(v8aQmarket(6),6);
   const kinkTxt='kink P=$12', upTxt='Qm = 30 − P', loTxt='Qm = 54 − 3P';
@@ -1798,7 +1849,7 @@ function v8aMarketDraw(P) {
   if(Qm>0) { ctx.beginPath(); ctx.moveTo(qx,py); ctx.lineTo(qx,H-MB2); ctx.stroke(); }
   ctx.setLineDash([]);
 
-  ctx.fillStyle='#1f6fb2'; ctx.font='bold 12px Libre Franklin,system-ui,sans-serif';
+  ctx.fillStyle='#1f6fb2'; ctx.font='bold 16px Libre Franklin,system-ui,sans-serif';
   ctx.textAlign='right'; if(P>0.5 && Math.abs(P-30)>3 && Math.abs(P-12)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
   ctx.textAlign='center';
   if(Qm>0.5) ctx.fillText(`Q=${Qm.toFixed(0)}`,qx,H-MB2+12);
@@ -1915,7 +1966,7 @@ function v8Draw() {
   ctx.stroke();
 
   // Kink dots
-  ctx.font='12px Libre Franklin,system-ui,sans-serif';
+  ctx.font='16px Libre Franklin,system-ui,sans-serif';
   const kinkInfo=[];
   [c1,c2].forEach((c,i)=>{
     const Pk=c.a/c.b;
@@ -1947,7 +1998,7 @@ function v8Draw() {
     {id:'D2', color:EC.accent2, label:'D₂', lw:24, ax:c2ax, ay:c2ay, boxOff:{x:22,y:-16}},
     {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my, boxOff:{x:72,y:2}},
   ];
-  ctx.font='bold 13px Libre Franklin,system-ui,sans-serif';
+  ctx.font='bold 16px Libre Franklin,system-ui,sans-serif';
   labelSpec.forEach(s=>{ if(s.lw===undefined) s.lw = ctx.measureText(s.label).width+10; });
 
   const sig = labelSpec.map(s=>s.id).join(',');

@@ -575,15 +575,30 @@ html[data-ds="v2"] .fig-hd h3 {
 @media (min-width: 1500px) { html[data-ds="v2"] .layout { --page-w: 82rem; } }
 @media (min-width: 1800px) { html[data-ds="v2"] .layout { --page-w: 92rem; } }
 
-/* ── in-figure type floor ────────────────────────────────────────────────────
-   Figure labels were rendering as small as 7px. These reach every label drawn
-   as DOM or SVG text. Canvas-drawn text cannot be reached from CSS and is
-   listed separately in the rollout notes. */
-.fig-plot text, .jxgbox text, .demo-svg-wrap text,
-.fig-bay svg text { font-size: 13px; }
-.fig-plot .JXGtext, .jxgbox .JXGtext { font-size: 14px !important; }
-.fig-plot text[font-size], .demo-svg-wrap text[font-size],
-.fig-bay svg text[font-size] { font-size: 13px !important; }
+/* ── in-figure type ──────────────────────────────────────────────────────────
+   A default, for figure text that names no size of its own. It has to be
+   scoped that way: a presentation attribute loses to any CSS rule, with or
+   without !important, so the unscoped version of this rule silently overrode
+   every font-size the figures set and flattened the entire site to 13px. */
+.fig-plot text:not([font-size]), .jxgbox text:not([font-size]),
+.demo-svg-wrap text:not([font-size]),
+.fig-bay svg text:not([font-size]) { font-size: 13px; }
+/* JSXGraph draws its axis numbers as .JXGtext with no size of its own, so the
+   default above was reaching them: they are tick numbers and belong at the
+   tick size, 16px, like every other axis on the site. The third selector is
+   there to out-specify the default, which counts a class, an element and a
+   :not() and would otherwise win. */
+.fig-plot .JXGtext, .jxgbox .JXGtext,
+.fig-bay svg text.JXGtext { font-size: 16px; }
+/* This pair used to read `font-size: 13px !important`, which turned the floor
+   above into a ceiling: every label on the site came out at 13px whatever it
+   asked for, and a figure could not choose a size for itself at all.
+   CSS cannot express what is wanted here. A plot is drawn in its own
+   coordinates and scaled to fit, by about 0.87 on a full-width figure and by
+   1.8 on a small panel, so one declared size arrives at two different sizes
+   and no single number in this file is a floor for both. The floor is applied
+   in assets/figlabels.js instead, where the scale is known and the
+   measurement is in the pixels a reader actually sees. */
 
 /* Curve and axis weights, matching the prototype. */
 .fig-bay svg .domain, .fig-bay svg .axis path, .fig-bay svg .axis line { stroke-width: 1.4px; }
@@ -647,9 +662,10 @@ html[data-ds="v2"] .fig-hd h3 {
 
 /* d3 sets font-size on the axis GROUP, not on each <text>, so a rule targeting
    text alone never reached it and the tick numbers stayed at d3's 10px
-   default. Match the attribute wherever it sits. */
-.fig-bay svg [font-size], .fig-plot svg [font-size],
-.demo-svg-wrap svg [font-size], .fig-bay svg g.tick { font-size: 13px !important; }
+   default. A group that names no size gets this default; one that names a
+   size keeps it, and the floor in figlabels catches anything still too
+   small once the plot's own scale is taken into account. */
+.fig-bay svg g.tick, .fig-plot svg g.tick, .demo-svg-wrap svg g.tick { font-size: 13px; }
 
 /* A comparison table in the prose column is wider than the column and was
    being clipped, not scrolled. Tables scroll inside their own box at every

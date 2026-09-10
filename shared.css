@@ -1613,12 +1613,18 @@ html.wknav-lock { overflow: hidden; }
   --d-ghost:    var(--d-ghost-ink);
 }
 
-/* JSXGraph writes its own DOM with inline colour, so these need to outrank it.
-   The infobox default is #bbb (1.69:1) and label text was inheriting --amber
-   at 2.64:1: both are text a student is meant to read off the chart, and
-   DESIGN.md 4.3 puts in-figure labels at 13px with real contrast. */
+/* JSXGraph writes its own DOM with inline colour, so the colour rules here
+   need to outrank it. The infobox default is #bbb (1.69:1) and label text was
+   inheriting --amber at 2.64:1: both are text a student is meant to read off
+   the chart.
+
+   The size is a different matter. This used to read `font-size: 13px
+   !important`, which beat the size each board asks for and pinned every
+   JSXGraph tick number, axis letter and point name on the site at 13px. The
+   boards now set 16 to match the tick size everywhere else, so what is left
+   here is a floor for any label that names no size at all. */
 .JXGinfobox { color: var(--ink-soft) !important; font-size: var(--t-caption) !important; }
-.JXGtext { font-size: 13px !important; }
+.JXGtext { font-size: 13px; }
 
 /* Figure JS writes its readout sentences with the stroke colour inline
    (`<p style="color:#a8431f">The market produces only ...`). Those are

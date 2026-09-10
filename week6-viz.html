@@ -326,12 +326,31 @@
 /* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
    resolve CSS var(), so their colours come from here; CSS and inline styles use
    var() directly. Fallbacks equal the token values. */
+/* Size one figure's labels from the shared rule and fit each box to its own
+   text. Called once the label groups exist; the size is kept on the node list
+   so the clamp and the leaders can read it back. */
+function f6Fit(gs,nodes){
+  let m={font:12,height:15};
+  try{ if(window.EC224Place&&EC224Place.labelSize) m=EC224Place.labelSize(gs,nodes.length); }catch(e){}
+  nodes._fs=m.font; nodes._lh=m.height;
+  const pad=Math.max(12,Math.round(m.font*1.15));
+  gs.select('rect').attr('height',m.height);
+  gs.select('text').attr('y',m.height*0.74).attr('font-size',m.font);
+  gs.each(function(d){
+    const t=this.querySelector('text'); if(!t) return;
+    try{ const w=t.getComputedTextLength(); if(w) d.lw=Math.max(24,Math.round(w+pad)); }catch(e){}
+  });
+  gs.select('rect').attr('width',d=>d.lw);
+  gs.select('text').attr('x',d=>d.lw/2);
+  return m;
+}
+function f6LH(nodes){ return (nodes&&nodes._lh)||15; }
 var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
 
 // ======================================================================
 // SHARED UTILITIES
 // ======================================================================
-const ML=50, MR=20, MT=20, MB=40;
+const ML=68, MR=20, MT=20, MB=50;
 
 // Force-simulation label collision avoidance (D3-style physics, Canvas version)
 // items: [{x,y,ax,ay,w,h,text,color,fontSize,bold}] -- x/y are mutable label centers
@@ -390,7 +409,7 @@ function drawForceLabel(ctx, lbl) {
      MLU's in-chart labels legible over data without a container. 13px, not 9px:
      at our plot sizes that is the same optical size as MLU's 16px at theirs. */
   const {x,y,ax,ay,text,color='#4a5566',w,h} = lbl;
-  const FS = 13;
+  const FS = 18;   /* curve-label type, matching the prototype */
   const bw = w || ctx.measureText(text).width*1.45+10;
   const bh = h || FS + 5;
   const cx = x + bw / 2, cy = y + bh / 2;
@@ -469,7 +488,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
   ctx.beginPath(); ctx.moveTo(ML,H-MB); ctx.lineTo(W-MR,H-MB); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,H-MB); ctx.stroke();
   // Tick text
-  ctx.fillStyle='#8b95a5'; ctx.font='12px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#8b95a5'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
   for(const v of niceTicks(xR[0],xR[1],5)){
     const [px]=toC(v,yR[0],W,H,xR,yR);
     ctx.fillText(fmtTick(v),px,H-MB+12);
@@ -479,7 +498,7 @@ function drawAxesSt(ctx,W,H,xR,yR,xLbl,yLbl){
     ctx.textAlign='right'; ctx.fillText(fmtTick(v),ML-5,py+3);
   }
   // Axis labels
-  ctx.fillStyle="#4a5566"; ctx.font="16px Libre Franklin,system-ui,sans-serif";
+  ctx.fillStyle="#4a5566"; ctx.font="18px Libre Franklin,system-ui,sans-serif";
   ctx.textAlign='center'; ctx.fillText(xLbl||'q',W/2,H-4);
   ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(yLbl||'$',0,0); ctx.restore(); ctx.restore();
@@ -566,7 +585,7 @@ function v61Draw(Lcur,Kcur){
     ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
   });
   const [icLx,icLy]=toC(0,Math.min(TCopt/v,AXIS_MAX),W,H,xR,yR);
-  ctx.font='13px Libre Franklin,system-ui,sans-serif';
+  ctx.font='16px Libre Franklin,system-ui,sans-serif';
   // Anchor label to a point on the isoquant near L=AXIS_MAX*0.7
   const iqL=AXIS_MAX*0.7, iqK=q*q/iqL;
   const [iqAx,iqAy]=toC(Math.min(iqL,AXIS_MAX), Math.min(iqK,AXIS_MAX), W,H,xR,yR);
@@ -588,7 +607,7 @@ function v61Draw(Lcur,Kcur){
     ctx.beginPath(); ctx.moveTo(ML,oy); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(ox,H-MB); ctx.lineTo(ox,oy); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font='13px Libre Franklin,system-ui,sans-serif';
+    ctx.font='16px Libre Franklin,system-ui,sans-serif';
     const optLbls=[
       {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:18,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize: 13,bold:false},
       {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:18,text:'Cost minimised!',color:'#2f5c3a',fontSize: 13,bold:false},
@@ -616,7 +635,7 @@ function v61Draw(Lcur,Kcur){
   const atOpt=onIsoquant&&atTangency;
   const [bx,by]=toC(Lcur,Kcur,W,H,xR,yR);
   dot6(ctx,bx,by,8,atOpt?'#2f5c3a':EC.red,'#fff');
-  ctx.font='13px Libre Franklin,system-ui,sans-serif';
+  ctx.font='16px Libre Franklin,system-ui,sans-serif';
   const dotCol=atOpt?'#2f5c3a':EC.red;
   // One short verdict at the dot. The (L,K) coordinate and the MRTS/(w/v)
   // numbers both live in the readout panel below, so repeating them here only
@@ -888,6 +907,8 @@ function v65MC(q){return 2*q;}
 function v65ATC(q,tfc){return v65TC(q,tfc)/q;}
 function v65AVC(q){return q;}
 function v65AFC(q,tfc){return tfc/q;}
+// The lowest q at which AFC is inside the frame, never left of q=3.
+function v65AFCq(tfc,yMax){return Math.max(3, (tfc/yMax)*1.06);}
 
 window._initFig65=function initFig65(){
   if(typeof d3==='undefined') return;
@@ -926,14 +947,14 @@ window._initFig65=function initFig65(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('Quantity (q)');
-  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('Cost per unit ($)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text('Quantity (q)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',19)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text('Cost per unit ($)');
 
   // Force label nodes: SMC, ATC, AVC, AFC, minATC, (LRAC)
   function makePts(fn,qlo,qhi,step){
@@ -954,7 +975,7 @@ window._initFig65=function initFig65(){
       {id:'SMC',  color:EC.red,label:'SMC',  lw:44,ax:scX(12),  ay:scY(Math.min(v65MC(12),yMax))},
       {id:'ATC',  color:'#1f6fb2',label:'ATC',  lw:40, ax:scX(13),  ay:scY(Math.min(v65ATC(13,tfc),yMax))},
       {id:'AVC',  color:EC.green,label:'AVC',  lw:44, ax:scX(13),  ay:scY(Math.min(v65AVC(13),yMax))},
-      {id:'AFC',  color:'#8b95a5',   label:'AFC',  lw:40, ax:scX(3),   ay:scY(Math.min(v65AFC(3,tfc),yMax))},
+      {id:'AFC',  color:'#4a5257',   label:'AFC',  lw:40, ax:scX(v65AFCq(tfc,yMax)), ay:scY(v65AFC(v65AFCq(tfc,yMax),tfc))},
       {id:'minATC',color:'#1f6fb2',label:'min ATC',lw:68,ax:scX(qminATC),ay:scY(Math.min(minATC,yMax))},
     ];
     if(v65ShowLR) nodes.push({id:'LRAC',color:EC.red,label:'LRAC',lw:48,ax:scX(8),ay:scY(2)});
@@ -968,7 +989,7 @@ window._initFig65=function initFig65(){
 
     f65Conn=svg.selectAll('.f65conn').data(f65Nodes).enter()
       .append('line').attr('class','f65conn')
-      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
 
     f65LblGs=svg.selectAll('.f65lbl').data(f65Nodes).enter()
       .append('g').attr('class','f65lbl fig-label');
@@ -977,20 +998,21 @@ window._initFig65=function initFig65(){
     f65LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
       .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
+    f6Fit(f65LblGs,f65Nodes);
 
     /* One deterministic placement, no settling: see assets/figplace.js. */
     f65Sim=EC224Place.staticSim(f65Nodes,{
-      origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+      origin:"topleft", w:d=>d.lw, h:()=>f6LH(f65Nodes),
       svg:f65LblGs,
       bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
     })
       .on('tick',()=>{
         f65Nodes.forEach(d=>{
           d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
-          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-f6LH(f65Nodes),d.y));
         });
         f65LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
-        f65Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+        f65Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+f6LH(f65Nodes)/2);
       });
   }
 
@@ -1043,7 +1065,8 @@ window._initFig65=function initFig65(){
           n.lw = tfcShifted ? 46 : 40;
         }
         if(n.id==='AFC'){
-          const nx=scX(3), ny=scY(Math.min(v65AFC(3,tfc),yMax));
+          const aq=v65AFCq(tfc,yMax);
+          const nx=scX(aq), ny=scY(v65AFC(aq,tfc));
           const dx=nx-n.fx_anchor, dy=ny-n.fy_anchor;
           n.x+=dx; n.y+=dy; n.vx=0; n.vy=0;
           n.fx_anchor=nx; n.fy_anchor=ny;
@@ -1147,14 +1170,14 @@ window._initFig66=function initFig66(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(7).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('q (output)');
-  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('AC ($)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text('q (output)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',19)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text('AC ($)');
 
   let f66Sim, f66Nodes, f66LblGs, f66Conn;
 
@@ -1229,7 +1252,7 @@ window._initFig66=function initFig66(){
 
     f66Conn=labelLayer.selectAll('.f66conn').data(f66Nodes).enter()
       .append('line').attr('class','f66conn')
-      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
 
     f66LblGs=labelLayer.selectAll('.f66lbl').data(f66Nodes).enter()
       .append('g').attr('class','f66lbl fig-label');
@@ -1238,20 +1261,21 @@ window._initFig66=function initFig66(){
     f66LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
       .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
+    f6Fit(f66LblGs,f66Nodes);
 
     /* One deterministic placement, no settling: see assets/figplace.js. */
     f66Sim=EC224Place.staticSim(f66Nodes,{
-      origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+      origin:"topleft", w:d=>d.lw, h:()=>f6LH(f66Nodes),
       svg:f66LblGs,
       bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
     })
       .on('tick',()=>{
         f66Nodes.forEach(d=>{
           d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
-          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-f6LH(f66Nodes),d.y));
         });
         f66LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
-        f66Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+        f66Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+f6LH(f66Nodes)/2);
       });
 
     const lracMin2=2*Math.sqrt(V66_W*V66_V);
@@ -1337,14 +1361,14 @@ window._initFig68=function initFig68(){
   // Axes
   svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('g').attr('transform',`translate(${PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(9).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   svg.append('text').attr('x',PAD.left+(W-PAD.left-PAD.right)/2).attr('y',H-6)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('L (labor)');
-  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',14)
-    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).text('K (capital)');
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text('L (labor)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('y',19)
+    .attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text('K (capital)');
 
   let f68Nodes, f68Sim, f68LblGs, f68Conn;
 
@@ -1374,7 +1398,7 @@ window._initFig68=function initFig68(){
 
     f68Conn=svg.selectAll('.f68conn').data(f68Nodes).enter()
       .append('line').attr('class','f68conn')
-      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+      .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
 
     f68LblGs=svg.selectAll('.f68lbl').data(f68Nodes).enter()
       .append('g').attr('class','f68lbl fig-label');
@@ -1383,20 +1407,21 @@ window._initFig68=function initFig68(){
     f68LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
       .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
+    f6Fit(f68LblGs,f68Nodes);
 
     /* One deterministic placement, no settling: see assets/figplace.js. */
     f68Sim=EC224Place.staticSim(f68Nodes,{
-      origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+      origin:"topleft", w:d=>d.lw, h:()=>f6LH(f68Nodes),
       svg:f68LblGs,
       bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
     })
       .on('tick',()=>{
         f68Nodes.forEach(d=>{
           d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
-          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+          d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-f6LH(f68Nodes),d.y));
         });
         f68LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
-        f68Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+        f68Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+f6LH(f68Nodes)/2);
       });
   }
 
@@ -1632,14 +1657,14 @@ window._initFig610=function initFig610(){
   const qstarDot=svg.append('circle').attr('r',7).attr('fill','#1f6fb2').attr('stroke','white').attr('stroke-width',1.5);
 
   // Shading labels
-  const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',13).attr('font-family',"'Libre Franklin',sans-serif");
-  const diseconLbl=svg.append('text').attr('fill','rgba(231,76,60,0.85)').attr('font-size',13).attr('font-family',"'Libre Franklin',sans-serif");
+  const econLbl=svg.append('text').attr('fill','rgba(46,139,87,0.85)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).attr('font-family',"'Libre Franklin',sans-serif");
+  const diseconLbl=svg.append('text').attr('fill','rgba(231,76,60,0.85)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).attr('font-family',"'Libre Franklin',sans-serif");
 
   // Axes groups (rebuilt per draw via scales)
   const xAxisG=svg.append('g').attr('transform',`translate(0,${H-PAD.bottom})`);
   const yAxisG=svg.append('g').attr('transform',`translate(${PAD.left},0)`);
-  const xLblEl=svg.append('text').attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).attr('y',H-6).text('q (output)');
-  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('text-anchor','middle').attr('fill','#666').attr('font-size',13).attr('y',14).text('$ per unit');
+  const xLblEl=svg.append('text').attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).attr('y',H-6).text('q (output)');
+  svg.append('text').attr('transform','rotate(-90)').attr('x',-(PAD.top+(H-PAD.top-PAD.bottom)/2)).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).attr('y',19).text('$ per unit');
 
   // Force label group
   const labelG=svg.append('g');
@@ -1674,9 +1699,9 @@ window._initFig610=function initFig610(){
 
     // Axes
     xAxisG.call(d3.axisBottom(scX).ticks(10).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
     yAxisG.call(d3.axisLeft(scY).ticks(6).tickSize(4))
-      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',12).attr('font-family',"'Libre Franklin',sans-serif");});
+      .call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
     xLblEl.attr('x',PAD.left+(W-PAD.left-PAD.right)/2);
 
     // AC curve points
@@ -1746,9 +1771,9 @@ window._initFig610=function initFig610(){
     const nodeList=[];
     if(qstar&&acstar<=acmax){
       nodeList.push({id:'qstar',color:'#1f6fb2',label:'q* = '+qstar.toFixed(1),lw:80,
-        ax:scX(qstar),ay:scY(acstar)});
-      nodeList.push({id:'acstar',color:'#8b95a5',label:'AC* = $'+acstar.toFixed(2),lw:90,
         ax:scX(qstar),ay:scY(0)});
+      nodeList.push({id:'acstar',color:'#1f6fb2',label:'AC* = $'+acstar.toFixed(2),lw:90,
+        ax:scX(qstar),ay:scY(acstar)});
       if(v610ShowMC){
         const acQ=Math.min(13,qmax*0.75);
         const ac=acFn(acQ); if(isFinite(ac)&&ac>0&&ac<=acmax)
@@ -1763,7 +1788,7 @@ window._initFig610=function initFig610(){
     if(f610Nodes.length>0){
       f610Conn=labelG.selectAll('.f610conn').data(f610Nodes).enter()
         .append('line').attr('class','f610conn')
-        .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
+        .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
 
       f610LblGs=labelG.selectAll('.f610lbl').data(f610Nodes).enter()
         .append('g').attr('class','f610lbl fig-label');
@@ -1772,20 +1797,21 @@ window._initFig610=function initFig610(){
       f610LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
         .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
         .text(d=>d.label);
+    f6Fit(f610LblGs,f610Nodes);
 
       /* One deterministic placement, no settling: see assets/figplace.js. */
       f610Sim=EC224Place.staticSim(f610Nodes,{
-        origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+        origin:"topleft", w:d=>d.lw, h:()=>f6LH(f610Nodes),
         svg:f610LblGs,
         bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
       })
         .on('tick',()=>{
           f610Nodes.forEach(d=>{
             d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
-            d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-LABEL_H,d.y));
+            d.y=Math.max(PAD.top,Math.min(H-PAD.bottom-f6LH(f610Nodes),d.y));
           });
           f610LblGs.attr('transform',d=>`translate(${d.x},${d.y})`);
-          f610Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
+          f610Conn.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+f6LH(f610Nodes)/2);
         });
     }
 
