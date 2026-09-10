@@ -15,7 +15,6 @@
   <style>
     .demo-svg-wrap { padding: 0; }
     .demo-svg-wrap svg { display: block; width: 100%; }
-    .draggable-label { cursor: move; }
     .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule-strong); position:relative; }
     .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
     .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing: normal; text-transform: none; color:var(--unit-ink); margin-bottom:0.4rem; position:relative; z-index:1; }
@@ -199,7 +198,6 @@
         <input type="range" class="ctrl-track" id="v65-tfc" min="10" max="200" step="any" value="100" oninput="v65Update()" aria-label="Total fixed cost TFC">
       </div>
       <button class="btn" id="v65-lr-btn" onclick="v65ToggleLR()">Show LRAC</button>
-      <button class="btn" onclick="window.resetFig65&&window.resetFig65()">Reset labels</button>
     </div>
           <div class="fig-plot"><div class="demo-svg-wrap" id="cvs65-wrap"></div></div>
           <div class="fig-state" id="v65-readout"></div>
@@ -232,7 +230,6 @@
         <span class="ctrl-label">Number of SRAC curves: <span class="ctrl-value" id="v66-nk-val">4</span></span>
         <input type="range" class="ctrl-track" id="v66-nk" min="1" max="8" step="1" value="4" oninput="v66Update()" style="width:160px;" aria-label="Number of SRAC curves">
       </div>
-      <button class="btn" onclick="window.resetFig66&&window.resetFig66()">Reset labels</button>
     </div>
           <div class="fig-plot"><div class="demo-svg-wrap" id="cvs66-wrap"></div></div>
           <div class="fig-state" id="v66-readout"></div>
@@ -268,7 +265,6 @@
         <span class="ctrl-label">Capital cost v: <span class="ctrl-value" id="v68-v-val">3</span></span>
         <input type="range" class="ctrl-track" id="v68-v" min="1" max="8" step="any" value="3" oninput="v68Update()" aria-label="Capital cost v">
       </div>
-      <button class="btn" onclick="window.resetFig68&&window.resetFig68()">Reset labels</button>
     </div>
           <div class="fig-plot"><div class="demo-svg-wrap" id="cvs68-wrap"></div></div>
           <div class="fig-state" id="v68-readout"></div>
@@ -307,7 +303,6 @@
         </select>
       </div>
       <button class="btn" id="v610-mc-btn" onclick="v610ToggleMC()">Show Marginal Cost</button>
-      <button class="btn" onclick="window.resetFig610&&window.resetFig610()">Reset labels</button>
     </div>
           <div class="fig-plot"><div class="demo-svg-wrap" id="cvs610-wrap"></div></div>
           <div class="fig-state" id="v610-readout"></div>
@@ -976,22 +971,19 @@ window._initFig65=function initFig65(){
       .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
 
     f65LblGs=svg.selectAll('.f65lbl').data(f65Nodes).enter()
-      .append('g').attr('class','f65lbl draggable-label')
-      .call(d3.drag()
-        .on('start',(e,d)=>{f65Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-        .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
-        .on('end',  (e,d)=>{f65Sim.alphaTarget(0);d.fx=null;d.fy=null;})
-      );
+      .append('g').attr('class','f65lbl fig-label');
     f65LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
       .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
     f65LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
       .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
 
-    f65Sim=d3.forceSimulation(f65Nodes)
-      .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-      .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
-      .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+    /* One deterministic placement, no settling: see assets/figplace.js. */
+    f65Sim=EC224Place.staticSim(f65Nodes,{
+      origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+      svg:f65LblGs,
+      bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
+    })
       .on('tick',()=>{
         f65Nodes.forEach(d=>{
           d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
@@ -1240,22 +1232,19 @@ window._initFig66=function initFig66(){
       .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
 
     f66LblGs=labelLayer.selectAll('.f66lbl').data(f66Nodes).enter()
-      .append('g').attr('class','f66lbl draggable-label')
-      .call(d3.drag()
-        .on('start',(e,d)=>{f66Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-        .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
-        .on('end',  (e,d)=>{f66Sim.alphaTarget(0);d.fx=null;d.fy=null;})
-      );
+      .append('g').attr('class','f66lbl fig-label');
     f66LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
       .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
     f66LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
       .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
 
-    f66Sim=d3.forceSimulation(f66Nodes)
-      .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-      .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
-      .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+    /* One deterministic placement, no settling: see assets/figplace.js. */
+    f66Sim=EC224Place.staticSim(f66Nodes,{
+      origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+      svg:f66LblGs,
+      bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
+    })
       .on('tick',()=>{
         f66Nodes.forEach(d=>{
           d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
@@ -1388,22 +1377,19 @@ window._initFig68=function initFig68(){
       .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
 
     f68LblGs=svg.selectAll('.f68lbl').data(f68Nodes).enter()
-      .append('g').attr('class','f68lbl draggable-label')
-      .call(d3.drag()
-        .on('start',(e,d)=>{f68Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-        .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
-        .on('end',  (e,d)=>{f68Sim.alphaTarget(0);d.fx=null;d.fy=null;})
-      );
+      .append('g').attr('class','f68lbl fig-label');
     f68LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
       .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
     f68LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
       .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
       .text(d=>d.label);
 
-    f68Sim=d3.forceSimulation(f68Nodes)
-      .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-      .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
-      .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+    /* One deterministic placement, no settling: see assets/figplace.js. */
+    f68Sim=EC224Place.staticSim(f68Nodes,{
+      origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+      svg:f68LblGs,
+      bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
+    })
       .on('tick',()=>{
         f68Nodes.forEach(d=>{
           d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
@@ -1780,22 +1766,19 @@ window._initFig610=function initFig610(){
         .attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
 
       f610LblGs=labelG.selectAll('.f610lbl').data(f610Nodes).enter()
-        .append('g').attr('class','f610lbl draggable-label')
-        .call(d3.drag()
-          .on('start',(e,d)=>{f610Sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-          .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
-          .on('end',  (e,d)=>{f610Sim.alphaTarget(0);d.fx=null;d.fy=null;})
-        );
+        .append('g').attr('class','f610lbl fig-label');
       f610LblGs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
         .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
       f610LblGs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
         .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
         .text(d=>d.label);
 
-      f610Sim=d3.forceSimulation(f610Nodes)
-        .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-        .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
-        .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04))
+      /* One deterministic placement, no settling: see assets/figplace.js. */
+      f610Sim=EC224Place.staticSim(f610Nodes,{
+        origin:"topleft", w:d=>d.lw, h:()=>LABEL_H,
+        svg:f610LblGs,
+        bounds:()=>({x0:PAD.left-4,y0:PAD.top,x1:W-4,y1:H-PAD.bottom})
+      })
         .on('tick',()=>{
           f610Nodes.forEach(d=>{
             d.x=Math.max(PAD.left-4,Math.min(W-d.lw-4,d.x));
@@ -1883,6 +1866,7 @@ window.addEventListener('resize', () => {
   <script src="assets/deltabar.js"></script>
   <script src="assets/autoplay-video.js"></script>
 <script src="assets/nav.js" defer></script>
+<script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 </body>
 </html>

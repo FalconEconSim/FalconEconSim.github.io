@@ -590,11 +590,18 @@ function jxgLabelOverlay(containerId, board) {
     .style('font-family', "var(--font-body)");
 
   var nodes = [];
-  var sim = d3.forceSimulation(nodes)
-    .force('collide', d3.forceCollide(function(d){ return d.lw * 0.55 + 4; }).strength(0.85))
-    .force('x', d3.forceX(function(d){ return d.fx_anchor; }).strength(0.04))
-    .force('y', d3.forceY(function(d){ return d.fy_anchor; }).strength(0.04))
-    .on('tick', tick);
+  /* Deterministic placement, not a settling simulation. The obstacles are
+     read from the board's own rendered svg, which shares this overlay's
+     pixel space, so the placer can see the curves it has to dodge. */
+  var placeCfg = {
+    origin: "topleft",
+    w: function (d) { return d.lw; },
+    h: function () { return OV_LABEL_H; },
+    svg: (board.renderer && board.renderer.svgRoot) || null,
+    bounds: { x0: 2, y0: 2, x1: W - 2, y1: H - 2 }
+  };
+  nodes._place = placeCfg;
+  var sim = EC224Place.staticSim(nodes, placeCfg).on('tick', tick);
 
   var conns = svg.selectAll(null);
   var lblGs = svg.selectAll(null);
@@ -683,6 +690,8 @@ function jxgLabelOverlay(containerId, board) {
   }
 
   function tick() {
+    placeCfg.bounds = { x0: 2, y0: 2, x1: W - 2, y1: H - 2 };
+    EC224Place.reflow(nodes, placeCfg);
     clamp();
     lblGs.attr('transform', function(d){ return 'translate(' + d.x + ',' + d.y + ')'; });
     conns
@@ -733,19 +742,9 @@ function jxgLabelOverlay(containerId, board) {
 
   board.on('update', reproject);
 
-  /* Slider smoothness pattern from S6/S8: while a control is held down the
-     simulation simmers at alphaTarget 0.3 (smooth collision resolution),
-     and cools to 0 on release. Call heatOn([...ids]) once per overlay. */
-  function heatOn(ids) {
-    ids.forEach(function(id){
-      var el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('mousedown',  function(){ sim.alphaTarget(0.3).restart(); });
-      el.addEventListener('touchstart', function(){ sim.alphaTarget(0.3).restart(); }, {passive:true});
-    });
-    window.addEventListener('mouseup',  function(){ sim.alphaTarget(0); });
-    window.addEventListener('touchend', function(){ sim.alphaTarget(0); });
-  }
+  /* Kept as a no-op: there is no simulation to keep warm now. Each redraw
+     places every label outright. */
+  function heatOn(ids) {}
 
   /* One-shot re-settle after a discrete change (button click, type switch). */
   function kick() { sim.alpha(0.5).restart(); }
@@ -765,12 +764,11 @@ function jxgLabelOverlay(containerId, board) {
         existing.fx_anchor = p.x; existing.fy_anchor = p.y;
         return existing;
       }
-      var ang = Math.random() * 2 * Math.PI, r = 40 + Math.random() * 30;
       return {
         id: s.id, color: s.color, label: s.label, lw: s.lw,
         ux: s.ux, uy: s.uy, ax: p.x, ay: p.y,
         fx_anchor: p.x, fy_anchor: p.y,
-        x: p.x + r * Math.cos(ang), y: p.y + r * Math.sin(ang)
+        x: p.x, y: p.y
       };
     });
 
@@ -788,13 +786,7 @@ function jxgLabelOverlay(containerId, board) {
     var gsSel = svg.selectAll('.ovlbl').data(nodes, function(d){ return d.id; });
     gsSel.exit().remove();
     var gsEnter = gsSel.enter()
-      .append('g').attr('class', 'ovlbl draggable-label')
-      .style('pointer-events', 'auto')
-      .call(d3.drag()
-        .on('start', function(e,d){ sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-        .on('drag',  function(e,d){ d.fx = e.x; d.fy = e.y; })
-        .on('end',   function(e,d){ sim.alphaTarget(0); d.fx = null; d.fy = null; })
-      );
+      .append('g').attr('class', 'ovlbl fig-label');
     gsEnter.append('rect').attr('width', function(d){ return d.lw; }).attr('height', OV_LABEL_H).attr('rx', 3)
       .attr('fill', 'white').attr('stroke', function(d){ return d.color; }).attr('stroke-width', 0.8).attr('opacity', 0.95);
     gsEnter.append('text').attr('x', function(d){ return d.lw/2; }).attr('y', OV_LABEL_H - 4)
@@ -3971,6 +3963,7 @@ window.addEventListener('resize', function() {
   <script src="assets/ask-widget.js"></script>
   <script src="assets/deltabar.js"></script>
 <script src="assets/nav.js" defer></script>
+<script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 </body>
 </html>

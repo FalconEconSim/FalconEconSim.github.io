@@ -18,7 +18,6 @@
   <style>
     .demo-svg-wrap{padding:0;}
     .demo-svg-wrap svg{display:block;width:100%;}
-    .draggable-label{cursor:move;}
     .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule-strong);position:relative;}
     .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
     .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--unit-ink);margin-bottom:0.4rem;position:relative;z-index:1;}
@@ -151,7 +150,6 @@
         <input type="range" class="ctrl-track" id="v81-p" min="5" max="19" step="any" value="12" oninput="v81Update()" aria-label="Market price P">
       </div>
       <button class="btn" onclick="v81Reset()">Reset (P* = $12)</button>
-      <button class="btn" onclick="resetV81Labels()">Reset labels</button>
     </div>
           <div class="ctrl-row">
       <div class="ctrl">
@@ -202,7 +200,6 @@
         <input type="range" class="ctrl-track" id="v82-q" min="0.2" max="8" step="any" value="4" oninput="v82Update()" aria-label="Quantity Q">
       </div>
       <button class="btn" id="v82-mono-btn" onclick="v82ToggleMono()">Show Monopoly Framing</button>
-      <button class="btn" onclick="resetV82Labels()">Reset labels</button>
     </div>
           <div class="fig-state" id="v82-readout"></div>
         </div>
@@ -354,7 +351,6 @@
         <span class="ctrl-label">MC: <span class="ctrl-value" id="v85-mc-val">$2.00</span></span>
         <input type="range" class="ctrl-track" id="v85-mc" min="0" max="8" step="any" value="2" oninput="v85Update()" aria-label="Marginal cost MC">
       </div>
-      <button class="btn" onclick="resetV85Labels()">Reset labels</button>
     </div>
           <div class="fig-state" id="v85-readout"></div>
           <div id="v85-delta" class="delta-bar"></div>
@@ -434,7 +430,6 @@
         <input type="range" class="ctrl-track" id="v88-n" min="1" max="10" step="1" value="1" oninput="v88Update()" aria-label="Number of pricing tiers n">
       </div>
       <button class="btn" id="v88-spotify-btn" onclick="v88ToggleSpotify()">Show Spotify 3-tier</button>
-      <button class="btn" onclick="resetV88Labels()">Reset labels</button>
     </div>
           <div class="fig-state" id="v88-readout"></div>
         </div>
@@ -520,7 +515,6 @@
       <button class="btn on" id="v810-mono-btn" onclick="v810SetState('mono')">Unregulated Monopoly</button>
       <button class="btn" id="v810-mc-btn" onclick="v810SetState('mc')">Regulate: P = MC</button>
       <button class="btn" id="v810-ac-btn" onclick="v810SetState('ac')">Regulate: P = AC</button>
-      <button class="btn" onclick="resetV810Labels()">Reset labels</button>
     </div>
           <div class="fig-state" id="v810-readout"></div>
         </div>
@@ -634,34 +628,37 @@ function d3Seg(svg,scX,scY,x1,y1,x2,y2,color,sw,dash){
   return svg.append('line').attr('x1',scX(x1)).attr('y1',scY(y1)).attr('x2',scX(x2)).attr('y2',scY(y2))
     .attr('stroke',color).attr('stroke-width',sw||2).attr('stroke-dasharray',dash||'');
 }
-// Draggable, force-laid-out labels: NO anchor dots, connector line only.
+// Labels are placed once, deterministically, and are not draggable: see
+// assets/figplace.js. The connector line stays; there are no anchor dots.
 function d3AddLabels(svg,nodes,sim){
+  if(sim&&sim._cfg){sim._cfg.svg=svg;nodes._place=sim._cfg;}   // the placer needs the ink to dodge
   const conns=svg.selectAll(null).data(nodes).enter()
     .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
   const gs=svg.selectAll(null).data(nodes).enter()
-    .append('g').attr('class','draggable-label')
-    .call(d3.drag()
-      .on('start',(e,d)=>{sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
-      .on('end',(e,d)=>{sim.alphaTarget(0);d.fx=null;d.fy=null;})
-    );
-  gs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+    .append('g').attr('class','fig-label');
+  gs.append('rect').attr('height',LABEL_H).attr('rx',3)
     .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
-  gs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+  gs.append('text').attr('y',LABEL_H-4)
     .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
     .text(d=>d.label);
+  d3SizeLabels(gs);
   return {conns,gs};
 }
 // Optional per-node boxOff {x,y}: the label BOX settles centred at
 // (anchor + boxOff) instead of on the anchor, pulling a label clear of a
 // curve/point it would otherwise sit on while its leader still points home.
 function d3MakeSim(nodes){
-  return d3.forceSimulation(nodes)
-    .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-    .force('x',d3.forceX(d=>d.boxOff?d.fx_anchor-d.lw/2+d.boxOff.x:d.fx_anchor).strength(d=>d.boxOff?0.14:0.04))
-    .force('y',d3.forceY(d=>d.boxOff?d.fy_anchor-LABEL_H/2+d.boxOff.y:d.fy_anchor).strength(d=>d.boxOff?0.14:0.04));
+  return EC224Place.staticSim(nodes,{
+    origin:"topleft",
+    w:d=>d.lw, h:()=>LABEL_H,
+    bounds:{x0:D3PAD.left-4,y0:D3PAD.top,x1:D3W-4,y1:D3H-D3PAD.bottom},
+    prefer:d=>d.boxOff?{x:-d.lw/2+d.boxOff.x,y:-LABEL_H/2+d.boxOff.y}:null
+  });
 }
 function d3TickClamp(nodes,gs,conns){
+  if(gs)d3SizeLabels(gs);          // text may have changed since last frame
+  // Re-solve against the curves as they are for THIS frame, then paint.
+  EC224Place.reflow(nodes,nodes._place);
   nodes.forEach(d=>{
     d.x=Math.max(D3PAD.left-4,Math.min(D3W-d.lw-4,d.x));
     d.y=Math.max(D3PAD.top,Math.min(D3H-D3PAD.bottom-LABEL_H,d.y));
@@ -669,15 +666,24 @@ function d3TickClamp(nodes,gs,conns){
   gs.attr('transform',d=>`translate(${d.x},${d.y})`);
   conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
 }
-function d3Node(id,color,label,lw,ax,ay,extra){
-  const ang=Math.random()*2*Math.PI,r=110+Math.random()*50;
-  return Object.assign({id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax+r*Math.cos(ang),y:ay+r*Math.sin(ang)},extra||{});
+// Size each label box to the text inside it.
+function d3SizeLabels(gs){
+  gs.each(function(d){
+    var t=this.querySelector('text');
+    if(!t)return;
+    try{var w=t.getComputedTextLength();if(w)d.lw=Math.max(22,Math.round(w+14));}catch(e){}
+  });
+  gs.select('rect').attr('width',d=>d.lw);
+  gs.select('text').attr('x',d=>d.lw/2);
 }
-// Re-scatter a sim's label nodes back around their anchors.
+function d3Node(id,color,label,lw,ax,ay,extra){
+  return Object.assign({id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax,y:ay},extra||{});
+}
+// Placement is deterministic, so re-running it simply reproduces the same
+// layout. Kept so any caller still works.
 function d3ScatterLabels(nodes,sim){
   if(!nodes||!sim)return;
-  nodes.forEach(d=>{d.x=d.fx_anchor+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.fy_anchor+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
-  sim.alpha(0.5).restart();
+  sim.restart();
 }
 // Move a label node's anchor (and the node with it) to a new screen point.
 function d3MoveAnchor(node,nx,ny){
@@ -720,14 +726,12 @@ function d3HaloLabel(g,x,y,txt,opts){
   return t;
 }
 
-// Registry of sims for the global mousedown/mouseup alphaTarget pattern.
+// Kept as a no-op. It used to spin the force simulation up while a slider
+// was held; placement is a single deterministic solve now, so there is
+// nothing to warm up and the call sites can stay as they are.
 const SIM_REGISTRY=[];
 function registerSliderSim(sliderId,getSim){
-  const sl=document.getElementById(sliderId);
-  if(!sl)return;
-  sl.addEventListener('mousedown',()=>{const s=getSim();if(s)s.alphaTarget(0.3).restart();});
-  sl.addEventListener('touchstart',()=>{const s=getSim();if(s)s.alphaTarget(0.3).restart();},{passive:true});
-  SIM_REGISTRY.push(getSim);
+  if(getSim)SIM_REGISTRY.push(getSim);
 }
 
 /* FIGURE SCRIPTS APPENDED BELOW */
@@ -1913,6 +1917,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   <script src="assets/ask-widget.js"></script>
   <script src="assets/deltabar.js"></script>
 <script src="assets/nav.js" defer></script>
+<script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 </body>
 </html>

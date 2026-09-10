@@ -783,18 +783,22 @@ function d5AddLabels(svg, nodes, sim) {
   d5Seed(nodes, +vb[2] || 500, +vb[3] || 500);
   // Kept so d5PolishSeeds can find this overlay's canvas once it has drawn.
   sim._d5svg = svg; sim._d5nodes = nodes;
+  // The curves live on the canvas under this overlay, so that is where the
+  // placer has to look for the ink it is dodging.
+  if (sim._cfg) {
+    sim._cfg.canvas = () => {
+      const host = svg.node() && svg.node().parentElement;
+      return host && host.querySelector('canvas');
+    };
+    nodes._place = sim._cfg;
+  }
   const conns = svg.append('g').selectAll('line').data(nodes).enter()
     .append('line')
     .attr('stroke', d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
   const gs = svg.append('g').selectAll('g').data(nodes).enter()
-    .append('g').attr('class','draggable-label')
-    .call(d3.drag()
-      .on('start',(e,d)=>{ sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
-      .on('drag', (e,d)=>{ d.fx=e.x; d.fy=e.y; })
-      .on('end',  (e,d)=>{ sim.alphaTarget(0); d.fx=null; d.fy=null; })
-    );
-  // A transparent hit-rect keeps the label draggable: haloed text alone gives
-  // the pointer only the glyphs to grab.
+    .append('g').attr('class','fig-label');
+  // A transparent rect the size of the text, kept as the box the placement
+  // pass measures against.
   gs.append('rect').attr('width',d=>d5w(d)).attr('height',D5_LABEL_H)
     .attr('fill','transparent');
   gs.append('text').attr('x',d=>d5w(d)/2).attr('y',D5_LABEL_H-5)
@@ -820,17 +824,25 @@ function d5AddLabels(svg, nodes, sim) {
    Collide is also gentler (0.85 -> 0.55) and its radius smaller, because the
    label boxes got 1.44x wider when the type went from 9px to 13px and the old
    radius was over-separating them. */
+/* One deterministic solve, no settling and no dragging: see figplace.js.
+   d5Seed still works out the side of the anchor with more room, and that
+   preferred offset is offered to the placer first; the placer overrules it
+   only when that spot is on a curve or on another label. */
 function d5MakeSim(nodes) {
-  return d3.forceSimulation(nodes)
-    .velocityDecay(0.82)
-    .force('collide', d3.forceCollide(d=>d5w(d)*0.42+3).strength(0.55))
-    .force('x', d3.forceX(d=>d.fx_anchor+d.ox).strength(0.15))
-    .force('y', d3.forceY(d=>d.fy_anchor+d.oy).strength(0.15));
+  return EC224Place.staticSim(nodes, {
+    origin: "center",
+    w: d => d5w(d), h: () => D5_LABEL_H,
+    prefer: d => ({ x: (d.ox || 0) - d5w(d) / 2, y: (d.oy || 0) - D5_LABEL_H / 2 })
+  });
 }
 
 // Tick handler: clamp into plot bounds [PAD..W-PAD]/[PAD..H-PAD], position
 // label groups + connector lines. PAD here is the canvas ML/MR/MT/MB margin box.
 function d5TickClamp(nodes, gs, conns, W, H, padL, padR, padT, padB) {
+  if (nodes._place) {
+    nodes._place.bounds = { x0: padL, y0: padT, x1: W - padR, y1: H - padB };
+    EC224Place.reflow(nodes, nodes._place);
+  }
   const clamp = d => {
     // Clamp the CENTRE, keeping the whole box inside the plot's margin box.
     // padR was accepted but never used, so a wide label could sit flush against
@@ -997,11 +1009,7 @@ let _d5GlobalUpHooked = false;
 const _d5AllSims = [];
 function d5RegisterSim(sim) {
   _d5AllSims.push(sim);
-  if (!_d5GlobalUpHooked) {
-    _d5GlobalUpHooked = true;
-    window.addEventListener('mouseup', ()=>_d5AllSims.forEach(s=>s.alphaTarget(0)));
-    window.addEventListener('touchend', ()=>_d5AllSims.forEach(s=>s.alphaTarget(0)));
-  }
+  // Nothing to cool down: placement is instant.
   return sim;
 }
 
@@ -2645,6 +2653,7 @@ window.addEventListener('resize', () => {
   <script src="assets/ask-widget.js"></script>
   <script src="assets/deltabar.js"></script>
 <script src="assets/nav.js" defer></script>
+<script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 </body>
 </html>

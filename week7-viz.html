@@ -15,7 +15,6 @@
   <style>
     .demo-svg-wrap{padding:0;}
     .demo-svg-wrap svg{display:block;width:100%;}
-    .draggable-label{cursor:move;}
     .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule-strong);position:relative;}
     .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
     .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--unit-ink);margin-bottom:0.4rem;position:relative;z-index:1;}
@@ -169,7 +168,6 @@
         <input type="range" class="ctrl-track" id="v72-p" min="2" max="12" step="any" value="7" oninput="v72Update()" aria-label="Market price P* for profit rectangle">
       </div>
       <button class="btn" id="v72-mistakes-btn" onclick="v72ToggleMistakes()">Show Common Mistakes</button>
-      <button class="btn" onclick="resetV72Labels()">Reset labels</button>
     </div>
           <div class="fig-state" id="v72-readout"></div>
           <div class="fig-state" id="v72-calc-box"></div>
@@ -210,7 +208,6 @@
         <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v73-p-val">$6.00</span></span>
         <input type="range" class="ctrl-track" id="v73-p" min="0" max="10" step="any" value="6" oninput="v73Update()" aria-label="Market price P* for shutdown decision">
       </div>
-      <button class="btn" onclick="resetV73Labels()">Reset labels</button>
     </div>
         </div>
       </div>
@@ -346,7 +343,6 @@
       <button class="viz-btn green" onclick="v79RunEntry()">Run Entry (n=150 &rarr; 297, profit &rarr; 0)</button>
       <button class="viz-btn red" onclick="v79RunExit()">Run Exit (n=450 &rarr; 297, loss &rarr; 0)</button>
       <button class="btn" onclick="v79Reset()">Reset to n=150</button>
-      <button class="btn" onclick="resetV79Labels()">Reset labels</button>
     </div>
           <div class="fig-state" id="v79-readout"></div>
           <div id="v79-delta" class="delta-bar"></div>
@@ -815,30 +811,44 @@ function d3AddCurve(svg,fn,scX,scY,color,yMax,dash=''){
   return svg.append('path').attr('fill','none').attr('stroke',color).attr('stroke-width',2)
     .attr('stroke-dasharray',dash).attr('d',d3.line()(pts));
 }
+// Labels are placed once, deterministically, and are not draggable: see
+// assets/figplace.js. The connector line stays; there are no anchor dots.
 function d3AddLabels(svg,nodes,sim){
+  if(sim&&sim._cfg){sim._cfg.svg=svg;nodes._place=sim._cfg;}
   const conns=svg.selectAll(null).data(nodes).enter()
     .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55);
   const gs=svg.selectAll(null).data(nodes).enter()
-    .append('g').attr('class','draggable-label')
-    .call(d3.drag()
-      .on('start',(e,d)=>{sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
-      .on('end',(e,d)=>{sim.alphaTarget(0);d.fx=null;d.fy=null;})
-    );
-  gs.append('rect').attr('width',d=>d.lw).attr('height',LABEL_H).attr('rx',3)
+    .append('g').attr('class','fig-label');
+  gs.append('rect').attr('height',LABEL_H).attr('rx',3)
     .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
-  gs.append('text').attr('x',d=>d.lw/2).attr('y',LABEL_H-4)
+  gs.append('text').attr('y',LABEL_H-4)
     .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',12).attr('font-weight',600)
     .text(d=>d.label);
+  d3SizeLabels(gs);
   return {conns,gs};
 }
+// Size each label box to the text inside it, rather than to a number typed
+// in at the call site against a typeface the site no longer uses.
+function d3SizeLabels(gs){
+  gs.each(function(d){
+    var t=this.querySelector('text');
+    if(!t)return;
+    try{var w=t.getComputedTextLength();if(w)d.lw=Math.max(22,Math.round(w+14));}catch(e){}
+  });
+  gs.select('rect').attr('width',d=>d.lw);
+  gs.select('text').attr('x',d=>d.lw/2);
+}
 function d3MakeSim(nodes){
-  return d3.forceSimulation(nodes)
-    .force('collide',d3.forceCollide(d=>d.lw*0.55+4).strength(0.85))
-    .force('x',d3.forceX(d=>d.fx_anchor).strength(0.04))
-    .force('y',d3.forceY(d=>d.fy_anchor).strength(0.04));
+  return EC224Place.staticSim(nodes,{
+    origin:"topleft",
+    w:d=>d.lw, h:()=>LABEL_H,
+    bounds:{x0:D3PAD.left-4,y0:D3PAD.top,x1:D3W-4,y1:D3H-D3PAD.bottom},
+    prefer:d=>d.boxOff?{x:-d.lw/2+d.boxOff.x,y:-LABEL_H/2+d.boxOff.y}:null
+  });
 }
 function d3TickClamp(nodes,gs,conns){
+  if(gs)d3SizeLabels(gs);          // text may have changed since last frame
+  EC224Place.reflow(nodes,nodes._place);   // solve against THIS frame's curves
   nodes.forEach(d=>{
     d.x=Math.max(D3PAD.left-4,Math.min(D3W-d.lw-4,d.x));
     d.y=Math.max(D3PAD.top,Math.min(D3H-D3PAD.bottom-LABEL_H,d.y));
@@ -847,8 +857,7 @@ function d3TickClamp(nodes,gs,conns){
   conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+LABEL_H/2);
 }
 function d3Node(id,color,label,lw,ax,ay,extra={}){
-  const ang=Math.random()*2*Math.PI,r=110+Math.random()*50;
-  return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax+r*Math.cos(ang),y:ay+r*Math.sin(ang),...extra};
+  return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax,y:ay,...extra};
 }
 // Move a label node's anchor (and the node rigidly with it) to a new screen point.
 function d3MoveAnchor(node,nx,ny){
@@ -1637,25 +1646,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   v78Update();
   v79InitSvg(); v79Draw();
 
-  // S6 alphaTarget smooth-drag pattern for slider-driven sims
-  (function(){
-    const sl=document.getElementById('v72-p');
-    sl.addEventListener('mousedown',()=>{ if(v72sim) v72sim.alphaTarget(0.3).restart(); });
-    sl.addEventListener('touchstart',()=>{ if(v72sim) v72sim.alphaTarget(0.3).restart(); },{passive:true});
-  })();
-  (function(){
-    const sl=document.getElementById('v73-p');
-    sl.addEventListener('mousedown',()=>{ if(v73sim) v73sim.alphaTarget(0.3).restart(); });
-    sl.addEventListener('touchstart',()=>{ if(v73sim) v73sim.alphaTarget(0.3).restart(); },{passive:true});
-  })();
-  window.addEventListener('mouseup',()=>{
-    if(v72sim) v72sim.alphaTarget(0);
-    if(v73sim) v73sim.alphaTarget(0);
-  });
-  window.addEventListener('touchend',()=>{
-    if(v72sim) v72sim.alphaTarget(0);
-    if(v73sim) v73sim.alphaTarget(0);
-  });
 
   // ResizeObserver only for canvas-based figures (7.1 uses canvas)
   const ro=new ResizeObserver(()=>{
@@ -1698,6 +1688,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   <script src="assets/deltabar.js"></script>
   <script src="assets/autoplay-video.js"></script>
 <script src="assets/nav.js" defer></script>
+<script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 </body>
 </html>

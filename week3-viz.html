@@ -91,9 +91,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
 
     .viz-two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
     .jxgbox { background:#fff !important; border:none !important; border-radius:0 !important; }
-    .draggable-label { cursor:move; }
     .d3-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; font-family:var(--font-body); }
-    .d3-overlay .draggable-label { pointer-events:auto; }
 
     .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; padding:0.8rem; }
     .stat-box { background:#f8f9fb; border:1px solid var(--rule-strong); border-radius:5px; padding:0.55rem 0.75rem; }
@@ -550,41 +548,54 @@ function d3OvNode(id, color, label, lw, ax, ay, extra = {}) {
            x: ax + r * Math.cos(ang), y: ay + r * Math.sin(ang), ...extra };
 }
 
-// Append connector lines + draggable label groups (rect+text) to svg.
-// Matches S6/S8 styling exactly: white rounded rect, 9px/600 Libre Franklin text,
-// dashed 0.9px connector at 0.55 opacity, no anchor dot.
+// Connector line plus a white rounded-rect label. No anchor dot, and no
+// dragging: placement is a single deterministic solve, see figplace.js.
 function d3OvAddLabels(svg, nodes, sim) {
+  if (sim && sim._cfg) { sim._cfg.svg = svg; nodes._place = sim._cfg; }
   const conns = svg.selectAll(null).data(nodes).enter()
     .append('line')
     .attr('stroke', d => d.color).attr('stroke-width', 0.9)
     .attr('stroke-dasharray', '4,3').attr('opacity', 0.55);
   const gs = svg.selectAll(null).data(nodes).enter()
-    .append('g').attr('class', 'draggable-label')
-    .call(d3.drag()
-      .on('start', (e, d) => { sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on('end',   (e, d) => { sim.alphaTarget(0); d.fx = null; d.fy = null; })
-    );
-  gs.append('rect').attr('width', d => d.lw).attr('height', D3_LABEL_H).attr('rx', 3)
+    .append('g').attr('class', 'fig-label');
+  gs.append('rect').attr('height', D3_LABEL_H).attr('rx', 3)
     .attr('fill', 'white').attr('stroke', d => d.color).attr('stroke-width', 0.8).attr('opacity', 0.95);
-  gs.append('text').attr('x', d => d.lw / 2).attr('y', D3_LABEL_H - 4)
+  gs.append('text').attr('y', D3_LABEL_H - 4)
     .attr('text-anchor', 'middle').attr('fill', d => d.color)
     .attr('font-size', 12).attr('font-weight', 600)
     .text(d => d.label);
+  d3OvSizeLabels(gs);
   return { conns, gs };
 }
+// Size each label box to the text inside it.
+function d3OvSizeLabels(gs) {
+  gs.each(function (d) {
+    var t = this.querySelector('text');
+    if (!t) return;
+    try { var w = t.getComputedTextLength(); if (w) d.lw = Math.max(22, Math.round(w + 14)); } catch (e) {}
+  });
+  gs.select('rect').attr('width', d => d.lw);
+  gs.select('text').attr('x', d => d.lw / 2);
+}
 
-// Standard collide + anchored-spring force simulation (same constants as S6/S8).
+// One deterministic placement instead of a settling simulation. Bounds come
+// from d3OvTick, which is the only place that knows the overlay box.
 function d3OvMakeSim(nodes) {
-  return d3.forceSimulation(nodes)
-    .force('collide', d3.forceCollide(d => d.lw * 0.55 + 4).strength(0.85))
-    .force('x', d3.forceX(d => d.fx_anchor).strength(0.04))
-    .force('y', d3.forceY(d => d.fy_anchor).strength(0.04));
+  return EC224Place.staticSim(nodes, {
+    origin: "topleft",
+    w: d => d.lw, h: () => D3_LABEL_H,
+    prefer: d => d.boxOff ? {x:-d.lw/2+d.boxOff.x, y:-D3_LABEL_H/2+d.boxOff.y} : null
+  });
 }
 
 // Per-tick clamp + redraw. w/h = overlay pixel box; pad = {top,right,bottom,left} keep-out margins.
 function d3OvTick(nodes, gs, conns, w, h, pad) {
   pad = pad || { top: 4, right: 4, bottom: 4, left: 4 };
+  if (gs) d3OvSizeLabels(gs);
+  if (nodes._place) {
+    nodes._place.bounds = { x0: pad.left, y0: pad.top, x1: w - pad.right, y1: h - pad.bottom };
+    EC224Place.reflow(nodes, nodes._place);
+  }
   nodes.forEach(d => {
     d.x = Math.max(pad.left, Math.min(w - d.lw - pad.right, d.x));
     d.y = Math.max(pad.top,  Math.min(h - D3_LABEL_H - pad.bottom, d.y));
@@ -1866,6 +1877,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <script src="assets/autoplay-video.js"></script>
   <script src="assets/deltabar.js"></script>
 <script src="assets/nav.js" defer></script>
+<script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 </body>
 </html>
