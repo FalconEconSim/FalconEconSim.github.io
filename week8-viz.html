@@ -627,7 +627,7 @@ function d3AddAxes(svg,scX,scY,xLabel,yLabel,fmtY){
   svg.append('g').attr('class','d3-xaxis').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
     d3.axisBottom(scX).ticks(8).tickSize(4)
   ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
-  svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
+  svg.append('g').attr('class','d3-yaxis').attr('transform',`translate(${D3PAD.left},0)`).call(
     d3.axisLeft(scY).ticks(6).tickSize(4).tickFormat(fmtY||null)
   ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
   if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(xLabel);
@@ -780,6 +780,7 @@ function v81Rebuild(){
   v81dyn._xLbl  =v81svg.append('text').attr('text-anchor','middle').attr('font-size',v81Fs).attr('font-weight',600).attr('fill',EC.indicator);
   v81dyn._yLbl  =v81svg.append('text').attr('text-anchor','end').attr('font-size',v81Fs).attr('font-weight',600).attr('fill',EC.indicator);
   v81dyn._xAxisG=v81svg.select('.d3-xaxis');
+  v81dyn._yAxisG=v81svg.select('.d3-yaxis');
   // Ghost D / S (faded, dashed, thinner): the secondary sliders (demand
   // intercept a, supply minimum price b) genuinely shift these lines, so the
   // baseline (a=20, b=4) is left on screen for comparison when they differ.
@@ -858,7 +859,9 @@ function v81Draw(){
      over each other and read as one */
   if(v81dyn._xAxisG&&!v81dyn._xAxisG.empty())
     v81dyn._xAxisG.selectAll('.tick text').attr('opacity',d=>Math.abs(scX(d)-scX(Qtr))<22?0:1);
-  v81dyn._yLbl.attr('x',D3PAD.left-2).attr('y',scY(P)+3).text('$'+P.toFixed(1));
+  v81dyn._yLbl.attr('x',D3PAD.left-2).attr('y',scY(P)+5).text('$'+P.toFixed(1));
+  if(v81dyn._yAxisG&&!v81dyn._yAxisG.empty())
+    v81dyn._yAxisG.selectAll('.tick text').attr('opacity',d=>Math.abs(scY(d)-scY(P))<14?0:1);
   d3MoveAnchor(v81nodes.find(n=>n.id==='CS'),scX(Math.max(0.4,Qtr*0.35)),scY((a+P)/2));
   d3MoveAnchor(v81nodes.find(n=>n.id==='PS'),scX(Math.max(0.4,Qtr*0.35)),scY((b+P)/2));
   if(v81gs)d3TickClamp(v81nodes,v81gs,v81conns);
@@ -1948,5 +1951,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 <script src="assets/nav.js" defer></script>
 <script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
+<script src="assets/figreset.js" defer></script>
 </body>
 </html>
