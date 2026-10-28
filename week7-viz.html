@@ -372,11 +372,13 @@
       </figure>
       <div class="fig-prose">
         <p class="fig-intro">
-      Start with 150 firms earning a healthy profit (P* &asymp; $6.40 &gt; SAC, green rectangle visible). Click "Run Entry" to
+      Each firm has the cost curves of Fig 7.8 (min SAC = $5.51 at q = 3.58), and market supply is n firms' SMC curves added
+      together. Demand has just risen from D (Qd = 3,558.6 &minus; 548.4P) to D&prime; (Qd = 4,086 &minus; 548.4P), as in the
+      animation. With 150 firms price is $6.40 and each firm earns $3.31 (green rectangle). Click "Run Entry" to
       watch new firms enter, market supply shift right, price fall, and the profit rectangle shrink toward zero at long-run
-      equilibrium (n &asymp; 297, P* &asymp; $5.51 = minimum SAC). Click "Run Exit" to start instead from an industry with
-      <em>too many</em> firms (n = 450): price is below SAC, the rectangle turns red (a loss), and firms exit until
-      the same zero-profit equilibrium is reached from above.
+      equilibrium (n &asymp; 297, P* = $5.51 = minimum SAC, the dotted LRS line). Click "Run Exit" to start instead from an industry with
+      <em>too many</em> firms (n = 450): price is $4.73, below SAC, the rectangle turns red (a loss of $2.69 per firm), and firms exit until
+      price climbs back to the same zero-profit equilibrium at $5.51.
     </p>
         <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly, just not earning excess returns.</div>
       </div>
@@ -1542,47 +1544,62 @@ function v78DrawMath(n){
 // ─────────────────────────────────────────────────────────────────────────
 // FIG 7.9: LONG-RUN ENTRY/EXIT
 // ─────────────────────────────────────────────────────────────────────────
-// Long-run (zero-economic-profit) equilibrium for this market is where P = min(SAC) ≈ $5.51,
-// which occurs at n ≈ 297-298. We use n=297 (P≈$5.51, profit≈ +$0.01 ≈ 0) as the LR target,
-// firms start with a clear profit (entry, n=150) or a clear loss (exit, n=450) and the
-// simulation runs them toward this same zero-profit point from opposite directions.
+// One firm model throughout, the same as Figs 7.5 and 7.8:
+//   TC = q^3/3 - 2q^2 + 7q + 5, SMC = q^2 - 4q + 7, min SAC = $5.51 at q = 3.584,
+//   firm supply q(P) = 2 + sqrt(P - 3) for P >= 4 (min AVC), market supply n*q(P).
+// Demand matches the film above: it has just risen from D (Qd = 3558.6 - 548.4P,
+// long run n = 150 at $5.51) to D' (Qd = 4086 - 548.4P). With 150 firms the
+// short-run price is $6.40; entry stops near n = 297, where P is back at $5.51.
 const V79_LR_N=297;
+const V79_A1=4086, V79_A0=3558.6, V79_B=548.4;
 let v79n=150, v79animId=null;
-// Qd=500-50P, Qs=n*(P-4)/2 => P=(500+2n)/(50+n/2)=(1000+4n)/(100+n)
-function v79PofN(n){return(1000+4*n)/(100+n);}
-// n, P*, and firm profit at a given n; used both to draw the current frame and
-// to snapshot the baseline ("old") state whenever a run starts.
+function v79Qs(n,P){return P<4?0:n*(2+Math.sqrt(P-3));}
+// Solve n(2+s) = A - B(3+s^2) for s = sqrt(P-3): B s^2 + n s + (2n + 3B - A) = 0.
+function v79PofN(n){
+  const c=2*n+3*V79_B-V79_A1;
+  const s=(-n+Math.sqrt(n*n-4*V79_B*c))/(2*V79_B);
+  return 3+s*s;
+}
 function v79Stats(n){
   const P=v79PofN(n);
   const q=qStar7(P);
   const profit=q*(P-SAC7(q));
-  return {n,P,profit};
+  return {n,P,q,Q:V79_A1-V79_B*P,profit};
 }
-// Baseline for the delta readout: the n a run started from. Defaults to the
-// page's initial n=150 so the bar reads "no change yet" before any button click.
 let v79Start=v79Stats(150);
 // ── FIG 7.9 D3 SVG ───────────────────────────────────────────────────────
 let v79svgA=null,v79svgB=null;
 let v79nodesA=null,v79simA=null,v79gsA=null,v79connsA=null;
 let v79nodesB=null,v79simB=null,v79gsB=null,v79connsB=null;
+const V79_QMAX=2000, V79_PMAX=8;
 
 function v79InitSvg(){
   // --- Left panel: Market ---
-  const scXM=d3.scaleLinear().domain([0,300]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYM=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  const scXM=d3.scaleLinear().domain([0,V79_QMAX]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scYM=d3.scaleLinear().domain([0,V79_PMAX]).range([D3H2-D3PAD.bottom,D3PAD.top]);
   v79svgA=d3MakeSvg2('cvs79a-wrap');
-  d3AddAxes2(v79svgA,scXM,scYM,'Q','P');
-  // Static demand: Qd=500-50P (P-intercept=10 ≤ yMax=14, touches y-axis)
-  const demPts79=[];
-  for(let P2=10;P2>=4;P2-=0.1){const Q2=500-50*P2;if(Q2<0||Q2>300)continue;demPts79.push([scXM(Q2),scYM(P2)]);}
-  if(demPts79.length>1)v79svgA.append('path').attr('class','v79-demand').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2).attr('d',d3.line()(demPts79));
-  // Placeholder groups for dynamic supply + equilibrium
+  d3AddAxes2(v79svgA,scXM,scYM,'Q (market)','P ($)');
+  // Eleven Q ticks collide at phone width: keep every other one (y ticks are all < 100)
+  v79svgA.selectAll('g.tick').filter(d=>d>=100&&d%400!==0).select('text').remove();
+  // Long-run supply: flat at min SAC = $5.51 (constant-cost industry)
+  v79svgA.append('line').attr('x1',scXM(0)).attr('x2',scXM(V79_QMAX)).attr('y1',scYM(5.51)).attr('y2',scYM(5.51))
+    .attr('stroke',EC.slate).attr('stroke-width',1.2).attr('stroke-dasharray','2,4').attr('opacity',0.6);
+  // Original demand D (faded) and the new demand D'
+  const dem=(A,cls,op,w,dash)=>{
+    const pts=[];
+    for(let P2=0;P2<=V79_PMAX+1e-9;P2+=0.05){const Q2=A-V79_B*P2;if(Q2<0||Q2>V79_QMAX)continue;pts.push([scXM(Q2),scYM(P2)]);}
+    v79svgA.append('path').attr('class',cls).attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',w)
+      .attr('stroke-dasharray',dash).attr('opacity',op).attr('d',d3.line()(pts));
+  };
+  dem(V79_A0,'v79-demand0',0.45,1.4,'5,4');
+  dem(V79_A1,'v79-demand',1,2,'');
   v79svgA.append('g').attr('class','v79-dyn-mkt');
-  // Labels (persistent): D anchor at P=8, Qd=500-400=100
   v79nodesA=[
-    d3Node('D','#1f6fb2','D',20,scXM(100),scYM(8)),
-    d3Node('S',EC.red,'S',20,scXM(100),scYM(10)),
-    d3Node('EQ',EC.indicator,'n=150, P*=$6.40',88,scXM(180),scYM(6.4)),
+    d3Node('D1','#1f6fb2','D′',26,scXM(V79_A1-V79_B*6.9),scYM(6.9)),
+    d3Node('S',EC.red,'S',20,scXM(v79Qs(150,7.2)),scYM(7.2)),
+    d3Node('EQ',EC.indicator,'n=150, P*=$6.40',88,scXM(576),scYM(6.4)),
+    d3Node('D0','#1f6fb2','D',20,scXM(V79_A0-V79_B*3.5),scYM(3.5)),
+    d3Node('LRS',EC.slate,'LRS $5.51',70,scXM(1850),scYM(5.51)),
   ];
   v79simA=d3MakeSim(v79nodesA);
   const elsA=d3AddLabels(v79svgA,v79nodesA,v79simA);
@@ -1591,20 +1608,17 @@ function v79InitSvg(){
   v79svgA._scXM=scXM;v79svgA._scYM=scYM;
 
   // --- Right panel: Firm ---
-  const scXF=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYF=d3.scaleLinear().domain([0,14]).range([D3H2-D3PAD.bottom,D3PAD.top]);
+  const scXF=d3.scaleLinear().domain([0,7]).range([D3PAD.left,D3W-D3PAD.right]);
+  const scYF=d3.scaleLinear().domain([0,10]).range([D3H2-D3PAD.bottom,D3PAD.top]);
   v79svgB=d3MakeSvg2('cvs79b-wrap');
-  d3AddAxes2(v79svgB,scXF,scYF,'q','$/unit');
-  // Static SAC and SMC
-  d3AddCurve(v79svgB,q=>SAC7(q),scXF,scYF,EC.slate,14);
-  d3AddCurve(v79svgB,q=>SMC7(q),scXF,scYF,'#1f6fb2',14);
-  // Placeholder for dynamic price line + profit rect
+  d3AddAxes2(v79svgB,scXF,scYF,'q (one firm)','$ per unit');
+  d3AddCurve(v79svgB,q=>SAC7(q),scXF,scYF,EC.slate,10);
+  d3AddCurve(v79svgB,q=>SMC7(q),scXF,scYF,'#1f6fb2',10);
   v79svgB.append('g').attr('class','v79-dyn-firm');
-  // Labels
   v79nodesB=[
-    d3Node('SAC',EC.slate,'SAC',30,scXF(7.5),scYF(SAC7(7.5))),
-    d3Node('SMC','#1f6fb2','SMC',30,scXF(5),scYF(SMC7(5))),
-    d3Node('PI',EC.indicator,'P*, π',96,scXF(5),scYF(6.4)),
+    d3Node('SAC',EC.slate,'SAC',30,scXF(6.5),scYF(SAC7(6.5))),
+    d3Node('SMC','#1f6fb2','SMC',30,scXF(4.4),scYF(SMC7(4.4))),
+    d3Node('PI',EC.indicator,'P*, π',96,scXF(3.84),scYF(6.4)),
   ];
   v79simB=d3MakeSim(v79nodesB);
   const elsB=d3AddLabels(v79svgB,v79nodesB,v79simB);
@@ -1613,115 +1627,96 @@ function v79InitSvg(){
   v79svgB._scXF=scXF;v79svgB._scYF=scYF;
 }
 
+// Set a readout label's text and size its plate to the text, so the number never overruns the box.
+function v79FitLabel(gs,node){
+  const g=gs.filter(d=>d===node), t=g.select('text').text(node.label);
+  let w=node.lw; try{w=t.node().getComputedTextLength()+14;}catch(e){}
+  if(w>10){node.lw=w; g.select('rect').attr('width',w); t.attr('x',w/2);}
+}
 function v79Draw(){
   if(!v79svgA||!v79svgB)v79InitSvg();
-  const n=v79n, P=v79PofN(n);
+  const n=v79n, st=v79Stats(n), P=st.P;
   const scXM=v79svgA._scXM, scYM=v79svgA._scYM;
   const scXF=v79svgB._scXF, scYF=v79svgB._scYF;
+  const supPath=(nn)=>{
+    const pts=[];
+    for(let P2=4;P2<=V79_PMAX+1e-9;P2+=0.05){const Q2=v79Qs(nn,P2);if(Q2>V79_QMAX)break;pts.push([scXM(Q2),scYM(P2)]);}
+    return pts.length>1?d3.line()(pts):null;
+  };
 
-  // Update market: supply line + equilibrium dot
   const gM=v79svgA.select('g.v79-dyn-mkt');
   gM.selectAll('*').remove();
-  const Qs=Pv=>n*(Pv-4)/2;
-
-  // Ghost supply (faded, dashed, thinner): "Run Entry"/"Run Exit" shift n away
-  // from the run's starting value (v79Start.n, the same baseline the delta bar
-  // above already reports against), so leave that original supply line drawn
-  // for comparison while the animation moves the current one.
+  // Ghost of the supply curve the current run started from
   const nShifted79 = n !== v79Start.n;
   if(nShifted79){
-    const QsBase=Pv=>v79Start.n*(Pv-4)/2;
-    const supPtsBase=[];
-    for(let P2=4;P2<=14;P2+=0.2){const Q2=QsBase(P2);if(Q2<0||Q2>300)continue;supPtsBase.push([scXM(Q2),scYM(P2)]);}
-    if(supPtsBase.length>1){
-      gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',1.4)
-        .attr('stroke-dasharray','5,4').attr('opacity',0.45).attr('d',d3.line()(supPtsBase));
-    }
-    /* Anchor the ghost label to a QUANTITY that is actually on screen, then
-       solve for the price, rather than picking a fixed price. The baseline n
-       differs between the entry run (150) and the exit run (450), and a fixed
-       price put the label at Q=375 for n=150, outside the 0..300 clamp, so the
-       label silently never drew. */
-    const gQ79=200, gP79=4+2*gQ79/v79Start.n;
-    if(gP79>=4&&gP79<=14){
-      gM.append('text').attr('x',scXM(gQ79)+4).attr('y',scYM(gP79)-4)
-        .attr('font-size',12).attr('font-weight',600).attr('fill',EC.red).attr('opacity',0.55).text('S');
-    }
+    const d0=supPath(v79Start.n);
+    if(d0)gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',1.4)
+      .attr('stroke-dasharray','5,4').attr('opacity',0.45).attr('d',d0);
   }
-
-  const supPts=[];
-  for(let P2=4;P2<=14;P2+=0.2){const Q2=Qs(P2);if(Q2<0||Q2>300)continue;supPts.push([scXM(Q2),scYM(P2)]);}
-  if(supPts.length>1)gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2).attr('d',d3.line()(supPts));
-  const Qeq=Math.min(299,Qs(P));
-  gM.append('circle').attr('cx',scXM(Qeq)).attr('cy',scYM(Math.min(13.5,P))).attr('r',5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
-  // n / P* readout is a draggable D3 force label anchored to the equilibrium
-  // dot (tracks it during the entry/exit animation via rigid translate)
+  const d1=supPath(n);
+  if(d1)gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2).attr('d',d1);
+  gM.append('circle').attr('cx',scXM(st.Q)).attr('cy',scYM(P)).attr('r',5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
   const eqN=v79nodesA.find(d=>d.id==='EQ');
   if(eqN){
     eqN.label='n='+n+', P*=$'+P.toFixed(2);
-    d3MoveAnchor(eqN,scXM(Qeq),scYM(Math.min(13.5,P)));
-    v79gsA.filter(d=>d.id==='EQ').select('text').text(eqN.label);
+    d3MoveAnchor(eqN,scXM(st.Q),scYM(P));
+    v79FitLabel(v79gsA,eqN);
   }
-  // Update anchor for S label: keep it ON the current supply curve at Q=100,
-  // where P = 4 + 200/n stays inside the plot for every n in the animation
-  // range (the old midpoint-at-P=9 rule needed n < 120, which never happens,
-  // so the label was stranded at its bogus init spot far above the line).
-  if(v79nodesA&&v79nodesA[1]){
-    d3MoveAnchor(v79nodesA[1],scXM(100),scYM(4+200/n));
-    v79nodesA[1].label = nShifted79 ? 'S′' : 'S';
-    v79nodesA[1].lw = nShifted79 ? 26 : 20;
+  // S label stays on the current supply curve at P = $7.20
+  const sN=v79nodesA.find(d=>d.id==='S');
+  if(sN){
+    const Qs72=Math.min(V79_QMAX-20,v79Qs(n,7.2));
+    d3MoveAnchor(sN,scXM(Qs72),scYM(7.2));
+    sN.label = nShifted79 ? 'S′' : 'S';
+    sN.lw = nShifted79 ? 26 : 20;
     v79gsA.filter(d=>d.id==='S').select('rect').attr('width',d=>d.lw);
     v79gsA.filter(d=>d.id==='S').select('text').attr('x',d=>d.lw/2).text(d=>d.label);
   }
 
-  // Update firm: price line + profit rect
+  // Firm: price line + profit (green) or loss (red) rectangle
   const gF=v79svgB.select('g.v79-dyn-firm');
   gF.selectAll('*').remove();
-  const Pc=Math.min(13.9,P);
-  const py=scYF(Pc);
+  const py=scYF(P);
   gF.append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right).attr('y1',py).attr('y2',py)
     .attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
-  if(P>0.5){
-    const qf=qStar7(P), sacF=SAC7(qf), profit=qf*(P-sacF);
-    const qfx=scXF(qf), sacy=scYF(Math.min(sacF,13.9));
-    const rectY=Math.min(py,sacy), rectH=Math.abs(py-sacy);
-    if(rectH>2){
-      gF.append('rect').attr('x',D3PAD.left).attr('y',rectY).attr('width',qfx-D3PAD.left).attr('height',rectH)
-        .attr('fill',profit>0?'rgba(39,174,96,0.25)':'rgba(231,76,60,0.2)')
-        .attr('stroke',profit>0?EC.green:EC.red).attr('stroke-width',1.5);
-    }
-    // P*/π readout is a draggable D3 force label anchored at the firm's
-    // optimum (q*, P) on the price line
-    const piN=v79nodesB.find(d=>d.id==='PI');
-    if(piN){
-      piN.label='P*=$'+P.toFixed(2)+', π='+(profit>0?'+':'')+profit.toFixed(2);
-      d3MoveAnchor(piN,qfx,py);
-      v79gsB.filter(d=>d.id==='PI').select('text').text(piN.label);
-    }
+  const qf=st.q, sacF=SAC7(qf), profit=st.profit;
+  const qfx=scXF(qf), sacy=scYF(sacF);
+  const rectY=Math.min(py,sacy), rectH=Math.abs(py-sacy);
+  const cs=getComputedStyle(document.documentElement);
+  const gain=(cs.getPropertyValue('--d-gain')||'').trim()||'#2f7d55';
+  const loss=(cs.getPropertyValue('--d-loss')||'').trim()||'#b03a2e';
+  if(rectH>1){
+    gF.append('rect').attr('x',D3PAD.left).attr('y',rectY).attr('width',qfx-D3PAD.left).attr('height',rectH)
+      .attr('fill',profit>0?gain:loss).attr('fill-opacity',0.22)
+      .attr('stroke',profit>0?gain:loss).attr('stroke-width',1.5);
   }
-  // Re-render both panels' labels immediately: the entry/exit animation runs on a
-  // timer (no pointer events), so the cooled sims would otherwise never repaint them.
+  gF.append('circle').attr('cx',qfx).attr('cy',py).attr('r',4.5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
+  const piN=v79nodesB.find(d=>d.id==='PI');
+  if(piN){
+    const pr=Math.abs(profit)<0.005?0:profit;
+    piN.label='P*=$'+P.toFixed(2)+', π='+(pr>0?'+':pr<0?'−':'')+'$'+Math.abs(pr).toFixed(2);
+    d3MoveAnchor(piN,qfx,py);
+    v79FitLabel(v79gsB,piN);
+  }
   if(v79gsA)d3TickClamp2(v79nodesA,v79gsA,v79connsA);
   if(v79gsB)d3TickClamp2(v79nodesB,v79gsB,v79connsB);
 
+  const pr=Math.abs(profit)<0.005?0:profit;
   document.getElementById('v79-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">Firms (n)</div><div class="readout-val">${n}</div></div>
-      <div class="readout-col"><div class="readout-label">P*(n)</div><div class="readout-val">$${P.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar7(P).toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${qStar7(P)*(P-SAC7(qStar7(P)))>=0?EC.green:EC.red}">${qStar7(P)*(P-SAC7(qStar7(P)))>=0?'+':''}$${(qStar7(P)*(P-SAC7(qStar7(P)))).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">P*</div><div class="readout-val">$${P.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Market Q</div><div class="readout-val">${Math.round(st.Q).toLocaleString()}</div></div>
+      <div class="readout-col"><div class="readout-label">q* per firm</div><div class="readout-val">${qf.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Profit &pi; per firm</div><div class="readout-val" style="color:${pr>=0?'var(--d-gain-ink)':'var(--d-loss-ink)'}">${pr>0?'+':pr<0?'&minus;':''}$${Math.abs(pr).toFixed(2)}</div></div>
     </div>`;
 
-  /* Old / new / change readout. Baseline is v79Start, the n the current run
-     began from (150 for entry, 450 for exit, or the page's initial n=150),
-     so the numbers track exactly the convergence-to-zero-profit story the
-     figure and its caption describe. */
   if (window.ecDelta) {
-    const cur=v79Stats(n);
     ecDelta('v79-delta', [
-      { label: 'Firms (n)',            old: v79Start.n,      now: cur.n,      dp: 0 },
-      { label: 'Equilibrium price P*', old: v79Start.P,      now: cur.P,      prefix: '$' },
-      { label: 'Firm profit',          old: v79Start.profit, now: cur.profit, prefix: '$' },
+      { label: 'Firms (n)',            old: v79Start.n,      now: st.n,      dp: 0 },
+      { label: 'Equilibrium price P*', old: v79Start.P,      now: st.P,      prefix: '$' },
+      { label: 'Market quantity Q',    old: v79Start.Q,      now: st.Q,      dp: 0 },
+      { label: 'Firm profit',          old: v79Start.profit, now: st.profit, prefix: '$' },
     ]);
   }
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>Week 4: Interactive Visualizations - EC224</title>
+  <title>Week 4: Interactive Visualizations · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
@@ -196,8 +196,8 @@
       <h3>Revenue Rectangle: Price vs Quantity Effect</h3>
     </div>
         <p class="fig-intro">
-      Total revenue equals the area of the rectangle P&times;Q. When price rises, the <strong style="color:var(--d-second)">red
-      strip</strong> shows revenue gained from existing buyers paying more; the <strong style="color:var(--green)">green
+      Total revenue equals the area of the rectangle P&times;Q. When price rises, the <strong style="color:var(--d-gain-ink)">green
+      strip</strong> shows revenue gained from existing buyers paying more; the <strong style="color:var(--d-loss-ink)">red
       strip</strong> shows revenue lost from buyers who leave. The live verdict tells you which effect dominates.
       Set the old price, pick the new price, and adjust the demand slope to explore.
     </p>
@@ -232,8 +232,11 @@
       <h3>Pricing Strategy Simulator</h3>
     </div>
         <p class="fig-intro">
-      Select an industry with its real-world empirical elasticity estimate. Then adjust the price change and see the predicted
-      change in total revenue. Uses the approximation %&Delta;TR &asymp; %&Delta;P &times; (1&nbsp;+&nbsp;e<sub>d</sub>).
+      Select an industry with its real-world empirical elasticity estimate. Then adjust the price change and see the change in total revenue.
+      The solid bar is the exact %&Delta;TR, computed from the actual new price and quantity (constant-elasticity demand,
+      Q<sub>new</sub> = Q<sub>old</sub> &times; (P<sub>new</sub>/P<sub>old</sub>)<sup>e<sub>d</sub></sup>). The dashed outline is the
+      linear approximation %&Delta;TR &asymp; %&Delta;P &times; (1&nbsp;+&nbsp;e<sub>d</sub>), which is close for small price changes and
+      drifts away for large ones, especially for elastic goods.
     </p>
       </div>
       <div class="fig-bay">
@@ -305,8 +308,8 @@
       <h3>Surge Pricing Simulator</h3>
     </div>
         <p class="fig-intro">
-      Ride-share surge pricing in action. As the surge multiplier rises, rider demand falls, consumer surplus shrinks, and
-      Uber's revenue grows - up to a point. Riders priced out exit the market entirely.
+      Surge pricing on a ride-hailing app. As the surge multiplier rises, rider demand falls, consumer surplus shrinks, and
+      the app's revenue grows, up to a point. Riders priced out exit the market entirely.
       This illustrates the welfare trade-off between producer revenue and consumer surplus.
     </p>
       </div>
@@ -1101,9 +1104,16 @@ function v2Init() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FIG 4.3 - REVENUE RECTANGLE (colors: RED=gain, GREEN=loss)
+// FIG 4.3 - REVENUE RECTANGLE (colors: GREEN=gain via --d-gain, RED=loss via --d-loss)
 // ══════════════════════════════════════════════════════════════════════
 const v3 = { a:100 };
+// Site palette: gain = --d-gain (green), loss = --d-loss (red), drawn translucent.
+function v3Fill(tok, fb) {
+  const hex=(getComputedStyle(document.documentElement).getPropertyValue(tok)||'').trim()||fb;
+  const m=/^#([0-9a-f]{6})$/i.exec(hex); if(!m) return hex;
+  const v=parseInt(m[1],16);
+  return 'rgba('+(v>>16)+','+((v>>8)&255)+','+(v&255)+',0.38)';
+}
 const xR3=[0,110], yR3=[0,55];
 let v3W, v3H, v3ctx;
 let v3Svg, v3Sim, v3Nodes, v3Lbl;
@@ -1145,21 +1155,21 @@ function v3Draw() {
     // Base rectangle
     ctx.fillStyle='rgba(26,86,219,0.08)';
     ctx.fillRect(ML, by, bx-ML, oy-by);
-    // RED: revenue gained (price gain strip, existing buyers pay more)
-    ctx.fillStyle='rgba(231,76,60,0.38)';
+    // GREEN: revenue gained (price gain strip, existing buyers pay more)
+    ctx.fillStyle=v3Fill('--d-gain','#2f7d55');
     ctx.fillRect(ML, ny, nx-ML, by-ny);
-    // GREEN: revenue lost (quantity lost strip, buyers who exit)
-    ctx.fillStyle='rgba(39,174,96,0.38)';
+    // RED: revenue lost (quantity lost strip, buyers who exit)
+    ctx.fillStyle=v3Fill('--d-loss','#b03a2e');
     ctx.fillRect(nx, by, bx-nx, oy-by);
   } else if (P < Pb) {
     // Base rectangle
     ctx.fillStyle='rgba(26,86,219,0.08)';
     ctx.fillRect(ML, ny, nx-ML, oy-ny);
-    // RED: revenue gained (quantity gained strip)
-    ctx.fillStyle='rgba(231,76,60,0.38)';
+    // GREEN: revenue gained (quantity gained strip)
+    ctx.fillStyle=v3Fill('--d-gain','#2f7d55');
     ctx.fillRect(bx, ny, nx-bx, oy-ny);
-    // GREEN: revenue lost (price loss strip)
-    ctx.fillStyle='rgba(39,174,96,0.38)';
+    // RED: revenue lost (price loss strip)
+    ctx.fillStyle=v3Fill('--d-loss','#b03a2e');
     ctx.fillRect(ML, by, bx-ML, ny-by);
   } else {
     ctx.fillStyle='rgba(26,86,219,0.15)';
@@ -1193,7 +1203,7 @@ function v3Draw() {
       <div class="readout-col"><div class="readout-label">|e<sub>d</sub>| at P<sub>old</sub></div><div class="readout-val" style="color:${eColor(ed)}">${ae.toFixed(2)}</div></div>
     </div>
     <div class="verdict ${Math.abs(P-Pb)<=0.1?'unit':((P>Pb&&deltaT<0)||(P<Pb&&deltaT>0))?'elastic':deltaT===0?'unit':'inelastic'}" style="margin-top:0.4rem">
-      ${P>Pb?(deltaT<0?'Price rise hurt TR: demand is elastic over this range (green loss > red gain)':deltaT>0?'Price rise helped TR: demand is inelastic over this range (red gain > green loss)':'Price rise left TR unchanged: red gain exactly offsets green loss'):''}
+      ${P>Pb?(deltaT<0?'Price rise hurt TR: demand is elastic over this range (red loss > green gain)':deltaT>0?'Price rise helped TR: demand is inelastic over this range (green gain > red loss)':'Price rise left TR unchanged: green gain exactly offsets red loss'):''}
       ${P<Pb?(deltaT>0?'Price cut helped TR: demand is elastic over this range':deltaT<0?'Price cut hurt TR: demand is inelastic over this range':'Price cut left TR unchanged: gains exactly offset losses'):''}
       ${Math.abs(P-Pb)<=0.1?'Change the new price to see how TR responds':''}
     </div>`;
@@ -1258,9 +1268,14 @@ function v4Draw() {
   const key=document.getElementById('v4-ind').value;
   const ind=v4Industries[key];
   const dp=parseFloat(document.getElementById('v4-dp').value)/100;
-  const dTR = dp * (1 + ind.e);
+  // Exact: new Q from constant-elasticity demand, then TR = P x Q.
+  const qRatio = Math.pow(1+dp, ind.e);
+  const dQ = qRatio - 1;
+  const dTR = (1+dp)*qRatio - 1;
+  const dTRapprox = dp * (1 + ind.e);
   const pChange=dp*100;
   const trChange=dTR*100;
+  const trApprox=dTRapprox*100;
 
   ctx.clearRect(0,0,W,H);
 
@@ -1288,6 +1303,7 @@ function v4Draw() {
   // clamp bars to available space (handles large elasticities cleanly)
   const pH=Math.min(Math.abs(pChange)/100*halfH, halfH);
   const tH=Math.min(Math.abs(trChange)/100*halfH, halfH);
+  const aH=Math.min(Math.abs(trApprox)/100*halfH, halfH);
 
   // P bar (left)
   ctx.fillStyle = pChange>=0 ? 'rgba(231,76,60,0.8)' : 'rgba(39,174,96,0.8)';
@@ -1300,6 +1316,12 @@ function v4Draw() {
   ctx.fillRect(cx+barW*0.6, trChange>=0 ? midY-tH : midY, barW, tH);
   ctx.fillStyle='#333'; ctx.textAlign='center';
   ctx.fillText('%ΔTR', cx+barW*1.1, chartBot+14);
+  // Linear approximation: dashed outline over the exact bar
+  if (Math.abs(trApprox-trChange) > 0.05) {
+    ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle='#5f6875'; ctx.lineWidth=1.6;
+    ctx.strokeRect(cx+barW*0.6-6, trApprox>=0 ? midY-aH : midY, barW+12, aH);
+    ctx.restore();
+  }
 
   // zero line
   ctx.strokeStyle='#999'; ctx.lineWidth=1.5;
@@ -1338,7 +1360,9 @@ function v4Draw() {
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">Price change</div><div class="readout-val" style="color:${pChange>=0?EC.red:EC.green}">${pChange>=0?'+':''}${pChange.toFixed(0)}%</div></div>
       <div class="readout-col"><div class="readout-label">Elasticity</div><div class="readout-val" style="color:${eColor(ind.e)}">${ind.e}</div></div>
-      <div class="readout-col"><div class="readout-label">Predicted %ΔTR</div><div class="readout-val" style="color:${trChange>=0?EC.green:EC.red}">${trChange>=0?'+':''}${trChange.toFixed(1)}%</div></div>
+      <div class="readout-col"><div class="readout-label">%ΔQ</div><div class="readout-val">${dQ>=0?'+':''}${(dQ*100).toFixed(1)}%</div></div>
+      <div class="readout-col"><div class="readout-label">Exact %ΔTR</div><div class="readout-val" style="color:${trChange>=0?EC.green:EC.red}">${trChange>=0?'+':''}${trChange.toFixed(1)}%</div></div>
+      <div class="readout-col"><div class="readout-label">Linear approx. (dashed)</div><div class="readout-val" style="color:var(--ink-soft)">${trApprox>=0?'+':''}${trApprox.toFixed(1)}%</div></div>
     </div>
     <div class="verdict ${Math.abs(ind.e)>1?'elastic':'inelastic'}" style="margin-top:0.5rem">
       ${pChange===0
@@ -1367,7 +1391,7 @@ function v4Init() {
     const key=document.getElementById('v4-ind').value;
     const ind=v4Industries[key];
     const dp=parseFloat(document.getElementById('v4-dp').value)/100;
-    const dTR = dp * (1 + ind.e);
+    const dTR = (1+dp)*Math.pow(1+dp, ind.e) - 1;
     const pChange=dp*100, trChange=dTR*100;
     const barW=80, cx=W/2;
     const chartTop=MT+4, chartBot=H-MB-22;
@@ -1595,13 +1619,13 @@ function v7Draw() {
   document.getElementById('v7-readout').innerHTML=
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">Surge price</div><div class="readout-val">$${P.toFixed(2)} (${mult.toFixed(1)}×)</div></div>
-      <div class="readout-col"><div class="readout-label">Riders</div><div class="readout-val">${Q.toFixed(0)} (was ${Qnorm})</div></div>
-      <div class="readout-col"><div class="readout-label">Uber Revenue</div><div class="readout-val" style="color:var(--green)">$${TR.toFixed(0)}</div></div>
-      <div class="readout-col"><div class="readout-label">Consumer Surplus</div><div class="readout-val" style="color:#14568c">$${CS.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Riders</div><div class="readout-val">${Q.toFixed(1)} (was ${Qnorm.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">App revenue</div><div class="readout-val" style="color:var(--green)">$${TR.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Consumer Surplus</div><div class="readout-val" style="color:#14568c">$${CS.toFixed(2)}</div></div>
     </div>
     <div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-soft)">
-      ${Q<Qnorm?`<strong>${Qnorm-Q} riders priced out</strong> of the market.`:''}
-      ${TR>TRnorm?`Revenue up $${(TR-TRnorm).toFixed(0)} vs normal.`:`Revenue down $${(TRnorm-TR).toFixed(0)} vs normal.`}
+      ${Qnorm-Q>=0.05?`<strong>${(Qnorm-Q).toFixed(1)} riders priced out</strong> of the market.`:''}
+      ${Math.abs(TR-TRnorm)<0.005?'Revenue: no change vs normal.':TR>TRnorm?`Revenue up $${(TR-TRnorm).toFixed(2)} vs normal.`:`Revenue down $${(TRnorm-TR).toFixed(2)} vs normal.`}
     </div>`;
 
   /* Old / new / change readout. Baseline is the normal (non-surge) price
@@ -1611,8 +1635,8 @@ function v7Draw() {
     const CSnorm = 0.5*Qnorm*(Pchoke-Pnorm);
     ecDelta('v7-delta', [
       { label: 'Surge price',     old: Pnorm,  now: P,  prefix: '$' },
-      { label: 'Riders',          old: Qnorm,  now: Q,  dp: 0 },
-      { label: 'Uber Revenue',    old: TRnorm, now: TR, prefix: '$' },
+      { label: 'Riders',          old: Qnorm,  now: Q,  dp: 1 },
+      { label: 'App revenue',    old: TRnorm, now: TR, prefix: '$' },
       { label: 'Consumer Surplus', old: CSnorm, now: CS, prefix: '$' },
     ]);
   }

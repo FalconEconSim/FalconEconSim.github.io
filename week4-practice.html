@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>Week 4: Practice Problems - EC224</title>
+  <title>Week 4: Practice Problems · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
@@ -204,6 +204,7 @@ function genPoint() {
     question: `The demand function is \\(Q = ${a} - ${b}P\\). Compute the price elasticity of demand at \\(P = ${P}\\). Round to three decimal places.`,
     answerKey: edRound,
     tolerance: 0.005,
+    acceptAbs: true,   // |e_d| is accepted too, with a note about the sign
     inputLabel: 'e_d =',
     solution: {
       a, b, P, Q, ed: edRound, region, regionLabel, trEffect,
@@ -315,7 +316,7 @@ function genCS() {
         { label: 'Choke price (set Q=0)', math: `0 = ${a} - ${b}P \\implies P_{\\max} = ${Pmax}` },
         { label: 'Quantity at P*', math: `Q^* = ${a} - ${b}(${P}) = ${Q}` },
         { label: 'Area of CS triangle', math: `CS = \\tfrac{1}{2}\\times Q^*\\times (P_{\\max}-P^*) = \\tfrac{1}{2}\\times${Q}\\times(${Pmax}-${P}) = ${CSround}` },
-        { label: 'Interpretation', math: `\\text{Consumers gain \\$${CSround} of surplus - they collectively value these ${Q} units at \\$${CSround} more than they pay.}` },
+        { label: 'Interpretation', math: `\\text{Consumers gain \\$${CSround} of surplus: they collectively value these ${Q} units at \\$${CSround} more than they pay.}` },
       ]
     }
   };
@@ -391,16 +392,19 @@ function checkAnswer() {
   if (isNaN(val)) { fb.textContent = 'Please enter a number.'; fb.className = 'prob-feedback'; return; }
   attempts++;
   const diff = Math.abs(val - currentProb.answerKey);
-  if (diff <= currentProb.tolerance) {
+  const absOk = currentProb.acceptAbs && currentProb.answerKey < 0 && Math.abs(val + currentProb.answerKey) <= currentProb.tolerance;
+  if (diff <= currentProb.tolerance || absOk) {
     inp.classList.add('correct'); inp.classList.remove('wrong');
-    fb.textContent = ' Correct!';
+    fb.textContent = absOk && diff > currentProb.tolerance
+      ? ` Correct in absolute value. Remember that the elasticity of demand is negative, so the signed answer is ${currentProb.answerKey}.`
+      : ' Correct!';
     fb.className = 'prob-feedback ok';
     revealSolution();
     totalDone++;
     updateBadge();
   } else {
     inp.classList.add('wrong'); inp.classList.remove('correct');
-    fb.textContent = attempts >= 2 ? ` The answer is ${currentProb.answerKey}. See solution below.` : ' Not quite - try again.';
+    fb.textContent = attempts >= 2 ? ` The answer is ${currentProb.answerKey}. See solution below.` : ' Not quite, try again.';
     fb.className = 'prob-feedback err';
     if (attempts >= 2) { revealSolution(); totalDone++; updateBadge(); }
   }

@@ -187,7 +187,7 @@
       <h3>SR vs LR Cost Curves</h3>
     </div>
         <p class="fig-intro">
-      Short-run Marginal Cost (SMC), Average Variable Cost (AVC), Average Total Cost (ATC), and Average Fixed Cost (AFC) are drawn simultaneously. The Total Fixed Cost (TFC) slider shows how fixed costs shift ATC upward but leave SMC and AVC unchanged. A toggle overlays the Long-Run Average Cost (LRAC) for comparison. All five short-run curve properties in one diagram.
+      Short-run Marginal Cost (SMC), Average Variable Cost (AVC), Average Total Cost (ATC), and Average Fixed Cost (AFC) are drawn simultaneously. The Total Fixed Cost (TFC) slider shows how fixed costs shift ATC upward but leave SMC and AVC unchanged. A toggle overlays the Long-Run Average Cost (LRAC) for comparison. All four short-run cost curves in one diagram.
     </p>
       </div>
       <div class="fig-bay">
@@ -1736,6 +1736,13 @@ window._initFig610=function initFig610(){
     let acLo=Infinity, acHi=-Infinity;
     for(let q=0.5;q<=qmax;q+=0.5){const a=acFn(q); acLo=Math.min(acLo,a); acHi=Math.max(acHi,a);}
     const kind = acHi-acLo<1e-9 ? 'flat' : qstar<=0.6 ? 'rising' : qstar>=qmax-0.2 ? 'falling' : 'u';
+    /* The 0.05 grid only brackets the minimum (Steep read 2.85; the exact value is
+       sqrt(8) = 2.83), so refine it by ternary search inside that bracket. */
+    if(kind==='u'){
+      let lo=qstar-0.05, hi=qstar+0.05;
+      for(let i=0;i<60;i++){const m1=lo+(hi-lo)/3, m2=hi-(hi-lo)/3; if(acFn(m1)<acFn(m2)) hi=m2; else lo=m1;}
+      qstar=(lo+hi)/2; acstar=acFn(qstar);
+    }
     acmax=Math.min(acmax*1.15,acstar*5,200);
     if(acmax<10) acmax=10;
 

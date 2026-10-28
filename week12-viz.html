@@ -118,9 +118,9 @@
           <div class="ctrl-row">
       <div class="ctrl">
         <span class="ctrl-label">Fraction of peaches p: <span class="ctrl-value" id="v121-p-val">0.50</span></span>
-        <input type="range" id="v121-p" min="0" max="1" step="0.01" value="0.50" oninput="v121Draw()">
+        <input type="range" id="v121-p" min="0" max="1" step="0.003333333333333333" value="0.5" oninput="v121Draw()">
       </div>
-      <button class="btn" onclick="document.getElementById('v121-p').value=0.667;v121Draw()">Knife-edge (p* = ⅔)</button>
+      <button class="btn" onclick="document.getElementById('v121-p').value=String(2/3);v121Draw()">Knife-edge (p* = ⅔)</button>
     </div>
           <div class="fig-state" id="v121-readout"></div>
         </div>
@@ -176,9 +176,13 @@
 // ── FIG 12.1: lemons market ─────────────────────────────────────────────────
 function v121Draw() {
   var p = parseFloat(document.getElementById('v121-p').value);
-  document.getElementById('v121-p-val').textContent = p.toFixed(2);
-  var EWTP = 1200 + 1200 * p, reserve = 2000, pstar = 2 / 3;
+  // The slider steps in 1/300ths so it can land exactly on p* = 2/3.
+  var knife = Math.abs(p - 2 / 3) < 1e-6;
+  if (knife) p = 2 / 3;
+  document.getElementById('v121-p-val').textContent = knife ? '2/3' : p.toFixed(3);
+  var EWTP = knife ? 2000 : 1200 + 1200 * p, reserve = 2000, pstar = 2 / 3;
   var pooling = EWTP >= reserve;
+  var usd = function (v) { return '$' + Math.round(v).toLocaleString('en-US'); };
 
   var scX = d3.scaleLinear().domain([0, 1]).range([D3PAD.left, D3W - D3PAD.right]);
   var scY = d3.scaleLinear().domain([1000, 2600]).range([D3H - D3PAD.bottom, D3PAD.top]);
@@ -201,17 +205,19 @@ function v121Draw() {
   d3Halo(svg, scX(pstar), scY(1080), 'p* = ⅔', { color: EC.slate, size: 10 });
   // current p
   d3Dot(svg, scX(p), scY(EWTP), EC.indicator, 6);
-  d3Halo(svg, scX(p), scY(EWTP) - 12, '$' + EWTP.toFixed(0), { color: EC.indicator, size: 10 });
+  d3Halo(svg, scX(p), scY(EWTP) - 12, usd(EWTP), { color: EC.indicator, size: 10 });
 
   document.getElementById('v121-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">E[WTP]</div><div class="readout-val">$' + EWTP.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">E[WTP]</div><div class="readout-val">' + usd(EWTP) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Peach reserve</div><div class="readout-val">$2,000</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Outcome</div><div class="readout-val">' + (pooling ? 'Pooling' : 'Separating') + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Outcome</div><div class="readout-val">' + (knife ? 'Knife-edge' : pooling ? 'Pooling' : 'Separating') + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + (pooling ? EC.gain : EC.loss) + '">' +
-    (pooling
-      ? 'E[WTP] = $' + EWTP.toFixed(0) + ' clears the $2,000 reserve, so peach sellers stay: both types trade (pooling). Buyers of lemons overpay a little.'
-      : 'E[WTP] = $' + EWTP.toFixed(0) + ' is below the $2,000 reserve, so peach sellers exit. Only lemons trade, and the $400 gain from every peach sale is destroyed.') +
+    (knife
+      ? 'E[WTP] = $2,000 exactly equals the $2,000 reserve. Peach sellers are just willing to stay, so both types still trade, but any lower p tips the market into separating.'
+      : pooling
+      ? 'E[WTP] = ' + usd(EWTP) + ' clears the $2,000 reserve, so peach sellers stay: both types trade (pooling). Buyers of lemons overpay a little.'
+      : 'E[WTP] = ' + usd(EWTP) + ' is below the $2,000 reserve, so peach sellers exit. Only lemons trade, and the $400 gain from every peach sale is destroyed.') +
     '</p>';
 }
 
