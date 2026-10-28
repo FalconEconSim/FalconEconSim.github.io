@@ -76,17 +76,49 @@
 
   <!-- FIG 10.1 -->
   <section class="sec page fig-sec" id="sec-101">
+      <div class="fig-hd">
+        <span class="fig-n">Fig 10.1</span>
+        <h3>Cournot &amp; Stackelberg on the Best-Response Diagram</h3>
+      </div>
+      <figure class="film" id="film-10-1">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig101-cournot-poster.jpg" aria-label="Animation: Cournot best responses" aria-describedby="film-10-1-tx">
+            <source src="media/films/fig101-cournot.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 43s</span>
+          <span class="film-cap">With demand P = 120 - Q and zero costs, two firms take turns best-responding to each other's output, tracing a zig-zag that converges to the Cournot-Nash equilibrium of 40 units each at a price of $40. If firm A can commit first, it moves along B's best response to the Stackelberg point: A makes 60, B makes 30, and P = $30.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-10-1-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Two firms sell the same good. Market demand is P = 120 - Q, where Q is their combined output. Costs are zero. Each firm picks its output taking the other's as given.</li>
+              <li>B's best response: whatever A makes, B maximises profit on the demand that is left. The more A produces, the less B wants to produce.</li>
+              <li>A's best response is the mirror image. It is steeper on this graph only because A's output is on the horizontal axis.</li>
+              <li>Now let them take turns. Suppose A starts by making 10. B replies with its best response, 55: straight up to B's line.</li>
+              <li>A replies to 55 with 32.5, straight across to A's line. Then B replies, then A again. Every step is shorter than the one before.</li>
+              <li>The zig-zag ends where the lines cross. There each firm is already best-responding to the other, so neither wants to move: the Nash equilibrium. Together they make 80, so P = $40 and each firm earns $1,600.</li>
+              <li>If A can commit first, it picks the point on B's line it likes best: A makes 60, B replies with 30, and P = $30. A earns $1,800, B only $900. Moving first pays.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
       <div class="fig-prose">
-        <div class="fig-hd">
-      <span class="fig-n">Fig 10.1</span>
-      <h3>Cournot &amp; Stackelberg on the Best-Response Diagram</h3>
-    </div>
         <p class="fig-intro">
       Market demand is \(P = a - bQ\) with \(MC = 0\). Each firm&rsquo;s reaction curve gives its profit-maximising output
       as a function of the rival&rsquo;s. <strong>Pick a market demand</strong> to see how the reaction curves and the
       equilibrium shift. Then drag Firm A&rsquo;s output: Firm B always best-responds along its own reaction curve (the
       moving dot rides B&rsquo;s curve), but only where the two curves <em>cross</em> is A <em>also</em> best-responding,
-      the Cournot&ndash;Nash equilibrium. Away from that crossing the market is not at rest, so press
+      the Cournot-Nash equilibrium. Away from that crossing the market is not at rest, so press
       <strong>Watch adjustment</strong> and let the firms take turns best-responding: the staircase spirals into the
       Cournot point. Push A out to the Stackelberg quantity to see the first-mover advantage.
     </p>
@@ -231,7 +263,8 @@
       With identical products buyers go to whoever is cheapest. Market demand is \(Q = 120 - P\) and \(MC = \$20\). Your
       profit depends on your price relative to the rival&rsquo;s: price above the rival and you sell nothing; match and you
       split the market; undercut (while staying above cost) and you capture the whole market. Slide your price against a
-      fixed rival price and watch your best response, always to shave just below the rival, which is what drives price
+      fixed rival price and watch your best response: shave just below the rival (or, if the rival is above the monopoly price of $70,
+      simply charge $70), which is what drives price
       down to marginal cost.
     </p>
         <div class="insight-box red"><strong>The paradox: two firms are enough.</strong> Because the best response is always to undercut by a penny, any price above marginal cost is unstable, and price collapses to \(MC\) with zero profit, the perfectly competitive outcome from just two firms. The paradox breaks only when capacity is limited, products differ, or the game repeats.</div>
@@ -318,7 +351,14 @@ function v101Draw(overlay) {
   // the slider value (with B best-responding).
   var qA, qB, animating = overlay && overlay.length;
   if (animating) { qA = overlay[overlay.length - 1][0]; qB = overlay[overlay.length - 1][1]; }
-  else { qA = parseFloat(document.getElementById('v101-qa').value); qB = v101brB(qA); }
+  else {
+    qA = parseFloat(document.getElementById('v101-qa').value);
+    // The slider moves in whole units, but q* = a/3b is fractional for some
+    // demands (160/3 = 53.3). Snap to it so the Cournot readout is exact and
+    // both firms really do earn the same profit there.
+    if (Math.abs(qA - qStar) < 0.6) qA = qStar;
+    qB = v101brB(qA);
+  }
   var P = Math.max(0, a - b * (qA + qB)), piA = P * qA, piB = P * qB;
   document.getElementById('v101-qa-val').textContent = Math.round(qA);
 
@@ -354,7 +394,7 @@ function v101Draw(overlay) {
   var atC = Math.abs(qA - qStar) < 0.6, atS = Math.abs(qA - a / (2 * b)) < 0.6;
   var note = animating
     ? 'Best-response dynamics: each firm takes turns best-responding to the other. The staircase spirals into the Cournot crossing (' + qStar.toFixed(0) + ', ' + qStar.toFixed(0) + '), the stable equilibrium.'
-    : atC ? 'Both firms best-respond to each other: this is the Cournot&ndash;Nash equilibrium, each earning $' + piA.toFixed(0) + '.'
+    : atC ? 'Both firms best-respond to each other: this is the Cournot-Nash equilibrium, each earning $' + piA.toFixed(0) + '.'
     : atS ? 'Firm A commits to the Stackelberg quantity ' + qA.toFixed(0) + '; Firm B best-responds with ' + qB.toFixed(0) + '. A out-earns B ($' + piA.toFixed(0) + ' vs $' + piB.toFixed(0) + '), the first-mover advantage.'
     : 'Firm B is best-responding to A&rsquo;s choice, but A is off its own reaction curve, so this is not an equilibrium. Press Watch adjustment to see it converge.';
   var col = animating ? EC.indicator : (atC ? EC.gain : atS ? EC.primary : EC.slate);
@@ -388,9 +428,9 @@ function v102Draw() {
 
   // market-share bands under the beach line
   svg.append('rect').attr('x', sx(0)).attr('y', y - 26).attr('width', sx(mid) - sx(0)).attr('height', 26)
-    .attr('fill', FILL_CS).attr('stroke', 'none');
+    .attr('fill', a <= b ? FILL_CS : FILL_PS).attr('stroke', 'none');   // left band belongs to the left vendor
   svg.append('rect').attr('x', sx(mid)).attr('y', y - 26).attr('width', sx(1) - sx(mid)).attr('height', 26)
-    .attr('fill', FILL_PS).attr('stroke', 'none');
+    .attr('fill', a <= b ? FILL_PS : FILL_CS).attr('stroke', 'none');
   // beach line
   svg.append('line').attr('x1', sx(0)).attr('y1', y).attr('x2', sx(1)).attr('y2', y).attr('stroke', EC.slate).attr('stroke-width', 2);
   [0, 0.25, 0.5, 0.75, 1].forEach(function (t) {
@@ -407,7 +447,9 @@ function v102Draw() {
   d3Dot(svg, sx(a), y, STROKE_CS, 9); d3Halo(svg, sx(a), y - 16, 'Vendor A', { color: STROKE_CS, size: 10 });
   d3Dot(svg, sx(b), y, STROKE_PS, 9); d3Halo(svg, sx(b), y + 40, 'Vendor B', { color: STROKE_PS, size: 10 });
 
-  var aShare = (a <= b) ? mid : (1 - mid);
+  // Co-located vendors split the beach evenly; otherwise the left one gets
+  // everything up to the midpoint.
+  var aShare = (a === b) ? 0.5 : (a < b) ? mid : (1 - mid);
   var bShare = 1 - aShare;
   var atNash = Math.abs(a - 0.5) < 0.02 && Math.abs(b - 0.5) < 0.02;
   var note = atNash
@@ -495,7 +537,7 @@ function v104Draw() {
   };
   document.getElementById('v104-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">q_A, q_B</div><div class="readout-val">' + m.qA + ', ' + m.qB + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">q<sub>A</sub>, q<sub>B</sub></div><div class="readout-val">' + m.qA + ', ' + m.qB + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Total Q</div><div class="readout-val">' + Q + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Industry profit</div><div class="readout-val">$' + ind.toLocaleString() + '</div></div>' +
@@ -566,6 +608,7 @@ function v105Draw() {
   var share = p > pr ? '0% (priced out)' : p === pr ? '50% (split)' : '100% (undercut)';
   var verdict = p > pr ? 'Priced above the rival, you sell nothing: buyers all go to the cheaper seller.'
     : p === pr ? 'Matching the rival splits the market 50/50.'
+    : p <= MC ? 'Pricing at MC = $20 wins the whole market but earns nothing on it. This is where undercutting stops: once both firms charge $20, the Bertrand equilibrium, neither can gain by moving and both earn zero.'
     : 'You undercut and capture the whole market for $' + prof.toFixed(0) + '. But the rival now has exactly the same incentive to undercut you, so price keeps falling toward MC = $20.';
   document.getElementById('v105-readout').innerHTML =
     '<div class="readout-row">' +
@@ -584,5 +627,7 @@ document.addEventListener('DOMContentLoaded', function () { v101Draw(); v102Draw
 <script src="assets/nav.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 <script src="assets/figreset.js" defer></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
 </body>
 </html>

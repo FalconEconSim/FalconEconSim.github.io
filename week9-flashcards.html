@@ -135,7 +135,7 @@ const CARDS = [
 
   { id:5, type:"Def",
     q:"With unobservable heterogeneous consumers, what is an information rent? Use the gym example.",
-    a:"When a firm must charge every buyer the same fixed fee (because it cannot tell types apart), it sets F low enough to retain the low-demand type. The high-demand type would have paid more, so the surplus it keeps is an information rent, surplus the firm cannot extract because it lacks the information to identify and target that buyer.\n\nGym example (per-pair of one H and one L, p = MC):\n- CS_H = $162, CS_L = $50.\n- Uniform fee F = $50 keeps both: profit = 2 x 50 = $100, and Type H pockets an information rent of 162 - 50 = $112.\n- Excluding L (F = $162) earns only $81.\n\nThis is why firms invest in loyalty data and tiered memberships: any signal of type lets them claw back the rent." },
+    a:"When a firm must charge every buyer the same fixed fee (because it cannot tell types apart) and sets F low enough to retain the low-demand type, the high-demand type would have paid more, so the surplus it keeps is an information rent, surplus the firm cannot extract because it lacks the information to identify and target that buyer.\n\nGym example (per-pair of one H and one L, p = MC):\n- CS_H = $162, CS_L = $50.\n- Uniform fee F = $50 keeps both: profit = 2 x 50 = $100, and Type H pockets an information rent of 162 - 50 = $112.\n- Raising F to $162 sells only to H and earns $162, more than $100, so with one buyer of each type the firm would actually drop L. Keeping L pays only when low types are numerous: with three L per H, F = $50 earns 4 x 50 = $200 > $162.\n\nWhenever the low fee is the better choice, H keeps that rent. This is why firms invest in loyalty data and tiered memberships: any signal of type lets them claw back the rent." },
 
   { id:6, type:"Def",
     q:"What is a natural monopoly? What cost structure creates one?",
@@ -147,7 +147,7 @@ const CARDS = [
 
   { id:8, type:"Graph",
     q:"Name the four regulatory regimes for a natural monopoly and give the verdict on each.",
-    a:"1. Unregulated (MR = MC): low Q, high P. Profitable for the firm but the most inefficient outcome.\n\n2. MC pricing (P = MC): efficient quantity, DWL = 0, but P < AC so the firm loses money and needs a subsidy.\n\n3. AC pricing / Ramsey (P = AC): the firm breaks even, self-financing, at the cost of a small residual DWL. This is the second-best solution and the one regulators usually choose.\n\n4. Two-part (p = MC, F = fixed): efficient quantity AND self-financing, but the fixed fee drives consumer surplus to zero.\n\nThe dilemma in one line: MC pricing is efficient but loss-making; AC pricing is viable but slightly inefficient; two-part is both efficient and viable but extracts all CS." },
+    a:"1. Unregulated (MR = MC): low Q, high P. Profitable for the firm but the most inefficient outcome.\n\n2. MC pricing (P = MC): efficient quantity, DWL = 0, but P < AC so the firm loses money and needs a subsidy.\n\n3. AC pricing / Ramsey (P = AC): the firm breaks even, self-financing, at the cost of a small residual DWL. This is the second-best solution and the one regulators usually choose.\n\n4. Two-part (p = MC, F = fixed): efficient quantity AND self-financing, but every customer must pay the access fee. A regulator sets the fee just high enough to cover the fixed cost; an unregulated firm would push it up to take all of consumer surplus.\n\nThe dilemma in one line: MC pricing is efficient but loss-making; AC pricing is viable but slightly inefficient; two-part is both efficient and viable but relies on a flat fee that every customer pays." },
 
   { id:9, type:"Eq",
     q:"AC pricing solve. A broadband provider has TC = 40 + 2Q and faces P = 20 - Q. Under P = AC regulation, what quantity and price result?",
@@ -203,7 +203,7 @@ const CARDS = [
 
   { id:22, type:"Def",
     q:"Rank the pricing strategies from Weeks 8-9 by information needed and profit: uniform monopoly, third-degree, two-part, perfect price discrimination.",
-    a:"From least to most information, and least to most profit:\n\n1. Uniform monopoly, needs no information. Profit = pi_M. CS > 0, DWL > 0.\n\n2. Third-degree (market separation), needs to observe the buyer's GROUP. Profit > pi_M. CS > 0, DWL reduced.\n\n3. Two-part pricing, needs AGGREGATE demand only. Profit = 2 pi_M (linear demand). CS = 0, DWL = 0.\n\n4. Perfect price discrimination, needs each buyer's INDIVIDUAL WTP. Profit = CS_PC + pi_M (the whole pie). CS = 0, DWL = 0.\n\nHeadline: two-part pricing is the week's centrepiece, it doubles profit and achieves efficiency using only aggregate demand, with no need to observe individual types." }
+    a:"From least to most information, and least to most profit:\n\n1. Uniform monopoly, needs no information. Profit = pi_M. CS > 0, DWL > 0.\n\n2. Third-degree (market separation), needs to observe the buyer's GROUP. Profit > pi_M. CS > 0, DWL reduced.\n\n3. Two-part pricing, needs AGGREGATE demand only. Profit = 2 pi_M (linear demand). CS = 0, DWL = 0.\n\n4. Perfect price discrimination, needs each buyer's INDIVIDUAL WTP. Profit = the whole pie, CS_PC (with constant MC this is 2 pi_M under linear demand: equal to two-part profit when buyers are identical, and more once buyers differ). CS = 0, DWL = 0.\n\nHeadline: two-part pricing is the week's centrepiece, it doubles profit and achieves efficiency using only aggregate demand, with no need to observe individual types." }
 ];
 
 // engine
@@ -288,7 +288,12 @@ function setFilter(f){filter=f;rebuildDeck();render();}
 function restart(){rebuildDeck();render();}
 function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
 document.addEventListener('keydown',e=>{
+  // Leave typing in the Ask widget (or any field) alone, and only rate a card
+  // that is showing its answer, never past the end of the deck.
+  const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+  if(idx>=deck.length)return;
   if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(!flipped)return;
   if(e.code==='Digit1')rate('Hard');
   if(e.code==='Digit2')rate('Good');
   if(e.code==='Digit3')rate('Easy');

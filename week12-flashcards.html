@@ -143,7 +143,7 @@ const CARDS = [
 
   { id:7, type:"Eq",
     q:"Spence separating range. y_H = $100,000, y_L = $40,000, c_H(s) = s, c_L(s) = 3s. Derive both incentive constraints and state the separating range.",
-    a:"For a separating equilibrium, the high type signals (s* > 0) and the low type does not.\n\nLow type's constraint (must NOT want to mimic): staying at s = 0 beats faking s*:\ny_L - 0 >= y_H - 3s^{*}, so 3s^{*} >= 100,000 - 40,000 = 60,000, giving s^{*} >= 20 (in thousands).\n\nHigh type's constraint (must WANT to signal): signalling beats pretending to be low:\ny_H - s^{*} >= y_L - 0, so s^{*} <= 60,000 - ... i.e. s^{*} <= 60 (in thousands).\n\nSeparating range:\n\\[20 \\le s^{*} \\le 60\\]\nThe minimum-cost (Riley) equilibrium is s^{*} = 20.\n\nSince education here adds no productivity, any s* > 0 is pure social waste, showing how asymmetric information causes over-investment in credentials." },
+    a:"For a separating equilibrium, the high type signals (s* > 0) and the low type does not.\n\nLow type's constraint (must NOT want to mimic): staying at s = 0 beats faking s*:\ny_L - 0 >= y_H - 3s^{*}, so 3s^{*} >= 100,000 - 40,000 = 60,000, giving s^{*} >= 20 (in thousands).\n\nHigh type's constraint (must WANT to signal): signalling beats pretending to be low:\ny_H - s^{*} >= y_L - 0, so s^{*} <= 100,000 - 40,000 = 60,000, giving s^{*} <= 60 (in thousands).\n\nSeparating range:\n\\[20 \\le s^{*} \\le 60\\]\nThe minimum-cost (Riley) equilibrium is s^{*} = 20.\n\nSince education here adds no productivity, any s* > 0 is pure social waste, showing how asymmetric information causes over-investment in credentials." },
 
   { id:8, type:"Eq",
     q:"State the optimal performance weight in the principal-agent model and interpret its comparative statics.",
@@ -248,7 +248,12 @@ function setFilter(f){filter=f;rebuildDeck();render();}
 function restart(){rebuildDeck();render();}
 function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
 document.addEventListener('keydown',e=>{
+  // Leave typing in the Ask widget (or any field) alone, and only rate a card
+  // that is showing its answer, never past the end of the deck.
+  const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+  if(idx>=deck.length)return;
   if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(!flipped)return;
   if(e.code==='Digit1')rate('Hard');
   if(e.code==='Digit2')rate('Good');
   if(e.code==='Digit3')rate('Easy');

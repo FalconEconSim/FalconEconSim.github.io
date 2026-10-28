@@ -1097,8 +1097,8 @@ function initICExplorer() {
   document.getElementById('ic-type-btns').addEventListener('click', function(e) {
     var btn=e.target.closest('.type-btn');
     if (!btn) return;
-    document.querySelectorAll('#ic-type-btns .type-btn').forEach(function(b){b.classList.remove('on');});
-    btn.classList.add('on');
+    document.querySelectorAll('#ic-type-btns .type-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
     var type=btn.dataset.type;
     document.getElementById('alpha-ctrl').style.display = type==='cobb'?'':'none';
     /* Animated crossfade between preference types */
@@ -1251,7 +1251,8 @@ function redrawIC2DAtU0(type, alpha, u0) {
           var a = icU0State.alpha;
           var slope = -(a * gy) / ((1 - a) * gx);
           var offY = Math.abs(slope) > 1.5 ? 0.15 : 0.45;
-          return Math.min(gy + offY, 12.5);
+          /* +0.3: the label is anchored by its middle (see anchorY below) */
+          return Math.min(gy + offY + 0.3, 12.8);
         },
         function() {
           if (!icGlider2D) return '';
@@ -1262,7 +1263,10 @@ function redrawIC2DAtU0(type, alpha, u0) {
           return 'MRS = ' + (a * gy / ((1 - a) * gx)).toFixed(3);
         }
       ], {fontSize: 16, color: C.amber, fixed: false, highlight: false,
-          anchorX: 'left', anchorY: 'bottom'});
+          anchorX: 'left', anchorY: 'middle'});
+      /* anchorY 'middle', not 'bottom': JSXGraph positions a bottom-anchored
+         HTML text with style.bottom, and figlabels.js then moves it by
+         writing style.top, which stretched the plate into a tall empty box. */
     }
     /* Reset glider to equal-goods point (x=y=u0) so MRS=1 by default */
     if (icGlider2D && icHighlightFn) {
@@ -1817,8 +1821,8 @@ function initShiftBoard() {
   document.getElementById('shift-btns').addEventListener('click',function(e){
     var btn=e.target.closest('.shift-btn');
     if (!btn) return;
-    document.querySelectorAll('#shift-btns .shift-btn').forEach(function(b){b.classList.remove('on');});
-    btn.classList.add('on');
+    document.querySelectorAll('#shift-btns .shift-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
     buildShiftBoard();
     if (shiftOverlay) shiftOverlay.kick();
   });
@@ -2030,6 +2034,10 @@ function buildOptimumBoard() {
       optBoard.create('segment',[[0,ys],[xs,ys]],{strokeColor:'#c9c2b6',strokeWidth:1,dash:2,fixed:true,highlight:false}),
       optBoard.create('segment',[[xs,0],[xs,ys]],{strokeColor:'#c9c2b6',strokeWidth:1,dash:2,fixed:true,highlight:false})
     );
+  }
+  /* Readouts and derivation run for corner solutions too (perfect
+     substitutes always land on an axis), not only for interior optima. */
+  {
     /* Write values to sidebar result bar */
     var elXs=document.getElementById('opt-x-star');
     var elYs=document.getElementById('opt-y-star');
@@ -2585,37 +2593,47 @@ function buildICCross() {
   crossObjects.forEach(function(o){try{crossBoard.removeObject(o,false);}catch(e){}});
   crossObjects = [];
 
-  var u1 = 7;  /* Outer IC fixed at U=7 */
+  var u1 = 7;  /* IC2 (steel) fixed: X^0.5 Y^0.5 = 7 */
   var u2 = parseFloat(document.getElementById('iccross-u2').value);
   var a = 0.5, b = 0.5;
+  /* IC1 (amber) is drawn with a different shape (X^0.3 Y^0.7 = u2). Two
+     Cobb-Douglas curves with the SAME exponents can never cross, however far
+     one is pushed, so a same-shape pair could not show the contradiction. */
+  var a1 = 0.3, b1 = 0.7;
+  function y2(x){ return Math.pow(u1/Math.pow(x,a),1/b); }
+  function y1(x){ return Math.pow(u2/Math.pow(x,a1),1/b1); }
 
-  /* Outer IC (blue, fixed) */
+  /* IC2 (steel, fixed) */
   var ic1 = crossBoard.create('functiongraph', [function(x){
-    return x > 0.1 ? Math.pow(u1/Math.pow(x,a),1/b) : NaN;
+    return x > 0.1 ? y2(x) : NaN;
   }, 0.1, 14], { strokeColor: EC.steel, strokeWidth: 3, highlight: false });
   crossObjects.push(ic1);
 
-  /* Inner IC (amber, moveable) */
+  /* IC1 (amber, moveable) */
   var ic2 = crossBoard.create('functiongraph', [function(x){
-    return x > 0.1 ? Math.pow(u2/Math.pow(x,a),1/b) : NaN;
+    return x > 0.1 ? y1(x) : NaN;
   }, 0.1, 14], { strokeColor: EC.amber, strokeWidth: 3, highlight: false });
   crossObjects.push(ic2);
+
+  /* Where they cross: y1 = y2  =>  x^(1/b - a1/b1) = u1^(1/b) / u2^(1/b1) */
+  var xA = Math.pow(Math.pow(u1,1/b) / Math.pow(u2,1/b1), 1/(a/b - a1/b1));
+  var yA = y2(xA);
 
   /* Curve-name labels - D3 force-label overlay (gold-standard S6/S8 pattern),
      anchored on each curve near its right end. Replaces the old fixed
      JSXGraph text labels (which could overlap as the inner curve moves). */
   if (crossOverlay) {
     crossOverlay.setLabels([
-      {id:'IC2', color:EC.steel, label:'IC2 (U=7)', lw:60,
-        ux:12.5, uy:Math.pow(u1/Math.pow(12.5,a),1/b)},
-      {id:'IC1', color:EC.amber, label:'IC1 (U='+u2.toFixed(1)+')', lw:64,
-        ux:12.5, uy:Math.pow(u2/Math.pow(12.5,a),1/b)}
+      {id:'IC2', color:EC.steel, label:'IC2', lw:30,
+        ux:11.2, uy:y2(11.2)},
+      {id:'IC1', color:EC.amber, label:'IC1', lw:30,
+        ux:13.8, uy:y1(13.8)}
     ]);
     /* When the slider pushes IC1 past IC2 the two anchors swap vertical
        order; swap the label boxes' current positions in step so the force
        layout doesn't strand each label beside the other curve with the
        connectors crossed (layout hysteresis). */
-    var nowAbove = u2 >= u1;
+    var nowAbove = y1(12.5) >= y2(12.5);
     if (prevICCrossAbove !== null && nowAbove !== prevICCrossAbove) {
       var icNodes = crossOverlay.sim.nodes(), nIC1 = null, nIC2 = null;
       icNodes.forEach(function(d){
@@ -2631,38 +2649,36 @@ function buildICCross() {
     prevICCrossAbove = nowAbove;
   }
 
-  /* Check for crossing: ICs cross when u2 > u1 (ic2 above ic1) at some x */
-  var crossed = u2 >= u1;
+  /* The curves have crossed once the crossing point is on the board */
+  var crossed = xA > 0.3 && xA < 14 && yA > 0.3 && yA < 15;
 
   if (crossed) {
-    /* ICs are equal or above: highlight contradiction */
-    var xcross = 5;
-    var ycross = Math.pow(u1/Math.pow(xcross,a),1/b);
-
-    /* Point A at crossing zone */
-    var ptA = crossBoard.create('point', [xcross, ycross], {
+    /* A: the crossing point, on both curves */
+    var ptA = crossBoard.create('point', [xA, yA], {
       name:'A', size:6, fillColor:EC.red, strokeColor:'#fff', strokeWidth:2,
       fixed:true, withLabel:true, label:{fontSize: 16,color:EC.red,offset:[5,5]}
     });
     crossObjects.push(ptA);
 
-    /* Point B on outer IC */
-    var bx = 9;
-    var ptB = crossBoard.create('point', [bx, Math.pow(u1/Math.pow(bx,a),1/b)], {
-      name:'B', size:6, fillColor:EC.steel, strokeColor:'#fff', strokeWidth:2,
-      fixed:true, withLabel:true, label:{fontSize: 16,color:EC.steel,offset:[5,5]}
+    /* B and C share one X, away from A; B is on whichever curve is higher
+       there, C directly below it on the other. So B has the same X and
+       strictly more Y than C. */
+    var xBC = xA > 8 ? Math.max(0.8, xA - 4) : xA + 3;
+    var amberHigh = y1(xBC) > y2(xBC);
+    var yB = amberHigh ? y1(xBC) : y2(xBC), yC = amberHigh ? y2(xBC) : y1(xBC);
+    var bCol = amberHigh ? EC.amber : EC.steel, cCol = amberHigh ? EC.steel : EC.amber;
+    var nameB = amberHigh ? 'IC1' : 'IC2', nameC = amberHigh ? 'IC2' : 'IC1';
+    crossObjects.push(crossBoard.create('segment', [[xBC, yC], [xBC, yB]], {
+      strokeColor:'#8b95a5', strokeWidth:1, dash:2, fixed:true, highlight:false
+    }));
+    var ptB = crossBoard.create('point', [xBC, yB], {
+      name:'B', size:6, fillColor:bCol, strokeColor:'#fff', strokeWidth:2,
+      fixed:true, withLabel:true, label:{fontSize: 16,color:bCol,offset:[5,5]}
     });
     crossObjects.push(ptB);
-
-    /* Point C on inner IC - slide right along the curve so it stays on
-       the visible board (y <= 13) even when u2 is large */
-    var cx = 3;
-    if (Math.pow(u2/Math.pow(cx,a),1/b) > 13) {
-      cx = Math.pow(u2 / Math.pow(13, b), 1/a);
-    }
-    var ptC = crossBoard.create('point', [cx, Math.pow(u2/Math.pow(cx,a),1/b)], {
-      name:'C', size:6, fillColor:EC.amber, strokeColor:'#fff', strokeWidth:2,
-      fixed:true, withLabel:true, label:{fontSize: 16,color:EC.amber,offset:[5,5]}
+    var ptC = crossBoard.create('point', [xBC, yC], {
+      name:'C', size:6, fillColor:cCol, strokeColor:'#fff', strokeWidth:2,
+      fixed:true, withLabel:true, label:{fontSize: 16,color:cCol,offset:[5,5]}
     });
     crossObjects.push(ptC);
 
@@ -2670,9 +2686,9 @@ function buildICCross() {
     var statusEl = document.getElementById('iccross-status');
     if (statusEl) {
       statusEl.innerHTML = '<strong style="color:var(--d-second)">Contradiction!</strong><br>'
-        + 'A is on both ICs: A ~ B (same IC2) and A ~ C (same IC1).<br>'
-        + 'By transitivity: B ~ C. But B has more of both goods than C.<br>'
-        + 'More of a good always raises utility. This is impossible.';
+        + 'A is on both ICs: A ~ B (same ' + nameB + ') and A ~ C (same ' + nameC + ').<br>'
+        + 'By transitivity: B ~ C. But B has the same X as C and more Y.<br>'
+        + 'More of a good always raises utility, so B must be preferred to C. This is impossible.';
       statusEl.className = 'contradiction-flash';
       statusEl.style.background = '#fff0f0';
       statusEl.style.borderColor = EC.red;
@@ -2682,7 +2698,7 @@ function buildICCross() {
   } else {
     var statusEl = document.getElementById('iccross-status');
     if (statusEl) {
-      statusEl.innerHTML = 'The curves are separated. IC2 (outer) represents higher utility. Slide right to make them cross and trigger the contradiction.';
+      statusEl.innerHTML = 'The curves are separated: every bundle on IC2 (outer) is preferred to the bundles on IC1. Slide right to make them cross and trigger the contradiction.';
       statusEl.style.background = 'var(--off-white)';
       statusEl.style.borderColor = 'var(--rule-strong)';
       statusEl.style.color = 'inherit';
@@ -3200,7 +3216,7 @@ function buildCornerExplorer() {
                 </div>
               </div>
               <!-- Info panel below the two canvases -->
-              <div class="ic-info-bottom" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:1rem 1.2rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">
+              <div class="ic-info-bottom" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;padding:1rem 1.2rem;background:#f8f9fb;border-bottom:1px solid var(--rule-strong);">
                 <div class="readout-row">
                   <span class="readout-label">Preference Type</span>
                   <span class="stat-val accent" id="ic-type-label">Cobb-Douglas</span>
@@ -3343,7 +3359,7 @@ function buildCornerExplorer() {
         </p>
         <div class="lo-callout">
           <span class="lo-label">Economic Intuition - LO 6: Shifts vs. Pivots</span>
-          An <strong>income change</strong> is a parallel shift: it multiplies both intercepts by the same factor (1 + Δ%) so the slope −P_X/P_Y is unchanged. A <strong>price change</strong> pivots the line around the unchanged intercept: raising P_X rotates the line inward around the fixed Y-intercept (I/P_Y stays constant, I/P_X falls). The key test: did the slope change? If yes → price change. If no → income change.
+          An <strong>income change</strong> is a parallel shift: it multiplies both intercepts by the same factor (1 + Δ%) so the slope \(-P_X/P_Y\) is unchanged. A <strong>price change</strong> pivots the line around the unchanged intercept: raising \(P_X\) rotates the line inward around the fixed Y-intercept (\(I/P_Y\) stays constant, \(I/P_X\) falls). The key test: did the slope change? If yes → price change. If no → income change.
         </div>
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%">
         <table>
@@ -3356,6 +3372,7 @@ function buildCornerExplorer() {
             <tr><td>$P_X$ ↓</td><td>Fixed</td><td>Moves out</td><td>Flatter</td><td>Pivot out</td></tr>
             <tr><td>$P_X$ ↑</td><td>Fixed</td><td>Moves in</td><td>Steeper</td><td>Pivot in</td></tr>
             <tr><td>$P_Y$ ↓</td><td>Moves out</td><td>Fixed</td><td>Steeper</td><td>Pivot out</td></tr>
+            <tr><td>$P_Y$ ↑</td><td>Moves in</td><td>Fixed</td><td>Flatter</td><td>Pivot in</td></tr>
           </tbody>
         </table>
         </div>
@@ -3436,6 +3453,37 @@ function buildCornerExplorer() {
            SECTION 4: CONSUMER OPTIMUM
            ══════════════════════════════════════════════════ -->
       <section class="sec page fig-sec" id="sec-optimum">
+      <div class="fig-hd"><span class="fig-n">Fig 2.5</span><h3>Consumer Optimum, Find the Best Bundle</h3></div>
+      <figure class="film" id="film-2-5">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig25-consumer-optimum-poster.jpg" aria-label="Animation: Finding the best bundle" aria-describedby="film-2-5-tx">
+            <source src="media/films/fig25-consumer-optimum.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 36s</span>
+          <span class="film-cap">A consumer with U = X^0.5 Y^0.5, income $80 and prices $5 and $4 walks along her budget line. Wherever the indifference curve is steeper or flatter than the budget line she can reach a higher curve, and she settles at X* = 8, Y* = 10, where MRS = PX / PY = 1.25.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-2-5-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Income is $80, X costs $5 and Y costs $4. The budget line's slope is the price ratio PX / PY = 1.25: the market trades 1.25 units of Y for one more X.</li>
+              <li>Start at X = 2, Y = 17.5. The indifference curve here is much steeper than the budget line: MRS = 8.75. She would give up 8.75 Y for one more X, but the market asks only 1.25.</li>
+              <li>So she trades Y for X along the budget line. Each step lands on a higher indifference curve: utility rises while the MRS falls toward 1.25.</li>
+              <li>Now start on the other side, at X = 14, Y = 2.5 (the same indifference curve as before). Here the curve is flatter than the budget line: MRS = 0.18, below 1.25. X is worth less to her than it costs, so she buys less X and more Y.</li>
+              <li>The walk stops where the two slopes match: MRS = PX / PY = 1.25. The indifference curve just touches the budget line at X* = 8, Y* = 10, the highest curve she can afford.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
       <div class="fig-prose">
         <div class="sec-hd">
           <span class="sec-n">§ 2.7</span>
@@ -3461,7 +3509,7 @@ function buildCornerExplorer() {
         </div>
         <div class="lo-callout">
           <span class="lo-label">Economic Intuition - LO 7: Why Tangency is Optimal</span>
-          At any non-tangency point on the budget line, the IC slope (MRS) ≠ budget line slope (P_X/P_Y). If MRS &gt; P_X/P_Y, the consumer values X more than markets do - they should buy more X. They keep adjusting until MRS = P_X/P_Y. At the tangency, the personal willingness to trade (MRS) exactly matches the market's trade-off (price ratio). No further reallocation can improve utility. Watch the figure: the optimal IC is tangent to the budget line; the ICs above are unaffordable; the ICs below are sub-optimal.
+          At any non-tangency point on the budget line, the IC slope (MRS) ≠ budget line slope (\(P_X/P_Y\)). If MRS &gt; \(P_X/P_Y\), the consumer values X more than markets do - they should buy more X. They keep adjusting until MRS = \(P_X/P_Y\). At the tangency, the personal willingness to trade (MRS) exactly matches the market's trade-off (price ratio). No further reallocation can improve utility. Watch the figure: the optimal IC is tangent to the budget line; the ICs above are unaffordable; the ICs below are sub-optimal.
         </div>
         <div class="callout common-mistake" style="margin-top:1.5rem">
           <div class="callout-label">Common Mistake</div>
@@ -3470,7 +3518,6 @@ function buildCornerExplorer() {
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
-          <div class="fig-hd"><span class="fig-n">Fig 2.5</span><h3>Consumer Optimum, Find the Best Bundle</h3></div>
           <div id="sec-optimum-viz" style="scroll-margin-top:70px">
           
             
@@ -3498,7 +3545,7 @@ function buildCornerExplorer() {
               </div>
               <div class="ctrl" id="opt-alpha-ctrl">
                 <label><span class="tip-icon" data-tip="a is the spending share on X. X* = aI/Px and Y* = (1-a)I/Py. Higher a shifts the optimum toward more X and less Y. The indifference curves tilt: steeper ICs reflect stronger preference for X.">i</span> \(\alpha\)&nbsp;<span class="ctrl-val" id="opt-alpha-val">0.5</span></label>
-                <input type="range" id="opt-alpha" min="0.1" max="0.9" step="any" value="0.5" title="Alpha a: spending share on X = a. Higher a ? more X at the optimum. ICs become steeper." />
+                <input type="range" id="opt-alpha" min="0.1" max="0.9" step="any" value="0.5" title="Alpha a: spending share on X = a. Higher a means more X at the optimum. ICs become steeper." />
               </div>
             </div>
                         <div class="two-col-panels chart-plus-readout">
@@ -3553,7 +3600,7 @@ function buildCornerExplorer() {
           <h2>Marginal Utility per Dollar</h2>
         </div>
         <p class="fig-intro">
-          The tangency condition $P_X/P_Y = MU_X/MU_Y$ can be rearranged to show the same optimality in a different form. Dividing both sides by prices gives the marginal utility per dollar condition:
+          The tangency condition $P_X/P_Y = MU_X/MU_Y$ can be rearranged to show the same optimality in a different form. Cross-multiplying gives the marginal utility per dollar condition:
         </p>
         <div class="math-block">
           <div class="math-label">Marginal Utility per Dollar Condition (rearranged tangency)</div>
@@ -3647,8 +3694,8 @@ function buildCornerExplorer() {
         </div>
 
         <div class="lo-callout" style="margin-top:1.5rem">
-          <span class="lo-label">Economic Intuition - The Income Expansion Path &amp; Engel’s Law</span>
-          For Cobb-Douglas preferences the <strong>income expansion path</strong> is always a straight ray through the origin: as income doubles, both X* and Y* exactly double and the bundle moves proportionally outward. This is what economists call <strong>homotheticity</strong>. The fixed spending-share property ($\alpha/(\alpha+\beta)$ on X, always) is its signature: no matter how rich or poor the consumer, the fraction of income allocated to each good stays constant. When a government macro-model assumes that households spend a fixed share of income on food regardless of income level, they are embedding Cobb-Douglas preferences.
+          <span class="lo-label">Economic Intuition - The Income Expansion Path &amp; Homotheticity</span>
+          For Cobb-Douglas preferences the <strong>income expansion path</strong> is always a straight ray through the origin: as income doubles, both X* and Y* exactly double and the bundle moves proportionally outward. This is what economists call <strong>homotheticity</strong>. The fixed spending-share property ($\alpha/(\alpha+\beta)$ on X, always) is its signature: no matter how rich or poor the consumer, the fraction of income allocated to each good stays constant. When a model assumes that households spend a fixed share of income on each good regardless of income level, it is embedding Cobb-Douglas preferences. Real spending on necessities does not always behave this way: Engel’s Law is the finding that the share of income spent on food falls as income rises, which Cobb-Douglas preferences cannot produce.
         </div>
 
         </section>
@@ -3746,7 +3793,7 @@ function buildCornerExplorer() {
               </div>
               <div style="font-size: var(--t-caption);color:var(--ink-light);line-height:1.6;background:#f8f9fb;border-radius:6px;padding:0.7rem 0.85rem;border:1px solid var(--rule-strong);">
                 <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform: none;letter-spacing: normal;color: var(--ink-soft);margin-bottom:5px;">The Contradiction</div>
-                If IC<sub>1</sub> and IC<sub>2</sub> cross at point A: bundle B on IC<sub>2</sub> satisfies A ~ B (same utility as A). Bundle C on IC<sub>1</sub> satisfies A ~ C. By transitivity, B ~ C. But B has <em>strictly more</em> of both goods than C, which is impossible under monotone preferences.
+                If IC<sub>1</sub> and IC<sub>2</sub> cross at point A, pick bundle B on one curve and bundle C directly below it on the other. B shares a curve with A, so A ~ B; C shares the other curve with A, so A ~ C. By transitivity, B ~ C. But B has the same X as C and <em>strictly more</em> Y, so under monotone preferences B must be strictly preferred to C. Contradiction.
               </div>
             </div>
           </div>
@@ -3969,5 +4016,7 @@ window.addEventListener('resize', function() {
 <script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 <script src="assets/figreset.js" defer></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
 </body>
 </html>

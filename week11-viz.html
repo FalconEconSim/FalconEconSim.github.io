@@ -64,11 +64,42 @@
 
   <!-- FIG 11.1 -->
   <section class="sec page fig-sec" id="sec-111">
+      <div class="fig-hd">
+        <span class="fig-n">Fig 11.1</span>
+        <h3>Negative Externality &amp; the Pigouvian Tax</h3>
+      </div>
+      <figure class="film" id="film-11-1">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig111-pigou-poster.jpg" aria-label="Animation: Negative externality and the Pigouvian tax" aria-describedby="film-11-1-tx">
+            <source src="media/films/fig111-pigou.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 35s</span>
+          <span class="film-cap">With demand (marginal benefit) MB = 100 - Q, private marginal cost PMC = 10 + Q and a marginal external cost of $20, the market produces 45 units, past the efficient 35 where social marginal cost meets MB, leaving a $100 deadweight loss. A Pigouvian tax of $20 per unit lifts private cost onto SMC, so the market chooses 35 units on its own and the deadweight loss disappears.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-11-1-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Demand is marginal benefit, MB = 100 - Q. The firm's private marginal cost is PMC = 10 + Q. The market settles where they cross: Q = 45 at a price of $55.</li>
+              <li>But every unit also harms third parties: a marginal external cost of $20. Add it on top of private cost to get the social marginal cost, SMC = PMC + MEC.</li>
+              <li>The efficient output counts every cost. It is where SMC = MB: 30 + Q = 100 - Q, so Q* = 35, where buyers value the last unit at $65.</li>
+              <li>The market ignores MEC, so it overproduces. Units 35 to 45 cost society more than buyers value them. The red triangle, 1/2 x 10 x 20 = $100, is the deadweight loss.</li>
+              <li>Now tax each unit $20, equal to MEC at Q*. The firm pays the external cost itself, so its cost curve, PMC + tax, rises onto SMC.</li>
+              <li>The market now lands on Q* = 35 by itself. Buyers pay $65, firms keep $45, and the deadweight loss is gone. Some pollution remains: the efficient amount is not zero.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
       <div class="fig-prose">
-        <div class="fig-hd">
-      <span class="fig-n">Fig 11.1</span>
-      <h3>Negative Externality &amp; the Pigouvian Tax</h3>
-    </div>
         <p class="fig-intro">
       Demand is \(P = 100 - Q\) and private marginal cost is \(PMC = 10 + Q\). Each unit also dumps a marginal external
       cost \(MEC\) on third parties, so social marginal cost is \(SMC = PMC + MEC\). The market produces where
@@ -196,7 +227,7 @@
     </p>
         <div class="explain">
       <div class="ex-h">Reading the graph</div>
-      <p>The left bar is the group&rsquo;s <em>total</em> value (value per person &times; group size \(N\)); the right bar is the good&rsquo;s fixed \(\$300\) cost. Providing the good is socially efficient whenever the total-value bar clears the cost bar. The marker on the left bar shows each individual&rsquo;s <em>own</em> value: when it sits below the cost line, no single person values the good enough to pay for it alone.</p>
+      <p>The left bar is the group&rsquo;s <em>total</em> value (value per person &times; group size \(N\)); the dashed line across both bars is the good&rsquo;s fixed \(\$300\) cost. Providing the good is socially efficient whenever the total-value bar clears the cost line. The right bar shows each individual&rsquo;s <em>own</em> value: when it sits below the cost line, no single person values the good enough to pay for it alone.</p>
       <div class="ex-h">The economics</div>
       <p>Because a public good is non-excludable, everyone enjoys it whether or not they chip in, so each person&rsquo;s best move is to wait for someone else to pay, to free-ride. The result is that a good clearly worth providing for the group as a whole can go unprovided, because no individual has the private incentive to fund it. The failure comes from non-excludability, not from the good being expensive: even when everyone would gain, the market under-provides. Real-world fixes coordinate the contributions (an all-or-nothing crowdfunding threshold) or simply finance the good through taxes.</p>
     </div>
@@ -293,7 +324,9 @@ function v111Draw() {
 
   d3Seg(svg, scX, scY, 0, 100, 100, 0, EC.primary, 3);           // MB (demand)
   d3Seg(svg, scX, scY, 0, 10, 90, 100, EC.gain, 2.5);            // PMC (supply)
-  if (MEC > 0) d3Seg(svg, scX, scY, 0, 10 + MEC, 90 - MEC, 100, EC.loss, 2.5, V111TAX ? '' : '6,4');  // SMC
+  // SMC runs to the top of the plot ($105), so at high MEC it still reaches the
+  // DWL triangle's top corner at Q_E = 45 instead of stopping short of it.
+  if (MEC > 0) d3Seg(svg, scX, scY, 0, 10 + MEC, 95 - MEC, 105, EC.loss, 2.5, V111TAX ? '' : '6,4');  // SMC
 
   d3Halo(svg, scX(82), scY(100 - 82 + 3), 'MB', { color: EC.primary, anchor: 'end', size: 10 });
   d3Halo(svg, scX(78), scY(10 + 78 - 3), 'PMC = supply', { color: EC.gain, anchor: 'end', size: 10 });
@@ -314,7 +347,9 @@ function v111Draw() {
     '<div class="readout-col"><div class="readout-label">Pigouvian tax t*</div><div class="readout-val">$' + MEC + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">DWL if unregulated</div><div class="readout-val">$' + dwl.toFixed(0) + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + (V111TAX ? EC.gain : EC.loss) + '">' +
-    (V111TAX
+    (MEC === 0
+      ? 'With no external cost, private and social cost coincide: the market output Q<sub>E</sub> = 45 is already efficient, so there is no deadweight loss and no tax is needed.'
+      : V111TAX
       ? 'With the tax t* = $' + MEC + ', private cost rises onto SMC and the market lands at Q* = ' + Qs.toFixed(1) + '. Deadweight loss is eliminated.'
       : 'The market overproduces at Q<sub>E</sub> = 45, past the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between costs society more than it is worth: a $' + dwl.toFixed(0) + ' deadweight loss.') +
     '</p>';
@@ -401,12 +436,14 @@ function v113Draw() {
   d3Dot(svg, scX(eqQ), scY(eqP), EC.indicator);
   d3Halo(svg, scX(eqQ) + 5, scY(6), (V113SUB ? 'Q* = ' : 'Qₑ = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10, anchor: 'start' });
   var sub = MEB, dwl = MEB * MEB / 4;
-  var verdict = V113SUB
+  var verdict = MEB === 0
+    ? 'With no external benefit, private and social benefit coincide: the market output Q<sub>E</sub> = 45 is already efficient, so there is no deadweight loss and no subsidy is needed.'
+    : V113SUB
     ? 'With the subsidy s* = $' + sub + ', output rises to the efficient Q* = ' + Qs.toFixed(1) + ' where MSB = MC, and the deadweight loss is eliminated.'
-    : 'The market produces only Q_E = 45 where MB = MC, short of the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between is worth more to society than it costs: a $' + dwl.toFixed(1) + ' deadweight loss from under-provision.';
+    : 'The market produces only Q<sub>E</sub> = 45 where MB = MC, short of the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between is worth more to society than it costs: a $' + dwl.toFixed(1) + ' deadweight loss from under-provision.';
   document.getElementById('v113-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">Market Q_E</div><div class="readout-val">45</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Market Q<sub>E</sub></div><div class="readout-val">45</div></div>' +
     '<div class="readout-col"><div class="readout-label">Social optimum Q*</div><div class="readout-val">' + Qs.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Pigouvian subsidy s*</div><div class="readout-val">$' + sub + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">DWL if unsubsidised</div><div class="readout-val">$' + dwl.toFixed(1) + '</div></div>' +
@@ -438,7 +475,7 @@ function v114Draw() {
   d3Halo(svg, scX(1.425), scY(0) + 16, 'Per person (v)', { color: EC.slate, size: 9 });
   if (aloneOK) { verdict = 'Each person values the good at $' + v + ' ≥ the $300 cost, so someone provides it alone: no free-rider problem here.'; col = EC.gain; }
   else if (efficient) { verdict = 'Providing is efficient: total value $' + total + ' exceeds the $300 cost, a $' + surplus + ' surplus. But no one values it enough to fund it alone, so each free-rides and the good is NOT provided, wasting $' + surplus + '.'; col = EC.loss; }
-  else { verdict = 'Total value $' + total + ' is below the $300 cost, so the good is not worth providing, and correctly is not.'; col = EC.slate; }
+  else { verdict = 'Total value $' + total + (total < c ? ' is below' : ' only equals') + ' the $300 cost, so providing the good creates no surplus, and it is correctly not provided.'; col = EC.slate; }
   document.getElementById('v114-readout').innerHTML =
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">Group size N</div><div class="readout-val">' + N + '</div></div>' +
@@ -449,10 +486,14 @@ function v114Draw() {
 }
 
 // ── FIG 11.5: Coase bargaining ──────────────────────────────────────────────
-var V115RIGHT = 'polluter';
+var V115RIGHT = null;   // no right chosen yet: the page opens at S* with neither button pressed
 function v115Right(who) {
+  // Pressing the chosen right again clears the choice and leaves the slider
+  // where it is. Without this the figure's Reset could never get back to the
+  // opening state (no right chosen, S = 25): re-clicking only re-applied it.
+  if (who === V115RIGHT) who = null;
   V115RIGHT = who;
-  document.getElementById('v115-s').value = (who === 'polluter') ? 50 : 0;
+  if (who) document.getElementById('v115-s').value = (who === 'polluter') ? 50 : 0;
   document.getElementById('v115-b-polluter').classList.toggle('revealed', who === 'polluter');
   document.getElementById('v115-b-victim').classList.toggle('revealed', who === 'victim');
   v115Draw();
@@ -505,5 +546,7 @@ document.addEventListener('DOMContentLoaded', function () { v111Draw(); v112Draw
 <script src="assets/nav.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 <script src="assets/figreset.js" defer></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
 </body>
 </html>

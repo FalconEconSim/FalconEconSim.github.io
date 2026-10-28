@@ -126,7 +126,7 @@
       and sets the fixed fee equal to the whole surplus, doubling uniform-monopoly profit and leaving zero deadweight
       loss. Raise \(p\) above marginal cost and both the surplus pie and the firm&rsquo;s total profit shrink.
     </p>
-        <div class="insight-box gold"><strong>The doubling result.</strong> At \(p=MC\) the fixed fee sweeps up the entire consumer-surplus triangle, which under linear demand is exactly twice the uniform-monopoly profit rectangle. That is why two-part pricing doubles profit using only aggregate demand, and why raising (p) above (MC) only shrinks the pie.</div>
+        <div class="insight-box gold"><strong>The doubling result.</strong> At \(p=MC\) the fixed fee sweeps up the entire consumer-surplus triangle, which under linear demand is exactly twice the uniform-monopoly profit rectangle. That is why two-part pricing doubles profit using only aggregate demand, and why raising \(p\) above \(MC\) only shrinks the pie.</div>
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
@@ -159,7 +159,7 @@
       loses money, and average-cost pricing breaks even at a small efficiency cost.
     </p>
         <div class="regime-note" id="v92-note"></div>
-        <div class="insight-box"><strong>The regulator&rsquo;s dilemma.</strong> MC pricing is efficient but loss-making; AC pricing breaks even but leaves a small deadweight loss; the unregulated firm is profitable but least efficient. No single regime is simultaneously efficient and self-financing without extracting all consumer surplus, which is why most utilities are regulated at average cost.</div>
+        <div class="insight-box"><strong>The regulator&rsquo;s dilemma.</strong> MC pricing is efficient but loss-making; AC pricing breaks even but leaves a small deadweight loss; the unregulated firm is profitable but least efficient. Only the two-part tariff is both efficient and self-financing, and it gets there by charging every customer an access fee: in the textbook version the fee takes the whole consumer surplus (here it is set just high enough to cover the $200 fixed cost). Because that flat fee is regressive and hard to set correctly, most utilities are regulated at average cost.</div>
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
@@ -248,11 +248,11 @@
         <p class="fig-intro">
       Instead of one price, a monopolist can charge a declining sequence of prices, a high rate for the first block of
       units and lower rates for later blocks (electricity and water tariffs work this way). Each extra block lets the
-      firm claw back more of the consumer-surplus triangle. Slide the number of blocks: with one block the firm captures
-      almost nothing, and as blocks multiply the staircase hugs the demand curve and profit approaches the perfect
+      firm claw back more of the consumer-surplus triangle. Slide the number of blocks: with one block, priced at marginal cost, the firm
+      captures nothing, and as blocks multiply the staircase hugs the demand curve and profit approaches the perfect
       price-discrimination maximum. Demand \(P = 3 - Q/10\), \(MC = \$1\).
     </p>
-        <div class="insight-box gold"><strong>More blocks, more surplus &mdash; and a limit.</strong> Block pricing is second-degree price discrimination: the firm never observes any individual&rsquo;s willingness to pay, it just offers a menu of rates and lets buyers sort themselves. Each added block converts a slice of consumer surplus into profit and pushes output toward the efficient quantity, so second-degree pricing typically <em>reduces</em> deadweight loss. Now push the slider to the limit: <strong>if each block shrank to a single unit &mdash; one price per consumer&rsquo;s unit &mdash; the staircase would sit exactly on the demand curve and capture the entire $20 surplus.</strong> That limiting case, one block per consumer, is <em>first-degree (perfect) price discrimination</em>. Block pricing is the practical, menu-based approximation to it.</div>
+        <div class="insight-box gold"><strong>More blocks, more surplus, and a limit.</strong> Block pricing is second-degree price discrimination: the firm never observes any individual&rsquo;s willingness to pay, it just offers a menu of rates and lets buyers sort themselves. Each added block converts a slice of consumer surplus into profit and pushes output toward the efficient quantity, so second-degree pricing typically <em>reduces</em> deadweight loss. Now push the slider to the limit: <strong>if each block shrank to a single unit, one price for every unit, the staircase would sit exactly on the demand curve and capture the entire $20 surplus.</strong> That limiting case, one price per unit, is <em>first-degree (perfect) price discrimination</em>. Block pricing is the practical, menu-based approximation to it.</div>
       </div>
       <div class="fig-bay">
         <div class="fig-bay-inner">
@@ -262,7 +262,7 @@
         <span class="ctrl-label">Number of price blocks: <span class="ctrl-value" id="v94-n-val">3</span></span>
         <input type="range" id="v94-n" min="1" max="10" step="1" value="3" oninput="v94Draw()">
       </div>
-      <button class="btn" onclick="document.getElementById('v94-n').value=1;v94Draw()">Single price</button>
+      <button class="btn" onclick="document.getElementById('v94-n').value=1;v94Draw()">One block</button>
       <button class="btn" onclick="document.getElementById('v94-n').value=10;v94Draw()">Many blocks</button>
     </div>
           <div class="fig-state" id="v94-readout"></div>
@@ -297,7 +297,7 @@ function v91Draw() {
   // DWL triangle from Qp to Qeff (red)
   if (p > MC) d3Poly(svg, scX, scY, [[Qp, p], [Qp, MC], [Qeff, MC]], FILL_DWL, STROKE_DWL);
 
-  d3Seg(svg, scX, scY, 0, a, 32, a - b * 32, EC.primary, 3);            // demand
+  d3Seg(svg, scX, scY, 0, a, a / b, 0, EC.primary, 3);                  // demand, ends on the Q axis
   d3Seg(svg, scX, scY, 0, MC, 32, MC, EC.slate, 2, '6,4');              // MC = AC
   d3Seg(svg, scX, scY, Qp, 0, Qp, p, EC.indicator, 1.5, '3,3');        // qty guide
 
@@ -308,6 +308,7 @@ function v91Draw() {
   if (p > MC && Qp > 0.4) d3Halo(svg, scX(Qp / 2), scY((p + MC) / 2), 'usage π', { color: STROKE_PS, size: 10 });
   if (p > MC) d3Halo(svg, scX((Qp + Qeff) / 2 + 1), scY(MC + 0.12), 'DWL', { color: STROKE_DWL, size: 10 });
   d3Halo(svg, scX(30), scY(MC + 0.12), 'MC = AC = $1', { color: EC.slate, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(27), scY(a - b * 27 + 0.14), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });
 
   var CS = 0.5 * (a - p) * Qp;                 // = F
   var usage = (p - MC) * Qp;
@@ -384,7 +385,7 @@ function v92Draw() {
     '<div class="readout-col"><div class="readout-label">Quantity</div><div class="readout-val">' + Q.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Avg cost</div><div class="readout-val">$' + AC.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">' + (isTP ? 'Net profit' : 'Profit') + '</div><div class="readout-val">$' + (isTP ? 0 : profit).toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">' + (isTP ? 'Net profit' : 'Profit') + '</div><div class="readout-val">' + (!isTP && profit < -0.5 ? '-$' + (-profit).toFixed(0) : '$' + (isTP ? 0 : Math.max(0, profit)).toFixed(0)) + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
 
   // Per-regime intuition + "what to look for" (Naveen's request): help students
@@ -513,7 +514,7 @@ function gmAnalyse() {
 
   // Worked best-response walkthrough (replaces the old one-line legend).
   var L = GM.labels, P = GM.pay, html = '';
-  html += '<div class="gw-head">Step 1 &mdash; <b class="a">' + L.a + '</b>&rsquo;s best responses</div>';
+  html += '<div class="gw-head">Step 1: <b class="a">' + L.a + '</b>&rsquo;s best responses</div>';
   for (var c = 0; c < 2; c++) {
     var top = P[0][c][0], bot = P[1][c][0];
     var pick = aTie[c] ? 'tie (' + L.r[0] + ' or ' + L.r[1] + ')' : L.r[aBR[c]];
@@ -522,7 +523,7 @@ function gmAnalyse() {
   }
   if (!aTie[0] && !aTie[1] && aBR[0] === aBR[1])
     html += '<div class="gw-step"><b class="a">' + L.a + '</b> has a <b>dominant strategy</b>: <b class="a">' + L.r[aBR[0]] + '</b> (best whatever ' + L.b + ' does).</div>';
-  html += '<div class="gw-head">Step 2 &mdash; <b class="b">' + L.b + '</b>&rsquo;s best responses</div>';
+  html += '<div class="gw-head">Step 2: <b class="b">' + L.b + '</b>&rsquo;s best responses</div>';
   for (var rr = 0; rr < 2; rr++) {
     var left = P[rr][0][1], right = P[rr][1][1];
     var pickb = bTie[rr] ? 'tie (' + L.c[0] + ' or ' + L.c[1] + ')' : L.c[bBR[rr]];
@@ -531,11 +532,13 @@ function gmAnalyse() {
   }
   if (!bTie[0] && !bTie[1] && bBR[0] === bBR[1])
     html += '<div class="gw-step"><b class="b">' + L.b + '</b> has a <b>dominant strategy</b>: <b class="b">' + L.c[bBR[0]] + '</b> (best whatever ' + L.a + ' does).</div>';
-  html += '<div class="gw-head">Step 3 &mdash; Nash equilibrium</div>';
+  html += '<div class="gw-head">Step 3: Nash equilibrium</div>';
   var sol;
   if (nash.length === 0) sol = 'No cell is a best response for both players, so there is <b>no pure-strategy Nash equilibrium</b> (players would keep switching).';
-  else if (nash.length === 1) sol = 'One cell, <b>' + nash[0] + '</b>, is a best response for both players at once &mdash; the unique <b>Nash equilibrium</b>.';
-  else sol = 'Two cells, <b>' + nash.join(' and ') + '</b>, are each best responses for both players &mdash; <b>two Nash equilibria</b> (a coordination problem: which one?).';
+  else if (nash.length === 1) sol = 'One cell, <b>' + nash[0] + '</b>, is a best response for both players at once: the unique <b>Nash equilibrium</b>.';
+  else if (nash.length === 2) sol = 'Two cells, <b>' + nash.join(' and ') + '</b>, are each best responses for both players, so there are <b>two Nash equilibria</b> (a coordination problem: which one?).';
+  // Only reachable when a student types tied payoffs into the matrix.
+  else sol = (nash.length === 4 ? 'All four cells' : 'Three cells') + ', <b>' + nash.join(', ') + '</b>, are best responses for both players because of tied payoffs, so there are <b>' + (nash.length === 4 ? 'four' : 'three') + ' Nash equilibria</b>.';
   html += '<div class="gw-step gw-sol">' + sol + '</div>';
   walk.innerHTML = html;
 
@@ -564,14 +567,16 @@ function v94Draw() {
   // one, whose price meets MC so its profit rectangle has zero height.
   svg.append('path').attr('d', stair.map(function (pt, i) { return (i ? 'L' : 'M') + scX(pt[0]) + ' ' + scY(pt[1]); }).join(' '))
     .attr('fill', 'none').attr('stroke', STROKE_PS).attr('stroke-width', 2.5);
-  if (n > 1) d3Halo(svg, scX(Qc - w / 2), scY(MC) - 8, 'last block: price = MC', { color: EC.slate, size: 8 });
-  d3Seg(svg, scX, scY, 0, a, 32, a - b * 32, EC.primary, 3);
+  // Below the MC line, ending just short of Q = 20, so the demand curve (which
+  // crosses MC at Q = 20) never runs through the text.
+  if (n > 1) d3Halo(svg, scX(Qc) - 6, scY(MC) + 16, 'last block: price = MC', { color: EC.slate, anchor: 'end', size: 8 });
+  d3Seg(svg, scX, scY, 0, a, a / b, 0, EC.primary, 3);   // demand, ends on the Q axis
   d3Seg(svg, scX, scY, 0, MC, 32, MC, EC.slate, 2, '6,4');
   d3Halo(svg, scX(27), scY(D(27) + 0.14), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });
   d3Halo(svg, scX(30), scY(MC + 0.14), 'MC = $1', { color: EC.slate, anchor: 'end', size: 10 });
   var profit = 20 * (n - 1) / n, pct = profit / 20 * 100;
   var verdict = n === 1
-    ? 'A single block priced so the whole market still buys captures nothing beyond cost, the competitive outcome.'
+    ? 'One block, priced at MC so the whole market still buys, captures nothing beyond cost: the competitive outcome. (A single-price monopolist would instead charge $2 and earn $10, as in Fig 9.1.)'
     : 'With ' + n + ' blocks the firm captures $' + profit.toFixed(1) + ', ' + pct.toFixed(0) + '% of the $20 perfect-discrimination maximum. Each block turns another slice of the surplus triangle into profit.' +
       (n >= 8 ? ' Keep going: in the limit of one block per unit (one price per consumer) the staircase meets the demand curve and captures all $20, that is first-degree (perfect) price discrimination.' : '');
   document.getElementById('v94-readout').innerHTML =

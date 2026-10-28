@@ -327,30 +327,47 @@
 
   <!-- ═══════════════════════════════════════════════════════ FIG 4.8 -->
   <section class="sec page" id="sec-4-8">
-    <div class="fig-hd">
-      <span class="fig-n">Fig 4.8</span>
-      <h3>Market Demand: Horizontal Aggregation</h3>
-    </div>
+      <div class="fig-hd">
+        <span class="fig-n">Fig 4.8</span>
+        <h3>Market Demand: Horizontal Aggregation</h3>
+      </div>
+      <figure class="film" id="film-4-8">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig48-market-demand-poster.jpg" aria-label="Animation: Market demand: horizontal summation" aria-describedby="film-4-8-tx">
+            <source src="media/films/fig48-market-demand.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 40s</span>
+          <span class="film-cap">A price line sweeps down through three panels. At each price, Consumer 1's and Consumer 2's quantities are laid end to end on the market panel, and the market demand curve kinks at $12, where Consumer 2 starts to buy.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-4-8-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Consumer 1 stops buying at a price of $30, Consumer 2 at $12. Market demand adds up what they buy at each price: it adds quantities sideways, not prices.</li>
+              <li>A price line sweeps down through all three panels. Above $30 nobody buys. Below $30 only Consumer 1 buys, so the market curve is Consumer 1's curve: Qm = 30 − P.</li>
+              <li>At $12 Consumer 2 reaches her choke price and starts to buy. From here on, every $1 cut adds 1 unit for Consumer 1 and 2 units for Consumer 2.</li>
+              <li>So the market curve kinks and gets flatter: Qm = 54 − 3P. The dashed line is where the market would have gone with Consumer 1 alone.</li>
+              <li>Take P = $6. Consumer 1 buys 24 and Consumer 2 buys 12. Lay the two quantities end to end on the market panel: 24 + 12 = 36.</li>
+              <li>Market demand is the horizontal sum of the individual curves: Qm = 30 − P above $12 and Qm = 54 − 3P below it. It kinks at $12, the price where Consumer 2 enters.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
     <p class="fig-intro" style="font-size:1rem;">
-      The market demand curve is the <em>horizontal sum</em> of individual demand curves. The animation below shows
+      The market demand curve is the <em>horizontal sum</em> of individual demand curves. The animation above shows
       Consumer 1 (Q = 30 &minus; P, choke price $30) and Consumer 2 (Q = 24 &minus; 2P, choke price $12). Starting from a high price
       and moving down, watch each consumer enter the market and see how the kink forms when Consumer 2 begins buying.
     </p>
 
-    <!-- Manim animation video -->
-    <div style="background:#000;border-radius:10px;overflow:hidden;margin-bottom:0.75rem;line-height:0;">
-      <video id="v48-video" data-autoplay controls playsinline preload="metadata"
-        style="width:100%;display:block;border-radius:10px;">
-        <source src="assets/market-demand.mp4" type="video/mp4">
-        Your browser does not support HTML5 video.
-      </video>
-    </div>
-    <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:1.2rem;flex-wrap:wrap;">
-      <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--ink-soft);">Playback speed:</span>
-      <button class="v48-speed-btn" data-rate="0.5" onclick="v48SetRate(0.5)" style="font-family:var(--font-mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">0.5x</button>
-      <button class="v48-speed-btn active-rate" data-rate="1" onclick="v48SetRate(1)" style="font-family:var(--font-mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--unit-ink);border-radius:5px;background:var(--accent-light);color:var(--unit-ink);cursor:pointer;">1x</button>
-      <button class="v48-speed-btn" data-rate="2" onclick="v48SetRate(2)" style="font-family:var(--font-mono);font-size:0.72rem;padding:0.22rem 0.6rem;border:1px solid var(--rule-strong);border-radius:5px;background:#fff;cursor:pointer;">2x</button>
-    </div>
 
     <!-- Three-panel interactive -->
     <div class="bleed-wide" style="margin-bottom:1.25rem;">
@@ -633,18 +650,6 @@ function observeCanvasResize(id, redrawFn) {
   new ResizeObserver(() => redrawFn()).observe(cvs.parentElement || cvs);
 }
 
-// Fig 4.8 speed control
-function v48SetRate(r) {
-  const vid = document.getElementById('v48-video');
-  if (vid) vid.playbackRate = r;
-  document.querySelectorAll('.v48-speed-btn').forEach(b => {
-    const on = parseFloat(b.dataset.rate) === r;
-    b.style.borderColor = on ? 'var(--unit-ink)' : 'var(--rule-strong)';
-    b.style.background  = on ? 'var(--accent-light)' : '#fff';
-    b.style.color       = on ? 'var(--unit-ink)' : '';
-  });
-}
-
 function toC(Q, P, W, H, xR, yR) {
   const pw = W - ML - MR, ph = H - MT - MB;
   return [ML + (Q - xR[0]) / (xR[1] - xR[0]) * pw,
@@ -810,8 +815,8 @@ function v1Draw() {
     ctx.restore();
     document.getElementById('v1-readout').innerHTML =
       `<div class="readout-row">
-        <div class="readout-col"><div class="readout-label">Point 1</div><div class="readout-val">P=${v1.P1.toFixed(1)}, Q=${Q1.toFixed(1)}</div></div>
-        <div class="readout-col"><div class="readout-label">Point 2</div><div class="readout-val">P=${v1.P2.toFixed(1)}, Q=${Q2.toFixed(1)}</div></div>
+        <div class="readout-col"><div class="readout-label">Point A</div><div class="readout-val">P=${v1.P1.toFixed(1)}, Q=${Q1.toFixed(1)}</div></div>
+        <div class="readout-col"><div class="readout-label">Point B</div><div class="readout-val">P=${v1.P2.toFixed(1)}, Q=${Q2.toFixed(1)}</div></div>
         <div class="readout-col"><div class="readout-label">Arc Elasticity</div><div class="readout-val" style="color:${color}">${eArc.toFixed(3)}</div></div>
       </div>
       <div class="verdict ${ae>1?'elastic':ae<1?'inelastic':'unit'}">
@@ -832,12 +837,12 @@ function v1Draw() {
     const ae1 = Math.abs(e1), ae2 = Math.abs(e2);
     document.getElementById('v1-readout').innerHTML =
       `<div class="readout-row">
-        <div class="readout-col"><div class="readout-label">Point 1 (e)</div><div class="readout-val" style="color:${eColor(e1)}">${e1.toFixed(3)}</div></div>
-        <div class="readout-col"><div class="readout-label">Point 2 (e)</div><div class="readout-val" style="color:${eColor(e2)}">${e2.toFixed(3)}</div></div>
+        <div class="readout-col"><div class="readout-label">Point A (e)</div><div class="readout-val" style="color:${eColor(e1)}">${e1.toFixed(3)}</div></div>
+        <div class="readout-col"><div class="readout-label">Point B (e)</div><div class="readout-val" style="color:${eColor(e2)}">${e2.toFixed(3)}</div></div>
       </div>
       <p style="margin-top:0.5rem; font-size:0.83rem; color:var(--ink-soft)">
-        Point 1 is <strong>${ae1>1?'elastic':ae1<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae1.toFixed(2)});
-        Point 2 is <strong>${ae2>1?'elastic':ae2<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae2.toFixed(2)}).
+        Point A is <strong>${ae1>1?'elastic':ae1<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae1.toFixed(2)});
+        Point B is <strong>${ae2>1?'elastic':ae2<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae2.toFixed(2)}).
       </p>`;
     dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
     dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
@@ -2041,12 +2046,18 @@ function v8Update() {
   const cLow  = Pk1<Pk2 ? c1 : c2;
   const sumA = c1.a+c2.a, sumB = c1.b+c2.b;
 
+  // Write "30 − P", not "30 − 1P", and "$12", not "$12.0"
+  const num = v => (Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : String(+v.toFixed(2)));
+  const term = (a, b) => num(a) + ' &minus; ' + (Math.abs(b - 1) < 1e-9 ? '' : num(b)) + 'P';
   const fn=document.getElementById('v8-functional');
   if(fn){
+    // With equal choke prices there is no one-consumer range to show
+    const midRow = Pkmax - Pkmin > 1e-9
+      ? `= ${term(cHigh.a, cHigh.b)} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if $${num(Pkmin)} &lt; P &le; $${num(Pkmax)}<br>`
+      : '';
     fn.innerHTML=`<strong>Market Demand Q<sub>m</sub>(P):</strong><br>
-= 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if P &gt; $${Pkmax.toFixed(1)}<br>
-= ${cHigh.a} &minus; ${cHigh.b}P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if $${Pkmin.toFixed(1)} &lt; P &le; $${Pkmax.toFixed(1)}<br>
-= ${sumA} &minus; ${sumB%1===0?sumB:sumB.toFixed(1)}P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if P &le; $${Pkmin.toFixed(1)}`;
+= 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if P &gt; $${num(Pkmax)}<br>
+${midRow}= ${term(sumA, sumB)} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if P &le; $${num(Pkmin)}`;
   }
 
   document.getElementById('v8-readout').innerHTML=
@@ -2134,6 +2145,7 @@ window.addEventListener('resize', redrawAll4);
   <script src="assets/ask-widget.js"></script>
   <script src="assets/deltabar.js"></script>
   <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
 <script src="assets/nav.js" defer></script>
 <script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>

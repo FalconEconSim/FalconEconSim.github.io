@@ -272,11 +272,43 @@
 
   <!-- FIG 8.4 -->
   <section class="sec page fig-sec" id="sec-84">
+      <div class="fig-hd">
+        <span class="fig-n">Fig 8.4</span>
+        <h3>Monopoly Two-Step Rule: Guided Diagram</h3>
+      </div>
+      <figure class="film" id="film-8-4">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig84-monopoly-poster.jpg" aria-label="Animation: Monopoly in two steps" aria-describedby="film-8-4-tx">
+            <source src="media/films/fig84-monopoly.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 41s</span>
+          <span class="film-cap">With demand P = 10 - Q and marginal cost $2, the monopolist sets MR = MC to choose Q = 4, then reads the price, $6, off the demand curve. Compared with competition (P = MC = $2, Q = 8), consumer surplus falls from $32 to $8: $16 becomes monopoly profit and $8 is deadweight loss.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-8-4-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>A single seller faces the whole market demand, P = 10 - Q. Each unit costs $2 to make.</li>
+              <li>To sell one more unit it must cut the price on every unit, so marginal revenue lies below demand. For a straight-line demand, MR starts at the same point and is twice as steep: it hits zero at Q = 5, half of 10.</li>
+              <li>Step 1: find the quantity. While MR is above MC, one more unit adds more to revenue than to cost, so keep going. Stop where MR = MC, at Q = 4.</li>
+              <li>Step 2: find the price. Go straight up from Q = 4 to the demand curve, never read it off MR. Buyers will pay $6 for 4 units.</li>
+              <li>Compare a competitive market. Price is driven down to marginal cost, P = MC = $2, and buyers take 8 units.</li>
+              <li>Under monopoly consumers keep only the small blue triangle. The gold rectangle, (6 - 2) x 4 = $16, is profit: a transfer from consumers to the firm.</li>
+              <li>The red triangle is the deadweight loss. Units 5 to 8 are worth more than $2 to buyers but never get made. That $8 is lost to everyone: 8 + 16 + 8 = 32.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
       <div class="fig-prose">
-        <div class="fig-hd">
-      <span class="fig-n">Fig 8.4</span>
-      <h3>Monopoly Two-Step Rule: Guided Diagram</h3>
-    </div>
         <p class="fig-intro">
       The single most-tested monopoly skill. <strong>Step 1:</strong> set MR = MC to find Q*<sub>M</sub>.
       <strong>Step 2:</strong> read the price <em>up to the demand curve</em>, never off MR. Walk the steps with the
@@ -446,7 +478,7 @@
         <p class="fig-intro">
       A monopolist selling in two separable markets sets <strong>MR&#8321; = MR&#8322; = MC</strong> to maximise total profit.
       Each market has its own demand and therefore its own price: the market where demand is <em>less elastic</em> always pays more.
-      Click &ldquo;Find Optimum&rdquo; to see the full derivation; use the curve pickers to explore different demand shapes.
+      Click &ldquo;Find Optimum&rdquo; to see the full derivation; use the demand-intercept sliders to explore different demands.
     </p>
         <div class="insight-box">
       <strong>Key insight:</strong> The price-discrimination rule is MR&#8321; = MR&#8322; = MC.
@@ -458,11 +490,11 @@
         <div class="fig-bay-inner">
           <div class="two-col-panels">
       <div class="fig-plot">
-        <div class="panel-label">Market 1 &middot; Inelastic (business)</div>
+        <div class="panel-label">Market 1 &middot; Business</div>
         <div class="demo-svg-wrap" id="cvs89a-wrap"></div>
       </div>
       <div class="fig-plot">
-        <div class="panel-label">Market 2 &middot; Elastic (leisure)</div>
+        <div class="panel-label">Market 2 &middot; Leisure</div>
         <div class="demo-svg-wrap" id="cvs89b-wrap"></div>
       </div>
     </div>
@@ -1088,7 +1120,7 @@ function v83DrawTariff(p,Pw,t){
   const {xS,yS,dyn}=p;
   dyn.selectAll('*').remove();
   v83SyncTicks(p,[]);
-  const Peff=Math.min(Pw+t,11.9), tAct=Peff-Pw;
+  const Peff=Math.min(Pw+t,12), tAct=Peff-Pw; /* a tariff that lifts the price to autarky ($12) is prohibitive: imports stop and price cannot rise further */
   const QS_free=Math.max(0,Pw-4), QD_free=20-Pw;
   const QS_eff=Math.max(0,Peff-4), QD_eff=20-Peff;
   const imports_eff=Math.max(0,QD_eff-QS_eff);
@@ -1146,7 +1178,7 @@ function v83Draw(){
     `Imports&nbsp;=&nbsp;${(QD_free-QS_free).toFixed(0)}&emsp;`+
     `Net gain&nbsp;=&nbsp;<strong style="color:var(--green);">+$${netTrade.toFixed(1)}</strong> (consumers gain more than producers lose)`;
   // Part B calculation box
-  const Peff=Math.min(Pw+t,11.9), tAct=Peff-Pw;
+  const Peff=Math.min(Pw+t,12), tAct=Peff-Pw; /* a tariff that lifts the price to autarky ($12) is prohibitive: imports stop and price cannot rise further */
   if(tAct>0.1){
     const QS_eff=Math.max(0,Peff-4), QD_eff=20-Peff, imp_eff=Math.max(0,QD_eff-QS_eff);
     const CS_eff=0.5*(20-Peff)*(20-Peff), PS_eff=0.5*QS_eff*QS_eff;
@@ -1155,12 +1187,12 @@ function v83Draw(){
     const dwl=0.5*tAct*((QD_free-QD_eff)+(QS_eff-QS_free));
     const net_tar=dCS_tar+dPS_tar+govRev;
     document.getElementById('v83-tariff-calc').innerHTML=
-      `<strong>Tariff welfare vs. free trade at P<sub>W</sub>&nbsp;=&nbsp;$${Pw.toFixed(0)}:</strong><br>`+
+      `<strong>Tariff welfare vs. free trade at P<sub>W</sub>&nbsp;=&nbsp;$${Pw.toFixed(2)}:</strong><br>`+
       `&Delta;CS&nbsp;=&nbsp;<strong style="color:var(--d-second);">&minus;$${Math.abs(dCS_tar).toFixed(1)}</strong>&emsp;`+
       `&Delta;PS&nbsp;=&nbsp;<strong style="color:var(--green);">+$${dPS_tar.toFixed(1)}</strong>&emsp;`+
       `Gov revenue&nbsp;=&nbsp;<strong>+$${govRev.toFixed(1)}</strong>&emsp;`+
       `DWL (2 triangles)&nbsp;=&nbsp;<strong style="color:var(--d-second);">&minus;$${dwl.toFixed(1)}</strong><br>`+
-      `Net welfare change&nbsp;=&nbsp;<strong style="color:var(--d-second);">&minus;$${Math.abs(net_tar).toFixed(1)}</strong>. The DWL is never recovered by anyone.`;
+      `Net welfare change&nbsp;=&nbsp;<strong style="color:var(--d-second);">&minus;$${Math.abs(net_tar).toFixed(1)}</strong>. The DWL is never recovered by anyone.`+(Pw+t>12?`<br><em>Prohibitive tariff:</em> any tariff above $${(12-Pw).toFixed(2)} stops all imports, so the price stays at the autarky level of $12 and tariff revenue is zero.`:'');
   }else{
     document.getElementById('v83-tariff-calc').textContent='Set a tariff above $0 to see the welfare cost.';
   }
@@ -1554,8 +1586,8 @@ function v89SetupPanel(wrapId,a,slopeB,label,aMax){
   return {svg,xS,yS,Pmax,Qmax,slopeB,a,mrLine,mrLbl,mcLine,unifLine,profitRect,vD,hD,dot,pLbl,epsLbl};
 }
 function v89Init(){
-  v89m1=v89SetupPanel('cvs89a-wrap',V89.a1,1,'D₁ (inelastic)',140);
-  v89m2=v89SetupPanel('cvs89b-wrap',V89.a2,0.5,'D₂ (elastic)',80);
+  v89m1=v89SetupPanel('cvs89a-wrap',V89.a1,1,'D₁ (business)',140);
+  v89m2=v89SetupPanel('cvs89b-wrap',V89.a2,0.5,'D₂ (leisure)',80);
   v89Draw();
 }
 function v89RebuildPanels(){
@@ -1569,8 +1601,8 @@ function v89RebuildPanels(){
   document.getElementById('v89-unif-btn').classList.remove('on');
   d3.select('#cvs89a-wrap').selectAll('*').remove();
   d3.select('#cvs89b-wrap').selectAll('*').remove();
-  v89m1=v89SetupPanel('cvs89a-wrap',a1,1,'D₁ (inelastic)',140);
-  v89m2=v89SetupPanel('cvs89b-wrap',a2,0.5,'D₂ (elastic)',80);
+  v89m1=v89SetupPanel('cvs89a-wrap',a1,1,'D₁ (business)',140);
+  v89m2=v89SetupPanel('cvs89b-wrap',a2,0.5,'D₂ (leisure)',80);
   v89Draw();
 }
 function v89Draw(){
@@ -1613,16 +1645,16 @@ function v89Draw(){
   let html='';
   if(showOpt){
     html=`<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">M1 &middot; inelastic</div><div class="readout-val" style="color:#14568c">P₁=$${P1.toFixed(0)}, Q₁=${Q1.toFixed(0)}</div></div>
-      <div class="readout-col"><div class="readout-label">M2 &middot; elastic</div><div class="readout-val" style="color:#14568c">P₂=$${P2.toFixed(0)}, Q₂=${Q2.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">M1 &middot; business</div><div class="readout-val" style="color:#14568c">P₁=$${P1.toFixed(0)}, Q₁=${Q1.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">M2 &middot; leisure</div><div class="readout-val" style="color:#14568c">P₂=$${P2.toFixed(0)}, Q₂=${Q2.toFixed(0)}</div></div>
       <div class="readout-col"><div class="readout-label">π discriminate</div><div class="readout-val" style="color:var(--gold)">$${piDisc.toFixed(0)}</div></div>
     </div>
     <div style="margin-top:0.5rem;font-size:0.82rem;line-height:1.85;background:#f8fafb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.7rem 1rem;">
       <strong>Step-by-step derivation:</strong><br>
       M1: MR₁ = ${a1} &minus; 2Q₁ = ${mc.toFixed(0)} &rarr; Q₁ = (${a1}&minus;${mc.toFixed(0)})/2 = <strong>${Q1.toFixed(1)}</strong>, P₁ = ${a1} &minus; Q₁ = <strong>$${P1.toFixed(1)}</strong><br>
       M2: MR₂ = ${a2} &minus; Q₂ = ${mc.toFixed(0)} &rarr; Q₂ = ${a2}&minus;${mc.toFixed(0)} = <strong>${Q2.toFixed(1)}</strong>, P₂ = ${a2} &minus; Q₂/2 = <strong>$${P2.toFixed(1)}</strong><br>
-      M1 elasticity: ε₁ = &minus;P₁/Q₁ = &minus;${P1.toFixed(0)}/${Q1.toFixed(0)} = <strong style="color:var(--d-second);">${eps1.toFixed(2)}</strong> (inelastic: |&epsilon;|&lt;1 &rarr; higher markup)<br>
-      M2 elasticity: ε₂ = &minus;2&middot;P₂/Q₂ = &minus;2&times;${P2.toFixed(0)}/${Q2.toFixed(0)} = <strong style="color:var(--green);">${eps2.toFixed(2)}</strong> (elastic: |&epsilon;|&gt;1 &rarr; lower markup)<br>
+      M1 elasticity: ε₁ = &minus;P₁/Q₁ = &minus;${P1.toFixed(0)}/${Q1.toFixed(0)} = <strong style="color:var(--d-second);">${eps1.toFixed(2)}</strong> (${Math.abs(eps1)<Math.abs(eps2)?'less elastic than M2 &rarr; higher markup':'more elastic than M2 &rarr; lower markup'})<br>
+      M2 elasticity: ε₂ = &minus;2&middot;P₂/Q₂ = &minus;2&times;${P2.toFixed(0)}/${Q2.toFixed(0)} = <strong style="color:var(--green);">${eps2.toFixed(2)}</strong> (${Math.abs(eps2)>Math.abs(eps1)?'more elastic than M1 &rarr; lower markup':'less elastic than M1 &rarr; higher markup'})<br>
       Lerner index: L₁=(P₁&minus;MC)/P₁=${L1.toFixed(2)}, L₂=(P₂&minus;MC)/P₂=${L2.toFixed(2)}. Higher L &rarr; greater market power &rarr; higher price.
     </div>`;
     if(v89uniform){const gain=piDisc-bestPi;html+=`<div style="margin-top:0.4rem;font-size:0.82rem;line-height:1.8;"><strong>Uniform price:</strong> Q(P)=(${a1}&minus;P)+2(${a2}&minus;P)=${a1+2*a2}&minus;3P &rarr; P*=<strong>$${bestP.toFixed(1)}</strong>, π=$${bestPi.toFixed(0)}.<br><strong style="color:var(--green);">Gain from price discrimination = $${gain.toFixed(0)}</strong>. The firm captures more surplus by charging each market a separate price.</div>`;}
@@ -1840,8 +1872,8 @@ function v811Draw(){
   // stack when their values cluster (P_A slider at an extreme made PA/PR/AC land
   // on the same row). Sort top-to-bottom and enforce a 13px minimum gap.
   var lab811 = [
-    { t: 'PA=$' + PA.toFixed(0), y: scY(PA), c: EC.slate, w: 700 },
-    { t: 'PR=$' + PR.toFixed(0), y: scY(PR), c: EC.slate, w: 700 },
+    { t: 'PA=$' + PA.toFixed(2), y: scY(PA), c: EC.slate, w: 700 },
+    { t: 'PR=$' + PR.toFixed(2), y: scY(PR), c: EC.slate, w: 700 },
     { t: 'AC=$' + AC_QR.toFixed(1), y: scY(AC_QR), c: EC.red, w: 600 }
   ].sort(function (a, b) { return a.y - b.y; });
   for (var _i = 1; _i < lab811.length; _i++) if (lab811[_i].y - lab811[_i - 1].y < 13) lab811[_i].y = lab811[_i - 1].y + 13;
@@ -1849,8 +1881,8 @@ function v811Draw(){
   // Quantity labels: own row below the x-axis tick numbers, haloed.
   d3HaloLabel(v811dyn,scX(QA),scY(0)+24,'QA='+QA.toFixed(0),{color:EC.slate,size:9,weight:600});
   d3HaloLabel(v811dyn,scX(QR),scY(0)+24,'QR='+QR.toFixed(0),{color:EC.slate,size:9,weight:600});
-  document.getElementById('v811-pa-val').textContent='$'+PA.toFixed(0);
-  document.getElementById('v811-pr-val').textContent='$'+PR.toFixed(0);
+  document.getElementById('v811-pa-val').textContent='$'+PA.toFixed(2);
+  document.getElementById('v811-pr-val').textContent='$'+PR.toFixed(2);
   const netColor=profit>0.5?EC.green:profit<-0.5?EC.red:EC.slate;
   const bothAboveAC=PA>AC_QR&&PR>AC_QR;
   const netMsg=Math.abs(profit)<1?
@@ -1913,7 +1945,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(window.renderMathInElement){
     // ignoredClasses keeps auto-render away from live readouts, whose dollar
     // amounts ("P*=$11, profit=$31") would otherwise pair up as $…$ math.
-    renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false,ignoredClasses:['viz-readout','welfare-table','readout-row','anchor-story','step-box']});
+    renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false,ignoredClasses:['viz-readout','welfare-table','readout-row','anchor-story','step-box','fig-state','film']});
   }
 });
 
@@ -1952,5 +1984,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <script src="assets/figplace.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 <script src="assets/figreset.js" defer></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
 </body>
 </html>

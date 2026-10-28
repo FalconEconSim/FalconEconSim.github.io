@@ -61,11 +61,43 @@
 
   <!-- FIG 12.1 -->
   <section class="sec page fig-sec" id="sec-121">
+      <div class="fig-hd">
+        <span class="fig-n">Fig 12.1</span>
+        <h3>The Market for Lemons: When Do Peaches Survive?</h3>
+      </div>
+      <figure class="film" id="film-12-1">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig121-lemons-poster.jpg" aria-label="Animation: The market for lemons" aria-describedby="film-12-1-tx">
+            <source src="media/films/fig121-lemons.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 37s</span>
+          <span class="film-cap">Buyers cannot tell a peach from a lemon, so they pay at most the average value, E[WTP] = 1,200 + 1,200p. Peach owners need $2,000, so both types trade only when at least 2/3 of the cars are peaches; with half peaches the offer is $1,800, peaches exit, and the market unravels until only lemons trade.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-12-1-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Used cars come in two kinds. Buyers value a lemon at $1,200 and a peach at $2,400. A lemon's owner will sell for $1,000, but a peach owner wants at least $2,000.</li>
+              <li>Buyers can't tell them apart, so at most they pay the average value. All lemons is worth $1,200, all peaches $2,400. With a share p of peaches, E[WTP] = 1,200 + 1,200p.</li>
+              <li>Peach owners sell only if the offer reaches $2,000. That needs 1,200 + 1,200p of at least 2,000, so p must be at least 2/3.</li>
+              <li>If three quarters of the cars are peaches, buyers offer up to $2,100. That clears $2,000, so both kinds trade at one price: pooling.</li>
+              <li>Now suppose half the cars are peaches. Buyers offer at most $1,800, below the $2,000 a peach owner needs. So peach owners keep their cars.</li>
+              <li>With the peaches gone, every car for sale is a lemon. Buyers know it, and the most they will pay falls to $1,200.</li>
+              <li>Separating: only lemons trade, at a price between $1,000 and $1,200. Peaches never sell, though a buyer values each at $400 more than its owner does. Hidden quality destroys those gains.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
       <div class="fig-prose">
-        <div class="fig-hd">
-      <span class="fig-n">Fig 12.1</span>
-      <h3>The Market for Lemons: When Do Peaches Survive?</h3>
-    </div>
         <p class="fig-intro">
       Buyers cannot tell a peach from a lemon, so they offer the average value \(\mathbb{E}[WTP] = 1{,}200 + 1{,}200p\),
       where \(p\) is the fraction of peaches. Peach sellers will only sell if that average clears their $2,000 reserve
@@ -191,6 +223,8 @@ function v122Draw() {
   // low type mimic payoff = yH - 3s; high type signal payoff = yH - s; outside = yL
   var lowMimic = yH - 3 * s, highSignal = yH - s;
   var valid = s >= 20 && s <= 60;
+  // Money in $000 with the sign in front of the dollar: -$140k, not $-140k.
+  var k = function (x) { return (x < 0 ? '-$' + (-x) : '$' + x) + 'k'; };
 
   var scX = d3.scaleLinear().domain([0, 80]).range([D3PAD.left, D3W - D3PAD.right]);
   var scY = d3.scaleLinear().domain([0, 110]).range([D3H - D3PAD.bottom, D3PAD.top]);
@@ -206,7 +240,10 @@ function v122Draw() {
   d3Seg(svg, scX, scY, 0, yH, 80 / 3, 0, EC.second, 3);                    // low type mimics: 100 - 3s
   d3Halo(svg, scX(70), scY(yH - 70 + 4), 'High type: 100 − s', { color: EC.primary, anchor: 'end', size: 10 });
   d3Halo(svg, scX(20), scY(yH - 3 * 20 + 5), 'Low type mimic: 100 − 3s', { color: EC.second, anchor: 'start', size: 10 });
-  d3Halo(svg, scX(72), scY(yL + 5), 'Outside option $40k', { color: EC.slate, anchor: 'end', size: 10 });
+  // Right end of the dashed line, above it: past s = 60 the high-type line has
+  // dropped below $40k, so this corner is clear and the label no longer sits on
+  // top of the "Low type mimic" label that starts at s = 20.
+  d3Halo(svg, scX(80) - 4, scY(yL + 5), 'Outside option $40k', { color: EC.slate, anchor: 'end', size: 10 });
 
   // threshold marker
   d3Seg(svg, scX, scY, s, 0, s, 108, EC.indicator, 1.4, '3,3');
@@ -215,16 +252,16 @@ function v122Draw() {
 
   document.getElementById('v122-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">High type nets</div><div class="readout-val">$' + highSignal + 'k</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Low type if mimics</div><div class="readout-val">$' + lowMimic + 'k</div></div>' +
+    '<div class="readout-col"><div class="readout-label">High type nets</div><div class="readout-val">' + k(highSignal) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Low type if mimics</div><div class="readout-val">' + k(lowMimic) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Outside option</div><div class="readout-val">$40k</div></div>' +
     '<div class="readout-col"><div class="readout-label">Separating?</div><div class="readout-val">' + (valid ? 'Yes' : 'No') + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + (valid ? EC.gain : EC.loss) + '">' +
     (valid
-      ? 'Valid signal. The low type would net $' + lowMimic + 'k by faking it, ' + (lowMimic < yL ? 'below' : 'no better than') + ' its $40k outside option, so it does not bother; the high type nets $' + highSignal + 'k, ' + (highSignal > yL ? 'above' : 'still at least') + ' $40k, so it does. The types separate.'
+      ? 'Valid signal. The low type would net ' + k(lowMimic) + ' by faking it, ' + (lowMimic < yL ? 'below' : 'no better than') + ' its $40k outside option, so it does not bother; the high type nets ' + k(highSignal) + ', ' + (highSignal > yL ? 'above' : 'still at least') + ' $40k, so it does. The types separate.'
       : (s < 20
-        ? 'Threshold too low: the low type nets $' + lowMimic + 'k by mimicking, above its $40k outside option, so it copies the high type and the signal fails.'
-        : 'Threshold too high: the high type nets only $' + highSignal + 'k, below its $40k outside option, so even the high type skips education. No separation.')) +
+        ? 'Threshold too low: the low type nets ' + k(lowMimic) + ' by mimicking, above its $40k outside option, so it copies the high type and the signal fails.'
+        : 'Threshold too high: the high type nets only ' + k(highSignal) + ', below its $40k outside option, so even the high type skips education. No separation.')) +
     '</p>';
 }
 
@@ -236,5 +273,7 @@ document.addEventListener('DOMContentLoaded', function () { v121Draw(); v122Draw
 <script src="assets/nav.js" defer></script>
 <script src="assets/figlabels.js" defer></script>
 <script src="assets/figreset.js" defer></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
 </body>
 </html>

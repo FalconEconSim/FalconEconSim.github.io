@@ -179,7 +179,7 @@ const CARDS = [
 
   { id:16, type:"Mistake",
     q:"Common mistake: treating every Nash equilibrium of a game as subgame-perfect. Why can sequential play eliminate a Nash equilibrium?",
-    a:"Not every Nash equilibrium survives backward induction. Some are sustained by NON-CREDIBLE threats, and the SPNE refinement discards them.\n\nExample: A moves first (Top/Bottom), B responds. Payoffs (A, B): Top to (Left 3,9)(Right 1,8); Bottom to (Left 0,0)(Right 2,1). The simultaneous game has a Nash equilibrium at (Bottom, Right), but it relies on B threatening 'Left if you play Bottom' when in fact, once A plays Bottom, B prefers Right (1 > 0).\n\nBackward induction: if A plays Top, B picks Left (9 > 8), A gets 3; if A plays Bottom, B picks Right, A gets 2. A compares 3 vs 2 and plays Top. SPNE = (Top, Left).\n\nThe (Bottom, Right) equilibrium is eliminated because it embeds a threat B would never carry out." },
+    a:"Not every Nash equilibrium survives backward induction. Some are sustained by NON-CREDIBLE threats, and the SPNE refinement discards them.\n\nExample: A moves first (Top/Bottom), B responds. Payoffs (A, B): Top to (Left 3,9)(Right 1,8); Bottom to (Left 0,0)(Right 2,1). The simultaneous game has a Nash equilibrium at (Bottom, Right), but it relies on B threatening 'Right if you play Top' (leaving A with 1 instead of 3) when in fact, once A plays Top, B prefers Left (9 > 8).\n\nBackward induction: if A plays Top, B picks Left (9 > 8), A gets 3; if A plays Bottom, B picks Right, A gets 2. A compares 3 vs 2 and plays Top. SPNE = (Top, Left).\n\nThe (Bottom, Right) equilibrium is eliminated because it embeds a threat B would never carry out." },
 
   { id:17, type:"Mistake",
     q:"Common mistake: expecting Hotelling firms to spread out to the efficient locations. Where do they actually locate, and why the divergence?",
@@ -268,7 +268,12 @@ function setFilter(f){filter=f;rebuildDeck();render();}
 function restart(){rebuildDeck();render();}
 function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
 document.addEventListener('keydown',e=>{
+  // Leave typing in the Ask widget (or any field) alone, and only rate a card
+  // that is showing its answer, never past the end of the deck.
+  const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+  if(idx>=deck.length)return;
   if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(!flipped)return;
   if(e.code==='Digit1')rate('Hard');
   if(e.code==='Digit2')rate('Good');
   if(e.code==='Digit3')rate('Easy');

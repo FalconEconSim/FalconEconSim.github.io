@@ -279,6 +279,10 @@
       el.setAttribute('transform', ('translate(' + (bx + dx) + ',' + (by + dy) + ') ' + rest).trim());
     } else {
       var cs = getComputedStyle(el);
+      /* JSXGraph anchors some labels by bottom/right. Setting top/left on top of
+         that stretches the label into a tall empty plate, so convert first. */
+      if (el.style.bottom && el.style.bottom !== 'auto') { el.style.top = cs.top; el.style.bottom = 'auto'; }
+      if (el.style.right && el.style.right !== 'auto') { el.style.left = cs.left; el.style.right = 'auto'; }
       var left = parseFloat(el.style.left || cs.left) || 0;
       var top = parseFloat(el.style.top || cs.top) || 0;
       el.style.left = (left + dx) + 'px';
@@ -384,8 +388,13 @@
       var t0 = origTransform(el);
       if (t0) el.setAttribute('transform', t0); else el.removeAttribute('transform');
     } else {
-      if (el.dataset.flL0 !== undefined) { el.style.left = el.dataset.flL0; el.style.top = el.dataset.flT0; }
-      else { el.dataset.flL0 = el.style.left || ''; el.dataset.flT0 = el.style.top || ''; }
+      if (el.dataset.flL0 !== undefined) {
+        el.style.left = el.dataset.flL0; el.style.top = el.dataset.flT0;
+        el.style.bottom = el.dataset.flB0; el.style.right = el.dataset.flR0;
+      } else {
+        el.dataset.flL0 = el.style.left || ''; el.dataset.flT0 = el.style.top || '';
+        el.dataset.flB0 = el.style.bottom || ''; el.dataset.flR0 = el.style.right || '';
+      }
       if (el.dataset.flPlated) {
         el.style.background = '';
         el.style.border = '';

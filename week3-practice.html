@@ -345,7 +345,8 @@ function checkDemandAnswer() {
     const tol = Math.max(0.05, s.Xstar * 0.01);
     const ok = near(answers[i], s.Xstar, tol);
     if (!ok) allCorrect = false;
-    resultLines.push(`\\(P_x=${s.Px}\\): ${ok ? '' : ''} your answer ${niceNum(answers[i])}, correct ${niceNum(s.Xstar)}`);
+    // Say which answers are right; reveal the right value only after a second miss, as the hint does
+    resultLines.push(`\\(P_x=${s.Px}\\): <strong>${ok ? 'correct' : 'not quite'}</strong>, your answer ${niceNum(answers[i])}${ok || attempts > 1 ? `, correct ${niceNum(s.Xstar)}` : ''}`);
   });
 
   if (allCorrect) {
@@ -388,7 +389,7 @@ function showDemandSolution() {
     <div class="solution-wrapper">
       <div class="sol-label">Full Solution</div>
       <div class="solution-grid">
-        <div class="sol-graph" style="display:grid;grid-template-rows:1fr 1fr;gap:0;">
+        <div class="sol-graph" style="display:grid;grid-template-rows:auto;align-content:start;gap:0;">
           <div id="jxg-demand-left"  style="width:100%;aspect-ratio:1/1;min-height:220px;"></div>
           <div style="height:1px;background:var(--rule-strong);"></div>
           <div id="jxg-demand-right" style="width:100%;aspect-ratio:1/1;min-height:220px;"></div>
@@ -420,7 +421,7 @@ function showDemandSolution() {
           With Cobb-Douglas preferences, the consumer <strong>always spends exactly 50% of income on X</strong>
           (since \\(\\alpha=0.5\\)): \\(P_x X^* = 0.5 \\times ${I} = ${I/2}\\) at every price.
           This is why the demand curve is a rectangular hyperbola \\(X^* = ${I/2}/P_x\\),
-          and why the area under the demand curve (total expenditure on X) is constant.
+          and why the rectangle \\(P_x \\times X^*\\) under any point on the curve (total spending on X) always has the same area.
         </div>
       </div>
     </div>`;
@@ -619,7 +620,8 @@ function checkSlutskyAnswer() {
   targets.forEach((t, i) => {
     const ok = near(vals[i], t, Math.max(tol, Math.abs(t) * 0.01));
     if (!ok) allOk = false;
-    lines.push(`\\(${labels[i]}\\): ${ok ? '' : ''} (yours ${niceNum(vals[i])}, correct ${niceNum(t)})`);
+    // Say which answers are right; reveal the right value only after a second miss, as the hint does
+    lines.push(`\\(${labels[i]}\\): <strong>${ok ? 'correct' : 'not quite'}</strong> (yours ${niceNum(vals[i])}${ok || attempts > 1 ? `, correct ${niceNum(t)}` : ''})`);
   });
 
   if (allOk) {
@@ -725,33 +727,37 @@ function drawSlutskyGraph(prob, s) {
   const ymax = Math.max(...allY) * 1.4;
 
   solBoard = JXG.JSXGraph.initBoard('jxg-slutsky', {
-    boundingbox: [-xmax*0.08, ymax, xmax, -ymax*0.06],
+    boundingbox: [-xmax*0.08, ymax, xmax, -ymax*0.15],
     axis: true, showNavigation: false, showCopyright: false,
     pan: { enabled: false }, zoom: { enabled: false },
     defaultAxes: {
       x: { withLabel: false, ticks: { strokeColor:'#e3ded5', label:{ fontSize: 13, color:'#8b95a5' } } },
-      y: { withLabel: false, ticks: { strokeColor:'#e3ded5', label:{ fontSize: 13, color:'#8b95a5' } } }
+      // No negative tick numbers: the extra room below the axis is for the SE/IE bracket
+      y: { withLabel: false, ticks: { strokeColor:'#e3ded5', label:{ fontSize: 13, color:'#8b95a5' },
+           generateLabelText: function(tick) { var v = tick.usrCoords[2]; return v < 0 ? '' : String(Math.round(v * 100) / 100); } } }
     }
   });
   const b = solBoard;
-  b.create('text', [xmax*0.88, -ymax*0.04, 'X'], { fontSize: 13, color:'#8b95a5', fixed:true });
-  b.create('text', [-xmax*0.06, ymax*0.96, 'Y'], { fontSize: 13, color:'#8b95a5', fixed:true });
+  // Axis names inside the plot, clear of the tick numbers
+  b.create('text', [xmax*0.95, ymax*0.04, 'X'], { fontSize: 13, color:'#8b95a5', fixed:true });
+  b.create('text', [xmax*0.02, ymax*0.97, 'Y'], { fontSize: 13, color:'#8b95a5', fixed:true });
 
   const yi = I / Py;
   const xiA = I / Px_old;
   const xiB = I / Px_new;
 
-  // Compensated budget line: passes through A with slope -Px_new/Py
-  // Eqn: y = YA - (Px_new/Py)*(x - XA)
-  // x-int: y=0 → x = XA + YA*Py/Px_new
-  const xiComp = s.XA + s.YA * Py / Px_new;
+  // Compensated budget line: slope -Px_new/Py and TANGENT to the original IC
+  // at C (the construction the problem statement and the solution steps use).
+  // It used to be drawn through A instead, so C sat off its own line.
+  // Eqn: y = YC - (Px_new/Py)*(x - XC); x-int: x = XC + YC*Py/Px_new
+  const xiComp = s.XC + s.YC * Py / Px_new;
 
   // Blue: original budget line
   b.create('segment', [[0, yi], [xiA, 0]], { strokeColor:'#1f6fb2', strokeWidth:2.5, fixed:true });
   b.create('text', [xiA*0.4, yi*0.75, 'Original (P₀)'], { fontSize: 13, color:'#14568c', fixed:true });
 
   // Dashed: compensated
-  const yCompInt = s.YA + s.XA * Px_new / Py;
+  const yCompInt = s.YC + s.XC * Px_new / Py;
   b.create('segment', [[0, yCompInt], [xiComp, 0]], { strokeColor:'#4a5566', strokeWidth:2, dash:2, fixed:true });
   b.create('text', [xiComp*0.15, yCompInt*0.85, 'Compensated'], { fontSize: 13, color:'#4a5566', fixed:true });
 
@@ -786,11 +792,11 @@ function drawSlutskyGraph(prob, s) {
   });
 
   // SE bracket on X axis
-  const yLine = -ymax * 0.03;
+  const yLine = -ymax * 0.08;
   b.create('segment', [[s.XA, yLine],[s.XC, yLine]], { strokeColor:'#4a5566', strokeWidth:2, fixed:true });
-  b.create('text', [(s.XA+s.XC)/2, yLine*2.5, 'SE'], { fontSize: 13, color:'#4a5566', fixed:true });
+  b.create('text', [(s.XA+s.XC)/2, -ymax*0.12, 'SE'], { fontSize: 13, color:'#4a5566', fixed:true });
   b.create('segment', [[s.XC, yLine],[s.XB, yLine]], { strokeColor:'#b03a2e', strokeWidth:2, fixed:true });
-  b.create('text', [(s.XC+s.XB)/2, yLine*2.5, 'IE'], { fontSize: 13, color:'#b03a2e', fixed:true });
+  b.create('text', [(s.XC+s.XB)/2, -ymax*0.12, 'IE'], { fontSize: 13, color:'#b03a2e', fixed:true });
 }
 
 /* ================================================================
