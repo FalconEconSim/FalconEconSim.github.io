@@ -246,10 +246,16 @@ function v122Draw() {
   d3Seg(svg, scX, scY, 0, yH, 80 / 3, 0, EC.second, 3);                    // low type mimics: 100 - 3s
   d3Halo(svg, scX(70), scY(yH - 70 + 4), 'High type: 100 − s', { color: EC.primary, anchor: 'end', size: 10 });
   d3Halo(svg, scX(20), scY(yH - 3 * 20 + 5), 'Low type mimic: 100 − 3s', { color: EC.second, anchor: 'start', size: 10 });
-  // Right end of the dashed line, above it: past s = 60 the high-type line has
-  // dropped below $40k, so this corner is clear and the label no longer sits on
-  // top of the "Low type mimic" label that starts at s = 20.
-  d3Halo(svg, scX(80) - 4, scY(yL + 5), 'Outside option $40k', { color: EC.slate, anchor: 'end', size: 10 });
+  // Left end of the dashed line, just under it: the one corner no payoff line
+  // crosses at any width. At the right end the label either sat on the
+  // high-type line (desktop) or was pushed 40px clear of its own line (phone).
+  // Two short lines keep it left of the low-type line at every width. The $40k value is the tick right beside it.
+  // One text element with two lines, so the placer treats it as one block.
+  var oy = scY(yL) + ((window.EC224Place && EC224Place.haloFont) ? EC224Place.haloFont(svg, 10) : 10) + 5;
+  var oT = d3Halo(svg, scX(0) + 6, oy, 'Outside', { color: EC.slate, anchor: 'start', size: 10 });
+  oT.append('tspan').attr('x', scX(0) + 6).attr('dy', '1.15em').text('option');
+  var oB = oT.node().getBBox();
+  d3.select(oT.node().previousSibling).attr('y', oB.y - 1.5).attr('height', oB.height + 3);
 
   // threshold marker
   d3Seg(svg, scX, scY, s, 0, s, 108, EC.indicator, 1.4, '3,3');

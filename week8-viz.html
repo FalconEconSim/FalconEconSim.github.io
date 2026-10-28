@@ -886,14 +886,20 @@ function v81Draw(){
   // axis tick marks at Qtr (x-axis) and P (y-axis)
   v81dyn._xTick.attr('x1',scX(Qtr)).attr('x2',scX(Qtr)).attr('y1',scY(0)).attr('y2',scY(0)+7);
   v81dyn._yTick.attr('x1',D3PAD.left-7).attr('x2',D3PAD.left).attr('y1',scY(P)).attr('y2',scY(P));
-  v81dyn._xLbl.attr('x',scX(Qtr)).attr('y',scY(0)+20).text(Qtr.toFixed(1));
+  /* drop a trailing .0 ($12, not $12.0). Ticks are hidden by measuring the
+     rendered boxes: on a phone the tick text is scaled up, so a fixed viewBox
+     gap let the marker print on top of its neighbouring tick */
+  const v81f=x=>{const r=x.toFixed(1);return r.endsWith('.0')?r.slice(0,-2):r;};
+  const v81hit=(lbl,pad)=>function(){const a=this.getBoundingClientRect(),b=lbl.node().getBoundingClientRect();
+    return (a.width&&b.width&&a.left<b.right+pad&&b.left<a.right+pad&&a.top<b.bottom+pad&&b.top<a.bottom+pad)?0:1;};
+  v81dyn._xLbl.attr('x',scX(Qtr)).attr('y',scY(0)+20).text(v81f(Qtr));
   /* hide the static tick this marker is standing on, or the two numbers print
      over each other and read as one */
   if(v81dyn._xAxisG&&!v81dyn._xAxisG.empty())
-    v81dyn._xAxisG.selectAll('.tick text').attr('opacity',d=>Math.abs(scX(d)-scX(Qtr))<22?0:1);
-  v81dyn._yLbl.attr('x',D3PAD.left-2).attr('y',scY(P)+5).text('$'+P.toFixed(1));
+    v81dyn._xAxisG.selectAll('.tick text').attr('opacity',1).attr('opacity',v81hit(v81dyn._xLbl,3));
+  v81dyn._yLbl.attr('x',D3PAD.left-2).attr('y',scY(P)+5).text('$'+v81f(P));
   if(v81dyn._yAxisG&&!v81dyn._yAxisG.empty())
-    v81dyn._yAxisG.selectAll('.tick text').attr('opacity',d=>Math.abs(scY(d)-scY(P))<14?0:1);
+    v81dyn._yAxisG.selectAll('.tick text').attr('opacity',1).attr('opacity',v81hit(v81dyn._yLbl,4));
   d3MoveAnchor(v81nodes.find(n=>n.id==='CS'),scX(Math.max(0.4,Qtr*0.35)),scY((a+P)/2));
   d3MoveAnchor(v81nodes.find(n=>n.id==='PS'),scX(Math.max(0.4,Qtr*0.35)),scY((b+P)/2));
   if(v81gs)d3TickClamp(v81nodes,v81gs,v81conns);

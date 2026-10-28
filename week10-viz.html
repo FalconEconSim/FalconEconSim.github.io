@@ -394,8 +394,8 @@ function v101Draw(overlay) {
   var atC = Math.abs(qA - qStar) < 0.6, atS = Math.abs(qA - a / (2 * b)) < 0.6;
   var note = animating
     ? 'Best-response dynamics: each firm takes turns best-responding to the other. The staircase spirals into the Cournot crossing (' + qStar.toFixed(0) + ', ' + qStar.toFixed(0) + '), the stable equilibrium.'
-    : atC ? 'Both firms best-respond to each other: this is the Cournot-Nash equilibrium, each earning $' + piA.toFixed(0) + '.'
-    : atS ? 'Firm A commits to the Stackelberg quantity ' + qA.toFixed(0) + '; Firm B best-responds with ' + qB.toFixed(0) + '. A out-earns B ($' + piA.toFixed(0) + ' vs $' + piB.toFixed(0) + '), the first-mover advantage.'
+    : atC ? 'Both firms best-respond to each other: this is the Cournot-Nash equilibrium, each earning $' + Math.round(piA).toLocaleString('en-US') + '.'
+    : atS ? 'Firm A commits to the Stackelberg quantity ' + qA.toFixed(0) + '; Firm B best-responds with ' + qB.toFixed(0) + '. A out-earns B ($' + Math.round(piA).toLocaleString('en-US') + ' vs $' + Math.round(piB).toLocaleString('en-US') + '), the first-mover advantage.'
     : 'Firm B is best-responding to A&rsquo;s choice, but A is off its own reaction curve, so this is not an equilibrium. Press Watch adjustment to see it converge.';
   var col = animating ? EC.indicator : (atC ? EC.gain : atS ? EC.primary : EC.slate);
   document.getElementById('v101-readout').innerHTML =
@@ -403,8 +403,8 @@ function v101Draw(overlay) {
     '<div class="readout-col"><div class="readout-label">q<sub>A</sub></div><div class="readout-val">' + qA.toFixed(0) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">q<sub>B</sub> (best response)</div><div class="readout-val">' + qB.toFixed(1) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Profit A</div><div class="readout-val">$' + piA.toFixed(0) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Profit B</div><div class="readout-val">$' + piB.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Profit A</div><div class="readout-val">$' + Math.round(piA).toLocaleString('en-US') + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Profit B</div><div class="readout-val">$' + Math.round(piB).toLocaleString('en-US') + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + col + '">' + note + '</p>';
 }
 
@@ -581,7 +581,7 @@ function v105Draw() {
   var scX = d3.scaleLinear().domain([20, 120]).range([D3PAD.left, D3W - D3PAD.right]);
   var scY = d3.scaleLinear().domain([0, 2700]).range([D3H - D3PAD.bottom, D3PAD.top]);
   var svg = d3MakeSvg('cvs105-wrap');
-  d3AddAxes(svg, scX, scY, 'Your price ($)', 'Your profit ($)', function (d) { return '$' + d; }, function (d) { return '$' + d; });
+  d3AddAxes(svg, scX, scY, 'Your price ($)', 'Your profit ($)', function (d) { return '$' + d; }, function (d) { return '$' + d.toLocaleString('en-US'); });
   var pts = [];
   for (var pp = 20; pp <= pr; pp += 1) pts.push([pp, (pp - MC) * Qd(pp)]);
   if (pts.length) svg.append('path').attr('d', pts.map(function (q, i) { return (i ? 'L' : 'M') + scX(q[0]) + ' ' + scY(q[1]); }).join(' '))
@@ -604,17 +604,17 @@ function v105Draw() {
   d3Dot(svg, scX(p), scY(prof), EC.indicator);
   // Value label up-and-left of its dot so the rising profit curve doesn't run
   // through it (the dot sits on the curve; straight-up still grazed it).
-  d3Halo(svg, scX(p) - 8, scY(prof) - 18, '$' + prof.toFixed(0), { color: EC.indicator, size: 10, anchor: 'end' });
+  d3Halo(svg, scX(p) - 8, scY(prof) - 18, '$' + Math.round(prof).toLocaleString('en-US'), { color: EC.indicator, size: 10, anchor: 'end' });
   var share = p > pr ? '0% (priced out)' : p === pr ? '50% (split)' : '100% (undercut)';
   var verdict = p > pr ? 'Priced above the rival, you sell nothing: buyers all go to the cheaper seller.'
     : p === pr ? 'Matching the rival splits the market 50/50.'
     : p <= MC ? 'Pricing at MC = $20 wins the whole market but earns nothing on it. This is where undercutting stops: once both firms charge $20, the Bertrand equilibrium, neither can gain by moving and both earn zero.'
-    : 'You undercut and capture the whole market for $' + prof.toFixed(0) + '. But the rival now has exactly the same incentive to undercut you, so price keeps falling toward MC = $20.';
+    : 'You undercut and capture the whole market for $' + Math.round(prof).toLocaleString('en-US') + '. But the rival now has exactly the same incentive to undercut you, so price keeps falling toward MC = $20.';
   document.getElementById('v105-readout').innerHTML =
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">Your price</div><div class="readout-val">$' + p + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Rival price</div><div class="readout-val">$' + pr + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Your profit</div><div class="readout-val">$' + prof.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Your profit</div><div class="readout-val">$' + Math.round(prof).toLocaleString('en-US') + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Market share</div><div class="readout-val" style="font-size:var(--t-small)">' + share + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + (p > pr ? EC.loss : EC.primary) + '">' + verdict + '</p>';
 }

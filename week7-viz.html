@@ -1581,6 +1581,11 @@ function v79InitSvg(){
   d3AddAxes2(v79svgA,scXM,scYM,'Q (market)','P ($)');
   // Eleven Q ticks collide at phone width: keep every other one (y ticks are all < 100)
   v79svgA.selectAll('g.tick').filter(d=>d>=100&&d%400!==0).select('text').remove();
+  // At phone width the last Q tick (2,000), centred on the plot's right edge,
+  // ran past the edge of the svg and was cut off; there is no room for it
+  // beside 1,600 either, so it is dropped there (the axis still reads 0..1,600)
+  if(v79svgA.node().getBoundingClientRect().width<480)
+    v79svgA.selectAll('g.tick').filter(d=>d===V79_QMAX).select('text').remove();
   // Long-run supply: flat at min SAC = $5.51 (constant-cost industry)
   v79svgA.append('line').attr('x1',scXM(0)).attr('x2',scXM(V79_QMAX)).attr('y1',scYM(5.51)).attr('y2',scYM(5.51))
     .attr('stroke',EC.slate).attr('stroke-width',1.2).attr('stroke-dasharray','2,4').attr('opacity',0.6);

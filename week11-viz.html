@@ -351,7 +351,7 @@ function v111Draw() {
       ? 'With no external cost, private and social cost coincide: the market output Q<sub>E</sub> = 45 is already efficient, so there is no deadweight loss and no tax is needed.'
       : V111TAX
       ? 'With the tax t* = $' + MEC + ', private cost rises onto SMC and the market lands at Q* = ' + Qs.toFixed(1) + '. Deadweight loss is eliminated.'
-      : 'The market overproduces at Q<sub>E</sub> = 45, past the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between costs society more than it is worth: a $' + dwl.toFixed(0) + ' deadweight loss.') +
+      : 'The market overproduces at Q<sub>E</sub> = 45, past the optimum Q* = ' + (+Qs.toFixed(1)) + '. Every unit in between costs society more than it is worth: a $' + Math.round(dwl).toLocaleString('en-US') + ' deadweight loss.') +
     '</p>';
 }
 
@@ -396,10 +396,10 @@ function v112Draw() {
     '<div class="readout-col"><div class="readout-label">Firm A abates</div><div class="readout-val">' + eA.toFixed(0) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Firm B abates</div><div class="readout-val">' + eB.toFixed(0) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">Permit price λ*</div><div class="readout-val">$' + lam.toFixed(0) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Cap-and-trade cost</div><div class="readout-val">$' + costCT.toFixed(0) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Equal-regulation cost</div><div class="readout-val">$' + costEq.toFixed(0) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Saving</div><div class="readout-val">$' + saving.toFixed(0) + '</div></div>' +
-    '</div><p style="margin-top:.6rem;color:' + EC.gain + '">Trading lets the cheap firm (A) do most of the cleanup, hitting the target for $' + costCT.toFixed(0) + ' instead of $' + costEq.toFixed(0) + ' under equal shares: a saving of $' + saving.toFixed(0) + ' (' + (100 * saving / costEq).toFixed(0) + '%).</p>';
+    '<div class="readout-col"><div class="readout-label">Cap-and-trade cost</div><div class="readout-val">$' + Math.round(costCT).toLocaleString('en-US') + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Equal-regulation cost</div><div class="readout-val">$' + Math.round(costEq).toLocaleString('en-US') + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Saving</div><div class="readout-val">$' + Math.round(saving).toLocaleString('en-US') + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.gain + '">Trading lets the cheap firm (A) do most of the cleanup, hitting the target for $' + Math.round(costCT).toLocaleString('en-US') + ' instead of $' + Math.round(costEq).toLocaleString('en-US') + ' under equal shares: a saving of $' + Math.round(saving).toLocaleString('en-US') + ' (' + (100 * saving / costEq).toFixed(0) + '%).</p>';
 }
 
 // ── FIG 11.3: positive externality + Pigouvian subsidy ──────────────────────
@@ -440,7 +440,7 @@ function v113Draw() {
     ? 'With no external benefit, private and social benefit coincide: the market output Q<sub>E</sub> = 45 is already efficient, so there is no deadweight loss and no subsidy is needed.'
     : V113SUB
     ? 'With the subsidy s* = $' + sub + ', output rises to the efficient Q* = ' + Qs.toFixed(1) + ' where MSB = MC, and the deadweight loss is eliminated.'
-    : 'The market produces only Q<sub>E</sub> = 45 where MB = MC, short of the optimum Q* = ' + Qs.toFixed(1) + '. Every unit in between is worth more to society than it costs: a $' + dwl.toFixed(1) + ' deadweight loss from under-provision.';
+    : 'The market produces only Q<sub>E</sub> = 45 where MB = MC, short of the optimum Q* = ' + (+Qs.toFixed(1)) + '. Every unit in between is worth more to society than it costs: a $' + (+dwl.toFixed(1)).toLocaleString('en-US') + ' deadweight loss from under-provision.';
   document.getElementById('v113-readout').innerHTML =
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">Market Q<sub>E</sub></div><div class="readout-val">45</div></div>' +
@@ -514,14 +514,27 @@ function v115Draw() {
   d3Seg(svg, scX, scY, 0, 100, 50, 0, EC.primary, 3);    // MB
   d3Seg(svg, scX, scY, 0, 0, 50, 100, EC.loss, 3);       // MD
   d3Halo(svg, scX(44), scY(MB(44) + 6), 'MB of polluting', { color: EC.primary, anchor: 'end', size: 10 });
-  // Placed down the line at S=38 (not the top-right corner), so it clears the
-  // "polluter's right (start S=50)" start-marker label that sits at the very top.
+  // Placed down the line at S=38, clear of the top-right corner.
   d3Halo(svg, scX(38), scY(MD(38) + 6), 'MD to neighbour', { color: EC.loss, anchor: 'end', size: 10 });
   d3Seg(svg, scX, scY, Sstar, 0, Sstar, 50, EC.slate, 1.2, '4,4');
   d3Halo(svg, scX(Sstar), scY(54), 'S* = 25', { color: EC.slate, size: 9 });
   // Starting points set by who owns the right: neighbour's right => S=0, polluter's => S=50.
-  d3Halo(svg, scX(1), scY(96), "neighbour's right (start S=0)", { color: V115RIGHT === 'victim' ? EC.gain : EC.ghost, size: 8, anchor: 'start', weight: V115RIGHT === 'victim' ? 700 : 400 });
-  d3Halo(svg, scX(49), scY(96), "polluter's right (start S=50)", { color: V115RIGHT === 'polluter' ? EC.gain : EC.ghost, size: 8, anchor: 'end', weight: V115RIGHT === 'polluter' ? 700 : 400 });
+  // The two lines run corner to corner, so the top corners these used to sit in
+  // put them on a curve (and on each other at phone width). They go in the open
+  // side wedges instead, each beside the end of the axis it starts from, on two
+  // lines so they fit the wedge at every width (three on a phone, where the
+  // text is scaled up), centred on the wedge's widest point at $50.
+  var v115Narrow = svg.node().getBoundingClientRect().width < 480;
+  var v115Start = function (x, lines, on, anchor) {
+    var g = svg.append('g');
+    var t = d3Halo(g, x, 0, lines[0], { color: on ? EC.gain : EC.slate, size: 9, anchor: anchor, weight: on ? 700 : 400 });
+    lines.slice(1).forEach(function (l) { t.append('tspan').attr('x', x).attr('dy', '1.15em').text(l); });
+    var bb = t.node().getBBox();
+    d3.select(t.node().previousSibling).attr('x', bb.x - 3).attr('y', bb.y - 1.5).attr('width', bb.width + 6).attr('height', bb.height + 3);
+    g.attr('transform', 'translate(0,' + (scY(50) - (bb.y + bb.height / 2)) + ')');
+  };
+  v115Start(scX(0.8), v115Narrow ? ["neighbour's", 'right', '(start S=0)'] : ["neighbour's right", '(start S=0)'], V115RIGHT === 'victim', 'start');
+  v115Start(scX(49.2), v115Narrow ? ["polluter's", 'right', '(start S=50)'] : ["polluter's right", '(start S=50)'], V115RIGHT === 'polluter', 'end');
   d3Seg(svg, scX, scY, S, 0, S, Math.max(MB(S), MD(S)), EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(S), scY(MB(S)), EC.primary);
   d3Dot(svg, scX(S), scY(MD(S)), EC.loss);
