@@ -340,6 +340,7 @@
     var b = el.getBoundingClientRect();
     if (!b.width) return false;
     if (isHaloed(el)) return true;
+    if (el.tagName.toLowerCase() === 'text' && ownBackingRect(el)) return true;
     var sibs = el.parentNode ? el.parentNode.children : [];
     for (var i = 0; i < sibs.length; i++) {
       var r = sibs[i];
@@ -430,8 +431,27 @@
 
   /* The rect a figure drew behind this label. Found by overlap, so look it up
      while label and rect are still in step, never after one has moved. */
+  /* Once paired, a label keeps its rect. Looking the pair up again by overlap
+     after both had moved found a NEIGHBOUR's rect on crowded phone plots
+     (Fig 10.2, Fig 12.2): the wrong rect was reset, the right one stayed
+     shifted, and empty white plates were left lying on the bars and curves. */
+  function isWhiteRect(r) {
+    if (!r || r.nodeType !== 1 || r.tagName.toLowerCase() !== 'rect') return false;
+    if (r.hasAttribute('data-fl-plate')) return false;
+    var f = (r.getAttribute('fill') || '').toLowerCase();
+    return f === '#fff' || f === '#ffffff' || f === 'white' || f === 'var(--paper-raised)';
+  }
   function ownBackingRect(el) {
     if (!el.parentNode || el.tagName.toLowerCase() !== 'text') return null;
+    if (el._flOwn && el._flOwn.parentNode === el.parentNode) return el._flOwn;
+    el._flOwn = null;
+    /* d3Halo (vizkit.js) inserts the rect immediately before its own text */
+    var prev = el.previousElementSibling;
+    var t0of = function (n) { var v = n.getAttribute('data-fl-t0'); return v !== null ? v : (n.getAttribute('transform') || ''); };
+    if (isWhiteRect(prev) && t0of(prev) === t0of(el)) {
+      el._flOwn = prev;
+      return prev;
+    }
     var b = el.getBoundingClientRect();
     if (!b.width) return null;
     var sibs = el.parentNode.children;
@@ -444,7 +464,11 @@
       var rb = r.getBoundingClientRect();
       if (!rb.width) continue;
       if (!(rb.right < b.left - 2 || b.right < rb.left - 2 ||
-            rb.bottom < b.top - 2 || b.bottom < rb.top - 2)) return r;
+            rb.bottom < b.top - 2 || b.bottom < rb.top - 2)) {
+        /* only trust an overlap while the label is still where it was drawn */
+        if ((el.getAttribute('transform') || '') === (el.getAttribute('data-fl-t0') || el.getAttribute('transform') || '')) el._flOwn = r;
+        return r;
+      }
     }
     return null;
   }
@@ -642,8 +666,13 @@
       if (!isCurveLabel(t) || isAxisTitle(t)) return;
       if (!shown(t) || inLegend(t)) return;
       if (inAxisMargin(t, host)) return;
+      /* back where the figure drew it BEFORE asking whether it is backed: a
+         label once moved off its rect (say on a pass that ran before the
+         rect was sized) otherwise never matched it again, and left an empty
+         plate behind for good (Fig 7.9 SMC) */
+      resetLabel(t);
       if (alreadyBacked(t, host)) { resetPair(t); backedOnes.push(t); return; }
-      resetLabel(t); all.push(t);
+      all.push(t);
     });
 
     var grid = new Grid(w, h);
@@ -844,6 +873,25 @@
     if (!hb.width) return 0;
     var inkGrid = gridFor.get(host);
 
+    /* Phones. The tick numbers are sized to 16 screen pixels, so on a 390px
+       screen they take twice the room in the figure's own units that the
+       margin was drawn for, and the axis titles, drawn at fixed positions,
+       land on top of them. There is no room to move a title outward inside
+       the original viewBox, so the title is moved clear of the ticks and the
+       viewBox grows on that side to hold it. Every pass starts from the
+       figure's own viewBox, so repeated runs cannot accumulate. */
+    var grown = [];
+    host.querySelectorAll('svg').forEach(function (s) {
+      if (s.ownerSVGElement) return;
+      var cur = s.getAttribute('viewBox');
+      if (!cur) return;
+      /* a viewBox other than the one this pass last set is the figure's own */
+      if (s.getAttribute('data-fl-vb') !== cur) s.setAttribute('data-fl-vb0', cur);
+      else if (cur !== s.getAttribute('data-fl-vb0')) s.setAttribute('viewBox', s.getAttribute('data-fl-vb0'));
+      s._flExt = { l: 0, r: 0, b: 0 };
+      grown.push(s);
+    });
+
     var ticks = [];
     host.querySelectorAll('svg text, .JXGtext').forEach(function (t) {
       var v = (t.textContent || '').trim();
@@ -897,6 +945,48 @@
         return c;
       }
 
+      /* An outer axis title sitting on the tick numbers: move it straight
+         out past them and let the viewBox grow to hold it (see above). */
+      var rootS = t.ownerSVGElement;
+      while (rootS && rootS.ownerSVGElement) rootS = rootS.ownerSVGElement;
+      if (rootS && rootS._flExt && t.tagName.toLowerCase() === 'text') {
+        var sr = rootS.getBoundingClientRect();
+        var hitsOf = function (b) {
+          return ticks.filter(function (tb) {
+            return !(b.right + 2 <= tb.left || tb.right + 2 <= b.left ||
+                     b.bottom + 2 <= tb.top || tb.bottom + 2 <= b.top);
+          });
+        };
+        var b0 = t.getBoundingClientRect();
+        var cx = (b0.left + b0.right) / 2, cy = (b0.top + b0.bottom) / 2;
+        var side = null;
+        if (rotated && cx < sr.left + sr.width * 0.25) side = 'l';
+        else if (rotated && cx > sr.right - sr.width * 0.25) side = 'r';
+        else if (!rotated && cy > sr.bottom - sr.height * 0.3) side = 'b';
+        /* or simply drawn past the edge and cut off (Fig 7.9 "P ($)") */
+        var clipped = side === 'l' ? b0.left < sr.left - 0.5 : side === 'r' ? b0.right > sr.right + 0.5 : b0.bottom > sr.bottom + 0.5;
+        if (side && sr.width && (clipped || hitsOf(b0).length)) {
+          var tx = 0, ty = 0;
+          for (var it = 0; it < 4; it++) {
+            var bb = (tx || ty) ? boxAt(tx, ty) : b0;
+            var hs = hitsOf(bb);
+            if (!hs.length) break;
+            if (side === 'l') tx -= bb.right + 3 - Math.min.apply(null, hs.map(function (h) { return h.left; }));
+            else if (side === 'r') tx += Math.max.apply(null, hs.map(function (h) { return h.right; })) + 3 - bb.left;
+            else ty += Math.max.apply(null, hs.map(function (h) { return h.bottom; })) + 2 - bb.top;
+          }
+          move(t, tx, ty);
+          var fb = t.getBoundingClientRect();
+          var upp = rootS.viewBox.baseVal.width / sr.width;   /* units per screen px */
+          var e = rootS._flExt;
+          if (side === 'l') e.l = Math.max(e.l, (sr.left + 2 - fb.left) * upp);
+          if (side === 'r') e.r = Math.max(e.r, (fb.right + 2 - sr.right) * upp);
+          if (side === 'b') e.b = Math.max(e.b, (fb.bottom + 3 - sr.bottom) * upp);
+          fixed++;
+          return;
+        }
+      }
+
       var here = cost(t.getBoundingClientRect(), 0, 0);
       if (here === 0) return;               /* already clear of everything */
 
@@ -935,6 +1025,17 @@
       if (!tcol || tcol === 'none') tcol = '#14181b';
       var trect = plate(t, tcol, true);   // plain white, no coloured outline
       if (trect) { sizePlate(trect, t, host); fixed++; }
+    });
+
+    grown.forEach(function (s) {
+      var e = s._flExt, v0 = s.getAttribute('data-fl-vb0'), nv = v0;
+      if (e.l > 0.5 || e.r > 0.5 || e.b > 0.5) {
+        var v = v0.split(/[\s,]+/).map(Number);
+        var r1 = function (x) { return Math.round(x * 10) / 10; };
+        nv = r1(v[0] - e.l) + ' ' + v[1] + ' ' + r1(v[2] + e.l + e.r) + ' ' + r1(v[3] + e.b);
+      }
+      if (s.getAttribute('viewBox') !== nv) s.setAttribute('viewBox', nv);
+      s.setAttribute('data-fl-vb', nv);
     });
     return fixed;
   }

@@ -49,6 +49,14 @@ moves labels the figure placed badly, plates them so they stay readable, draws
 a leader when it has moved one far enough to need it, and enforces the type
 floor. It knows nothing about economics; it works off an occupancy grid.
 
+On phones the 16px tick numbers take about twice the room, in a figure's own
+units, that its margins were drawn for. So `placeAxisTitles` moves an outer
+axis title that sits on (or is cut off past) the tick numbers straight out past
+them and **grows that svg's viewBox** on that side to hold it. The figure's own
+viewBox is kept in `data-fl-vb0` and every pass starts from it, so passes never
+accumulate. At desktop widths nothing grows. A label with its own white rect
+(d3Halo, week 7's label boxes) is paired with that rect once and keeps it.
+
 **`assets/vizkit.js`** holds the shared d3 helpers for weeks 9 to 12: axes,
 haloed labels, filled polygons.
 

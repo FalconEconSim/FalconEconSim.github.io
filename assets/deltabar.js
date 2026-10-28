@@ -23,6 +23,10 @@
  *   suffix  unit suffix, e.g. '%' (default '')
  *   eps     treat |now-old| below this as "no change" (default 0.005)
  *   invert  true if a DECREASE is the good/expected direction (colour only)
+ *   fixed   true if the figure holds this value constant on purpose (e.g. output
+ *           along an isoquant). While it has not moved the row says "held
+ *           constant" instead of "no change yet", which would wrongly suggest
+ *           that moving a slider will change it.
  *
  * When old and now are equal the row renders in a neutral "no change yet"
  * state rather than showing "up 0.00", so a figure at its baseline does not
@@ -93,7 +97,7 @@
       return '<div class="delta-item">' +
                '<div class="delta-label" title="' + esc(it.label) + '">' + esc(it.label) + '</div>' +
                '<div class="delta-nums"><span class="delta-now">' + fmt(it.now, dp, prefix, suffix) + '</span></div>' +
-               '<div class="delta-chg delta-flat">no change yet</div>' +
+               '<div class="delta-chg delta-flat">' + (it.fixed ? 'held constant' : 'no change yet') + '</div>' +
              '</div>';
     }
 

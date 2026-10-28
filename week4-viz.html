@@ -1331,9 +1331,16 @@ function v4Draw() {
   // tick label in the top-left corner, and with a wider line gap so the two
   // lines read as a clean stacked badge.
   ctx.fillStyle=eColor(ind.e); ctx.font='bold 18px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='left';
-  ctx.fillText(`e = ${ind.e}`, ML+46, MT+14);
+  // On a narrow canvas the badge would run across the centre axis; start it
+  // just right of the axis instead.
+  const eTxtW=ctx.measureText(`e = ${ind.e}`).width;
+  ctx.font='17px Libre Franklin,system-ui,sans-serif';
+  const badgeW=Math.max(eTxtW, ctx.measureText(ind.name).width);
+  const badgeX=(ML+46+badgeW > cx-6) ? cx+8 : ML+46;
+  ctx.font='bold 18px Libre Franklin,system-ui,sans-serif';
+  ctx.fillText(`e = ${ind.e}`, badgeX, MT+14);
   ctx.fillStyle='#555'; ctx.font='17px Libre Franklin,system-ui,sans-serif';
-  ctx.fillText(ind.name, ML+46, MT+31);
+  ctx.fillText(ind.name, badgeX, MT+31);
 
   // bar value labels -- D3 SVG force labels (draggable, anchored to bar tops)
   ctx.font='bold 17px Libre Franklin,system-ui,sans-serif';

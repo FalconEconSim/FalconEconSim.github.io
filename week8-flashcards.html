@@ -305,7 +305,12 @@ function setFilter(f){filter=f;rebuildDeck();render();}
 function restart(){rebuildDeck();render();}
 function restartHard(){const hard=deck.filter(c=>ratings[c.id]==='Hard');deck=shuffle(hard.length?hard:(CARDS.filter(c=>filter==='All'||c.type===filter)));idx=0;stats={Easy:0,Good:0,Hard:0};ratings={};render();}
 document.addEventListener('keydown',e=>{
+  // Leave typing in the Ask widget (or any field) alone, and only rate a card
+  // that is showing its answer, never past the end of the deck.
+  const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+  if(idx>=deck.length)return;
   if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(!flipped)return;
   if(e.code==='Digit1')rate('Hard');
   if(e.code==='Digit2')rate('Good');
   if(e.code==='Digit3')rate('Easy');

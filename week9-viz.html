@@ -569,7 +569,9 @@ function v94Draw() {
     .attr('fill', 'none').attr('stroke', STROKE_PS).attr('stroke-width', 2.5);
   // Below the MC line, ending just short of Q = 20, so the demand curve (which
   // crosses MC at Q = 20) never runs through the text.
-  if (n > 1) d3Halo(svg, scX(Qc) - 6, scY(MC) + 16, 'last block: price = MC', { color: EC.slate, anchor: 'end', size: 8 });
+  /* below the MC line by the label's own height, which grows on phones */
+  var lbFs = (window.EC224Place && EC224Place.haloFont) ? EC224Place.haloFont(svg, 8) : 8;
+  if (n > 1) d3Halo(svg, scX(Qc) - 6, scY(MC) + 5 + lbFs * 0.85, 'last block: price = MC', { color: EC.slate, anchor: 'end', size: 8 });
   d3Seg(svg, scX, scY, 0, a, a / b, 0, EC.primary, 3);   // demand, ends on the Q axis
   d3Seg(svg, scX, scY, 0, MC, 32, MC, EC.slate, 2, '6,4');
   d3Halo(svg, scX(27), scY(D(27) + 0.14), 'Demand', { color: EC.primary, anchor: 'end', size: 10 });

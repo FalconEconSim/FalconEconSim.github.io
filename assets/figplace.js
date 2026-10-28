@@ -557,6 +557,12 @@
       function scoreBox(box) {
         var sc = grid.clearance(box.x, box.y, box.w, box.h);
         if (box.x < nb.x0 || box.y < nb.y0 || box.x + box.w > nb.x1 || box.y + box.h > nb.y1) sc -= 40;
+        /* The ring is a fixed radius, so a label wider than twice the ring,
+           put in a left or right slot, still straddles its own anchor and
+           hides the very point it names. */
+        var pad = 4 / upx;
+        if (a.x > box.x - pad && a.x < box.x + box.w + pad &&
+            a.y > box.y - pad && a.y < box.y + box.h + pad) sc -= 50;
         for (var i = 0; i < placed.length; i++) {
           var p = placed[i];
           if (!(box.x + box.w + 3 <= p.x || p.x + p.w + 3 <= box.x ||
