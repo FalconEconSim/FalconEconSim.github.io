@@ -79,7 +79,7 @@ A plain object with pure functions (keep it in `models.js`, UMD, so `verify.js` 
 | `random(rng, prev)` | new valid parameters, different from `prev` (loop gen + valid, see week2/models.js `draw`) |
 | `solve(p)` | the answer object -> `f.sol` |
 | `domain(p)` | `{ X, Y, xs, ys }` plot ranges and tick steps -> `f.dom` (fixed for the round) |
-| `score(p, g, sol)` | `{ total: 0..100, ... }` (unless the spec has its own `score(f)`) |
+| `score(p, g, sol)` | `{ total: 0..100, ... }` (unless the spec has its own `score(f)`). The kit calls `model.score(f.p, spec.scoreInput ? spec.scoreInput(f) : f.g, f.sol)`: the third argument is always the solved answer `f.sol`, so do not give `score` a third parameter of your own (optional settings, a tolerance); put those in `p` or close over them. |
 
 ### State on the figure `f`
 
@@ -104,7 +104,9 @@ Progress helpers for render:
   check: function (f) { return true | false | 'message shown in red' } }
 { kind: 'drag', label: '...', prompt: fn(f) or string, check: fn(f) }   // handles carry step: i
 { kind: 'draw', key: 'curve', bins: 48, mode: 'fn' | 'free', label, prompt,
-  kstart: function (f, x) { return y; },      // keyboard start line
+  kstart: function (f, x) { return y; },      // keyboard start line ('fn' mode)
+  kshapes: function (f) { return [[{x, y}, ...], ...]; },   // 'free' mode: keyboard sketches (see below)
+  single: true,                               // 'free' mode: each new stroke replaces the drawing
   check: function (f) { return f.coverage('curve') >= 0.45 || 'Keep going'; } }
 ```
 
@@ -114,6 +116,11 @@ Progress helpers for render:
   redrawable before reveal). Mode `'free'` stores raw points (L-shapes, vertical lines).
   Render it with `D.drawing(key)` (plum while predicting, a dashed ghost after).
 - A step completes on pointer-up (or Enter / an arrow key on its handle) if `check` passes.
+- Keyboard and `free` drawings: a freehand stroke cannot be typed, so give the step `kshapes(f)`, a list of
+  candidate sketches (arrays of `{x, y}`; an optional `.name` on each array is read to screen readers). Arrow
+  keys cycle the sketches, Enter accepts. Without `kshapes` the keys do nothing on a free step (before, they
+  wrote 'fn' bins into the free drawing and broke it). `coverage()` is for 'fn' mode only; check a free
+  drawing's points yourself. Week 5 (5.10) uses both `kshapes` and `single`.
 
 ### Handles
 
@@ -153,7 +160,7 @@ placed after everything else (including handles)**, so call order does not matte
 | `D.area(pts, o)` | filled polygon (`fill`, `fo`, `op`), under layer |
 | `D.dot(x, y, o)` | dot; `o.pr` makes it land with an overshoot |
 | `D.ghost(x, y, o)` | dashed plum ghost of a guess |
-| `D.drop(x, y, o)` | dashed guides to both axes (`o.x: false` / `o.y: false`) |
+| `D.drop(x, y, o)` | dashed guides to both axes (`o.x: false` / `o.y: false`; `o.reg: false` keeps them out of the label placer) |
 | `D.arrow(...)`, `D.arrowP(...)`, `D.plineP(...)` | data / pixel arrow, pixel line |
 | `D.text(px, py, s, o)` | raw pixel text, exactly there (`o.reg` registers it) |
 | `D.label(s, cands, o)` | collision-avoiding label; `cands` = `[{x, y, anchor}]` pixels, best first |
@@ -181,6 +188,10 @@ controls: [
 ```
 
 Steppers tween: `set` runs every frame with in-between values and once more with `final = true`.
+`min` and `max` may be numbers or `fn(f)`, read again on every click (bounds that depend on the round or on
+another control). The buttons' disabled state is refreshed after each stepper / seg click, not when an
+on-graph handle moves, but the clamp at click time always uses the current bounds. A `controls` array built
+by `fn(f)` is evaluated once per reveal (call `f.buildExplore()` from a seg's `set` to rebuild it).
 Rapid clicks step from the pending target, so values never drift. Buttons disable at min / max.
 
 ### Utilities
@@ -244,7 +255,29 @@ Kit.mount([fig], { store: 'example' });
   `.stage`, not the `<svg>`. A handle's custom `hit` area larger than 64px is still usable by
   mouse, but on touch only its 64px disc blocks scrolling: keep custom hit areas near the knob.
 - Keyboard: arrows move the active handle (focus then sticks to it), Space cycles handles,
-  Enter places or confirms. Give handles a `key(f, dx, dy)` when arrows should mean something
+  Enter places or confirms. Focus follows a step, not a list index: arrows keep moving the handle you are
+  on even after they complete its step, and Enter then moves focus to the next step's handle as soon as it
+  exists. When the next step has no handle yet (a place or draw step), arrows keep moving the finished
+  handle and Enter hands the keys to the new step (so a drag step followed by a tap step no longer drops the
+  point on the second arrow press). Any pointer press resets the keyboard pick to the active handle. Specs
+  no longer need to list the new step's handle first (week 3 did, as a workaround; that order still works). Give handles a `key(f, dx, dy)` when arrows should mean something
   other than x / y (rotations, sliding along a curve).
 - Test hook: `Kit.mount` sets `window.__figs[key]` to each Figure, handy for scripts
   (`f.handles()`, `f.S`, `f.sol`, `f.reveal(false)`).
+
+## Changelog
+
+- Week 5 round (kit owner: the week 5 builder). All backward compatible; weeks 2, 3, 4 verify and load clean.
+  1. Keyboard focus in multi-step figures follows the step (also fixes drag-then-place: arrows no longer drop
+     the next step's point) (`f.kstep`, `P.focusStep`): Enter on a finished
+     step moves focus to the newly activated step's handle; arrow presses that complete a step keep focus
+     where it is (`completeStep(i, stay)`). Before, focus stayed on handle index 0.
+  2. Free-mode drawings: `kshapes` keyboard sketches and the `single` stroke option (above).
+  3. Stepper `min` / `max` accept `fn(f)`.
+  4. `D.drop` honors `reg: false` (it always registered its guides before).
+  5. Enter on a step whose check refuses keeps focus on the handle you were on (it used to jump to the
+     step's first handle).
+  6. `noAutoDone: true` on a handle still means arrows never complete its step; only Enter (or a pointer
+     release) does. The focus fix above does not change that.
+  7. kit.css: on narrow screens verdict table cells wrap instead of overflowing the panel.
+  8. Documented the `model.score(p, g, sol)` call signature.

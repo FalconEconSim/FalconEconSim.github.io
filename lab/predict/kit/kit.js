@@ -364,8 +364,8 @@
   D.drop = function (x, y, o) {
     o = o || {}; var S = this.S, pr = o.pr == null ? 1 : o.pr; if (pr <= 0.001) return this;
     var p = this.px(x, y), st = { c: o.c || C.soft, w: o.w || 2.5, dash: o.dash || '6 6', op: o.op };
-    if (o.x !== false) { this.add(o.layer || 'over', K.pline(p[0], p[1], p[0], lerp(p[1], S.y0, pr), st)); if (live(o)) this.L.pline(p[0], p[1], p[0], S.y0); }
-    if (o.y !== false) { this.add(o.layer || 'over', K.pline(p[0], p[1], lerp(p[0], S.x0, pr), p[1], st)); if (live(o)) this.L.pline(p[0], p[1], S.x0, p[1]); }
+    if (o.x !== false) { this.add(o.layer || 'over', K.pline(p[0], p[1], p[0], lerp(p[1], S.y0, pr), st)); if (o.reg !== false && live(o)) this.L.pline(p[0], p[1], p[0], S.y0); }
+    if (o.y !== false) { this.add(o.layer || 'over', K.pline(p[0], p[1], lerp(p[0], S.x0, pr), p[1], st)); if (o.reg !== false && live(o)) this.L.pline(p[0], p[1], S.x0, p[1]); }
     return this;
   };
   D.arrow = function (x1, y1, x2, y2, o) {
@@ -564,7 +564,7 @@
     f.dom = f.model.domain(f.p);
     f.g = spec.initGuess ? spec.initGuess(f) : {};
     f.done = spec.steps.map(function () { return false; });
-    f.cur = 0; f.kpick = false; f.kbd = false; f.setMode('predict'); f.rv = {}; f.ex = {}; f.result = null; f.round++; f.msg = null; f.kplaced = {}; f.skipped = false;
+    f.cur = 0; f.kpick = false; f.kstep = null; f.kshape = null; f.kbd = false; f.setMode('predict'); f.rv = {}; f.ex = {}; f.result = null; f.round++; f.msg = null; f.kplaced = {}; f.skipped = false;
     f.$('.q').innerHTML = rich(val(spec.question, f));
     f.$('.setup').innerHTML = val(spec.setup, f) || '';
     f.$('.predict').hidden = false; f.$('.verdict').hidden = true; f.$('.explore').hidden = true; f.$('.again').hidden = true;
@@ -591,7 +591,7 @@
   };
 
   // try to complete step i; a step's check(f) may return false or a message string to refuse
-  P.completeStep = function (i) {
+  P.completeStep = function (i, stay) {
     var f = this; if (i == null || !f.predicting) return;
     var st = f.spec.steps[i];
     if (st.check) {
@@ -600,9 +600,19 @@
     }
     f.msg = null;
     f.done[i] = true;
-    var next = f.done.indexOf(false);
+    var next = f.done.indexOf(false), was = f.cur;
     f.cur = next < 0 ? f.spec.steps.length : next;
+    if (f.cur !== was && !stay) f.focusStep();
     f.updateSteps();
+  };
+  // keyboard focus follows the step: once arrows / Space picked a handle (kpick), a new step's
+  // handle takes the focus as soon as it appears. With no handle for the new step (a place step
+  // not yet placed, or all steps done) the focus stays where it was.
+  P.focusStep = function () {
+    var f = this; if (!f.kpick || !f.S) return;
+    var hs = f.handles(), on = f.keyHandle(hs);
+    if (on && on.step === f.cur) return;   // already on a handle of this step (e.g. a refused Enter): stay there
+    for (var j = 0; j < hs.length; j++) if (hs[j].step === f.cur) { f.kfocus = j; f.kstep = f.cur; return; }
   };
 
   /* geometry */
@@ -675,7 +685,12 @@
   P.keyHandle = function (hs) {
     if (!hs.length) return null;
     var act = hs.filter(function (h) { return h.active; });
-    if (this.kfocus != null && this.kfocus < hs.length && this.kpick) return hs[this.kfocus];
+    if (this.kpick) {
+      // focus follows a step's handle even when the spec reorders its handle list between renders
+      var kf = this.kfocus != null && this.kfocus < hs.length ? hs[this.kfocus] : null;
+      if (this.kstep != null && !(kf && kf.step === this.kstep)) for (var j = 0; j < hs.length; j++) if (hs[j].step === this.kstep) return hs[j];
+      if (kf) return kf;
+    }
     return act[0] || hs[hs.length - 1];
   };
   // apply a handle's snap and call its setter (data coordinates, clamped to the frame)
@@ -742,7 +757,7 @@
 
   P.finishReveal = function () {
     var f = this, spec = f.spec, res = f.result;
-    f.setMode('explore'); f.kpick = false;
+    f.setMode('explore'); f.kpick = false; f.kstep = null;
     f.root.classList.remove('is-revealing'); f.root.classList.add('is-explore');
     if (spec.explore && spec.explore.init) spec.explore.init(f);
     var t = TALLY[f.id] || { played: 0, best: 0, streak: 0 };
@@ -815,7 +830,7 @@
         var v = c._target != null ? c._target : c.get(f), o = f.root.querySelector('[data-ctl-val="' + i + '"]');
         if (o) o.textContent = c.fmt ? c.fmt(v) : num(v, 2);
         f.root.querySelectorAll('.st-btn[data-ctl="' + i + '"]').forEach(function (b) {
-          var d = +b.getAttribute('data-dir'); b.disabled = d < 0 ? (c.min != null && v <= c.min + 1e-9) : (c.max != null && v >= c.max - 1e-9);
+          var d = +b.getAttribute('data-dir'), lo = val(c.min, f), hi = val(c.max, f); b.disabled = d < 0 ? (lo != null && v <= lo + 1e-9) : (hi != null && v >= hi - 1e-9);
         });
       } else if (c.kind === 'seg') {
         var cur = c.get(f);
@@ -830,7 +845,8 @@
       var from = c.get(f), base = c._target != null ? c._target : from;
       var to = base + (+btn.getAttribute('data-dir')) * (c.step || 1);
       to = Math.round(to * 1e6) / 1e6;
-      if (c.min != null) to = Math.max(c.min, to); if (c.max != null) to = Math.min(c.max, to);
+      var lo = val(c.min, f), hi = val(c.max, f);   // min / max may be numbers or fn(f), read at every click
+      if (lo != null) to = Math.max(lo, to); if (hi != null) to = Math.min(hi, to);
       if (Math.abs(to - base) < 1e-9) return;
       c._target = to; f.syncControls();
       f.tween(from, to, c.dur || 450, function (v, fin) { c.set(f, v, fin); }, function () { c._target = null; f.syncControls(); });
@@ -880,7 +896,7 @@
       if (e.button > 0) return;
       var pt = f.local(e), t = f.target(pt, e.pointerType !== 'mouse');
       if (!t) return;
-      e.preventDefault(); f.kbd = false;
+      e.preventDefault(); f.kbd = false; f.kpick = false; f.kstep = null;   // a pointer hands keyboard focus back to the active handle
       try { stg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
       f.drag = t; f.dragId = e.pointerId; f.lastPt = null;
       if (t.kind === 'draw') f.drawStart(t.step);
@@ -949,7 +965,8 @@
    *   st.mode 'free': raw points, any shape (L-shapes, vertical lines) */
   P.drawStart = function (i) {
     var f = this, st = f.spec.steps[i];
-    if (st.mode === 'free') { if (!f.g[st.key]) f.g[st.key] = []; else if (f.g[st.key].length) f.g[st.key].push(null); }
+    // st.single: every new stroke replaces the drawing (one-stroke shapes such as an L)
+    if (st.mode === 'free') { if (!f.g[st.key] || st.single) f.g[st.key] = []; else if (f.g[st.key].length) f.g[st.key].push(null); }
   };
   P.drawTo = function (i, X, Y, last) {
     var f = this, st = f.spec.steps[i], key = st.key;
@@ -983,7 +1000,10 @@
     if (f.revealing) return;
     var dx = k === 'ArrowRight' ? 1 : k === 'ArrowLeft' ? -1 : 0, dy = k === 'ArrowUp' ? 1 : k === 'ArrowDown' ? -1 : 0;
     var big = e.shiftKey ? 5 : 1;
-    if (f.predicting) {
+    // arrows that just completed a drag step keep moving that handle; they must not drop the next
+    // step's point (or start its drawing) until Enter hands the keyboard over
+    var held = f.predicting && f.kpick && f.kstep != null && f.kstep !== f.cur && f.handles().some(function (h) { return h.step === f.kstep; });
+    if (f.predicting && !held) {
       var st = f.spec.steps[f.cur];
       // place steps: Enter drops the point (at st.kstart or mid-plot), arrows move it, Enter again confirms
       var placed = st && st.kind === 'place' && (st.key ? !!f.g[st.key] : f.kplaced[f.cur]);
@@ -993,6 +1013,17 @@
         f.$('.sr').textContent = 'Point placed. Arrow keys move it, Enter confirms.';
         f.render(); e.preventDefault(); return;
       }
+      // free drawings by keyboard: arrows cycle the spec's candidate sketches (st.kshapes(f) -> [[{x, y}], ...]), Enter accepts
+      if (st && st.kind === 'draw' && st.mode === 'free' && (dx || dy || k === 'Enter')) {
+        e.preventDefault(); if (!st.kshapes) return;
+        var shp = st.kshapes(f), n = shp.length, d = dx || -dy;
+        if (d || (f.kshape == null && !(f.g[st.key] && f.g[st.key].length))) {
+          f.kshape = f.kshape == null ? 0 : (f.kshape + d + n) % n; f.kbd = true;
+          f.g[st.key] = shp[f.kshape].slice();
+          f.$('.sr').textContent = 'Sketch ' + (f.kshape + 1) + ' of ' + n + (shp[f.kshape].name ? ': ' + shp[f.kshape].name : '') + '. Arrow keys switch sketches, Enter accepts.';
+        } else f.completeStep(f.cur);
+        f.render(); return;
+      }
       if (st && st.kind === 'draw' && (dx || dy || k === 'Enter')) {
         f.keyDraw(f.cur, dy * big);
         if (k === 'Enter') f.completeStep(f.cur);
@@ -1001,20 +1032,27 @@
     }
     var hs = f.handles();
     if (k === ' ' && hs.length > 1) {
-      var cur = hs.indexOf(f.keyHandle(hs)); f.kfocus = (cur + 1) % hs.length; f.kpick = true; f.kbd = true;
+      var cur = hs.indexOf(f.keyHandle(hs)); f.kfocus = (cur + 1) % hs.length; f.kstep = hs[f.kfocus].step; f.kpick = true; f.kbd = true;
       f.$('.sr').textContent = 'Handle ' + (f.kfocus + 1) + ' of ' + hs.length + ' selected.';
       f.render(); e.preventDefault(); return;
     }
     if (!dx && !dy && k !== 'Enter') return;
     var h = f.keyHandle(hs); if (!h) return;
-    e.preventDefault(); f.kbd = true; f.kfocus = hs.indexOf(h); f.kpick = true;
-    if (k === 'Enter') { if (h.step != null) f.completeStep(h.step); f.render(); return; }
+    e.preventDefault(); f.kbd = true; f.kfocus = hs.indexOf(h); f.kstep = h.step; f.kpick = true;
+    if (k === 'Enter') {
+      if (h.step != null) {
+        f.completeStep(h.step); f.focusStep();
+        // the next step has no handle yet (a place or draw step): hand the keys to it
+        if (f.kstep !== f.cur && f.cur < f.spec.steps.length) { f.kpick = false; f.kstep = null; f.$('.sr').textContent = 'Step ' + (f.cur + 1) + ': ' + String(f.stepPrompt(f.cur)).replace(/<[^>]+>/g, ''); }
+      }
+      f.render(); return;
+    }
     var nx = h.x != null ? h.x : S.ix(h.px[0]), ny = h.y != null ? h.y : S.iy(h.px[1]);
     var ks = h.kstep, kx = ks ? (typeof ks === 'object' ? ks.x : ks) : (h.snap ? (typeof h.snap === 'object' ? h.snap.x : h.snap) : S.X / 100);
     var ky = ks ? (typeof ks === 'object' ? ks.y : ks) : (h.snap ? (typeof h.snap === 'object' ? h.snap.y : h.snap) : S.Y / 100);
     if (h.key) h.key(f, dx * big, dy * big);
     else f.setHandle(h, nx + dx * big * (kx || S.X / 100), ny + dy * big * (ky || S.Y / 100));
-    if (h.step != null && f.predicting && !h.noAutoDone) f.completeStep(h.step);
+    if (h.step != null && f.predicting && !h.noAutoDone) f.completeStep(h.step, true);   // arrows keep focus; Enter moves on
     f.render();
   };
   P.keyDraw = function (i, dy) {
