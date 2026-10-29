@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<!--
+  EC224 Week 11 figure lab, version 3: "Scrollytelling".
+  Each figure is a short scroll-driven story: the graph stays pinned while 6 short steps
+  scroll past, each step moves the graph to a new state, and the last step hands the
+  student one or two big controls.
+
+  Prior art borrowed from:
+  - The Pudding, "How to implement scrollytelling with six different libraries"
+    (Russell Goldenberg): sticky graphic + step triggers at a fixed offset, steps drive
+    state rather than scroll progress, so scrolling back reverses cleanly.
+  - scrollama (Goldenberg): the trigger-line idea; here a ~40 line rAF version in scrolly.js
+    so the phone layout can move the trigger below the pinned graph.
+  - NYT graphics and Distill ("Communicating with Interactive Articles", Hohman et al. 2020):
+    one idea per step, the graph is the main character, text points at what just changed.
+  - Bret Victor, "Explorable Explanations", and Nicky Case: end each story by handing the
+    reader the knob, with only the one or two knobs that matter.
+  - ManimGX films on the site: paper ground, thick strokes, labels set in open space,
+    curves that draw themselves in, the small film-style results table (here, the scoreboard).
+  - D3 v7 for scales and tweening.
+-->
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+  <title>Week 11: Public goods and externalities, told in scroll</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+</head>
+<body>
+<a class="skip" href="#f111">Skip to the first figure</a>
+<header class="hero">
+  <p class="hero-week">EC224, Week 11</p>
+  <h1>Public goods and externalities</h1>
+  <p class="hero-dek">Five short stories, each told with one graph. Scroll to play a story, scroll back to rewind it. At the end of each one the graph is yours to play with.</p>
+  <nav class="toc" aria-label="Figures">
+    <ol>
+      <li><a href="#f111"><span class="toc-n">11.1</span> Pollution and the Pigouvian tax</a></li>
+      <li><a href="#f112"><span class="toc-n">11.2</span> Cap-and-trade</a></li>
+      <li><a href="#f113"><span class="toc-n">11.3</span> Spillover benefits and the subsidy</a></li>
+      <li><a href="#f114"><span class="toc-n">11.4</span> Public goods and free riders</a></li>
+      <li><a href="#f115"><span class="toc-n">11.5</span> The Coase theorem</a></li>
+    </ol>
+  </nav>
+</header>
+
+<main>
+<!-- ================================================================ 11.1 -->
+<section class="fig" id="f111" aria-labelledby="f111-h">
+  <header class="fig-hd">
+    <p class="fig-n">Figure 11.1</p>
+    <h2 id="f111-h">Pollution and the Pigouvian tax</h2>
+  </header>
+  <div class="scrolly">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-t">11.1 Pigouvian tax</span><span class="prog" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="t"></i></span></div>
+      <div class="chart"></div>
+      <div class="board" aria-live="polite"></div>
+    </div>
+    <div class="steps">
+      <div class="step" style="--c:#1f6fb2"><p>Here is a market. The <b class="k-blue">blue line</b> is demand: what buyers will pay for one more unit. Economists call it marginal benefit, <b class="k-blue">MB = 100 - Q</b>.</p></div>
+      <div class="step" style="--c:#c85a3c"><p>Firms supply along their own cost of one more unit, the private marginal cost <b class="k-orange">PMC = 10 + Q</b>. The market lands where the lines cross: <b>45 units at $55</b>.</p></div>
+      <div class="step" style="--c:#6b52a8"><p>But every unit also pollutes. Neighbors suffer <b class="k-gold">$20 of harm</b> per unit, the marginal external cost (MEC). Stack it on top of PMC and you get the true cost to society, <b class="k-purple">SMC</b>.</p></div>
+      <div class="step" style="--c:#6b52a8"><p>Society wants output where the full cost meets the benefit: SMC = MB at <b class="k-purple">Q* = 35</b>.</p></div>
+      <div class="step" style="--c:#b03a2e"><p>The market ignores the $20 and makes 10 extra units. Each one costs society more than it is worth. The <b class="k-red">red triangle</b> is the deadweight loss: &frac12; &times; 10 &times; 20 = <b class="k-red">$100</b>.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>The fix: a <b class="k-gold">$20 tax</b> on each unit. The firm now pays for the harm, so its cost line rises onto SMC, and the market picks <b class="k-purple">35 units</b> on its own. The loss is gone. Some pollution remains: the efficient amount is not zero.</p></div>
+      <div class="step step-try" style="--c:#7a1f5c">
+        <h3>Your turn</h3>
+        <p>Make pollution more or less harmful, then switch the tax on and off.</p>
+        <div class="ctrls"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 11.2 -->
+<section class="fig" id="f112" aria-labelledby="f112-h">
+  <header class="fig-hd">
+    <p class="fig-n">Figure 11.2</p>
+    <h2 id="f112-h">Cap-and-trade: let the cheap cleaner do more</h2>
+  </header>
+  <div class="scrolly">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-t">11.2 Cap-and-trade</span><span class="prog" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="t"></i></span></div>
+      <div class="chart"></div>
+      <div class="board" aria-live="polite"></div>
+    </div>
+    <div class="steps">
+      <div class="step" style="--c:#4a5257"><p>Two factories must cut <b>100 units</b> of pollution between them. For each firm, the more it cleans up, the more the next unit costs.</p></div>
+      <div class="step" style="--c:#1f6fb2"><p><b class="k-blue">Firm A</b> cleans up cheaply: its marginal abatement cost is <b class="k-blue">MAC = 2e</b>. <b class="k-orange">Firm B</b> is expensive: <b class="k-orange">MAC = 8e</b>.</p></div>
+      <div class="step" style="--c:#4a5257"><p>Rule one: equal shares, 50 units each. A's last unit costs <b class="k-blue">$100</b>, but B's costs <b class="k-orange">$400</b>. Total bill: <b>$12,500</b>.</p></div>
+      <div class="step" style="--c:#4a5257"><p>Move some cleanup from B to A. Each unit B drops saves more than it costs A to pick up. At 65 and 35 the bill falls to <b>$9,125</b>.</p></div>
+      <div class="step" style="--c:#a07800"><p>A permit market finishes the job. Firms trade permits until both face the same price, <b class="k-gold">$160</b>. Now A cuts <b class="k-blue">80</b> and B cuts <b class="k-orange">20</b>.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>Same 100 units, for <b class="k-green">$8,000</b> instead of $12,500: <b class="k-green">36% cheaper</b>. When every firm's last unit costs the same, the cleanup is as cheap as it can be.</p></div>
+      <div class="step step-try" style="--c:#7a1f5c">
+        <h3>Your turn</h3>
+        <p>Split the 100 units yourself and hunt for the cheapest mix. Then let permits decide.</p>
+        <div class="ctrls"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 11.3 -->
+<section class="fig" id="f113" aria-labelledby="f113-h">
+  <header class="fig-hd">
+    <p class="fig-n">Figure 11.3</p>
+    <h2 id="f113-h">Spillover benefits and the subsidy</h2>
+  </header>
+  <div class="scrolly">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-t">11.3 Pigouvian subsidy</span><span class="prog" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="t"></i></span></div>
+      <div class="chart"></div>
+      <div class="board" aria-live="polite"></div>
+    </div>
+    <div class="steps">
+      <div class="step" style="--c:#1f6fb2"><p>Flu shots. The <b class="k-blue">blue line</b> is each buyer's own benefit from one more shot: <b class="k-blue">MB = 100 - Q</b>.</p></div>
+      <div class="step" style="--c:#c85a3c"><p>Sellers supply along marginal cost, <b class="k-orange">MC = 10 + Q</b>. The market settles at <b>45 shots for $55</b>.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>But your shot also protects the people around you: a marginal external benefit of <b class="k-gold">$20</b> per shot. Add it on top to get society's benefit, <b class="k-green">MSB = MB + MEB</b>.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>Society wants shots up to where MSB meets MC: <b class="k-green">Q* = 55</b>.</p></div>
+      <div class="step" style="--c:#b03a2e"><p>The market stops at 45. Shots 45 to 55 are worth more to society than they cost, yet never happen. The <b class="k-red">red triangle</b> is the lost value: &frac12; &times; 10 &times; 20 = <b class="k-red">$100</b>.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>The fix: a <b class="k-gold">$20 subsidy</b> per shot. Buyers act as if the spillover were theirs, demand rises onto MSB, and the market makes <b class="k-green">55 shots</b>. Sellers get $65, buyers pay $45, and the loss is gone.</p></div>
+      <div class="step step-try" style="--c:#7a1f5c">
+        <h3>Your turn</h3>
+        <p>Change how much each shot protects others, then switch the subsidy on and off.</p>
+        <div class="ctrls"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 11.4 -->
+<section class="fig" id="f114" aria-labelledby="f114-h">
+  <header class="fig-hd">
+    <p class="fig-n">Figure 11.4</p>
+    <h2 id="f114-h">Public goods and free riders</h2>
+  </header>
+  <div class="scrolly">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-t">11.4 Free riding</span><span class="prog" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="t"></i></span></div>
+      <div class="chart"></div>
+      <div class="board" aria-live="polite"></div>
+    </div>
+    <div class="steps">
+      <div class="step" style="--c:#14181b"><p>A streetlight for the block costs <b>$300</b>. Once it is on, it lights the street for everyone, and nobody can be left in the dark.</p></div>
+      <div class="step" style="--c:#1f6fb2"><p><b class="k-blue">Amara</b> values the light at <b>$120</b>. That is less than $300, so she will not buy it alone.</p></div>
+      <div class="step" style="--c:#6b52a8"><p><b class="k-purple">Ben</b> and <b class="k-gold">Cy</b> value it at $120 each too. Nobody will pay $300 by themselves.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>But they all enjoy the same light, so stack their values: $120 + $120 + $120 = <b class="k-green">$360</b>. That is vertical summation. It beats the cost by <b class="k-green">$60</b>, so the light is worth building.</p></div>
+      <div class="step" style="--c:#b03a2e"><p>The catch: each neighbor waits for the others to pay, since they get the light either way. So nobody pays. The light is <b class="k-red">never built</b> and the $60 is lost. That is free riding.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>The fix: a deal where everyone pays <b>$100</b> or nobody does, like a pledge drive or a local tax. Each gets $120 of light for $100, <b class="k-green">$20 better off</b>, so all three sign up.</p></div>
+      <div class="step step-try" style="--c:#7a1f5c">
+        <h3>Your turn</h3>
+        <p>Change how many neighbors share the light and how much each one values it.</p>
+        <div class="ctrls"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 11.5 -->
+<section class="fig" id="f115" aria-labelledby="f115-h">
+  <header class="fig-hd">
+    <p class="fig-n">Figure 11.5</p>
+    <h2 id="f115-h">The Coase theorem</h2>
+  </header>
+  <div class="scrolly">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-t">11.5 Coase</span><span class="prog" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="t"></i></span></div>
+      <div class="chart"></div>
+      <div class="board" aria-live="polite"></div>
+    </div>
+    <div class="steps">
+      <div class="step" style="--c:#1f6fb2"><p>A factory sits upstream from a neighbor. Each unit of pollution S saves the factory less than the last, <b class="k-blue">MB = 100 - 2S</b>, and hurts the neighbor more, <b class="k-red">MD = 2S</b>.</p></div>
+      <div class="step" style="--c:#14181b"><p>The efficient level is <b>S* = 25</b>. There, the last unit is worth $50 to the factory and does $50 of harm.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>Say the <b>factory</b> owns the right to pollute, so it starts at 50. Units 25 to 50 hurt the neighbor more than they help the factory: <b class="k-green">$1,250</b> of gains from a deal.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>So the <b>neighbor pays the factory</b> to cut back to 25. Any payment from $625 to $1,875 leaves both better off.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>Now flip it. The <b>neighbor</b> owns the right to clean air, so pollution starts at 0. Units 0 to 25 help the factory more than they hurt the neighbor.</p></div>
+      <div class="step" style="--c:#2f7d55"><p>This time the <b>factory pays the neighbor</b> to allow 25. Same end point either way. Who owns the right decides who pays, not how much gets polluted.</p></div>
+      <div class="step step-try" style="--c:#7a1f5c">
+        <h3>Your turn</h3>
+        <p>Give the right to one side, then let them bargain. Bargaining assumes it is cheap to negotiate.</p>
+        <div class="ctrls"></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <p>Numbers follow the Week 11 textbook and visualization page. Models: MB = 100 - Q, PMC = 10 + Q; MAC<sub>A</sub> = 2e, MAC<sub>B</sub> = 8e; streetlight cost $300; MB = 100 - 2S, MD = 2S.</p>
+</footer>
+
+<script src="scrolly.js"></script>
+<script src="figs.js"></script>
+</body>
+</html>

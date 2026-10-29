@@ -1,0 +1,146 @@
+:root {
+  --paper: #eff1ee;
+  --raised: #ffffff;
+  --ink: #14181b;
+  --soft: #4a5257;
+  --plum: #7a1f5c;
+  --blueT: #14568c;
+  --orangeT: #a8431f;
+  --greenT: #256647;
+  --redT: #93301f;
+  --goldT: #7d5a00;
+  --rule: #d5dad6;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Libre Franklin', system-ui, sans-serif;
+  font-size: 19px;
+  line-height: 1.5;
+}
+
+.masthead, main, .foot { max-width: 1380px; margin: 0 auto; padding: 0 40px; }
+
+.masthead { padding-top: 64px; padding-bottom: 24px; }
+.course { margin: 0 0 10px; color: var(--plum); font-weight: 700; font-size: 18px; }
+h1 { margin: 0 0 18px; font-size: clamp(38px, 5.2vw, 64px); line-height: 1.04; font-weight: 800; letter-spacing: -0.02em; max-width: 16ch; }
+.lede { margin: 0 0 22px; font-size: 22px; line-height: 1.45; max-width: 46ch; color: var(--ink); }
+.howto { display: flex; align-items: center; gap: 14px; margin: 0; color: var(--soft); font-size: 17px; max-width: 60ch; }
+.howto svg { flex: none; }
+
+.figure {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 56px;
+  padding: 72px 0 40px;
+  border-top: 2px solid var(--rule);
+  margin-top: 48px;
+}
+.figure:first-child { margin-top: 24px; }
+.fig-text { padding-top: 28px; }
+.fig-n { margin: 0 0 6px; color: var(--plum); font-weight: 700; font-size: 18px; }
+h2 { margin: 0 0 18px; font-size: 38px; line-height: 1.08; font-weight: 800; letter-spacing: -0.01em; }
+.fig-text p { margin: 0 0 16px; }
+.try { color: var(--plum); font-weight: 600; }
+
+.fig-stage { position: relative; min-width: 0; }
+.stage-bar { display: flex; justify-content: flex-end; height: 0; position: relative; z-index: 1; }
+.reset {
+  font: inherit; font-size: 16px; font-weight: 600; color: var(--soft);
+  background: transparent; border: 1.5px solid #b8bfba; border-radius: 999px;
+  padding: 8px 16px; min-height: 44px; cursor: pointer;
+}
+.reset:hover { color: var(--ink); border-color: var(--ink); }
+.reset:focus-visible { outline: 3px solid var(--plum); outline-offset: 2px; }
+
+.plot-host { width: 100%; }
+svg.plot { display: block; overflow: visible; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+svg.plot text { font-family: 'Libre Franklin', system-ui, sans-serif; }
+
+.axis { stroke: var(--ink); stroke-width: 2; }
+.tick { fill: var(--soft); font-weight: 500; }
+.tick.strong { font-weight: 800; }
+.axis-title { fill: var(--soft); font-weight: 600; }
+.axis-val { font-weight: 800; paint-order: stroke; stroke: var(--paper); stroke-width: 5px; }
+.axis-val.soft { font-weight: 700; }
+.lbl { font-family: 'Libre Franklin', system-ui, sans-serif; }
+.halo { paint-order: stroke; stroke: var(--paper); stroke-width: 6px; stroke-linejoin: round; }
+.hint { font-style: italic; }
+.toast-b { filter: drop-shadow(0 2px 3px rgba(20, 24, 27, 0.25)); }
+
+.caption {
+  margin: 14px 0 0; font-size: 20px; line-height: 1.5; max-width: 62ch; min-height: 4.5em;
+}
+.caption b { font-weight: 800; }
+.caption .k { color: var(--ink); }
+.caption .r { color: var(--redT); }
+.caption .g { color: var(--goldT); }
+.caption .gr { color: var(--greenT); }
+.caption .b { color: var(--blueT); }
+.caption .o { color: var(--orangeT); }
+
+.sr-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------------- handles ---------------- */
+.handle { touch-action: none; outline: none; }
+.handle .h-hit { fill: transparent; }
+.handle .h-glow { fill: var(--c); opacity: 0; transition: opacity 0.15s; }
+.handle:hover .h-glow { opacity: 0.2; }
+.handle:focus-visible .h-glow { opacity: 0.3; }
+.handle.dragging .h-glow { opacity: 0.32; }
+.handle .h-body {
+  fill: #fff; stroke: var(--c); stroke-width: 4;
+  filter: drop-shadow(0 1.5px 2px rgba(20, 24, 27, 0.3));
+  transform-box: fill-box; transform-origin: center; transition: transform 0.12s;
+}
+.handle:hover .h-body, .handle.dragging .h-body { transform: scale(1.1); }
+.handle .h-grip { stroke: var(--c); stroke-width: 2.4; stroke-linecap: round; fill: none; pointer-events: none; }
+.handle .h-arrows { fill: var(--c); opacity: 0.8; pointer-events: none; }
+.handle .h-ring { fill: none; stroke: var(--c); stroke-width: 3; opacity: 0; pointer-events: none; }
+.handle:focus-visible .h-ring { opacity: 1; stroke: var(--plum); stroke-dasharray: 4 4; r: 24px; }
+.handle .h-ring.pulse { animation: snap 0.55s ease-out; }
+.handle.beckon .h-ring { animation: beckon 2.4s ease-out infinite; }
+@keyframes snap { from { opacity: 0.95; r: 18px; stroke-width: 5px; } to { opacity: 0; r: 42px; stroke-width: 1px; } }
+@keyframes beckon { 0% { opacity: 0.8; r: 18px; } 55% { opacity: 0; r: 40px; } 100% { opacity: 0; r: 40px; } }
+html.is-dragging, html.is-dragging * { cursor: grabbing !important; }
+
+/* Coase "who holds the right" chips */
+.chip { cursor: pointer; outline: none; }
+.chip .chip-b { fill: var(--paper); stroke: var(--plum); stroke-width: 2; stroke-dasharray: 5 4; }
+.chip .chip-t { fill: var(--plum); }
+.chip:hover .chip-b { fill: #f6eef3; }
+.chip:focus-visible .chip-b { stroke-width: 3.5; stroke-dasharray: none; }
+.chip.on { cursor: default; }
+.chip.on .chip-b { fill: var(--plum); stroke-dasharray: none; }
+.chip.on .chip-t { fill: #fff; }
+
+.foot { padding-top: 40px; padding-bottom: 64px; color: var(--soft); font-size: 16px; border-top: 2px solid var(--rule); margin-top: 40px; }
+
+@media (max-width: 1080px) {
+  .figure { grid-template-columns: 1fr; gap: 12px; padding-top: 48px; }
+  .fig-text { padding-top: 0; max-width: 62ch; }
+}
+@media (max-width: 600px) {
+  body { font-size: 17px; }
+  .masthead, main, .foot { padding: 0 16px; }
+  .masthead { padding-top: 36px; }
+  h1 { font-size: 38px; }
+  .lede { font-size: 19px; }
+  .howto { font-size: 16px; }
+  h2 { font-size: 30px; }
+  .figure { padding-top: 36px; margin-top: 32px; }
+  .caption { font-size: 18px; }
+  .reset { font-size: 15px; padding: 6px 14px; }
+  .fig-stage { display: flex; flex-direction: column; }
+  .stage-bar { order: 3; height: auto; justify-content: flex-start; margin-top: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .handle .h-ring.pulse, .handle.beckon .h-ring { animation: none; }
+  .handle .h-body { transition: none; }
+}
