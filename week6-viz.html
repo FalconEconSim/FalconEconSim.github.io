@@ -77,7 +77,7 @@
   <nav class="rail" aria-label="Figures on this page">
     <div class="rail-hd">This week</div>
     <ol>
-      <li><a href="#sec-6-1"><span>6.1</span><span class="rail-title">Cost Minimisation Sandbox</span></a></li>
+      <li><a href="#sec-6-1"><span>6.1</span><span class="rail-title">Cost Minimization Sandbox</span></a></li>
       <li><a href="#sec-6-2"><span>6.2</span><span class="rail-title">Two-Panel Cost Derivation</span></a></li>
       <li><a href="#sec-6-5"><span>6.5</span><span class="rail-title">SR vs LR Cost Curves</span></a></li>
       <li><a href="#sec-6-6"><span>6.6</span><span class="rail-title">LRAC Envelope Builder</span></a></li>
@@ -101,10 +101,10 @@
       <div class="fig-prose">
         <div class="fig-hd">
       <span class="fig-n">Fig 6.1</span>
-      <h3>Cost Minimisation Sandbox</h3>
+      <h3>Cost Minimization Sandbox</h3>
     </div>
         <p class="fig-intro">
-      Set the wage w, rental rate v, and target output q using the sliders. Then drag the dot on the graph to your best guess for the cost-minimising bundle (L, K). The dot turns green when you find the tangency. When you are ready to check your work, click "Show Optimal Bundle" to see the step-by-step solution.
+      Set the wage w, rental rate v, and target output q using the sliders. Then drag the dot on the graph to your best guess for the cost-minimizing bundle (L, K). The dot turns green when you find the tangency. When you are ready to check your work, click "Show Optimal Bundle" to see the step-by-step solution.
     </p>
         <div class="v61-steps" id="v61-steps">
       <div id="v61-steps-content"></div>
@@ -141,7 +141,7 @@
       <h3>Two-Panel Cost Derivation</h3>
     </div>
         <p class="fig-intro">
-      Isoquant panel: the isoquant map with the expanding isocost sweeping across output levels. Total Cost panel: the TC(q) curve building itself point by point. Step through output levels to watch each cost-minimising bundle map to a TC value.
+      Isoquant panel: the isoquant map with the expanding isocost sweeping across output levels. Total Cost panel: the TC(q) curve building itself point by point. Step through output levels to watch each cost-minimizing bundle map to a TC value.
     </p>
         <div class="v62-form-note" id="v62-form-note">
       Cobb-Douglas production: each input is imperfectly substitutable. The expansion path is a ray through the origin, meaning the firm scales both inputs proportionally as output rises. The TC curve is linear in q (constant returns to scale here).
@@ -278,7 +278,7 @@
       Think about it: if labor suddenly costs more, what would a cost-conscious manager do? Would you use the same amount of labor? Or would you try to use less labor and substitute toward capital?
     </p>
         <p class="fig-intro" style="margin-top:-0.75rem;">
-      Use the wage slider below to see the effect. Watch how the isocost line rotates, and see where the new cost-minimising bundle lands. Does it match your intuition?
+      Use the wage slider below to see the effect. Watch how the isocost line rotates, and see where the new cost-minimizing bundle lands. Does it match your intuition?
     </p>
       </div>
       <div class="fig-bay">
@@ -637,7 +637,7 @@ function v61Draw(Lcur,Kcur){
     ctx.font='16px Libre Franklin,system-ui,sans-serif';
     const optLbls=[
       {ax:ox,ay:oy,x:ox+12,y:oy-10,w:ctx.measureText('(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')').width*1.45+8,h:18,text:'(L*='+opt.Ls.toFixed(2)+', K*='+opt.Ks.toFixed(2)+')',color:'#2f5c3a',fontSize: 13,bold:false},
-      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimised!').width*1.45+8,h:18,text:'Cost minimised!',color:'#2f5c3a',fontSize: 13,bold:false},
+      {ax:ox,ay:oy,x:ox+12,y:oy+8,w:ctx.measureText('Cost minimized!').width*1.45+8,h:18,text:'Cost minimized!',color:'#2f5c3a',fontSize: 13,bold:false},
     ];
     // Resolve isoquant + isocost + optimal labels together; keep above the x-axis.
     const all61=lbls61.concat(optLbls);
@@ -673,7 +673,7 @@ function v61Draw(Lcur,Kcur){
      with the dot sitting in the middle of its text. */
   for (let a6 = 0; a6 < Math.PI*2; a6 += Math.PI/4) linePts61.push([bx + Math.cos(a6)*9, by + Math.sin(a6)*9]);
   linePts61.push([bx,by]);
-  const verdict = atOpt ? 'Cost minimised!' : (!onIsoquant ? 'Not on isoquant yet' : 'MRTS ≠ w/v');
+  const verdict = atOpt ? 'Cost minimized!' : (!onIsoquant ? 'Not on isoquant yet' : 'MRTS ≠ w/v');
   const verdictCol = atOpt ? '#2f5c3a' : '#8b95a5';
   dragLbls.push({ax:bx,ay:by,x:bx+12,y:by+8,w:ctx.measureText(verdict).width*1.45+8,h:18,text:verdict,color:verdictCol,fontSize: 13,bold:false});
   // Resolve isoquant + isocost + drag labels together; keep above the x-axis.
@@ -688,12 +688,17 @@ function v61Draw(Lcur,Kcur){
     '<div class="readout-col"><div class="readout-label">K (drag)</div><div class="readout-val">'+Kcur.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">MRTS = K/L</div><div class="readout-val" style="color:var(--d-second)">'+MRTS.toFixed(2)+'</div></div>' +
     '<div class="readout-col"><div class="readout-label">w/v (price ratio)</div><div class="readout-val">'+(wv).toFixed(2)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">TC = wL + vK</div><div class="readout-val">'+TC.toFixed(2)+'</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2f5c3a">'+opt.TC.toFixed(2)+'</div></div>' +
+    /* A bundle off the isoquant makes a different output, so its cost is not
+       comparable with the minimum cost of making Q. Compare only on it. */
+    (onIsoquant
+      ? '<div class="readout-col"><div class="readout-label">TC = wL + vK</div><div class="readout-val">'+TC.toFixed(2)+'</div></div>' +
+        '<div class="readout-col"><div class="readout-label">Min TC*</div><div class="readout-val" style="color:#2f5c3a">'+opt.TC.toFixed(2)+'</div></div>'
+      : '') +
     '</div>' +
     '<div style="margin-top:0.4rem;font-size:0.84rem;color:var(--ink-soft)">' +
-    (atOpt?'Cost minimised: MRTS = w/v. This is the cheapest way to produce Q='+q+'.':
-      'Not optimal. Drag the dot toward the tangency where MRTS = w/v = '+(wv).toFixed(2)+'. Click "Show Optimal Bundle" when ready.') +
+    (atOpt?'Cost minimized: MRTS = w/v. This is the cheapest way to produce Q='+q+'.':
+      (!onIsoquant ? 'Off the isoquant: this bundle makes Q = '+Q_bundle.toFixed(1)+', not Q = '+q+', so its cost cannot be compared with the minimum yet. Move onto the isoquant first.' :
+      'Not optimal. Drag the dot toward the tangency where MRTS = w/v = '+(wv).toFixed(2)+'. Click "Show Optimal Bundle" when ready.')) +
     '</div>';
 }
 
@@ -811,7 +816,7 @@ function v62Bundle(q, form){
 
 const V62_FORM_NOTES={
   cd: 'Cobb-Douglas production: each input is imperfectly substitutable. The expansion path is a ray through the origin, meaning the firm scales both inputs proportionally as output rises. The TC curve is linear in q (constant returns to scale here).',
-  subs: 'Perfect substitutes: Q = L + K. The two inputs are interchangeable, so the firm uses only the cheaper one. With equal prices (w = v = 4), every bundle on an isoquant costs the same, so every point on it is cost-minimising (the figure marks the midpoint). TC is linear in q with slope equal to the input price.',
+  subs: 'Perfect substitutes: Q = L + K. The two inputs are interchangeable, so the firm uses only the cheaper one. With equal prices (w = v = 4), every bundle on an isoquant costs the same, so every point on it is cost-minimizing (the figure marks the midpoint). TC is linear in q with slope equal to the input price.',
   comp: 'Perfect complements (Leontief): Q = min(L, K). Inputs must be used in a fixed 1:1 ratio; substitution is impossible. The expansion path is the 45-degree ray L = K. Each isoquant is L-shaped. Adding more of one input beyond the ratio yields zero extra output.'
 };
 

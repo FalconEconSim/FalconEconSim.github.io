@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>Week 7: Interactive Visualizations - EC224</title>
+  <title>Week 7: Interactive Visualizations · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
@@ -299,7 +299,7 @@
           <div class="fig-plot"><div class="demo-svg-wrap" id="cvs77-wrap"></div></div>
           <div class="ctrl-row">
       <button class="btn" id="v77-step-btn" onclick="v77NextStep()">Step 1: Consumer Effect &rarr;</button>
-      <button class="btn" onclick="v77Reset()">Reset</button>
+      <button class="btn" onclick="v77Reset()">Reset steps</button>
     </div>
           <div class="fig-state" id="v77-readout">Choose a scenario and click through the steps to trace the causal chain.</div>
         </div>
@@ -743,7 +743,7 @@ function v71Draw(){
     `<div class="readout-row">
       <div class="readout-col"><div class="readout-label">Quantity q</div><div class="readout-val">${q.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">Price P* = MR</div><div class="readout-val">$${P.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">TFC</div><div class="readout-val">$${tfc.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">TFC</div><div class="readout-val">$${tfc.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">VC shift</div><div class="readout-val">${ms>=0?'+':''}${ms.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">TC(q)</div><div class="readout-val">$${tc_val.toFixed(2)}</div></div>
       <div class="readout-col"><div class="readout-label">TR = P*q</div><div class="readout-val">$${tr_val.toFixed(2)}</div></div>
@@ -757,7 +757,7 @@ function v71Update(){
   const tfc=parseFloat(document.getElementById('v71-tfc').value);
   const ms=parseFloat(document.getElementById('v71-ms').value);
   document.getElementById('v71-p-val').textContent='$'+P.toFixed(2);
-  document.getElementById('v71-tfc-val').textContent='$'+tfc.toFixed(1);
+  document.getElementById('v71-tfc-val').textContent='$'+tfc.toFixed(2);
   document.getElementById('v71-ms-val').textContent=(ms>=0?'+':'')+ms.toFixed(2);
   v71Draw();
 }
@@ -1364,7 +1364,7 @@ function v77Reset(){
   const data=v77scenarios_data[sc]||v77scenarios_data['sub'];
   const btn=document.getElementById('v77-step-btn');
   btn.textContent='Step 1: '+data.labels[1]+' Effect →';
-  btn.onclick=v77NextStep;
+  btn.onclick=v77NextStep;btn.disabled=false;
   document.getElementById('v77-readout').innerHTML='Choose a scenario and click through the steps to trace the causal chain.';
   v77Draw();
 }
@@ -1376,7 +1376,7 @@ function v77NextStep(){
   document.getElementById('v77-readout').innerHTML=v77shownSteps.join('<br>');
   const btn=document.getElementById('v77-step-btn');
   if(v77step<3){btn.textContent='Step '+(v77step+1)+': '+data.labels[v77step+1]+' Effect →';}
-  else{btn.textContent='Reset';btn.onclick=()=>{ v77Reset(); };}
+  else{btn.textContent='All steps shown';btn.disabled=true;}
   v77Draw();
 }
 // ── FIG 7.7 D3 SVG ───────────────────────────────────────────────────────

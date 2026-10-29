@@ -316,10 +316,10 @@ function v91Draw() {
   var dwl = 0.5 * (p - MC) * (Qeff - Qp);
   document.getElementById('v91-readout').innerHTML =
     '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">Fixed fee F</div><div class="readout-val">$' + CS.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Usage profit</div><div class="readout-val">$' + usage.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Total profit</div><div class="readout-val">$' + total.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Deadweight loss</div><div class="readout-val">$' + dwl.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Fixed fee F</div><div class="readout-val">$' + CS.toFixed(2) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Usage profit</div><div class="readout-val">$' + usage.toFixed(2) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Total profit</div><div class="readout-val">$' + total.toFixed(2) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Deadweight loss</div><div class="readout-val">$' + dwl.toFixed(2) + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + (Math.abs(p - MC) < 1e-6 ? EC.gain : EC.second) + '">' +
     (Math.abs(p - MC) < 1e-6
       ? 'At p = MC: total profit $20 is exactly twice uniform-monopoly profit ($10), and DWL = 0.'
@@ -374,24 +374,24 @@ function v92Draw() {
   if (isTP) d3Halo(svg, scX(Q / 2), scY((top + bot) / 2), 'fixed fee F = $200', { color: STROKE_PS, size: 10 });
   d3Seg(svg, scX, scY, Q, 0, Q, P, EC.indicator, 1.5, '3,3');
   d3Dot(svg, scX(Q), scY(P), EC.indicator);
-  d3Halo(svg, scX(Q), scY(P) - 12, 'P = $' + P.toFixed(1), { color: EC.indicator, size: 10 });
+  d3Halo(svg, scX(Q), scY(P) - 12, 'P = $' + P.toFixed(2), { color: EC.indicator, size: 10 });
 
-  if (V92 === 'unreg') { verdict = 'Unregulated: output is restricted to Q = 27.5, price is highest ($32.5), and the firm earns a large profit (green). Profitable for the firm, but the most inefficient regime: consumers lose and deadweight loss is largest.'; col = EC.transfer; }
+  if (V92 === 'unreg') { verdict = 'Unregulated: output is restricted to Q = 27.5, price is highest ($32.50), and the firm earns a large profit (green). Profitable for the firm, but the most inefficient regime: consumers lose and deadweight loss is largest.'; col = EC.transfer; }
   else if (V92 === 'mc') { verdict = 'MC pricing: efficient output Q = 55 at P = $5, but price is below average cost, so the firm makes a $200 loss (red) and needs a subsidy to survive.'; col = EC.loss; }
   else if (isTP) { verdict = 'Two-part: the firm charges p = MC = $5 (so output is the efficient Q = 55, no deadweight loss) plus a fixed fee F = $200 that exactly covers the fixed cost. The firm breaks even with no subsidy, but consumers pay the fee on top of marginal cost.'; col = EC.gain; }
   else { verdict = 'AC pricing: the firm breaks even (P = AC, zero profit) at Q ≈ ' + Q.toFixed(1) + '. A small deadweight loss remains versus MC pricing, but no subsidy is required. This is the usual real-world choice.'; col = EC.gain; }
   document.getElementById('v92-readout').innerHTML =
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">Quantity</div><div class="readout-val">' + Q.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Avg cost</div><div class="readout-val">$' + AC.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$' + P.toFixed(2) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Avg cost</div><div class="readout-val">$' + AC.toFixed(2) + '</div></div>' +
     '<div class="readout-col"><div class="readout-label">' + (isTP ? 'Net profit' : 'Profit') + '</div><div class="readout-val">' + (!isTP && profit < -0.5 ? '-$' + (-profit).toFixed(0) : '$' + (isTP ? 0 : Math.max(0, profit)).toFixed(0)) + '</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
 
   // Per-regime intuition + "what to look for" (Naveen's request): help students
   // read the figure, not just the numbers.
   var NOTE = {
-    unreg: { t: 'Unregulated monopoly', b: 'Left to itself the firm maximises its own profit, setting marginal revenue equal to marginal cost and then charging whatever the demand curve will bear. It deliberately holds output back to keep the price high.',
+    unreg: { t: 'Unregulated monopoly', b: 'Left to itself the firm maximizes its own profit, setting marginal revenue equal to marginal cost and then charging whatever the demand curve will bear. It deliberately holds output back to keep the price high.',
       look: 'The green profit rectangle is large, but the quantity marker sits far to the <b>left</b> of the efficient output. That leftward gap is surplus that is never created, the cost of leaving the monopoly alone.' },
     mc: { t: 'Marginal-cost pricing', b: 'Forcing price down to marginal cost gives the efficient quantity (the last unit’s value equals its cost). But a natural monopoly has MC below AC everywhere, so pricing at MC means selling below average cost.',
       look: 'The quantity marker now reaches the <b>efficient</b> output, but the price line sits <b>below the AC curve</b>. The red rectangle is the firm’s loss, which a subsidy would have to cover.' },
@@ -579,13 +579,13 @@ function v94Draw() {
   var profit = 20 * (n - 1) / n, pct = profit / 20 * 100;
   var verdict = n === 1
     ? 'One block, priced at MC so the whole market still buys, captures nothing beyond cost: the competitive outcome. (A single-price monopolist would instead charge $2 and earn $10, as in Fig 9.1.)'
-    : 'With ' + n + ' blocks the firm captures $' + profit.toFixed(1) + ', ' + pct.toFixed(0) + '% of the $20 perfect-discrimination maximum. Each block turns another slice of the surplus triangle into profit.' +
+    : 'With ' + n + ' blocks the firm captures $' + profit.toFixed(2) + ', ' + pct.toFixed(0) + '% of the $20 perfect-discrimination maximum. Each block turns another slice of the surplus triangle into profit.' +
       (n >= 8 ? ' Keep going: in the limit of one block per unit (one price per consumer) the staircase meets the demand curve and captures all $20, that is first-degree (perfect) price discrimination.' : '');
   document.getElementById('v94-readout').innerHTML =
     '<div class="readout-row">' +
     '<div class="readout-col"><div class="readout-label">Blocks</div><div class="readout-val">' + n + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Profit captured</div><div class="readout-val">$' + profit.toFixed(1) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Perfect-discrim. max</div><div class="readout-val">$20.0</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Profit captured</div><div class="readout-val">$' + profit.toFixed(2) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Perfect-discrim. max</div><div class="readout-val">$20.00</div></div>' +
     '<div class="readout-col"><div class="readout-label">Share captured</div><div class="readout-val">' + pct.toFixed(0) + '%</div></div>' +
     '</div><p style="margin-top:.6rem;color:' + EC.transfer + '">' + verdict + '</p>';
 }

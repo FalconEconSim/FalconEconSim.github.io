@@ -118,11 +118,16 @@
    one). Keep the button, it is a headline feature, but shrink it from 60 to
    48px (still above the 44px tap-target minimum), tuck it lower into the
    corner, and drop the pulse ring, whose expanding shadow is visually noisy
-   right next to a figure. The peek label was already hidden here. */
+   right next to a figure. The peek label was already hidden here.
+   Even at 44px it still sat on the last x tick of full-width plots (Fig 8.1),
+   so while a figure is under its corner it tucks sideways into the page
+   gutter, leaving a 16px tab that still opens the chat (see tuck() below). */
 "@media (max-width:480px){.ecfab-pop{right:12px;left:12px;width:auto;bottom:82px;height:auto;top:66px;max-height:none;}" +
 ".ecfab-label{display:none;}" +
-".ecfab-btn{right:12px;bottom:12px;width:48px;height:48px;}" +
+".ecfab-btn{right:max(8px,env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));width:44px;height:44px;border-radius:13px;transition:transform .2s,box-shadow .16s;}" +
 ".ecfab-btn svg{width:26px;height:26px;}" +
+".ecfab-tuck .ecfab-btn{transform:translateX(36px);box-shadow:0 4px 12px rgba(122,31,92,.16);}" +
+".ecfab-tuck .ecfab-badge{display:none;}" +
 ".ecfab-btn::after{display:none;}" +
 ".ecfab-badge{font-size:.5rem;padding:1px 4px;}}";
     var s = document.createElement("style");
@@ -209,6 +214,33 @@
       if (e.target.closest && e.target.closest(".ecbot-lb")) return;
       setOpen(false);
     });
+
+    // Phones: slide the button into the right-hand gutter while a figure is
+    // under its corner, so it never covers plot content. It stays tappable.
+    var phone = window.matchMedia ? window.matchMedia("(max-width:480px)") : null;
+    var tuckQueued = false;
+    function tuck() {
+      tuckQueued = false;
+      var on = false;
+      if (phone && phone.matches && !open && document.elementsFromPoint) {
+        var W = window.innerWidth, H = window.innerHeight;
+        var pts = [[W - 30, H - 32], [W - 50, H - 32], [W - 30, H - 52], [W - 50, H - 52]];
+        for (var i = 0; i < pts.length && !on; i++) {
+          var stack = document.elementsFromPoint(pts[i][0], pts[i][1]);
+          for (var j = 0; j < stack.length; j++) {
+            var el = stack[j];
+            if (wrap.contains(el)) continue;
+            if (el.closest && el.closest(".fig-bay,.fig-plot,.jxgbox,canvas,figure")) { on = true; break; }
+          }
+        }
+      }
+      wrap.classList.toggle("ecfab-tuck", on);
+    }
+    function queueTuck() { if (!tuckQueued) { tuckQueued = true; requestAnimationFrame(tuck); } }
+    window.addEventListener("scroll", queueTuck, { passive: true });
+    window.addEventListener("resize", queueTuck);
+    btn.addEventListener("click", queueTuck);
+    setTimeout(tuck, 600);
 
     // one-time gentle nudge for first-time visitors
     var seen = false;

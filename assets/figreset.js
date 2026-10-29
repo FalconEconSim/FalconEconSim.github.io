@@ -57,7 +57,7 @@
     var found = null;
     sec.querySelectorAll('button').forEach(function (b) {
       if (found || b.classList.contains('fig-reset')) return;
-      if (/reset/i.test(b.textContent || '')) found = b;
+      if (b.hasAttribute('data-own-reset') || /reset/i.test(b.textContent || '')) found = b;
     });
     return found;
   }
