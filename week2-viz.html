@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>EC224 Week 2: Consumer Choice · Intermediate Microeconomics</title>
+  <title>Week 2: Interactive Visualizations · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
@@ -498,6 +498,32 @@ td:first-child { font-weight: 500; color: var(--ink); }
   <!-- JSXGraph -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+<script>
+/* Keep JSXGraph tick numbers inside narrow boards. The axis margins are set in
+   graph units (about 6-8% of the range), which on a phone is too few pixels for
+   the y tick labels and the x tick labels, so they were clipped at the edges.
+   This only widens the left/bottom margin when it is under a pixel floor. */
+(function(){
+  if(!window.JXG||!JXG.JSXGraph)return;
+  var init=JXG.JSXGraph.initBoard;
+  JXG.JSXGraph.initBoard=function(id,attr){
+    var b=init.apply(this,arguments);
+    if(!attr||!attr.axis||!b.setBoundingBox)return b;
+    var sbb=b.setBoundingBox;
+    b.setBoundingBox=function(bb){
+      var w=this.canvasWidth,h=this.canvasHeight,L=38,B=28;
+      if(w>3*L&&h>3*B&&bb&&bb[0]<0&&bb[2]>0&&bb[3]<0&&bb[1]>0){
+        if(-bb[0]/(bb[2]-bb[0])*w<L) bb=[-L*bb[2]/(w-L),bb[1],bb[2],bb[3]];
+        if(-bb[3]/(bb[1]-bb[3])*h<B) bb=[bb[0],bb[1],bb[2],-B*bb[1]/(h-B)];
+      }
+      var a=[bb];for(var i=1;i<arguments.length;i++)a.push(arguments[i]);
+      return sbb.apply(this,a);
+    };
+    b.setBoundingBox(b.getBoundingBox(),false);
+    return b;
+  };
+})();
+</script>
   <!-- D3 (force-simulation draggable label overlays on top of JSXGraph boards, matching S6/S8 gold-standard pattern) -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <!-- MathJax, load synchronously so it's ready for the full page -->
@@ -3749,7 +3775,7 @@ function buildCornerExplorer() {
                 As you drag P right, the tangent flattens. The green triangle shows the local &Delta;X and &Delta;Y at P: how many units of Y the consumer gives up for one more X. MRS = &Delta;Y/&Delta;X at that point. <strong>Diminishing MRS</strong> means this ratio shrinks as X grows.
               </div>
               <div id="mrs-steepness-bar" style="margin-top:0.3rem;">
-                <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform: none;letter-spacing: normal;color: var(--ink-soft);margin-bottom:4px;">MRS magnitude (flat left, steep right)</div>
+                <div style="font-family:var(--font-mono);font-size: var(--t-caption);text-transform: none;letter-spacing: normal;color: var(--ink-soft);margin-bottom:4px;">MRS magnitude (short bar = flat tangent, long bar = steep)</div>
                 <div style="height:8px;background:#e4e4e4;border-radius:99px;overflow:hidden;">
                   <div id="mrs-bar-fill" style="height:100%;background:var(--amber);border-radius:99px;transition:width 0.2s ease;width:50%;"></div>
                 </div>
@@ -3770,7 +3796,7 @@ function buildCornerExplorer() {
           <h2>Why Indifference Curves Cannot Cross</h2>
         </div>
         <p class="fig-intro">
-          Indifference curves <em>never</em> intersect. If they did, the transitivity of preferences would be violated. Drag the inner IC upward until the two curves cross, then watch the logical contradiction appear.
+          Indifference curves <em>never</em> intersect. If they did, the transitivity of preferences would be violated. Use the slider to raise the inner IC until the two curves cross, then watch the logical contradiction appear.
         </p>
       </div>
       <div class="fig-bay">
@@ -3778,7 +3804,7 @@ function buildCornerExplorer() {
           <div class="fig-hd"><span class="fig-n">Fig 2.9</span><h3>Why ICs Cannot Cross</h3></div>
           <div class="ctrl-row">
             <div class="ctrl" style="flex:1">
-              <label>Drag the inner IC upward to try to make them cross</label>
+              <label>Raise the inner IC to try to make the curves cross</label>
               <input type="range" id="iccross-u2" min="2" max="9" step="any" value="3" aria-label="Inner indifference curve utility level, drag up to try to make curves cross" />
               <div style="display:flex;justify-content:space-between;font-size: var(--t-caption);color:var(--ink-soft);margin-top:2px;"><span>Inner IC low</span><span>Move up to cross</span></div>
             </div>

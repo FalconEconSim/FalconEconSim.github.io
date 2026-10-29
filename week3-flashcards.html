@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>Week 3: Flashcards - EC224</title>
+  <title>Week 3: Flashcards · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
@@ -219,6 +219,7 @@ let flipped  = false;
 let scores   = { easy:0, ok:0, hard:0 };
 let streak   = 0;
 let filter   = 'All';
+const TYPE_LABEL = { Def:'Definition', TF:'True / False' };
 
 /* ── Utilities ── */
 function shuffle(arr) { for (let i = arr.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
@@ -256,11 +257,11 @@ function render() {
 
     <div class="fc-filters">
       ${['All','Def','Concept','Formula','TF'].map(f =>
-        `<button class="fc-ftag${f===filter?' active':''}" onclick="setFilter('${f}')">${f==='All'?'All types':f}</button>`
+        `<button class="fc-ftag${f===filter?' active':''}" onclick="setFilter('${f}')">${f==='All'?'All types':(TYPE_LABEL[f]||f)}</button>`
       ).join('')}
     </div>
 
-    <span class="fc-badge" style="background:${tc.bg};color:${tc.fg}">${card.type}</span>
+    <span class="fc-badge" style="background:${tc.bg};color:${tc.fg}">${TYPE_LABEL[card.type]||card.type}</span>
 
     <div id="fc-card-zone">
       <div class="fc-scene">

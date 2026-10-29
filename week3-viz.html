@@ -13,6 +13,32 @@
   <script src="assets/figkit.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+<script>
+/* Keep JSXGraph tick numbers inside narrow boards. The axis margins are set in
+   graph units (about 6-8% of the range), which on a phone is too few pixels for
+   the y tick labels and the x tick labels, so they were clipped at the edges.
+   This only widens the left/bottom margin when it is under a pixel floor. */
+(function(){
+  if(!window.JXG||!JXG.JSXGraph)return;
+  var init=JXG.JSXGraph.initBoard;
+  JXG.JSXGraph.initBoard=function(id,attr){
+    var b=init.apply(this,arguments);
+    if(!attr||!attr.axis||!b.setBoundingBox)return b;
+    var sbb=b.setBoundingBox;
+    b.setBoundingBox=function(bb){
+      var w=this.canvasWidth,h=this.canvasHeight,L=38,B=28;
+      if(w>3*L&&h>3*B&&bb&&bb[0]<0&&bb[2]>0&&bb[3]<0&&bb[1]>0){
+        if(-bb[0]/(bb[2]-bb[0])*w<L) bb=[-L*bb[2]/(w-L),bb[1],bb[2],bb[3]];
+        if(-bb[3]/(bb[1]-bb[3])*h<B) bb=[bb[0],bb[1],bb[2],-B*bb[1]/(h-B)];
+      }
+      var a=[bb];for(var i=1;i<arguments.length;i++)a.push(arguments[i]);
+      return sbb.apply(this,a);
+    };
+    b.setBoundingBox(b.getBoundingBox(),false);
+    return b;
+  };
+})();
+</script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script>
 /* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
@@ -325,7 +351,7 @@ var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n
       <div class="fig-prose">
         <p class="fig-intro">Any price change can be split into a substitution effect (SE), moving along the original IC at new prices, and an income effect (IE), shifting between ICs due to changed real income. Use the slider to vary the new price and watch the decomposition update live.</p>
         <div class="callout common-mistake" style="margin-top:1rem;">
-            <strong>Remember:</strong> The compensated budget line has the <em>new</em> slope (-P<sub>X,new</sub>/P<sub>Y</sub>) but provides just enough income to maintain the original utility U<sub>A</sub>. Point C is its tangency with the original IC. SE is always negative for own-price increases.
+            <strong>Remember:</strong> The compensated budget line has the <em>new</em> slope (-P<sub>X,new</sub>/P<sub>Y</sub>) but provides just enough income to maintain the original utility U<sub>A</sub>. Point C is its tangency with the original IC. The SE always moves X opposite to the price: negative when P<sub>X</sub> rises, positive when it falls (as at the default here).
           </div>
       </div>
       <div class="fig-bay">
@@ -1351,8 +1377,8 @@ function drawV2() {
   for (let gy = gridStep2; gy < ymax; gy += gridStep2) {
     b.create('segment',[[-xmax*0.08,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
-  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b.create('text',[xmax*0.9,-ymax*0.04,'X'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
+  b.create('text',[-xmax*0.06,ymax*0.96,'Y'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
 
   // Budget lines
   const segOrig  = b.create('segment',[[0,yi],[xiA,0]],{strokeColor:EC.steel,strokeWidth:2,fixed:true});
@@ -1572,10 +1598,10 @@ function initViz3() {
   for (let gy = 1; gy <= 6; gy++) {
     b2.create('segment',[[-2,gy],[xmax,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
-  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize: 16,color:'#8b95a5',fixed:true});
-  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
-  b2.create('text',[-1.5,6.5,'P'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b1.create('text',[xmax*0.9,-1.5,'X'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
+  b1.create('text',[-1.5,ymax*0.95,'Y'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
+  b2.create('text',[xmax*0.9,-0.3,'X'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
+  b2.create('text',[-1.5,6.5,'P'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
 
   // Draw expansion path (static dashed line). Its label is rendered by the
   // D3 SVG overlay below as a draggable force-label (S6/S8 style) instead of
@@ -1635,7 +1661,7 @@ function initViz3() {
 
     if (v3Pt) { try{b1.removeObject(v3Pt);}catch(e){} }
     v3Pt = b1.create('point',[xs,ys],{size:5,fillColor:EC.red,strokeColor:'#fff',strokeWidth:1.5,fixed:true,
-      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize: 16,color:EC.red,offset:[14,-18]}});
+      name:`(${nn(xs)},${nn(ys)})`,withLabel:true,label:{fontSize: 16,color:EC.red,anchorX:'middle',offset:[0,-30]}});
 
     // Right panel: draw demand curve at current I
     [v3D0, v3D0drop, v3D0pt, v3D0lbl, v3D1, v3D2, v3RefPt, v3D1lbl].forEach(o => {
@@ -1880,8 +1906,8 @@ function initViz5() {
   for (let gy = 1; gy <= 8; gy++) {
     b.create('segment',[[-2,gy],[80,gy]],{strokeColor:'#f0f0f0',strokeWidth:1,fixed:true,highlight:false,layer:1});
   }
-  b.create('text',[76,-0.3,'X'],{fontSize: 16,color:'#8b95a5',fixed:true});
-  b.create('text',[-1.5,8.3,'P'],{fontSize: 16,color:'#8b95a5',fixed:true});
+  b.create('text',[76,-0.3,'X'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
+  b.create('text',[-1.5,8.3,'P'],{fontSize: 16,color:'#8b95a5',fixed:true,cssClass:'JXGtext axis-label',highlightCssClass:'JXGtext axis-label'});
 
   redrawV5();
 

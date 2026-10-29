@@ -861,6 +861,9 @@
     if (!s2 || s2.length > 34) return false;
     if (isValueAnnotation(el)) return false;
     if (isNumberish(s2)) return false;
+    /* a label drawn on its own white box is a curve label, not an axis
+       title: moving it outward left the box behind, empty (Fig 3.3) */
+    if (el.tagName.toLowerCase() === 'text' && ownBackingRect(el)) return false;
     var tr = (el.getAttribute && el.getAttribute('transform')) || '';
     if (/rotate/i.test(tr)) return true;
     var hb = host.getBoundingClientRect(), b = el.getBoundingClientRect();
