@@ -1,0 +1,81 @@
+<!doctype html>
+<!--
+  EC224 Week 11 figure lab, version 5: "Predict, then see".
+  Each figure opens with a question and a partly drawn graph. The student commits a guess ON the
+  graph (tap to place, drag, or draw freehand), presses Reveal, and watches the answer draw itself
+  in like the ManimGX films, with the guess left behind as a ghost. Then a scored verdict, a short
+  why, an Explore mode with one or two big controls, and "Try a new one" with fresh, checked numbers.
+
+  Prior art borrowed from:
+  - NYT Upshot "You Draw It" (Aisch, Cox, Quealy 2015): draw the curve first, then the reveal
+    with your line kept for comparison. 11.3 is a direct homage.
+  - EE2dev/you-draw-it (d3 library): 0 to 100 score from the absolute distance to the truth.
+  - Seeing Theory (Brown University): one idea per panel, controls that sit on the picture.
+  - Brilliant.org: predict before you are told; feedback that is warm, never punitive.
+  - Bret Victor "Explorable Explanations" and Nicky Case: the reader acts, the system answers.
+  - Mafs / JSXGraph: draggable points constrained to an axis, keyboard nudges for handles.
+  - anti-slop checklist (miqdadbadjuber/anti-slop): real buttons with visible states, pointer
+    cursors, reduced motion respected, explicit media sizes, tap targets checked at phone width.
+  Plain HTML/CSS/JS, no build step; only Libre Franklin from Google Fonts.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Predict, then see: Week 11</title>
+<meta name="description" content="Externalities and public goods as guessing games: predict on the graph, then watch the answer.">
+<link rel="icon" href="../../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skiplink" href="#f111">Skip to the first figure</a>
+<header class="top">
+  <p class="crumb">EC224, Week 11: externalities and public goods</p>
+  <h1>Predict, then see.</h1>
+  <p class="lead">Five questions about externalities and public goods. Answer each one on the graph by tapping, dragging or drawing. Your guess shows in <span class="you-swatch">plum</span>. Then press Reveal and watch the real answer draw itself in.</p>
+  <nav class="board" aria-label="Figures">
+    <a href="#f111"><span class="b-num">11.1</span><span class="b-name">Pigouvian tax</span><span class="b-best" data-fig="f111"></span></a>
+    <a href="#f112"><span class="b-num">11.2</span><span class="b-name">Cap and trade</span><span class="b-best" data-fig="f112"></span></a>
+    <a href="#f113"><span class="b-num">11.3</span><span class="b-name">Subsidy</span><span class="b-best" data-fig="f113"></span></a>
+    <a href="#f114"><span class="b-num">11.4</span><span class="b-name">Public goods</span><span class="b-best" data-fig="f114"></span></a>
+    <a href="#f115"><span class="b-num">11.5</span><span class="b-name">Coase</span><span class="b-best" data-fig="f115"></span></a>
+  </nav>
+</header>
+
+<main>
+  <section class="fig" id="f111" aria-label="Figure 11.1"></section>
+  <section class="fig" id="f112" aria-label="Figure 11.2"></section>
+  <section class="fig" id="f113" aria-label="Figure 11.3"></section>
+  <section class="fig" id="f114" aria-label="Figure 11.4"></section>
+  <section class="fig" id="f115" aria-label="Figure 11.5"></section>
+</main>
+
+<footer class="foot">
+  <p>Scores stay in this browser only. Numbers on first load match the Week 11 page; "Try a new one" draws new numbers, each checked by script.</p>
+</footer>
+
+<script src="models.js"></script>
+<script src="predict.js"></script>
+<script src="figs.js"></script>
+<script>
+  (function () {
+    var figs = {};
+    window.W11FIGS.forEach(function (spec) { figs[spec.key] = new Predict.Figure(spec, document.getElementById(spec.key)); });
+    window.__figs = figs;   // for the test scripts
+    function board() {
+      var t = Predict.tally();
+      document.querySelectorAll('.b-best').forEach(function (el) {
+        var r = t[el.getAttribute('data-fig')];
+        el.textContent = r && r.played ? 'best ' + r.best : 'not tried';
+        el.classList.toggle('has', !!(r && r.played));
+      });
+    }
+    board();
+    document.addEventListener('w11tally', board);
+  })();
+</script>
+</body>
+</html>
