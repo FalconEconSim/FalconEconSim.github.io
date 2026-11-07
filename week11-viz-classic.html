@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u4);--unit-ink:var(--u4-ink)">
+<head>
+  <meta name="robots" content="noindex" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <title>Week 11 Visualizations: Public Goods &amp; Externalities</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/theme.js"></script>
+  <script src="assets/figkit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    .demo-svg-wrap { padding: 0; }
+    .demo-svg-wrap svg { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week11.html">Week 11</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" data-nav-open>All weeks</button></span>
+</div>
+
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-111"><span>11.1</span><span class="rail-title">Externality &amp; the Pigouvian Tax</span></a></li>
+      <li><a href="#sec-112"><span>11.2</span><span class="rail-title">Cap-and-Trade: Equalizing MAC</span></a></li>
+      <li><a href="#sec-113"><span>11.3</span><span class="rail-title">Positive Externality &amp; Subsidy</span></a></li>
+      <li><a href="#sec-114"><span>11.4</span><span class="rail-title">Public Goods &amp; Free-Riding</span></a></li>
+      <li><a href="#sec-115"><span>11.5</span><span class="rail-title">The Coase Theorem</span></a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">11</span>
+      <h1>Public Goods &amp; Externalities</h1>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
+
+  <div class="sec-divider">The Externality Wedge</div>
+
+  <!-- FIG 11.1 -->
+  <section class="sec page fig-sec" id="sec-111">
+      <div class="fig-hd">
+        <span class="fig-n">Fig 11.1</span>
+        <h3>Negative Externality &amp; the Pigouvian Tax</h3>
+      </div>
+      <figure class="film" id="film-11-1">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig111-pigou-poster.jpg" aria-label="Animation: Negative externality and the Pigouvian tax" aria-describedby="film-11-1-tx">
+            <source src="media/films/fig111-pigou.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 35s</span>
+          <span class="film-cap">With demand (marginal benefit) MB = 100 - Q, private marginal cost PMC = 10 + Q and a marginal external cost of $20, the market produces 45 units, past the efficient 35 where social marginal cost meets MB, leaving a $100 deadweight loss. A Pigouvian tax of $20 per unit lifts private cost onto SMC, so the market chooses 35 units on its own and the deadweight loss disappears.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-11-1-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Demand is marginal benefit, MB = 100 - Q. The firm's private marginal cost is PMC = 10 + Q. The market settles where they cross: Q = 45 at a price of $55.</li>
+              <li>But every unit also harms third parties: a marginal external cost of $20. Add it on top of private cost to get the social marginal cost, SMC = PMC + MEC.</li>
+              <li>The efficient output counts every cost. It is where SMC = MB: 30 + Q = 100 - Q, so Q* = 35, where buyers value the last unit at $65.</li>
+              <li>The market ignores MEC, so it overproduces. Units 35 to 45 cost society more than buyers value them. The red triangle, 1/2 x 10 x 20 = $100, is the deadweight loss.</li>
+              <li>Now tax each unit $20, equal to MEC at Q*. The firm pays the external cost itself, so its cost curve, PMC + tax, rises onto SMC.</li>
+              <li>The market now lands on Q* = 35 by itself. Buyers pay $65, firms keep $45, and the deadweight loss is gone. Some pollution remains: the efficient amount is not zero.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
+      <div class="fig-prose">
+        <p class="fig-intro">
+      Demand is \(P = 100 - Q\) and private marginal cost is \(PMC = 10 + Q\). Each unit also dumps a marginal external
+      cost \(MEC\) on third parties, so social marginal cost is \(SMC = PMC + MEC\). The market produces where
+      \(PMC = MB\) (too much); the optimum is where \(SMC = MB\). The red triangle is the deadweight loss. Apply the
+      Pigouvian tax \(t^{*} = MEC\) to lift private cost onto the social-cost curve and erase it.
+    </p>
+        <div class="explain">
+      <div class="ex-h">Reading the graph</div>
+      <p>The blue line is marginal benefit (the demand curve). The green line is <em>private</em> marginal cost, what the firm itself pays. The red line sits above it by the marginal external cost \(MEC\), the harm each unit dumps on third parties, so it is the true <em>social</em> marginal cost. The market settles where blue meets green (private cost = benefit) at \(Q_E = 45\). The efficient point is where blue meets red, at \(Q^{*}\). Every unit between \(Q^{*}\) and \(Q_E\) is worth less to buyers than it truly costs society, and those units stack up into the red deadweight-loss triangle.</p>
+      <div class="ex-h">The economics</div>
+      <p>Left alone, the polluter ignores \(MEC\) because it never pays it, so it overproduces. A Pigouvian tax equal to \(MEC\) at the optimum makes the firm feel that external cost, sliding its private-cost line up onto the social-cost line, so the market now chooses \(Q^{*}\) on its own. Notice the efficient amount of pollution is <em>not</em> zero: society tolerates the activity right up to the point where marginal benefit finally equals full social cost.</p>
+    </div>
+        <div class="insight-box gold"><strong>Internalize, don&rsquo;t ban.</strong> The Pigouvian tax \(t^{*}=MEC(Q^{*})\) lifts private cost onto the social-cost curve, moving output to the efficient \(Q^{*}\) and erasing the deadweight loss. Note it does not stop the activity: some pollution remains, because the efficient level is where marginal benefit equals full social cost, not zero.</div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="seg-btns" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:var(--s-4)">
+      <button class="quiz-btn revealed" id="v111-b-off" onclick="v111Tax(false)">Unregulated</button>
+      <button class="quiz-btn" id="v111-b-on" onclick="v111Tax(true)">Apply Pigouvian tax</button>
+    </div>
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs111-wrap"></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Marginal external cost MEC: <span class="ctrl-value" id="v111-mec-val">$20</span></span>
+        <input type="range" id="v111-mec" min="0" max="50" step="2" value="20" oninput="v111Draw()">
+      </div>
+    </div>
+          <div class="fig-state" id="v111-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <div class="sec-divider">Least-Cost Abatement</div>
+
+  <!-- FIG 11.2 -->
+  <section class="sec page fig-sec" id="sec-112">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 11.2</span>
+      <h3>Cap-and-Trade: Equalizing Marginal Abatement Cost</h3>
+    </div>
+        <p class="fig-intro">
+      Two firms must together abate a total amount of pollution. Firm A cleans up cheaply (\(MAC_A = 2e_A\)); Firm B is
+      expensive (\(MAC_B = 8e_B\)). A permit market makes every firm abate up to the same permit price, so the low-cost
+      firm does more of the work. The result meets the target at least cost, far below forcing both firms to abate
+      equally. Slide the total cap to see the permit price and the saving move.
+    </p>
+        <div class="explain">
+      <div class="ex-h">Reading the graph</div>
+      <p>Each firm&rsquo;s marginal abatement cost rises the more it cleans up. Firm A&rsquo;s line (\(MAC_A = 2e_A\)) is flatter, cleaning is cheap for A, while Firm B&rsquo;s (\(MAC_B = 8e_B\)) is steep. A permit market sets a single price, and every firm keeps abating until its own \(MAC\) reaches that price, which is the height where the two curves line up. Because A is the cheaper cleaner, A ends up doing most of the abating and B does little.</p>
+      <div class="ex-h">The economics</div>
+      <p>Total cost is minimized only when the last dollar spent on abatement buys the same reduction at every firm, that is, when their marginal abatement costs are <em>equalized</em>, which is exactly what one common permit price delivers. Forcing both firms to abate the same amount would leave A&rsquo;s cheap capacity idle while B strains at high cost. Letting them trade reallocates the effort to whoever can do it cheapest, hitting the identical environmental target for far less money, here about a third less.</p>
+    </div>
+        <div class="insight-box"><strong>Let the cheap firm clean up.</strong> Equalizing marginal abatement cost across firms hits the pollution target at least total cost. Forcing every firm to abate the same amount wastes the low-cost firm&rsquo;s advantage, here trading lets Firm A do most of the work and cuts total cost by 36%.</div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs112-wrap"></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Total abatement required: <span class="ctrl-value" id="v112-t-val">100</span></span>
+        <input type="range" id="v112-t" min="20" max="150" step="5" value="100" oninput="v112Draw()">
+      </div>
+    </div>
+          <div class="fig-state" id="v112-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <div class="sec-divider">When the Spillover Is Positive</div>
+
+  <!-- FIG 11.3 -->
+  <section class="sec page fig-sec" id="sec-113">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 11.3</span>
+      <h3>Positive Externality &amp; the Pigouvian Subsidy</h3>
+    </div>
+        <p class="fig-intro">
+      Some goods (vaccination, education, a new user joining a network) confer a marginal external benefit \(MEB\) on
+      third parties, so social marginal benefit \(MSB = MB + MEB\) lies above private demand. The market equates
+      \(MB = MC\) and <em>under</em>-produces; the optimum is where \(MSB = MC\). The red triangle is the deadweight loss
+      from too little activity, and a Pigouvian subsidy \(s^{*}=MEB\) closes it. Slide the external benefit and toggle the
+      subsidy.
+    </p>
+        <div class="explain">
+      <div class="ex-h">Reading the graph</div>
+      <p>Private demand (blue) understates the good&rsquo;s true value, because each unit also confers a marginal external benefit \(MEB\) on other people. Adding that on top gives the higher social-benefit line \(MSB = MB + MEB\). The market trades where blue meets marginal cost and <em>under</em>-produces; the efficient quantity is further right, where the social-benefit line meets cost. The gap between them is a deadweight loss from too little activity, the red triangle.</p>
+      <div class="ex-h">The economics</div>
+      <p>A positive externality is the mirror image of pollution, so the fix is a subsidy rather than a tax. A subsidy of \(s^{*} = MEB\) pays the producer or consumer for the benefit they create for others, lifting private demand up onto the social-benefit line and raising output to the efficient level. This is the standard justification for public money going into vaccination, schooling, and research and development, activities whose benefits spill far beyond the person who pays for them.</p>
+    </div>
+        <div class="insight-box gold"><strong>Subsidize the spillover.</strong> A positive externality is the mirror image of a negative one: the market does too <em>little</em>, not too much, so the fix is a subsidy, not a tax. Setting \(s^{*}=MEB(Q^{*})\) pays for the benefit conferred on others and moves output up to the efficient level, which is why governments subsidize vaccines, schooling, and R&amp;D.</div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs113-wrap"></div></div>
+          <div class="ctrl-row">
+      <button class="quiz-btn revealed" id="v113-b-off" onclick="v113Sub(false)">No subsidy</button>
+      <button class="quiz-btn" id="v113-b-on" onclick="v113Sub(true)">Apply Pigouvian subsidy</button>
+      <div class="ctrl">
+        <span class="ctrl-label">Marginal external benefit MEB: <span class="ctrl-value" id="v113-meb-val">$20</span></span>
+        <input type="range" id="v113-meb" min="0" max="40" step="2" value="20" oninput="v113Draw()">
+      </div>
+    </div>
+          <div class="fig-state" id="v113-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <div class="sec-divider">Public Goods &amp; Bargaining</div>
+
+  <!-- FIG 11.4 -->
+  <section class="sec page fig-sec" id="sec-114">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 11.4</span>
+      <h3>Public Goods &amp; the Free-Rider Problem</h3>
+    </div>
+        <p class="fig-intro">
+      A public good (a neighborhood streetlight, a shared security guard) is worth providing when the group&rsquo;s total
+      willingness to pay exceeds its cost, even if no single person values it enough to fund it alone. But because no one
+      can be excluded, each person waits for someone else to pay. Slide the group size and how much each member values the
+      good against a fixed \(\$300\) cost: watch when provision is socially efficient, yet still fails because everyone
+      free-rides.
+    </p>
+        <div class="explain">
+      <div class="ex-h">Reading the graph</div>
+      <p>The left bar is the group&rsquo;s <em>total</em> value (value per person &times; group size \(N\)); the dashed line across both bars is the good&rsquo;s fixed \(\$300\) cost. Providing the good is socially efficient whenever the total-value bar clears the cost line. The right bar shows each individual&rsquo;s <em>own</em> value: when it sits below the cost line, no single person values the good enough to pay for it alone.</p>
+      <div class="ex-h">The economics</div>
+      <p>Because a public good is non-excludable, everyone enjoys it whether or not they chip in, so each person&rsquo;s best move is to wait for someone else to pay, to free-ride. The result is that a good clearly worth providing for the group as a whole can go unprovided, because no individual has the private incentive to fund it. The failure comes from non-excludability, not from the good being expensive: even when everyone would gain, the market under-provides. Real-world fixes coordinate the contributions (an all-or-nothing crowdfunding threshold) or simply finance the good through taxes.</p>
+    </div>
+        <div class="insight-box red"><strong>Efficient, yet unprovided.</strong> Whenever total value exceeds the cost, providing the good is efficient, but each individual&rsquo;s dominant move is to free-ride and hope the others pay. Non-excludability, not the cost, is what makes the market fail: the good is under-provided even though everyone would gain. Fixes coordinate contributions (an all-or-nothing crowdfunding threshold) or fund it through taxes.</div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs114-wrap"></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Group size N: <span class="ctrl-value" id="v114-n-val">3</span></span>
+        <input type="range" id="v114-n" min="1" max="8" step="1" value="3" oninput="v114Draw()">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Value per person: <span class="ctrl-value" id="v114-v-val">$120</span></span>
+        <input type="range" id="v114-v" min="0" max="200" step="10" value="120" oninput="v114Draw()">
+      </div>
+    </div>
+          <div class="fig-state" id="v114-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- FIG 11.5 -->
+  <section class="sec page fig-sec" id="sec-115">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 11.5</span>
+      <h3>The Coase Theorem: Bargaining to Efficiency</h3>
+    </div>
+        <p class="fig-intro">
+      A factory&rsquo;s marginal benefit from polluting falls as it pollutes more (\(MB = 100 - 2S\)); the marginal damage to
+      a neighbor rises (\(MD = 2S\)). The efficient level is where they cross, \(S^{*}=25\). Coase&rsquo;s insight: if
+      property rights are clear and bargaining is cheap, the two parties reach \(S^{*}\) <em>regardless of who holds the
+      right</em>, only the split of the gains changes. Set the starting point by who owns the right and slide the pollution
+      level to see the bargaining range close on \(S^{*}\).
+    </p>
+        <div class="explain">
+      <div class="ex-h">Reading the graph</div>
+      <p>The downward line is the factory&rsquo;s marginal benefit from polluting (\(MB = 100 - 2S\)), it falls because the easy, high-value pollution comes first. The upward line is the neighbor&rsquo;s marginal damage (\(MD = 2S\)), which rises as pollution mounts. They cross at the efficient level \(S^{*} = 25\), where one more unit&rsquo;s benefit to the factory just equals its harm to the neighbor. The two starting markers show the extremes: the polluter&rsquo;s right (pollution starts high) and the neighbor&rsquo;s right (pollution starts at zero).</p>
+      <div class="ex-h">The economics</div>
+      <p>Coase&rsquo;s insight is that if the right is clearly assigned and bargaining is cheap, the two parties trade their way to \(S^{*}\) no matter who holds it, because whenever \(MB \neq MD\) there is a deal that makes both better off. Only the direction of payment changes: with the polluter&rsquo;s right the neighbor pays it to cut back; with the neighbor&rsquo;s right the polluter pays for permission to emit some. Efficiency is identical, only the distribution of the gains differs. The theorem breaks down when many parties are involved or bargaining is costly, which is exactly when we fall back on taxes and regulation.</p>
+    </div>
+        <div class="insight-box"><strong>Rights decide who pays, not the outcome.</strong> Start from the polluter&rsquo;s right (high pollution) and the neighbor pays it to cut back; start from the neighbor&rsquo;s right (zero pollution) and the polluter pays to be allowed some, either way they meet at \(S^{*}=25\). Efficiency does not depend on the allocation of rights, only on the ability to bargain, which is exactly why Coase fails when transaction costs are high or parties are many.</div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs115-wrap"></div></div>
+          <div class="ctrl-row">
+      <button class="quiz-btn" id="v115-b-polluter" onclick="v115Right('polluter')">Polluter owns the right</button>
+      <button class="quiz-btn" id="v115-b-victim" onclick="v115Right('victim')">Neighbor owns the right</button>
+      <div class="ctrl">
+        <span class="ctrl-label">Pollution level S: <span class="ctrl-value" id="v115-s-val">25</span></span>
+        <input type="range" id="v115-s" min="0" max="50" step="1" value="25" oninput="v115Draw()">
+      </div>
+    </div>
+          <div class="fig-state" id="v115-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/figplace.js"></script>
+<script src="assets/vizkit.js"></script>
+<script>
+
+// ── FIG 11.1: externality + Pigouvian tax ───────────────────────────────────
+var V111TAX = false;
+function v111Tax(on) {
+  V111TAX = on;
+  document.getElementById('v111-b-off').classList.toggle('revealed', !on);
+  document.getElementById('v111-b-on').classList.toggle('revealed', on);
+  v111Draw();
+}
+function v111Draw() {
+  var MEC = parseFloat(document.getElementById('v111-mec').value);
+  document.getElementById('v111-mec-val').textContent = '$' + MEC;
+  // MB = 100 - Q, PMC = 10 + Q, SMC = 30... = PMC + MEC
+  var QE = 45;                       // PMC = MB: 10+Q = 100-Q
+  var Qs = (90 - MEC) / 2;           // SMC = MB: 10+Q+MEC = 100-Q
+  var eqQ = V111TAX ? Qs : QE;
+  var eqP = 100 - eqQ;
+
+  var scX = d3.scaleLinear().domain([0, 100]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 105]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs111-wrap');
+  d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
+
+  // DWL triangle between SMC and MB over [Qs, QE] (present whenever untaxed)
+  if (!V111TAX && MEC > 0)
+    d3Poly(svg, scX, scY, [[Qs, 100 - Qs], [QE, 100 - QE], [QE, 10 + QE + MEC]], FILL_DWL, STROKE_DWL);
+
+  d3Seg(svg, scX, scY, 0, 100, 100, 0, EC.primary, 3);           // MB (demand)
+  d3Seg(svg, scX, scY, 0, 10, 90, 100, EC.gain, 2.5);            // PMC (supply)
+  // SMC runs to the top of the plot ($105), so at high MEC it still reaches the
+  // DWL triangle's top corner at Q_E = 45 instead of stopping short of it.
+  if (MEC > 0) d3Seg(svg, scX, scY, 0, 10 + MEC, 95 - MEC, 105, EC.loss, 2.5, V111TAX ? '' : '6,4');  // SMC
+
+  d3Halo(svg, scX(82), scY(100 - 82 + 3), 'MB', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(64), scY(10 + 64 - 12), 'PMC = supply', { color: EC.gain, anchor: 'start', size: 10 });  // under PMC, away from SMC
+  var smcQ = (90 - MEC) * 0.62;      // stays on the SMC segment at every MEC
+  if (MEC > 0) d3Halo(svg, scX(smcQ), scY(10 + smcQ + MEC + 3), V111TAX ? 'PMC + tax = SMC' : 'SMC', { color: EC.loss, size: 10 });
+  if (!V111TAX && MEC > 0) d3Halo(svg, scX((Qs + QE) / 2 + 3), scY(100 - QE + 4), 'DWL', { color: STROKE_DWL, size: 10 });
+
+  d3Seg(svg, scX, scY, eqQ, 0, eqQ, eqP, EC.indicator, 1.4, '3,3');
+  d3Dot(svg, scX(eqQ), scY(eqP), EC.indicator, 6);
+  // Label sits at the foot of the guide line so it never collides with the DWL wedge.
+  d3Halo(svg, scX(eqQ) + 5, scY(6), (V111TAX ? 'Q* = ' : 'Qₑ = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10, anchor: 'start' });
+
+  var dwl = 0.5 * (QE - Qs) * MEC;
+  document.getElementById('v111-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Market Q<sub>E</sub></div><div class="readout-val">' + QE + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Social optimum Q*</div><div class="readout-val">' + Qs.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Pigouvian tax t*</div><div class="readout-val">$' + MEC + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">DWL if unregulated</div><div class="readout-val">$' + dwl.toFixed(0) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (V111TAX ? EC.gain : EC.loss) + '">' +
+    (MEC === 0
+      ? 'With no external cost, private and social cost coincide: the market output Q<sub>E</sub> = 45 is already efficient, so there is no deadweight loss and no tax is needed.'
+      : V111TAX
+      ? 'With the tax t* = $' + MEC + ', private cost rises onto SMC and the market lands at Q* = ' + Qs.toFixed(1) + '. Deadweight loss is eliminated.'
+      : 'The market overproduces at Q<sub>E</sub> = 45, past the optimum Q* = ' + (+Qs.toFixed(1)) + '. Every unit in between costs society more than it is worth: a $' + Math.round(dwl).toLocaleString('en-US') + ' deadweight loss.') +
+    '</p>';
+}
+
+// ── FIG 11.2: cap-and-trade MAC equalisation ────────────────────────────────
+function v112Draw() {
+  var T = parseFloat(document.getElementById('v112-t').value);
+  document.getElementById('v112-t-val').textContent = T;
+  // MAC_A = 2 eA, MAC_B = 8 eB.  Equalise: 2eA = 8eB → eA = 4 eB; eA+eB = T
+  var eB = T / 5, eA = 4 * T / 5, lam = 2 * eA;
+  var costCT = 0.5 * 2 * eA * eA + 0.5 * 8 * eB * eB;
+  var eEq = T / 2, costEq = 0.5 * 2 * eEq * eEq + 0.5 * 8 * eEq * eEq;
+  var saving = costEq - costCT;
+
+  var maxE = 130, maxY = 8 * (maxE) * 0.35;
+  var scX = d3.scaleLinear().domain([0, maxE]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, Math.max(lam * 1.6, 260)]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs112-wrap');
+  d3AddAxes(svg, scX, scY, 'Abatement by a firm (units)', '$ per unit abated', null, function (d) { return '$' + d; });
+
+  var yTop = scY.domain()[1];
+  var eAmaxLine = yTop / 2, eBmaxLine = yTop / 8;
+  d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eAmaxLine), Math.min(2 * maxE, yTop), EC.primary, 3);   // MAC_A = 2e
+  d3Seg(svg, scX, scY, 0, 0, Math.min(maxE, eBmaxLine), Math.min(8 * maxE, yTop), EC.second, 3);    // MAC_B = 8e
+  // Anchor the curve labels to the VISIBLE part of each line (clamped to maxE):
+  // eAmaxLine can exceed the axis domain, which pushed "Firm A MAC…" off the
+  // right edge (leaving a lone "F") at high tariff.
+  var exA = Math.min(maxE, eAmaxLine) * 0.62, exB = Math.min(maxE, eBmaxLine) * 0.7;
+  d3Halo(svg, scX(exA), scY(2 * exA + 8), 'Firm A MAC = 2e (cheap)', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(exB), scY(8 * exB + 8), 'Firm B MAC = 8e (dear)', { color: EC.second, anchor: 'start', size: 10 });
+
+  // permit price line + firm abatement points
+  d3Seg(svg, scX, scY, 0, lam, maxE, lam, EC.transfer, 1.6, '5,4');
+  d3Halo(svg, scX(maxE) - 4, scY(lam) - 8, 'permit price λ* = $' + lam.toFixed(0), { color: EC.transfer, anchor: 'end', size: 10 });
+  d3Seg(svg, scX, scY, eA, 0, eA, lam, EC.primary, 1.2, '3,3');
+  d3Seg(svg, scX, scY, eB, 0, eB, lam, EC.second, 1.2, '3,3');
+  d3Dot(svg, scX(eA), scY(lam), EC.primary, 6); var lblA = d3Halo(svg, scX(eA), scY(0) + 14, 'Firm A: ' + eA.toFixed(0), { color: EC.primary, size: 10 });
+  d3Dot(svg, scX(eB), scY(lam), EC.second, 6); var lblB = d3Halo(svg, scX(eB), scY(0) + 14, 'Firm B: ' + eB.toFixed(0), { color: EC.second, size: 10 });
+  d3HideTicksNear(svg, [lblA, lblB]);
+
+  document.getElementById('v112-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Firm A abates</div><div class="readout-val">' + eA.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Firm B abates</div><div class="readout-val">' + eB.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Permit price λ*</div><div class="readout-val">$' + lam.toFixed(0) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Cap-and-trade cost</div><div class="readout-val">$' + Math.round(costCT).toLocaleString('en-US') + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Equal-regulation cost</div><div class="readout-val">$' + Math.round(costEq).toLocaleString('en-US') + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Saving</div><div class="readout-val">$' + Math.round(saving).toLocaleString('en-US') + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + EC.gain + '">Trading lets the cheap firm (A) do most of the cleanup, hitting the target for $' + Math.round(costCT).toLocaleString('en-US') + ' instead of $' + Math.round(costEq).toLocaleString('en-US') + ' under equal shares: a saving of $' + Math.round(saving).toLocaleString('en-US') + ' (' + (100 * saving / costEq).toFixed(0) + '%).</p>';
+}
+
+// ── FIG 11.3: positive externality + Pigouvian subsidy ──────────────────────
+var V113SUB = false;
+function v113Sub(on) {
+  V113SUB = on;
+  document.getElementById('v113-b-off').classList.toggle('revealed', !on);
+  document.getElementById('v113-b-on').classList.toggle('revealed', on);
+  v113Draw();
+}
+function v113Draw() {
+  var MEB = parseFloat(document.getElementById('v113-meb').value);
+  document.getElementById('v113-meb-val').textContent = '$' + MEB;
+  // MB = 100 - Q, MC = 10 + Q, MSB = MB + MEB
+  var QE = 45;                       // MB = MC: 100-Q = 10+Q
+  var Qs = (90 + MEB) / 2;           // MSB = MC: 100-Q+MEB = 10+Q
+  var eqQ = V113SUB ? Qs : QE, eqP = 10 + eqQ;   // price sits on MC (supply)
+  var scX = d3.scaleLinear().domain([0, 100]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 145]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs113-wrap');
+  d3AddAxes(svg, scX, scY, 'Quantity (Q)', '$ per unit', null, function (d) { return '$' + d; });
+  // DWL triangle (underproduction) between QE and Q*: [QE,MC(QE)]-[QE,MSB(QE)]-[Q*,MC(Q*)]
+  if (!V113SUB && MEB > 0) {
+    d3Poly(svg, scX, scY, [[QE, 10 + QE], [QE, 100 - QE + MEB], [Qs, 10 + Qs]], FILL_DWL, STROKE_DWL);
+    d3Halo(svg, scX((QE + Qs) / 2 + 1), scY(10 + QE + 4), 'DWL', { color: STROKE_DWL, size: 10 });
+  }
+  d3Seg(svg, scX, scY, 0, 100, 100, 0, EC.primary, 3);              // MB (demand)
+  d3Seg(svg, scX, scY, 0, 100 + MEB, 100, MEB, EC.gain, 2.5, '6,4'); // MSB = MB + MEB
+  d3Seg(svg, scX, scY, 0, 10, 90, 100, EC.second, 3);              // MC (supply)
+  d3Halo(svg, scX(84), scY(100 - 84 + 4), 'MB', { color: EC.primary, anchor: 'end', size: 10 });
+  d3Halo(svg, scX(66), scY(100 - 66 + MEB + 4), 'MSB = MB + MEB', { color: EC.gain, size: 10 });
+  d3Halo(svg, scX(84), scY(10 + 84 + 5), 'MC', { color: EC.second, anchor: 'end', size: 10 });
+  d3Seg(svg, scX, scY, eqQ, 0, eqQ, eqP, EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(eqQ), scY(eqP), EC.indicator);
+  d3Halo(svg, scX(eqQ) + 5, scY(6), (V113SUB ? 'Q* = ' : 'Qₑ = ') + eqQ.toFixed(0), { color: EC.indicator, size: 10, anchor: 'start' });
+  var sub = MEB, dwl = MEB * MEB / 4;
+  var verdict = MEB === 0
+    ? 'With no external benefit, private and social benefit coincide: the market output Q<sub>E</sub> = 45 is already efficient, so there is no deadweight loss and no subsidy is needed.'
+    : V113SUB
+    ? 'With the subsidy s* = $' + sub + ', output rises to the efficient Q* = ' + Qs.toFixed(1) + ' where MSB = MC, and the deadweight loss is eliminated.'
+    : 'The market produces only Q<sub>E</sub> = 45 where MB = MC, short of the optimum Q* = ' + (+Qs.toFixed(1)) + '. Every unit in between is worth more to society than it costs: a $' + (+dwl.toFixed(1)).toLocaleString('en-US') + ' deadweight loss from under-provision.';
+  document.getElementById('v113-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Market Q<sub>E</sub></div><div class="readout-val">45</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Social optimum Q*</div><div class="readout-val">' + Qs.toFixed(1) + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Pigouvian subsidy s*</div><div class="readout-val">$' + sub + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">DWL if unsubsidised</div><div class="readout-val">$' + dwl.toFixed(2) + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + (V113SUB ? EC.gain : EC.second) + '">' + verdict + '</p>';
+}
+
+// ── FIG 11.4: public goods free-rider ───────────────────────────────────────
+function v114Draw() {
+  var N = parseInt(document.getElementById('v114-n').value);
+  var v = parseFloat(document.getElementById('v114-v').value);
+  document.getElementById('v114-n-val').textContent = N;
+  document.getElementById('v114-v-val').textContent = '$' + v;
+  var c = 300, total = N * v, surplus = total - c;
+  var maxY = Math.max(total, c, 400) * 1.12;
+  var scX = d3.scaleLinear().domain([0, 2]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, maxY]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs114-wrap');
+  d3AddAxes(svg, scX, scY, '', 'Dollars', function () { return ''; }, function (d) { return '$' + d; });
+  var efficient = total > c, aloneOK = v >= c, verdict, col;
+  // Cost reference line across both bars, so each bar reads against it.
+  d3Seg(svg, scX, scY, 0, c, 2, c, EC.slate, 1.5, '5,4');
+  d3Halo(svg, scX(1.95), scY(c) + 12, 'cost = $300', { color: EC.slate, size: 10, anchor: 'end' });
+  // Bar 1: total value (efficiency test). Bar 2: value PER PERSON (why it fails).
+  d3Poly(svg, scX, scY, [[0.3, 0], [0.3, total], [0.85, total], [0.85, 0]], efficient ? FILL_GAIN : FILL_DWL, efficient ? STROKE_GAIN : STROKE_DWL);
+  d3Poly(svg, scX, scY, [[1.15, 0], [1.15, v], [1.7, v], [1.7, 0]], aloneOK ? FILL_GAIN : FILL_DWL, aloneOK ? STROKE_GAIN : STROKE_DWL);
+  d3Halo(svg, scX(0.575), scY(total) - 8, '$' + total, { color: efficient ? STROKE_GAIN : STROKE_DWL, size: 11 });
+  d3Halo(svg, scX(1.425), scY(v) - 8, '$' + v, { color: aloneOK ? STROKE_GAIN : STROKE_DWL, size: 11 });
+  d3Halo(svg, scX(0.575), scY(0) + 16, 'Total value (N×v)', { color: EC.slate, size: 9 });
+  d3Halo(svg, scX(1.425), scY(0) + 16, 'Per person (v)', { color: EC.slate, size: 9 });
+  if (aloneOK) { verdict = 'Each person values the good at $' + v + ' ≥ the $300 cost, so someone provides it alone: no free-rider problem here.'; col = EC.gain; }
+  else if (efficient) { verdict = 'Providing is efficient: total value $' + total + ' exceeds the $300 cost, a $' + surplus + ' surplus. But no one values it enough to fund it alone, so each free-rides and the good is NOT provided, wasting $' + surplus + '.'; col = EC.loss; }
+  else { verdict = 'Total value $' + total + (total < c ? ' is below' : ' only equals') + ' the $300 cost, so providing the good creates no surplus, and it is correctly not provided.'; col = EC.slate; }
+  document.getElementById('v114-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Group size N</div><div class="readout-val">' + N + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Total value</div><div class="readout-val">$' + total + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Cost</div><div class="readout-val">$300</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Outcome</div><div class="readout-val" style="font-size:var(--t-small)">' + (aloneOK ? 'Provided' : efficient ? 'Not provided (all free-ride)' : 'Not provided') + '</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
+}
+
+// ── FIG 11.5: Coase bargaining ──────────────────────────────────────────────
+var V115RIGHT = null;   // no right chosen yet: the page opens at S* with neither button pressed
+function v115Right(who) {
+  // Pressing the chosen right again clears the choice and leaves the slider
+  // where it is. Without this the figure's Reset could never get back to the
+  // opening state (no right chosen, S = 25): re-clicking only re-applied it.
+  if (who === V115RIGHT) who = null;
+  V115RIGHT = who;
+  if (who) document.getElementById('v115-s').value = (who === 'polluter') ? 50 : 0;
+  document.getElementById('v115-b-polluter').classList.toggle('revealed', who === 'polluter');
+  document.getElementById('v115-b-victim').classList.toggle('revealed', who === 'victim');
+  v115Draw();
+}
+function v115Draw() {
+  var S = parseFloat(document.getElementById('v115-s').value);
+  document.getElementById('v115-s-val').textContent = S;
+  var MB = function (s) { return 100 - 2 * s; }, MD = function (s) { return 2 * s; }, Sstar = 25;
+  var scX = d3.scaleLinear().domain([0, 50]).range([D3PAD.left, D3W - D3PAD.right]);
+  var scY = d3.scaleLinear().domain([0, 105]).range([D3H - D3PAD.bottom, D3PAD.top]);
+  var svg = d3MakeSvg('cvs115-wrap');
+  d3AddAxes(svg, scX, scY, 'Pollution level S', '$ per unit', null, function (d) { return '$' + d; });
+  // gains-from-trade wedge between MB and MD, from S to S*
+  if (Math.abs(S - Sstar) > 0.5) {
+    var lo = Math.min(S, Sstar), hi = Math.max(S, Sstar);
+    d3Poly(svg, scX, scY, [[lo, MB(lo)], [lo, MD(lo)], [hi, MD(hi)], [hi, MB(hi)]], 'rgba(47,125,85,0.16)', 'none');
+  }
+  d3Seg(svg, scX, scY, 0, 100, 50, 0, EC.primary, 3);    // MB
+  d3Seg(svg, scX, scY, 0, 0, 50, 100, EC.loss, 3);       // MD
+  d3Halo(svg, scX(44), scY(MB(44) + 6), 'MB of polluting', { color: EC.primary, anchor: 'end', size: 10 });
+  // Placed down the line at S=38, clear of the top-right corner.
+  d3Halo(svg, scX(38), scY(MD(38) + 6), 'MD to neighbor', { color: EC.loss, anchor: 'end', size: 10 });
+  d3Seg(svg, scX, scY, Sstar, 0, Sstar, 50, EC.slate, 1.2, '4,4');
+  d3Halo(svg, scX(Sstar), scY(54), 'S* = 25', { color: EC.slate, size: 9 });
+  // Starting points set by who owns the right: neighbour's right => S=0, polluter's => S=50.
+  // The two lines run corner to corner, so the top corners these used to sit in
+  // put them on a curve (and on each other at phone width). They go in the open
+  // side wedges instead, each beside the end of the axis it starts from, on two
+  // lines so they fit the wedge at every width (three on a phone, where the
+  // text is scaled up), centred on the wedge's widest point at $50.
+  var v115Narrow = svg.node().getBoundingClientRect().width < 480;
+  var v115Start = function (x, lines, on, anchor) {
+    var g = svg.append('g');
+    var t = d3Halo(g, x, 0, lines[0], { color: on ? EC.gain : EC.slate, size: 9, anchor: anchor, weight: on ? 700 : 400 });
+    lines.slice(1).forEach(function (l) { t.append('tspan').attr('x', x).attr('dy', '1.15em').text(l); });
+    var bb = t.node().getBBox();
+    d3.select(t.node().previousSibling).attr('x', bb.x - 3).attr('y', bb.y - 1.5).attr('width', bb.width + 6).attr('height', bb.height + 3);
+    g.attr('transform', 'translate(0,' + (scY(50) - (bb.y + bb.height / 2)) + ')');
+  };
+  v115Start(scX(0.8), v115Narrow ? ["neighbor's", 'right', '(start S=0)'] : ["neighbor's right", '(start S=0)'], V115RIGHT === 'victim', 'start');
+  v115Start(scX(49.2), v115Narrow ? ["polluter's", 'right', '(start S=50)'] : ["polluter's right", '(start S=50)'], V115RIGHT === 'polluter', 'end');
+  d3Seg(svg, scX, scY, S, 0, S, Math.max(MB(S), MD(S)), EC.indicator, 1.5, '3,3');
+  d3Dot(svg, scX(S), scY(MB(S)), EC.primary);
+  d3Dot(svg, scX(S), scY(MD(S)), EC.loss);
+  var mb = MB(S), md = MD(S), verdict, col;
+  if (Math.abs(S - Sstar) < 1) { verdict = 'At S* = 25, MB = MD = $50. No trade can make both better off: this is the efficient level, and it is where bargaining lands from either starting point.'; col = EC.gain; }
+  else if (S < Sstar) { verdict = 'At S = ' + S + ', the factory gains $' + mb + ' from one more unit but the neighbor loses only $' + md + '. Both are better off allowing MORE pollution, up toward S* = 25.'; col = EC.primary; }
+  else { verdict = 'At S = ' + S + ', one more unit costs the neighbor $' + md + ' but is worth only $' + mb + ' to the factory. The neighbor will pay the factory to cut back toward S* = 25.'; col = EC.loss; }
+  document.getElementById('v115-readout').innerHTML =
+    '<div class="readout-row">' +
+    '<div class="readout-col"><div class="readout-label">Pollution S</div><div class="readout-val">' + S + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MB of polluting</div><div class="readout-val">$' + mb + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">MD to neighbor</div><div class="readout-val">$' + md + '</div></div>' +
+    '<div class="readout-col"><div class="readout-label">Efficient S*</div><div class="readout-val">25</div></div>' +
+    '</div><p style="margin-top:.6rem;color:' + col + '">' + verdict + '</p>';
+}
+
+document.addEventListener('DOMContentLoaded', function () { v111Draw(); v112Draw(); v113Draw(); v114Draw(); v115Draw(); });
+</script>
+  <!-- Ask the Course AI, floating assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+<script src="assets/nav.js" defer></script>
+<script src="assets/figlabels.js" defer></script>
+<script src="assets/figreset.js" defer></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
+</body>
+</html>

@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en-US" data-ds="v2" style="--unit:var(--u1);--unit-ink:var(--u1-ink)">
+<head>
+  <meta name="robots" content="noindex" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <title>Week 4: Interactive Visualizations · EC224</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
+  <script src="assets/figkit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    /* ── layout ── */
+    .viz-hero { padding:2.8rem 0 2rem; border-bottom:1px solid var(--rule-strong); position:relative; }
+    .viz-ghost { position:absolute; right:0; top:0.8rem; font-size:7rem; font-weight:700; color:#f0f0f0; line-height:1; user-select:none; pointer-events:none; }
+    .viz-week-label { font-size:0.74rem; font-weight:600; letter-spacing: normal; text-transform: none; color:var(--unit-ink); margin-bottom:0.4rem; position:relative; z-index:1; }
+    .viz-title { font-size:2rem; font-weight:600; line-height:1.2; color:var(--text); max-width:560px; margin-bottom:0.3rem; position:relative; z-index:1; }
+    .viz-instructor { font-size:0.9rem; color:var(--ink-soft); }
+
+    /* ── TOC ── */
+    .toc { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:10px; padding:1.1rem 1.4rem; margin:1.8rem 0 0; }
+    .toc-title { font-size:0.7rem; font-weight:600; letter-spacing: normal; text-transform: none; color:var(--ink-soft); margin-bottom:0.6rem; }
+    .toc ol { margin:0; padding-left:0.5rem; display:flex; flex-direction:column; gap:0.28rem; }
+    .toc li { font-size:0.855rem; color:var(--ink-soft); }
+    .toc a { color:var(--unit-ink); text-decoration:none; }
+    .toc a:hover { text-decoration:underline; }
+
+    /* ── figure sections ── */
+    .fig-section { border-top:2px solid var(--rule-strong); padding-top:2.5rem; margin-top:3rem; }
+    .fig-hdr { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.5rem; }
+    .fig-label { font-family:var(--font-mono); font-size:0.7rem; font-weight:600; letter-spacing: normal; text-transform: none; color:var(--unit-ink); background:var(--accent-light); padding:3px 8px; border-radius:4px; }
+    .fig-title { font-size:1.25rem; font-weight:600; color:var(--text); }
+
+    /* ── canvas wrapper ── */
+    .cvs-wrap { border:1px solid var(--rule-strong); border-radius:10px; overflow:hidden; background:#fff; max-width:482px; margin-left:auto; margin-right:auto; }
+    canvas { display:block; width:100%; height:320px; cursor:default; }
+
+    /* Fig 4.8 three-panel market-demand builder. Widened to the page's wide band
+       (via .bleed-wide) so each panel has room; stacks to one readable column on
+       narrow screens instead of staying three cramped columns. */
+    .md-panels { display:grid; grid-template-columns:repeat(3,1fr); gap:0.6rem; }
+    @media (max-width:820px) {
+      .md-panels { grid-template-columns:1fr; gap:0.9rem; }
+      .md-panels > .fig-plot { max-width:480px; margin-left:auto; margin-right:auto; width:100%; }
+    }
+
+    /* ── canvas + D3 SVG label overlay ── */
+    .cvs-stack { position:relative; }
+    .cvs-stack > canvas { position:relative; z-index:1; }
+    .cvs-overlay { position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+
+    /* ── controls ── */
+    .viz-ctrl-row { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; margin-top:1rem; }
+    .viz-slider-group { display:flex; align-items:center; gap:0.5rem; }
+    .viz-slider-label { font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-soft); white-space:nowrap; }
+    .viz-slider { width:130px; accent-color:var(--unit-ink); }
+    .viz-slider:focus-visible { outline:3px solid var(--unit-ink); outline-offset:3px; border-radius:3px; }
+    .viz-slider-val { font-family:var(--font-mono); font-size:0.82rem; color:var(--unit-ink); min-width:36px; }
+    .viz-btn { font-size:0.78rem; font-weight:600; padding:4px 12px; border-radius:6px; border:1px solid var(--rule-strong); background:var(--off-white); color:var(--text); cursor:pointer; transition:background 0.15s,border-color 0.15s; }
+    .viz-btn.active, .viz-btn:hover { background:var(--accent-light); border-color:var(--unit-ink); color:var(--unit-ink); }
+    .viz-select { font-size:0.82rem; font-family:var(--font-mono); border:1px solid var(--rule-strong); border-radius:6px; padding:3px 8px; background:var(--off-white); color:var(--text); cursor:pointer; }
+
+    /* ── readout boxes ── */
+    .viz-readout { background:var(--off-white); border:1px solid var(--rule-strong); border-radius:8px; padding:0.85rem 1.1rem; font-size:0.84rem; line-height:1.75; margin-top:0.9rem; }
+    .viz-readout b { color:var(--text); }
+    .readout-row { display:flex; gap:2rem; flex-wrap:wrap; }
+    .readout-col { flex:1; min-width:140px; }
+    .readout-val { font-size:1.05rem; font-weight:600; color:var(--unit-ink); font-family:var(--font-mono); }
+    .verdict { font-weight:600; font-size:0.9rem; margin-top:0.5rem; }
+    .verdict.elastic { color:var(--d-second); }
+    .verdict.unit { color:#5f6875; }
+    .verdict.inelastic { color:#14568c; }
+
+    /* ── footer ── */
+    .hub-footer { border-top:1px solid var(--rule-strong); padding:1.6rem 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:3rem; }
+    .hub-footer-left { font-size:0.82rem; color:var(--ink-soft); }
+    .hub-footer-left a { color:var(--ink-soft); text-decoration:none; }
+    .hub-footer-left a:hover { color:var(--unit-ink); }
+    .footer-logo { height:22px; opacity:0.5; }
+  </style>
+</head>
+<body>
+
+
+
+<div class="topbar">
+  <a class="wordmark" href="index.html">EC224</a>
+  <span class="crumb-sep">/</span>
+  <a href="week4.html">Week 4</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-here">Visualizations</span>
+  <span class="topbar-end"><button class="btn" data-nav-open>All weeks</button></span>
+</div>
+
+<div class="layout">
+
+  <nav class="rail" aria-label="Figures on this page">
+    <div class="rail-hd">This week</div>
+    <ol>
+      <li><a href="#sec-4-1"><span>4.1</span><span class="rail-title">Elasticity Meter: Point vs Arc</span></a></li>
+      <li><a href="#sec-4-2"><span>4.2</span><span class="rail-title">Elasticity Heatmap: Living Demand Curve</span></a></li>
+      <li><a href="#sec-4-3"><span>4.3</span><span class="rail-title">Revenue Rectangle: Price vs Quantity Effect</span></a></li>
+      <li><a href="#sec-4-4"><span>4.4</span><span class="rail-title">Pricing Strategy Simulator</span></a></li>
+      <li><a href="#sec-4-6"><span>4.6</span><span class="rail-title">Consumer Surplus Triangle</span></a></li>
+      <li><a href="#sec-4-7"><span>4.7</span><span class="rail-title">Surge Pricing Simulator</span></a></li>
+      <li><a href="#sec-4-8"><span>4.8</span><span class="rail-title">Market Demand Builder</span></a></li>
+    </ol>
+  </nav>
+
+  <main id="main-content">
+
+  <header class="page page-hd">
+    <div>
+      <span class="numeral">04</span>
+      <h1>Elasticity &amp; Consumer Welfare</h1>
+      <p class="lede">
+        Seven figures on how strongly quantity responds to price: point and arc
+        elasticity along a demand curve, why that decides whether a price change
+        raises or lowers revenue, what consumer surplus measures, and how
+        individual demands add up to market demand.
+      </p>
+      <p class="byline">Prof. Naveen Sunder</p>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════ FIG 4.1 -->
+  <section class="sec page fig-sec" id="sec-4-1">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 4.1</span>
+      <h3>Elasticity Meter: Point vs Arc</h3>
+    </div>
+        <p class="fig-intro">
+      Drag either point along the demand curve. <strong>Point elasticity</strong> measures responsiveness at a single location
+      using the formula e<sub>d</sub>&nbsp;=&nbsp;&minus;b&middot;P/Q. <strong>Arc (midpoint) elasticity</strong> measures responsiveness
+      between two points using the midpoint formula. Toggle between modes to compare how the two methods diverge as the
+      gap between points widens.
+    </p>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs1" height="320"></canvas><div class="cvs-overlay" id="cvs1-ov"></div></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Mode:</span>
+        <button class="btn on" id="v1-btn-arc" onclick="v1SetMode('arc')">Arc</button>
+        <button class="btn" id="v1-btn-point" onclick="v1SetMode('point')">Point</button>
+      </div>
+    </div>
+          <div class="fig-state" id="v1-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- ═══════════════════════════════════════════════════════ FIG 4.2 -->
+  <section class="sec page fig-sec" id="sec-4-2">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 4.2</span>
+      <h3>Elasticity Heatmap: Living Demand Curve</h3>
+    </div>
+        <p class="fig-intro">
+      The demand curve is shaded as a continuous gradient: <strong style="color:var(--d-second)">red</strong> at the top (elastic,
+      |e<sub>d</sub>|&gt;1), <strong style="color:#8a6000">amber</strong> at the midpoint (unit elastic, |e<sub>d</sub>|=1), and <strong style="color:#14568c">blue</strong>
+      at the bottom (inelastic, |e<sub>d</sub>|&lt;1). Drag the orange dot to any point and read off its exact elasticity.
+      Type your own linear demand equation below to reshape the curve.
+    </p>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs2" height="320"></canvas><div class="cvs-overlay" id="cvs2-ov"></div></div></div>
+          <div class="ctrl-row" style="align-items:center;gap:0.6rem;">
+      <div style="display:flex;flex-direction:column;gap:0.28rem;">
+        <span class="ctrl-label" style="font-size:0.73rem;">Enter demand equation (format: Q = a &minus; bP)</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-soft);">Q =</span>
+          <input type="number" id="v2-a-in" value="100" min="20" max="300" step="5"
+            style="font-family:var(--font-mono);font-size:0.9rem;width:72px;border:1px solid var(--rule-strong);border-radius:5px;padding:0.25rem 0.4rem;background:var(--off-white);"
+            oninput="v2ParseEq()" />
+          <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-soft);">&minus;</span>
+          <input type="number" id="v2-b-in" value="2" min="0.1" max="20" step="0.1"
+            style="font-family:var(--font-mono);font-size:0.9rem;width:65px;border:1px solid var(--rule-strong);border-radius:5px;padding:0.25rem 0.4rem;background:var(--off-white);"
+            oninput="v2ParseEq()" />
+          <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-soft);">P</span>
+        </div>
+        <span id="v2-eq-preview" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--unit-ink);"></span>
+      </div>
+    </div>
+          <div class="fig-state" id="v2-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- ═══════════════════════════════════════════════════════ FIG 4.3 -->
+  <section class="sec page fig-sec" id="sec-4-3">
+      <div class="fig-hd">
+        <span class="fig-n">Fig 4.3</span>
+        <h3>Revenue Rectangle: Price vs Quantity Effect</h3>
+      </div>
+      <figure class="film" id="film-4-3">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig43-elasticity-revenue-poster.jpg" aria-label="Animation: Elasticity and revenue" aria-describedby="film-4-3-tx">
+            <source src="media/films/fig43-elasticity-revenue.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 43s</span>
+          <span class="film-cap">Along the linear demand curve Q = 100 - 2P, point elasticity e = -2P/Q falls in size from elastic at the top to inelastic at the bottom. The revenue rectangle P x Q grows while demand is elastic, peaks at $1,250 at the unit-elastic midpoint (P = $25, Q = 50), and shrinks once demand turns inelastic.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-4-3-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Demand is Q = 100 - 2P. Point elasticity multiplies the slope by P / Q, so e = -2P / Q. On a straight line the slope is fixed, but P / Q is not, so e changes all along the curve.</li>
+              <li>Start near the top: at $45 buyers take 10 units. e = -9, very elastic. Revenue is the green rectangle, P x Q = $450. The lower panel plots that revenue.</li>
+              <li>Cut the price. On the top half |e| &gt; 1: quantity rises by a bigger percentage than price falls, so the rectangle gets bigger and revenue rises.</li>
+              <li>At the midpoint, P = $25 and Q = 50, so e = -1: unit elastic. The two effects exactly cancel and revenue reaches its peak, $1,250.</li>
+              <li>Keep cutting. Below the midpoint |e| &lt; 1: price falls by a bigger percentage than quantity rises, so the rectangle shrinks and revenue falls.</li>
+              <li>Revenue is highest exactly where |e| = 1. Above the midpoint, a price cut raises revenue. Below it, a price cut lowers revenue.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
+      <div class="fig-prose">
+        <p class="fig-intro">
+      Total revenue equals the area of the rectangle P&times;Q. When price rises, the <strong style="color:var(--d-gain-ink)">green
+      strip</strong> shows revenue gained from existing buyers paying more; the <strong style="color:var(--d-loss-ink)">red
+      strip</strong> shows revenue lost from buyers who leave. The live verdict tells you which effect dominates.
+      Set the old price, pick the new price, and adjust the demand slope to explore.
+    </p>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs3" height="320"></canvas><div class="cvs-overlay" id="cvs3-ov"></div></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Old price P<sub>old</sub>: <span class="ctrl-value" id="v3-pb-val">$25</span></span>
+        <input type="range" class="ctrl-track" id="v3-pb" min="5" max="40" value="25" oninput="v3Update()" aria-label="Old price (P old)">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">New price P<sub>new</sub>: <span class="ctrl-value" id="v3-p-val">$35</span></span>
+        <input type="range" class="ctrl-track" id="v3-p" min="5" max="45" value="35" oninput="v3Update()" aria-label="New price (P new)">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Demand slope b: <span class="ctrl-value" id="v3-slope-val">2.0</span></span>
+        <input type="range" class="ctrl-track" id="v3-slope" min="5" max="40" value="20" oninput="v3Update()" aria-label="Demand slope b">
+      </div>
+    </div>
+          <div class="fig-state" id="v3-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- ═══════════════════════════════════════════════════════ FIG 4.4 -->
+  <section class="sec page fig-sec" id="sec-4-4">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 4.4</span>
+      <h3>Pricing Strategy Simulator</h3>
+    </div>
+        <p class="fig-intro">
+      Select an industry with its real-world empirical elasticity estimate. Then adjust the price change and see the change in total revenue.
+      The solid bar is the exact %&Delta;TR, computed from the actual new price and quantity (constant-elasticity demand,
+      Q<sub>new</sub> = Q<sub>old</sub> &times; (P<sub>new</sub>/P<sub>old</sub>)<sup>e<sub>d</sub></sup>). The dashed outline is the
+      linear approximation %&Delta;TR &asymp; %&Delta;P &times; (1&nbsp;+&nbsp;e<sub>d</sub>), which is close for small price changes and
+      drifts away for large ones, especially for elastic goods.
+    </p>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs4" height="320"></canvas><div class="cvs-overlay" id="cvs4-ov"></div></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Industry:</span>
+        <select class="sel" id="v4-ind" onchange="v4Update()">
+          <option value="pharma">Pharmaceuticals (e = &minus;0.3)</option>
+          <option value="petrol">Gasoline (e = &minus;0.2)</option>
+          <option value="electric">Electricity (e = &minus;0.1)</option>
+          <option value="airline">Airline tickets (e = &minus;1.4)</option>
+          <option value="coffee">Coffee shop (e = &minus;2.3)</option>
+          <option value="fashion">Fashion clothing (e = &minus;2.8)</option>
+          <option value="hotel">Hotel rooms (e = &minus;1.8)</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">%&Delta;P: <span class="ctrl-value" id="v4-dp-val">+10%</span></span>
+        <input type="range" class="ctrl-track" id="v4-dp" min="-30" max="30" value="10" oninput="v4Update()" aria-label="Percent price change">
+      </div>
+    </div>
+          <div class="fig-state" id="v4-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- ═══════════════════════════════════════════════════════ FIG 4.6 -->
+  <section class="sec page fig-sec" id="sec-4-6">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 4.6</span>
+      <h3>Consumer Surplus Triangle</h3>
+    </div>
+        <p class="fig-intro">
+      Consumer surplus (CS) is the area of the triangle above the market price and below the demand curve. Use the first slider
+      to set the initial price, then raise it with the second slider to see how CS shrinks, decomposed into the
+      <strong style="color:var(--green)">rectangle</strong> (existing buyers now paying more) and the <strong style="color:#8a6000">exit triangle</strong>
+      (buyers who exit the market). Click <strong>Show Calculation</strong> to see the step-by-step formula.
+    </p>
+        <div id="v6-calc-box" style="display:none;background:#f8f9fb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;font-size:0.84rem;line-height:2;font-family:var(--font-mono);color:var(--text);">
+    </div>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs6" height="320"></canvas><div class="cvs-overlay" id="cvs6-ov"></div></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Base price P*: <span class="ctrl-value" id="v6-p-val">$15</span></span>
+        <input type="range" class="ctrl-track" id="v6-p" min="5" max="35" value="15" oninput="v6Update()" aria-label="Base price P*">
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">New price P': <span class="ctrl-value" id="v6-pn-val">$25</span></span>
+        <input type="range" class="ctrl-track" id="v6-pn" min="5" max="45" value="25" oninput="v6Update()" aria-label="New price P prime">
+      </div>
+      <button class="btn" onclick="v6ToggleCalc()">Show Calculation</button>
+    </div>
+          <div class="fig-state" id="v6-readout"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- ═══════════════════════════════════════════════════════ FIG 4.7 -->
+  <section class="sec page fig-sec" id="sec-4-7">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 4.7</span>
+      <h3>Surge Pricing Simulator</h3>
+    </div>
+        <p class="fig-intro">
+      Surge pricing on a ride-hailing app. As the surge multiplier rises, rider demand falls, consumer surplus shrinks, and
+      the app's revenue grows, up to a point. Riders priced out exit the market entirely.
+      This illustrates the welfare trade-off between producer revenue and consumer surplus.
+    </p>
+      </div>
+      <div class="fig-bay">
+        <div class="fig-bay-inner">
+          <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs7" height="320"></canvas><div class="cvs-overlay" id="cvs7-ov"></div></div></div>
+          <div class="ctrl-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Surge price: <span class="ctrl-value" id="v7-p-val">$5.00</span></span>
+        <input type="range" class="ctrl-track" id="v7-p" min="5" max="18" value="5" step="any" oninput="v7Update()" aria-label="Surge price">
+      </div>
+    </div>
+          <div class="fig-state" id="v7-readout"></div>
+          <div id="v7-delta" class="delta-bar"></div>
+        </div>
+      </div>
+    </section>
+
+  <!-- ═══════════════════════════════════════════════════════ FIG 4.8 -->
+  <section class="sec page" id="sec-4-8">
+      <div class="fig-hd">
+        <span class="fig-n">Fig 4.8</span>
+        <h3>Market Demand: Horizontal Aggregation</h3>
+      </div>
+      <figure class="film" id="film-4-8">
+        <div class="film-frame">
+          <video data-autoplay controls playsinline muted preload="metadata" width="1920" height="1080"
+            poster="media/films/fig48-market-demand-poster.jpg" aria-label="Animation: Market demand: horizontal summation" aria-describedby="film-4-8-tx">
+            <source src="media/films/fig48-market-demand.mp4" type="video/mp4">
+          </video>
+        </div>
+        <figcaption class="mathjax_ignore tex2jax_ignore">
+          <span class="film-k">Animation · 40s</span>
+          <span class="film-cap">A price line sweeps down through three panels. At each price, Consumer 1's and Consumer 2's quantities are laid end to end on the market panel, and the market demand curve kinks at $12, where Consumer 2 starts to buy.</span>
+          <span class="film-ctl">
+            <button type="button" data-film="replay">Replay</button>
+            <span class="film-rates" role="group" aria-label="Playback speed">
+              <button type="button" data-rate="0.5">0.5x</button>
+              <button type="button" data-rate="1">1x</button>
+              <button type="button" data-rate="1.5">1.5x</button>
+            </span>
+          </span>
+          <details class="film-tx" id="film-4-8-tx">
+            <summary>Read the narration</summary>
+            <ol>
+              <li>Consumer 1 stops buying at a price of $30, Consumer 2 at $12. Market demand adds up what they buy at each price: it adds quantities sideways, not prices.</li>
+              <li>A price line sweeps down through all three panels. Above $30 nobody buys. Below $30 only Consumer 1 buys, so the market curve is Consumer 1's curve: Qm = 30 − P.</li>
+              <li>At $12 Consumer 2 reaches her choke price and starts to buy. From here on, every $1 cut adds 1 unit for Consumer 1 and 2 units for Consumer 2.</li>
+              <li>So the market curve kinks and gets flatter: Qm = 54 − 3P. The dashed line is where the market would have gone with Consumer 1 alone.</li>
+              <li>Take P = $6. Consumer 1 buys 24 and Consumer 2 buys 12. Lay the two quantities end to end on the market panel: 24 + 12 = 36.</li>
+              <li>Market demand is the horizontal sum of the individual curves: Qm = 30 − P above $12 and Qm = 54 − 3P below it. It kinks at $12, the price where Consumer 2 enters.</li>
+            </ol>
+          </details>
+        </figcaption>
+      </figure>
+    <p class="fig-intro" style="font-size:1rem;">
+      The market demand curve is the <em>horizontal sum</em> of individual demand curves. The animation above shows
+      Consumer 1 (Q = 30 &minus; P, choke price $30) and Consumer 2 (Q = 24 &minus; 2P, choke price $12). Starting from a high price
+      and moving down, watch each consumer enter the market and see how the kink forms when Consumer 2 begins buying.
+    </p>
+
+
+    <!-- Three-panel interactive -->
+    <div class="bleed-wide" style="margin-bottom:1.25rem;">
+      <div class="md-panels">
+        <div class="fig-plot">
+          <div class="panel-label" style="color:var(--d-second);">Consumer 1 &nbsp; Q = 30 &minus; P</div>
+          <div class="cvs-stack"><canvas id="cvs8a" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8a-ov"></div></div>
+        </div>
+        <div class="fig-plot">
+          <div class="panel-label" style="color:var(--accent-2);">Consumer 2 &nbsp; Q = 24 &minus; 2P</div>
+          <div class="cvs-stack"><canvas id="cvs8b" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8b-ov"></div></div>
+        </div>
+        <div class="fig-plot">
+          <div class="panel-label" style="color:#14568c;">Market Demand Q<sub>m</sub>(P)</div>
+          <div class="cvs-stack"><canvas id="cvs8c" style="width:100%;"></canvas><div class="cvs-overlay" id="cvs8c-ov"></div></div>
+        </div>
+      </div>
+      <div class="ctrl-row" style="margin-top:0.75rem;">
+        <span class="ctrl-label">Price P:</span>
+        <input type="range" class="ctrl-track" id="v8a-p" min="0" max="32" step="any" value="20" oninput="v8aUpdate()" style="width:220px;" aria-label="Market price P">
+        <span class="ctrl-value" id="v8a-p-val">$20</span>
+      </div>
+      <div class="fig-state" id="v8a-readout"></div>
+    </div>
+
+    <!-- Market demand formula box -->
+    <div style="background:var(--off-white);border:1px solid var(--rule-strong);border-radius:9px;padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:0.88rem;line-height:1.95;">
+      <div style="font-size:0.72rem;font-weight:700;letter-spacing: normal;text-transform: none;color:var(--ink-soft);margin-bottom:0.55rem;">Market Demand Formula by Price Range</div>
+      <div style="display:flex;flex-direction:column;gap:0.3rem;font-family:var(--font-mono);">
+        <div><span style="display:inline-block;min-width:140px;color:var(--ink-soft);">P &gt; $30:</span><strong style="color:var(--ink-soft);">Q<sub>m</sub> = 0</strong> &nbsp;<span style="color:var(--ink-soft);font-size:0.82rem;">(neither consumer buys; choke price of Consumer 1 not yet reached)</span></div>
+        <div><span style="display:inline-block;min-width:140px;color:var(--d-second);">$12 &lt; P &le; $30:</span><strong style="color:var(--d-second);">Q<sub>m</sub> = 30 &minus; P</strong> &nbsp;<span style="color:var(--ink-soft);font-size:0.82rem;">(Consumer 1 only; Consumer 2's choke price $12 not yet reached)</span></div>
+        <div><span style="display:inline-block;min-width:140px;color:var(--green);">P &le; $12:</span><strong style="color:var(--green);">Q<sub>m</sub> = (30 &minus; P) + (24 &minus; 2P) = 54 &minus; 3P</strong> &nbsp;<span style="color:var(--ink-soft);font-size:0.82rem;">(both consumers buy; sum of demand curves)</span></div>
+      </div>
+      <div style="margin-top:0.6rem;font-size:0.8rem;color:var(--ink-soft);">The <em>choke price</em> is the price at which a consumer's demand falls to zero. Consumer 1: choke price = $30 (sets 30 &minus; P = 0). Consumer 2: choke price = $12 (sets 24 &minus; 2P = 0).</div>
+    </div>
+
+    <!-- Builder -->
+    <div style="border-top:1px dashed var(--rule-strong);margin-top:2rem;padding-top:1.5rem;">
+      <div class="fig-hdr" style="margin-bottom:0.4rem;">
+        <span class="fig-label" style="background:#f0fdf4;color:#167c3a;border:1px solid #bbf7d0;">Builder</span>
+        <span class="fig-title" style="font-size:1rem;">Build Your Own Market Demand</span>
+      </div>
+      <p class="fig-intro" style="margin-bottom:0.9rem;">
+        Type your own demand equations below. Enter each consumer's demand in the form Q = a &minus; bP.
+        The market demand curve builds itself as the horizontal sum. The functional form at different price ranges
+        appears at the bottom.
+      </p>
+      <div class="fig-plot"><div class="cvs-stack"><canvas id="cvs8" height="320"></canvas><div class="cvs-overlay" id="cvs8-ov"></div></div></div>
+      <div class="ctrl-row" style="flex-direction:column;align-items:flex-start;gap:0.6rem;margin-top:0.75rem;">
+        <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+          <span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--d-second);font-weight:600;min-width:80px;">Consumer 1</span>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-soft);">Q =</span>
+          <input type="number" id="v8-c1-a-in" value="30" min="1" max="80" step="1"
+            style="font-family:var(--font-mono);font-size:0.85rem;width:60px;border:1px solid #fcc;border-radius:5px;padding:0.2rem 0.4rem;background:#fff5f5;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-soft);">&minus;</span>
+          <input type="number" id="v8-c1-b-in" value="1" min="0.1" max="10" step="0.5"
+            style="font-family:var(--font-mono);font-size:0.85rem;width:55px;border:1px solid #fcc;border-radius:5px;padding:0.2rem 0.4rem;background:#fff5f5;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-soft);">P</span>
+          <span id="v8-c1-preview" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--d-second);"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+          <span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-2);font-weight:600;min-width:80px;">Consumer 2</span>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-soft);">Q =</span>
+          <input type="number" id="v8-c2-a-in" value="24" min="1" max="80" step="1"
+            style="font-family:var(--font-mono);font-size:0.85rem;width:60px;border:1px solid #bcd;border-radius:5px;padding:0.2rem 0.4rem;background:#f0f6ff;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-soft);">&minus;</span>
+          <input type="number" id="v8-c2-b-in" value="2" min="0.1" max="10" step="0.5"
+            style="font-family:var(--font-mono);font-size:0.85rem;width:55px;border:1px solid #bcd;border-radius:5px;padding:0.2rem 0.4rem;background:#f0f6ff;" oninput="v8Update()"/>
+          <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-soft);">P</span>
+          <span id="v8-c2-preview" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-2);"></span>
+        </div>
+      </div>
+      <!-- Functional form display -->
+      <div id="v8-functional" style="margin-top:0.75rem;background:#f8f9fb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.75rem 1rem;font-family:var(--font-mono);font-size:0.82rem;line-height:2;color:var(--text);">
+      </div>
+      <div class="fig-state" id="v8-readout"></div>
+    </div>
+  </section>
+
+  <footer class="site-foot">
+    <div class="hub-footer-left">
+      <a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a>
+      <span class="foot-sep"></span> EC224 Intermediate Microeconomics
+      <span class="foot-sep"></span> <a href="week4.html">← Back to Week 4</a>
+    </div>
+    <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
+  </footer>
+
+  </main>
+</div>
+
+<script>
+/* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
+   resolve CSS var(), so their colours come from here; CSS and inline styles use
+   var() directly. Fallbacks equal the token values. */
+var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
+
+// ══════════════════════════════════════════════════════════════════════
+// SHARED UTILITIES
+// ══════════════════════════════════════════════════════════════════════
+const ML=70, MR=25, MT=24, MB=50;
+
+
+// ──────────────────────────────────────────────────────────────────────
+// D3 SVG FORCE-LABEL OVERLAY HELPERS (S6/S8 "gold standard" pattern,
+// adapted for canvases whose pixel size W×H is computed at draw-time)
+// ──────────────────────────────────────────────────────────────────────
+const D3_LABEL_H = 15;     /* fallback, until a figure measures its own */
+/* Text size for one figure's labels, in this page's units, remembered on the
+   node list so each figure carries its own. A page holds figures of quite
+   different sizes and one number cannot serve them all. */
+function d3Metrics(svgish, nodes) {
+  let m = { font: 12, height: D3_LABEL_H };
+  try { if (window.EC224Place && EC224Place.labelSize) m = EC224Place.labelSize(svgish, nodes.length); } catch (e) {}
+  nodes._fs = m.font; nodes._lh = m.height;
+  return m;
+}
+function d3LH(nodes) { return (nodes && nodes._lh) || D3_LABEL_H; }
+function d3FS(nodes) { return (nodes && nodes._fs) || 12; }
+
+// (Re)build the <svg> inside an overlay <div>, sized to the canvas's CSS
+// pixel dimensions W×H via viewBox (NOT the DPR-scaled internal resolution).
+function d3Overlay(ovId, W, H) {
+  if (typeof d3 === 'undefined') return null;
+  const host = d3.select('#'+ovId);
+  if (host.empty()) return null;
+  host.selectAll('svg').remove();
+  return host.append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('width', '100%').attr('height', '100%')
+    .style('display', 'block').style('overflow', 'visible')
+    .style('font-family', "'Libre Franklin',system-ui,sans-serif");
+}
+
+// Build a label-node datum: {id,color,label,lw,ax,ay,fx_anchor,fy_anchor,x,y}
+// scattered randomly around its anchor so the sim animates into place.
+function d3LblNode(id, color, label, lw, ax, ay, extra={}) {
+  const ang = Math.random()*2*Math.PI, r = 40 + Math.random()*40;
+  return { id, color, label, lw, ax, ay,
+           fx_anchor: ax, fy_anchor: ay,
+           x: ax + r*Math.cos(ang), y: ay + r*Math.sin(ang), ...extra };
+}
+
+// One deterministic placement instead of a settling simulation: see
+// assets/figplace.js. Optional per-node `boxOff` = {x,y} still says where a
+// label would rather sit, and is honoured unless that spot is unusable.
+// Bounds are supplied per repaint by d3LabelTick, which knows the plot area.
+function d3LabelSim(nodes) {
+  return EC224Place.staticSim(nodes, {
+    origin: "topleft",
+    w: d=>d.lw, h: ()=>d3LH(nodes),
+    prefer: d=>d.boxOff ? {x:-d.lw/2+d.boxOff.x, y:-d3LH(nodes)/2+d.boxOff.y} : null
+  });
+}
+
+// Connector line plus a white rounded-rect label. No anchor dot, and no
+// dragging: the label is placed for you and stays where it is put.
+function d3LabelLayer(svg, nodes, simRef) {
+  const sim0 = simRef && simRef();
+  if (sim0 && sim0._cfg) { sim0._cfg.svg = svg; nodes._place = sim0._cfg; }
+  const conns = svg.selectAll(null).data(nodes).enter()
+    .append('line')
+    .attr('stroke', d=>d.color).attr('stroke-width', 0.9)
+    .attr('stroke-dasharray', '4,3').attr('opacity', 0.55).attr('data-place-leader', 1);
+  const gs = svg.selectAll(null).data(nodes).enter()
+    .append('g').attr('class', 'fig-label');
+  const M = d3Metrics(svg, nodes);
+  gs.append('rect').attr('height', M.height).attr('rx', 3)
+    .attr('fill', 'white').attr('stroke', d=>d.color).attr('stroke-width', 0.8).attr('opacity', 0.95);
+  gs.append('text').attr('y', M.height * 0.74)
+    .attr('text-anchor', 'middle').attr('fill', d=>d.color)
+    .attr('font-size', M.font).attr('font-weight', 600)
+    .text(d=>d.label);
+  d3SizeLabels(gs);
+  return { conns, gs };
+}
+// Size each label box to the text inside it, rather than to a number typed
+// in at the call site against a typeface the site no longer uses.
+function d3SizeLabels(gs) {
+  var pad = Math.max(12, Math.round(d3FS(gs.data()) * 1.15));
+  gs.each(function (d) {
+    var t = this.querySelector('text');
+    if (!t) return;
+    try { var w = t.getComputedTextLength(); if (w) d.lw = Math.max(24, Math.round(w + pad)); } catch (e) {}
+  });
+  gs.select('rect').attr('width', d=>d.lw);
+  gs.select('text').attr('x', d=>d.lw/2);
+}
+
+// Tick handler: clamp label positions to the plot area, update transforms
+// and connector-line endpoints. PAD = {top,right,bottom,left}; pw/ph are
+// the canvas's plot-area pixel bounds (here: ML/MR/MT/MB margins).
+function d3LabelTick(nodes, gs, conns, W, H, left, right, top, bottom) {
+  if (gs) d3SizeLabels(gs);
+  // The plot area is only known here, so hand it to the placer and re-solve
+  // against the curves as they are for this frame.
+  if (nodes._place) {
+    nodes._place.bounds = { x0: left-4, y0: top, x1: W-right+4, y1: H-bottom };
+    EC224Place.reflow(nodes, nodes._place);
+  }
+  nodes.forEach(d=>{
+    d.x = Math.max(left-4, Math.min(W-right-d.lw+4, d.x));
+    d.y = Math.max(top, Math.min(H-bottom-d3LH(nodes), d.y));
+  });
+  gs.attr('transform', d=>`translate(${d.x},${d.y})`);
+  conns.attr('x1', d=>d.fx_anchor).attr('y1', d=>d.fy_anchor)
+       .attr('x2', d=>d.x+d.lw/2).attr('y2', d=>d.y+d3LH(nodes)/2);
+}
+
+// Move a node's anchor to a new (ax,ay), translating x/y by the delta so
+// the label glides smoothly with its curve instead of snapping/drifting:
+// the established S6 pattern for slider/drag-driven anchor updates.
+function d3MoveAnchor(node, ax, ay) {
+  const dx = ax - node.fx_anchor, dy = ay - node.fy_anchor;
+  node.x += dx; node.y += dy;
+  node.vx = 0; node.vy = 0;
+  node.fx_anchor = ax; node.fy_anchor = ay;
+}
+
+// Kept as a no-op. It used to keep the simulation warm while a slider was
+// held; each repaint now places every label outright, so there is nothing to
+// keep warm and the call sites can stay as they are.
+/* Re-place the labels after the figure has redrawn itself.
+
+   This was an empty stub left behind when the force simulation was removed,
+   and nothing else on the page asked for a repaint, so every label box and
+   every leader on week 4 stayed frozen where it was first placed while the
+   curves moved underneath. The figure's own oninput attribute was registered
+   when the element was parsed, well before this runs, so this listener fires
+   after the redraw and solves against the frame that is actually on screen. */
+function d3WireSliderSmoothness(el, simRef) {
+  if (!el || el._ec224Wired) return;
+  el._ec224Wired = true;
+  const settle = () => { const s = simRef && simRef(); if (s && s.settle) s.settle(); };
+  if (el.tagName === 'CANVAS') {
+    // dragged, not typed: follow the drag, and catch where it ends
+    el.addEventListener('pointermove', e => { if (e.buttons) settle(); });
+    el.addEventListener('pointerup', settle);
+    el.addEventListener('touchmove', settle, { passive: true });
+    return;
+  }
+  el.addEventListener('input', settle);
+  el.addEventListener('change', settle);
+}
+
+function setupCvs(id) {
+  const cvs = document.getElementById(id);
+  if (!cvs) return {ctx:null,W:300,H:300};
+  const dpr = window.devicePixelRatio || 1;
+  // Size the backing store to the ACTUAL displayed width. The old code capped
+  // the logical width at 480 while the canvas CSS displayed it at the full
+  // container width (width:100%), so a 480-wide backing was upscaled to ~768px
+  // and rendered blurry (63% of native resolution at 2x DPI). Use the real
+  // clientWidth (uncapped) and pin the display size to it so backing = display.
+  // Measure the CONTAINER, never the canvas itself. Pinning cvs.style.width
+  // and then reading cvs.clientWidth back is self-referential: one wrong
+  // measurement, taken before the layout settled, was re-confirmed on every
+  // later resize and could never heal. Fig 4.8's builder was stuck with a
+  // 589-wide backing store stretched across 736 CSS pixels, which slid every
+  // curve 25px to the right of the label anchored to it.
+  const host = cvs.parentElement;
+  const W = Math.round((host && host.clientWidth) || cvs.clientWidth || 300);
+  const H = Math.min(W, 480);   // preserve prior height behaviour (square on phones, 480-tall on desktop)
+  const tw = Math.round(W * dpr), th = Math.round(H * dpr);
+  if (cvs.width !== tw || cvs.height !== th) {
+    cvs.width = tw; cvs.height = th;
+  }
+  // Width is left to the stylesheet's width:100%, so the box always matches
+  // the container that was just measured. Only the height needs stating.
+  cvs.style.height = H + 'px';
+  const ctx = cvs.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W, H };
+}
+
+// ResizeObserver: redraw all canvases when layout changes (handles browser zoom)
+function observeCanvasResize(id, redrawFn) {
+  const cvs = document.getElementById(id);
+  if (!cvs || !window.ResizeObserver) return;
+  new ResizeObserver(() => redrawFn()).observe(cvs.parentElement || cvs);
+}
+
+function toC(Q, P, W, H, xR, yR) {
+  const pw = W - ML - MR, ph = H - MT - MB;
+  return [ML + (Q - xR[0]) / (xR[1] - xR[0]) * pw,
+          MT + (yR[1] - P) / (yR[1] - yR[0]) * ph];
+}
+
+function fromC(px, py, W, H, xR, yR) {
+  const pw = W - ML - MR, ph = H - MT - MB;
+  return [xR[0] + (px - ML) / pw * (xR[1] - xR[0]),
+          yR[1] - (py - MT) / ph * (yR[1] - yR[0])];
+}
+
+function lerpColor(c1, c2, t) {
+  t = Math.max(0, Math.min(1, t));
+  const p = s => parseInt(s, 16);
+  const r1=p(c1.slice(1,3)), g1=p(c1.slice(3,5)), b1=p(c1.slice(5,7));
+  const r2=p(c2.slice(1,3)), g2=p(c2.slice(3,5)), b2=p(c2.slice(5,7));
+  const r=Math.round(r1+(r2-r1)*t).toString(16).padStart(2,'0');
+  const g=Math.round(g1+(g2-g1)*t).toString(16).padStart(2,'0');
+  const b=Math.round(b1+(b2-b1)*t).toString(16).padStart(2,'0');
+  return '#'+r+g+b;
+}
+
+function eColor(ed) {
+  const e = Math.abs(ed);
+  if (!isFinite(e) || e > 10) return EC.red;
+  // neutral at unit-elastic = amber (#e6a817) - visible against white background
+  if (e >= 1) return lerpColor('#e6a817', EC.red, Math.min((e-1)/2, 1));
+  return lerpColor('#1f6fb2', '#e6a817', e);
+}
+
+/* Round tick values (1/2/2.5/5 x 10^k). The old code cut the range into four
+   equal steps and printed Math.round(v), so a tick physically at 11.25 was
+   labelled "11": the number did not match its own position, and the values
+   read as arbitrary (0, 11, 23, 34, 45) next to the rest of the site. */
+function niceTicks(lo, hi, target) {
+  const span = hi - lo;
+  if (!(span > 0)) return [lo];
+  const raw = span / (target || 4);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const nrm = raw / mag;
+  const step = (nrm < 1.5 ? 1 : nrm < 3 ? 2 : nrm < 7 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) {
+    out.push(Math.abs(v) < step * 1e-6 ? 0 : +v.toFixed(6));
+  }
+  return out;
+}
+function fmtTick(v) { return Number.isInteger(v) ? String(v) : v.toFixed(1); }
+
+function drawAxes(ctx, W, H, xR, yR, xLabel, yLabel) {
+  if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
+  ctx.save();
+  // horizontal grid lines
+  ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
+  for (const v of niceTicks(yR[0], yR[1], 4)) {
+    if (v <= yR[0]) continue;
+    const [, py] = toC(xR[0], v, W, H, xR, yR);
+    ctx.beginPath(); ctx.moveTo(ML, py); ctx.lineTo(W - MR, py); ctx.stroke();
+  }
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 1;
+  // x axis
+  ctx.beginPath();
+  ctx.moveTo(ML, H - MB);
+  ctx.lineTo(W - MR, H - MB);
+  ctx.stroke();
+  // y axis
+  ctx.beginPath();
+  ctx.moveTo(ML, MT);
+  ctx.lineTo(ML, H - MB);
+  ctx.stroke();
+
+  ctx.fillStyle = '#8b95a5';
+  ctx.font = '16px Libre Franklin,system-ui,sans-serif';
+  ctx.textAlign = 'center';
+
+  // x ticks
+  for (const v of niceTicks(xR[0], xR[1], 5)) {
+    const [px] = toC(v, yR[0], W, H, xR, yR);
+    ctx.fillText(fmtTick(v), px, H - MB + 13);
+    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px, H-MB); ctx.lineTo(px, H-MB+4); ctx.stroke();
+  }
+  // y ticks
+  for (const v of niceTicks(yR[0], yR[1], 4)) {
+    const [, py] = toC(xR[0], v, W, H, xR, yR);
+    ctx.textAlign = 'right';
+    ctx.fillText(fmtTick(v), ML - 5, py + 3);
+    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ML, py); ctx.lineTo(ML-4, py); ctx.stroke();
+  }
+
+  // axis labels
+  ctx.fillStyle = '#666'; ctx.font = '16px Libre Franklin,system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(xLabel || 'Q', W/2, H - 4);
+  ctx.save();
+  ctx.translate(12, H/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText(yLabel || 'P ($)', 0, 0);
+  ctx.restore();
+  ctx.restore();
+}
+
+function dot(ctx, x, y, r, fill, stroke) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke || '#fff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.1 - ELASTICITY METER
+// ══════════════════════════════════════════════════════════════════════
+const v1 = { a:100, b:2, P1:25, P2:40, drag:null, mode:'arc' };
+const xR1=[0,60], yR1=[0,52];
+let v1W, v1H, v1ctx;
+let v1Svg, v1Sim, v1Nodes, v1Lbl;
+
+function v1SetMode(m) {
+  v1.mode = m;
+  document.getElementById('v1-btn-arc').classList.toggle('on', m==='arc');
+  document.getElementById('v1-btn-point').classList.toggle('on', m==='point');
+  v1Draw();
+}
+
+function v1Q(P) { return Math.max(0, v1.a - v1.b * P); }
+
+function v1Draw() {
+  const {ctx, W, H} = {ctx:v1ctx, W:v1W, H:v1H};
+  ctx.clearRect(0, 0, W, H);
+  drawAxes(ctx, W, H, xR1, yR1);
+
+  // demand curve
+  ctx.beginPath();
+  ctx.strokeStyle = '#1f6fb2';
+  ctx.lineWidth = 2;
+  const P0 = v1.a / v1.b, Q0 = 0;
+  const [ax0, ay0] = toC(Q0, P0, W, H, xR1, yR1);
+  const [ax1, ay1] = toC(v1.a, 0, W, H, xR1, yR1);
+  ctx.moveTo(ax0, ay0); ctx.lineTo(ax1, ay1); ctx.stroke();
+
+  const Q1 = v1Q(v1.P1), Q2 = v1Q(v1.P2);
+  const [cx1, cy1] = toC(Q1, v1.P1, W, H, xR1, yR1);
+  const [cx2, cy2] = toC(Q2, v1.P2, W, H, xR1, yR1);
+
+  let e1, e2, eArc, label, color;
+  let labelColorA = '#333', labelColorB = '#333';
+
+  if (v1.mode === 'arc') {
+    const Qmid = (Q1+Q2)/2, Pmid = (v1.P1+v1.P2)/2;
+    eArc = Pmid === 0 || Qmid === 0 ? 0 : ((Q2-Q1)/Qmid) / ((v1.P2-v1.P1)/Pmid);
+    const ae = Math.abs(eArc);
+    color = eColor(eArc);
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.min(cx1,cx2)-2, Math.min(cy1,cy2)-2, Math.abs(cx2-cx1)+4, Math.abs(cy2-cy1)+4);
+    ctx.restore();
+    document.getElementById('v1-readout').innerHTML =
+      `<div class="readout-row">
+        <div class="readout-col"><div class="readout-label">Point A</div><div class="readout-val">P=${v1.P1.toFixed(1)}, Q=${Q1.toFixed(1)}</div></div>
+        <div class="readout-col"><div class="readout-label">Point B</div><div class="readout-val">P=${v1.P2.toFixed(1)}, Q=${Q2.toFixed(1)}</div></div>
+        <div class="readout-col"><div class="readout-label">Arc Elasticity</div><div class="readout-val" style="color:${color}">${eArc.toFixed(3)}</div></div>
+      </div>
+      <div class="verdict ${ae>1?'elastic':ae<1?'inelastic':'unit'}">
+        ${ae>1?'Elastic: consumers respond strongly to price changes':''}
+        ${ae<1?'Inelastic: consumers respond weakly to price changes':''}
+        ${ae===1?'Unit elastic':''}
+      </div>`;
+    dot(ctx, cx1, cy1, 9, color, '#fff');
+    dot(ctx, cx2, cy2, 9, color, '#fff');
+    // dashed segment between A and B (no longer needed for label repulsion --
+    // the SVG overlay handles label collisions via forceSimulation)
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke(); ctx.setLineDash([]);
+    labelColorA = '#333'; labelColorB = '#333';
+  } else {
+    e1 = v1.b === 0 || Q1 === 0 ? 0 : -v1.b * v1.P1 / Q1;
+    e2 = v1.b === 0 || Q2 === 0 ? 0 : -v1.b * v1.P2 / Q2;
+    const ae1 = Math.abs(e1), ae2 = Math.abs(e2);
+    document.getElementById('v1-readout').innerHTML =
+      `<div class="readout-row">
+        <div class="readout-col"><div class="readout-label">Point A (e)</div><div class="readout-val" style="color:${eColor(e1)}">${e1.toFixed(3)}</div></div>
+        <div class="readout-col"><div class="readout-label">Point B (e)</div><div class="readout-val" style="color:${eColor(e2)}">${e2.toFixed(3)}</div></div>
+      </div>
+      <p style="margin-top:0.5rem; font-size:0.83rem; color:var(--ink-soft)">
+        Point A is <strong>${ae1>1?'elastic':ae1<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae1.toFixed(2)});
+        Point B is <strong>${ae2>1?'elastic':ae2<1?'inelastic':'unit elastic'}</strong> (|e<sub>d</sub>|=${ae2.toFixed(2)}).
+      </p>`;
+    dot(ctx, cx1, cy1, 9, eColor(e1), '#fff');
+    dot(ctx, cx2, cy2, 9, eColor(e2), '#fff');
+    labelColorA = eColor(e1); labelColorB = eColor(e2);
+  }
+
+  // Update D3 SVG overlay label anchors (smooth glide, no restart on redraw)
+  if (v1Nodes) {
+    const nA = v1Nodes.find(n=>n.id==='A'), nB = v1Nodes.find(n=>n.id==='B');
+    d3MoveAnchor(nA, cx1, cy1);
+    d3MoveAnchor(nB, cx2, cy2);
+    // Pin each A/B box just off its dot, on the OUTWARD side (the left point's
+    // label goes down-left, the right point's down-right), so the box clears BOTH
+    // the demand line AND the shaded arc rectangle between the points. The
+    // force-sim only repels labels from each other, not from the line/box.
+    const aLeft = cx1 <= cx2;
+    nA.fx = (aLeft ? cx1 - nA.lw - 6 : cx1 + 6); nA.fy = cy1 + 12;
+    nB.fx = (aLeft ? cx2 + 6 : cx2 - nB.lw - 6); nB.fy = cy2 + 12;
+    nA.color = labelColorA; nB.color = labelColorB;
+    if (v1Lbl) {
+      v1Lbl.gs.select('rect').attr('stroke', d=>d.color);
+      v1Lbl.gs.select('text').attr('fill', d=>d.color);
+      v1Lbl.conns.attr('stroke', d=>d.color);
+    }
+  }
+}
+
+function v1Init() {
+  const s = setupCvs('cvs1');
+  v1ctx = s.ctx; v1W = s.W; v1H = s.H;
+  const cvs = document.getElementById('cvs1');
+
+  // ── D3 SVG force-label overlay (draggable A/B labels, S6/S8 styling) ──
+  if (v1Sim) v1Sim.stop();
+  v1Svg = d3Overlay('cvs1-ov', v1W, v1H);
+  if (v1Svg) {
+    const Q1=v1Q(v1.P1), Q2=v1Q(v1.P2);
+    const [acx1,acy1]=toC(Q1,v1.P1,v1W,v1H,xR1,yR1);
+    const [acx2,acy2]=toC(Q2,v1.P2,v1W,v1H,xR1,yR1);
+    v1Nodes = [
+      d3LblNode('A', '#333', 'A', 22, acx1, acy1),
+      d3LblNode('B', '#333', 'B', 22, acx2, acy2),
+    ];
+    v1Sim = d3LabelSim(v1Nodes);
+    v1Lbl = d3LabelLayer(v1Svg, v1Nodes, ()=>v1Sim);
+    v1Sim.on('tick', ()=>d3LabelTick(v1Nodes, v1Lbl.gs, v1Lbl.conns, v1W, v1H, ML, MR, MT, MB));
+  }
+
+  // Snap mouse (px, py) to nearest point on the demand line
+  function snapToLine(px, py) {
+    const W=v1W, H=v1H;
+    const [Qm, Pm] = fromC(px, py, W, H, xR1, yR1);
+    // For Q = a - bP: project (Qm,Pm) onto the line
+    // Closest P: P_snap = (Pm + b*(Qm - a)*b/b) ... using perpendicular projection
+    const a=v1.a, b=v1.b;
+    // Line direction in (Q,P): (-b, 1). Project mouse offset onto it.
+    const t = ((-b)*(Qm - a) + 1*(Pm - 0)) / (b*b + 1);
+    const P_snap = Math.max(1, Math.min(a/b - 0.5, 0 + t));
+    return P_snap;
+  }
+
+  cvs.addEventListener('mousedown', e => {
+    const r = cvs.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const px = (e.clientX - r.left) * (cvs.width/r.width) / dpr;
+    const py = (e.clientY - r.top)  * (cvs.height/r.height) / dpr;
+    v1W = v1W || cvs.clientWidth; v1H = v1H || parseInt(cvs.getAttribute('height'))||260;
+    const Q1=v1Q(v1.P1), Q2=v1Q(v1.P2);
+    const [cx1,cy1]=toC(Q1,v1.P1,v1W,v1H,xR1,yR1);
+    const [cx2,cy2]=toC(Q2,v1.P2,v1W,v1H,xR1,yR1);
+    if (Math.hypot(px-cx1,py-cy1)<18) v1.drag=1;
+    else if (Math.hypot(px-cx2,py-cy2)<18) v1.drag=2;
+  });
+  cvs.addEventListener('mousemove', e => {
+    if (!v1.drag) return;
+    const r = cvs.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const px = (e.clientX - r.left) * (cvs.width/r.width) / dpr;
+    const py = (e.clientY - r.top)  * (cvs.height/r.height) / dpr;
+    if (v1.drag===1) v1.P1 = snapToLine(px, py);
+    else v1.P2 = snapToLine(px, py);
+    v1Draw();
+  });
+  cvs.addEventListener('mouseup', () => v1.drag = null);
+  cvs.addEventListener('mouseleave', () => v1.drag = null);
+  cvs.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const r = cvs.getBoundingClientRect();
+    const px = (t.clientX - r.left) * (cvs.width/r.width) / (window.devicePixelRatio||1);
+    const py = (t.clientY - r.top)  * (cvs.height/r.height) / (window.devicePixelRatio||1);
+    const Q1=v1Q(v1.P1), Q2=v1Q(v1.P2);
+    const [cx1,cy1]=toC(Q1,v1.P1,v1W,v1H,xR1,yR1);
+    const [cx2,cy2]=toC(Q2,v1.P2,v1W,v1H,xR1,yR1);
+    if (Math.hypot(px-cx1,py-cy1)<18) v1.drag=1;
+    else if (Math.hypot(px-cx2,py-cy2)<18) v1.drag=2;
+  }, {passive:false});
+  cvs.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!v1.drag) return;
+    const t = e.touches[0];
+    const r = cvs.getBoundingClientRect();
+    const px = (t.clientX - r.left) * (cvs.width/r.width) / (window.devicePixelRatio||1);
+    const py = (t.clientY - r.top) * (cvs.height/r.height) / (window.devicePixelRatio||1);
+    if (v1.drag===1) v1.P1 = snapToLine(px, py);
+    else v1.P2 = snapToLine(px, py);
+    v1Draw();
+  }, {passive:false});
+  cvs.addEventListener('touchend', () => v1.drag = null);
+
+  v1Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.2 - ELASTICITY HEATMAP
+// ══════════════════════════════════════════════════════════════════════
+// P defaults to 35 (elastic region), NOT the midpoint 25: at the midpoint the
+// draggable dot would spawn directly on the "unit elastic midpoint" label, which
+// looked like the label was stuck to the dot. Starting apart keeps them distinct.
+const v2 = { a:100, b:2, P:35 };
+let xR2=[0,110], yR2=[0,55]; // updated dynamically so demand line stays on screen
+let v2W, v2H, v2ctx, v2drag=false;
+let v2Svg, v2Sim, v2Nodes, v2Lbl;
+
+function v2Bfloat() {
+  const v = parseFloat(document.getElementById('v2-b-in') ? document.getElementById('v2-b-in').value : 2);
+  return isNaN(v) || v <= 0 ? 2 : v;
+}
+
+function v2ParseEq() {
+  const aEl = document.getElementById('v2-a-in');
+  const bEl = document.getElementById('v2-b-in');
+  const a = parseFloat(aEl ? aEl.value : 100);
+  const b = parseFloat(bEl ? bEl.value : 2);
+  if (!isNaN(a) && a > 0) v2.a = a;
+  if (!isNaN(b) && b > 0) v2.b = b;
+  v2.P = Math.min(v2.P, v2.a/v2.b - 0.5);
+  const prev = document.getElementById('v2-eq-preview');
+  if (prev) prev.textContent = `Choke price: P = ${(v2.a/v2.b).toFixed(1)}, unit-elastic midpoint: P = ${(v2.a/(2*v2.b)).toFixed(1)}`;
+  v2Draw();
+}
+
+function v2Draw() {
+  const ctx=v2ctx, W=v2W, H=v2H;
+  if (!ctx) return;
+  const a = v2.a, b = v2.b > 0 ? v2.b : v2Bfloat();
+  ctx.clearRect(0,0,W,H);
+
+  // Dynamic axis ranges -- scale so the entire demand line stays on screen
+  const Pmax = a/b;
+  const xHi = Math.max(110, Math.ceil(a * 1.12 / 10) * 10);
+  const yHi = Math.max(55,  Math.ceil(Pmax * 1.12 / 5) * 5);
+  xR2 = [0, xHi];
+  yR2 = [0, yHi];
+  const steps = 80;
+  for (let i=0; i<steps; i++) {
+    const P1 = Pmax * i/steps;
+    const P2 = Pmax * (i+1)/steps;
+    const Q1 = a-b*P1, Q2 = a-b*P2;
+    const [x1,y1]=toC(Q1,P1,W,H,xR2,yR2);
+    const [x2,y2]=toC(Q2,P2,W,H,xR2,yR2);
+    const Pm=(P1+P2)/2, Qm=a-b*Pm;
+    const ed = Qm===0?-99:-b*Pm/Qm;
+    ctx.beginPath();
+    ctx.strokeStyle = eColor(ed);
+    ctx.lineWidth = 7;
+    ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.stroke();
+  }
+  // thin black outline on top
+  ctx.beginPath();
+  ctx.strokeStyle='rgba(0,0,0,0.15)';
+  ctx.lineWidth=1;
+  const [sx,sy]=toC(0,Pmax,W,H,xR2,yR2);
+  const [ex,ey]=toC(a,0,W,H,xR2,yR2);
+  ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
+  ctx.stroke();
+
+  drawAxes(ctx, W, H, xR2, yR2);
+
+  // draggable dot
+  const Pc = Math.max(0.5, Math.min(Pmax-0.5, v2.P));
+  const Qc = a - b*Pc;
+  const ed = -b*Pc/Qc;
+  const [dpx,dpy]=toC(Qc,Pc,W,H,xR2,yR2);
+  dot(ctx, dpx, dpy, 8, '#f39c12', '#fff');
+
+  // unit-elastic midpoint marker + D3 SVG force label
+  const Pu = Pmax/2;
+  const Qu = a/2;
+  const [ux,uy]=toC(Qu,Pu,W,H,xR2,yR2);
+  ctx.beginPath(); ctx.arc(ux,uy,4,0,2*Math.PI); ctx.fillStyle='#e6a817aa'; ctx.fill();
+  if (v2Nodes) d3MoveAnchor(v2Nodes[0], ux, uy);
+
+  const ae=Math.abs(ed);
+  document.getElementById('v2-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Price</div><div class="readout-val">$${Pc.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Quantity</div><div class="readout-val">${Qc.toFixed(1)}</div></div>
+      <div class="readout-col"><div class="readout-label">Point Elasticity</div><div class="readout-val" style="color:${eColor(ed)}">${ed.toFixed(3)}</div></div>
+    </div>
+    <div class="verdict ${ae>1?'elastic':ae<1?'inelastic':'unit'}">
+      ${ae>1?'Elastic region: above the midpoint of demand':''}
+      ${ae<1?'Inelastic region: below the midpoint of demand':''}
+    </div>`;
+}
+
+function v2Update() { v2ParseEq(); }
+
+function v2Init() {
+  const s = setupCvs('cvs2');
+  v2ctx=s.ctx; v2W=s.W; v2H=s.H;
+  const cvs=document.getElementById('cvs2');
+
+  // ── D3 SVG force-label overlay ──
+  if (v2Sim) v2Sim.stop();
+  v2Svg = d3Overlay('cvs2-ov', v2W, v2H);
+  if (v2Svg) {
+    const a=v2.a, b=v2.b>0?v2.b:v2Bfloat();
+    const Pmax=a/b;
+    const xHi = Math.max(110, Math.ceil(a*1.12/10)*10);
+    const yHi = Math.max(55, Math.ceil(Pmax*1.12/5)*5);
+    const [ux,uy]=toC(a/2, Pmax/2, v2W, v2H, [0,xHi], [0,yHi]);
+    // Push the label off the demand line (the anchor sits on it) into the open
+    // area below and left of it, with a leader back to the midpoint. Up and to
+    // the right, a phone-width plot put the label over the draggable dot.
+    v2Nodes = [ d3LblNode('unitElastic', 'var(--ink-soft)', 'unit elastic', 80, ux, uy, {boxOff:{x:-40,y:44}}) ];
+    v2Sim = d3LabelSim(v2Nodes);
+    v2Lbl = d3LabelLayer(v2Svg, v2Nodes, ()=>v2Sim);
+    v2Sim.on('tick', ()=>d3LabelTick(v2Nodes, v2Lbl.gs, v2Lbl.conns, v2W, v2H, ML, MR, MT, MB));
+    d3WireSliderSmoothness(cvs, ()=>v2Sim);
+  }
+
+  function dragP(py) {
+    const b=v2Bfloat();
+    const [,P]=fromC(0,py,v2W,v2H,xR2,yR2);
+    v2.P = Math.max(0.5, Math.min(v2.a/b-0.5, P));
+    v2Draw();
+  }
+  cvs.addEventListener('mousedown', e=>{
+    const r=cvs.getBoundingClientRect();
+    const py=(e.clientY-r.top)*(cvs.height/r.height)/(window.devicePixelRatio||1);
+    v2drag=true; dragP(py);
+  });
+  cvs.addEventListener('mousemove', e=>{
+    if(!v2drag) return;
+    const r=cvs.getBoundingClientRect();
+    const py=(e.clientY-r.top)*(cvs.height/r.height)/(window.devicePixelRatio||1);
+    dragP(py);
+  });
+  cvs.addEventListener('mouseup', ()=>v2drag=false);
+  cvs.addEventListener('mouseleave', ()=>v2drag=false);
+  cvs.addEventListener('touchstart', e=>{ e.preventDefault(); const t=e.touches[0]; const r=cvs.getBoundingClientRect(); dragP((t.clientY-r.top)*(cvs.height/r.height)/(window.devicePixelRatio||1)); v2drag=true; },{passive:false});
+  cvs.addEventListener('touchmove', e=>{ e.preventDefault(); if(!v2drag) return; const t=e.touches[0]; const r=cvs.getBoundingClientRect(); dragP((t.clientY-r.top)*(cvs.height/r.height)/(window.devicePixelRatio||1)); },{passive:false});
+  cvs.addEventListener('touchend', ()=>v2drag=false);
+  v2Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.3 - REVENUE RECTANGLE (colors: GREEN=gain via --d-gain, RED=loss via --d-loss)
+// ══════════════════════════════════════════════════════════════════════
+const v3 = { a:100 };
+// Site palette: gain = --d-gain (green), loss = --d-loss (red), drawn translucent.
+function v3Fill(tok, fb) {
+  const hex=(getComputedStyle(document.documentElement).getPropertyValue(tok)||'').trim()||fb;
+  const m=/^#([0-9a-f]{6})$/i.exec(hex); if(!m) return hex;
+  const v=parseInt(m[1],16);
+  return 'rgba('+(v>>16)+','+((v>>8)&255)+','+(v&255)+',0.38)';
+}
+const xR3=[0,110], yR3=[0,55];
+let v3W, v3H, v3ctx;
+let v3Svg, v3Sim, v3Nodes, v3Lbl;
+
+function v3GetB() {
+  const el = document.getElementById('v3-slope');
+  return el ? parseFloat(el.value)/10 : 2;
+}
+function v3Q(P, b) { return Math.max(0, v3.a - (b||v3GetB())*P); }
+
+// The demand line's highest visible point: its price intercept when that is
+// on the plot, otherwise where it crosses the top of the frame.
+function v3TopOfLine(b, W, H, xR, yR) {
+  const Pl = Math.min(v3.a / b, yR[1] * 0.92);
+  return toC(v3.a - b * Pl, Pl, W, H, xR, yR);
+}
+function v3Draw() {
+  const ctx=v3ctx, W=v3W, H=v3H;
+  const b  = v3GetB();
+  const P  = parseFloat(document.getElementById('v3-p').value);
+  const Pb = parseFloat(document.getElementById('v3-pb').value);
+  const Qb = v3Q(Pb, b), Q = v3Q(P, b);
+  ctx.clearRect(0,0,W,H);
+  // Update xR3 based on max Q
+  const xMax = Math.max(v3.a, 115);
+  const xR3l=[0,xMax], yR3l=[0,55];   // fixed: both price sliders top out at 45
+  drawAxes(ctx, W, H, xR3l, yR3l);
+
+  const [lx0,ly0]=toC(0,v3.a/b,W,H,xR3l,yR3l);
+  const [lx1,ly1]=toC(v3.a,0,W,H,xR3l,yR3l);
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
+  ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
+
+  const [bx,by]=toC(Qb,Pb,W,H,xR3l,yR3l);
+  const [nx,ny]=toC(Q,P,W,H,xR3l,yR3l);
+  const [ox,oy]=toC(0,0,W,H,xR3l,yR3l);
+
+  if (P > Pb) {
+    // Base rectangle
+    ctx.fillStyle='rgba(26,86,219,0.08)';
+    ctx.fillRect(ML, by, bx-ML, oy-by);
+    // GREEN: revenue gained (price gain strip, existing buyers pay more)
+    ctx.fillStyle=v3Fill('--d-gain','#2f7d55');
+    ctx.fillRect(ML, ny, nx-ML, by-ny);
+    // RED: revenue lost (quantity lost strip, buyers who exit)
+    ctx.fillStyle=v3Fill('--d-loss','#b03a2e');
+    ctx.fillRect(nx, by, bx-nx, oy-by);
+  } else if (P < Pb) {
+    // Base rectangle
+    ctx.fillStyle='rgba(26,86,219,0.08)';
+    ctx.fillRect(ML, ny, nx-ML, oy-ny);
+    // GREEN: revenue gained (quantity gained strip)
+    ctx.fillStyle=v3Fill('--d-gain','#2f7d55');
+    ctx.fillRect(bx, ny, nx-bx, oy-ny);
+    // RED: revenue lost (price loss strip)
+    ctx.fillStyle=v3Fill('--d-loss','#b03a2e');
+    ctx.fillRect(ML, by, bx-ML, ny-by);
+  } else {
+    ctx.fillStyle='rgba(26,86,219,0.15)';
+    ctx.fillRect(ML, by, bx-ML, oy-by);
+  }
+
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,by); ctx.lineTo(bx,by); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx,oy); ctx.lineTo(bx,by); ctx.stroke();
+  if (Math.abs(P-Pb)>0.1) {
+    ctx.beginPath(); ctx.moveTo(ML,ny); ctx.lineTo(nx,ny); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(nx,oy); ctx.lineTo(nx,ny); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  dot(ctx, bx, by, 7, '#555', '#fff');
+  dot(ctx, nx, ny, 8, '#1f6fb2', '#fff');
+
+  // D3 SVG force label for demand curve
+  if (v3Nodes) { const [ax,ay]=v3TopOfLine(b,W,H,xR3l,yR3l); d3MoveAnchor(v3Nodes[0], ax, ay); }
+
+  const TRbase = Pb*Qb, TRnew = P*Q, deltaT = TRnew - TRbase;
+  const ed = b===0||Qb===0 ? 0 : -b*Pb/Qb;
+  const ae=Math.abs(ed);
+
+  document.getElementById('v3-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">TR at P<sub>old</sub>=$${Pb}</div><div class="readout-val">$${TRbase.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">TR at P<sub>new</sub>=$${P}</div><div class="readout-val">$${TRnew.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Change in TR</div><div class="readout-val" style="color:${deltaT>=0?EC.green:EC.red}">${deltaT>=0?'+':'-'}$${Math.abs(deltaT).toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">|e<sub>d</sub>| at P<sub>old</sub></div><div class="readout-val" style="color:${eColor(ed)}">${ae.toFixed(2)}</div></div>
+    </div>
+    <div class="verdict ${Math.abs(P-Pb)<=0.1?'unit':((P>Pb&&deltaT<0)||(P<Pb&&deltaT>0))?'elastic':deltaT===0?'unit':'inelastic'}" style="margin-top:0.4rem">
+      ${P>Pb?(deltaT<0?'Price rise hurt TR: demand is elastic over this range (red loss > green gain)':deltaT>0?'Price rise helped TR: demand is inelastic over this range (green gain > red loss)':'Price rise left TR unchanged: green gain exactly offsets red loss'):''}
+      ${P<Pb?(deltaT>0?'Price cut helped TR: demand is elastic over this range':deltaT<0?'Price cut hurt TR: demand is inelastic over this range':'Price cut left TR unchanged: gains exactly offset losses'):''}
+      ${Math.abs(P-Pb)<=0.1?'Change the new price to see how TR responds':''}
+    </div>`;
+}
+
+function v3Update() {
+  document.getElementById('v3-p-val').textContent ='$'+parseFloat(document.getElementById('v3-p').value);
+  document.getElementById('v3-pb-val').textContent='$'+parseFloat(document.getElementById('v3-pb').value);
+  const bv=parseFloat(document.getElementById('v3-slope').value)/10;
+  document.getElementById('v3-slope-val').textContent=bv.toFixed(1);
+  v3Draw();
+}
+
+function v3Init() {
+  const s=setupCvs('cvs3');
+  v3ctx=s.ctx; v3W=s.W; v3H=s.H;
+
+  // ── D3 SVG force-label overlay ──
+  if (v3Sim) v3Sim.stop();
+  v3Svg = d3Overlay('cvs3-ov', v3W, v3H);
+  if (v3Svg) {
+    const b=v3GetB();
+    const xMax = Math.max(v3.a, 115);
+    const xR3l=[0,xMax], yR3l=[0,55];   // fixed: both price sliders top out at 45
+    const [lx0,ly0]=v3TopOfLine(b, v3W, v3H, xR3l, yR3l);
+    v3Nodes = [ d3LblNode('D', '#1f6fb2', 'D', 18, lx0, ly0, {boxOff:{x:20,y:6}}) ];
+    v3Sim = d3LabelSim(v3Nodes);
+    v3Lbl = d3LabelLayer(v3Svg, v3Nodes, ()=>v3Sim);
+    v3Sim.on('tick', ()=>d3LabelTick(v3Nodes, v3Lbl.gs, v3Lbl.conns, v3W, v3H, ML, MR, MT, MB));
+    ['v3-pb','v3-p','v3-slope'].forEach(id=>d3WireSliderSmoothness(document.getElementById(id), ()=>v3Sim));
+  }
+
+  v3Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.4 - PRICING STRATEGY SIMULATOR
+// ══════════════════════════════════════════════════════════════════════
+const v4Industries = {
+  pharma:   { name:'Pharmaceuticals', e:-0.3, color:'#8e44ad' },
+  petrol:   { name:'Gasoline',        e:-0.2, color:EC.slate },
+  electric: { name:'Electricity',     e:-0.1, color:'#16a085' },
+  airline:  { name:'Airline tickets', e:-1.4, color:'#e67e22' },
+  coffee:   { name:'Coffee shop',     e:-2.3, color:'#8B4513' },
+  fashion:  { name:'Fashion',         e:-2.8, color:'#e91e63' },
+  hotel:    { name:'Hotel rooms',     e:-1.8, color:'#1565c0' }
+};
+let v4W, v4H, v4ctx;
+let v4Svg, v4Sim, v4Nodes, v4Lbl;
+
+// Resize a label node's box to fit new text (variable-width value labels)
+function d3ResizeLabel(lblLayer, node, newLw) {
+  if (Math.abs(node.lw - newLw) < 0.5) return;
+  node.lw = newLw;
+  const g = lblLayer.gs.filter(d=>d===node);
+  g.select('rect').attr('width', newLw);
+  g.select('text').attr('x', newLw/2);
+}
+
+function v4Draw() {
+  const ctx=v4ctx, W=v4W, H=v4H;
+  const key=document.getElementById('v4-ind').value;
+  const ind=v4Industries[key];
+  const dp=parseFloat(document.getElementById('v4-dp').value)/100;
+  // Exact: new Q from constant-elasticity demand, then TR = P x Q.
+  const qRatio = Math.pow(1+dp, ind.e);
+  const dQ = qRatio - 1;
+  const dTR = (1+dp)*qRatio - 1;
+  const dTRapprox = dp * (1 + ind.e);
+  const pChange=dp*100;
+  const trChange=dTR*100;
+  const trApprox=dTRapprox*100;
+
+  ctx.clearRect(0,0,W,H);
+
+  // bar chart area - centre the zero line so negative bars have space
+  const barW=80;
+  const cx=W/2;
+  const chartTop=MT+4;
+  const chartBot=H-MB-22;           // leave room for x-axis labels
+  const midY=Math.round((chartTop+chartBot)/2);
+  const halfH=midY-chartTop-2;      // max bar height in either direction (100% = halfH px)
+
+  // background grid (±100%, ±50%, 0%)
+  ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+  for(let i=-4;i<=4;i++){
+    const y=midY-halfH*i/4;
+    ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(W-MR,y); ctx.stroke();
+    if(i%2===0){
+      ctx.fillStyle='#5f6875'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+      ctx.fillText((i*25>0?'+':'')+i*25+'%',ML-4,y+4);
+    }
+  }
+  ctx.strokeStyle='#5f6875'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(cx,chartTop); ctx.lineTo(cx,chartBot); ctx.stroke();
+
+  // clamp bars to available space (handles large elasticities cleanly)
+  const pH=Math.min(Math.abs(pChange)/100*halfH, halfH);
+  const tH=Math.min(Math.abs(trChange)/100*halfH, halfH);
+  const aH=Math.min(Math.abs(trApprox)/100*halfH, halfH);
+
+  // P bar (left)
+  ctx.fillStyle = pChange>=0 ? 'rgba(231,76,60,0.8)' : 'rgba(39,174,96,0.8)';
+  ctx.fillRect(cx-barW*1.6, pChange>=0 ? midY-pH : midY, barW, pH);
+  ctx.fillStyle='#333'; ctx.font='bold 17px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('%ΔP', cx-barW*1.1, chartBot+14);
+
+  // TR bar (right)
+  ctx.fillStyle = trChange>=0 ? 'rgba(39,174,96,0.8)' : 'rgba(231,76,60,0.8)';
+  ctx.fillRect(cx+barW*0.6, trChange>=0 ? midY-tH : midY, barW, tH);
+  ctx.fillStyle='#333'; ctx.textAlign='center';
+  ctx.fillText('%ΔTR', cx+barW*1.1, chartBot+14);
+  // Linear approximation: dashed outline over the exact bar
+  if (Math.abs(trApprox-trChange) > 0.05) {
+    ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle='#5f6875'; ctx.lineWidth=1.6;
+    ctx.strokeRect(cx+barW*0.6-6, trApprox>=0 ? midY-aH : midY, barW+12, aH);
+    ctx.restore();
+  }
+
+  // zero line
+  ctx.strokeStyle='#999'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(ML,midY); ctx.lineTo(W-MR,midY); ctx.stroke();
+
+  // elasticity badge — indented right of the y-axis so it clears the "+100%"
+  // tick label in the top-left corner, and with a wider line gap so the two
+  // lines read as a clean stacked badge.
+  ctx.fillStyle=eColor(ind.e); ctx.font='bold 18px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='left';
+  // On a narrow canvas the badge would run across the centre axis; start it
+  // just right of the axis instead.
+  const eTxtW=ctx.measureText(`e = ${ind.e}`).width;
+  ctx.font='17px Libre Franklin,system-ui,sans-serif';
+  const badgeW=Math.max(eTxtW, ctx.measureText(ind.name).width);
+  const badgeX=(ML+46+badgeW > cx-6) ? cx+8 : ML+46;
+  ctx.font='bold 18px Libre Franklin,system-ui,sans-serif';
+  ctx.fillText(`e = ${ind.e}`, badgeX, MT+14);
+  ctx.fillStyle='#555'; ctx.font='17px Libre Franklin,system-ui,sans-serif';
+  ctx.fillText(ind.name, badgeX, MT+31);
+
+  // bar value labels -- D3 SVG force labels (draggable, anchored to bar tops)
+  ctx.font='bold 17px Libre Franklin,system-ui,sans-serif';
+  const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
+  const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
+  // On the bar's edge, not above it: a leader that stopped short of the bar,
+  // or pointed at empty air when the bar was zero-height, read as a mistake.
+  const pValLblY = pChange>=0 ? midY-pH : midY+pH;
+  const tValLblY = trChange>=0 ? midY-tH : midY+tH;
+  if (v4Nodes) {
+    const nP=v4Nodes[0], nT=v4Nodes[1];
+    nP.label = pTxt; nP.color = pChange>=0?EC.red:EC.green;
+    nT.label = tTxt; nT.color = trChange>=0?EC.green:EC.red;
+    d3ResizeLabel(v4Lbl, nP, ctx.measureText(pTxt).width+10);
+    d3ResizeLabel(v4Lbl, nT, ctx.measureText(tTxt).width+10);
+    d3MoveAnchor(nP, cx-barW*1.1, pValLblY);
+    d3MoveAnchor(nT, cx+barW*1.1, tValLblY);
+    v4Lbl.gs.select('rect').attr('stroke', d=>d.color);
+    v4Lbl.gs.select('text').attr('fill', d=>d.color).text(d=>d.label);
+    v4Lbl.conns.attr('stroke', d=>d.color);
+  }
+
+  document.getElementById('v4-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Price change</div><div class="readout-val" style="color:${pChange>=0?EC.red:EC.green}">${pChange>=0?'+':''}${pChange.toFixed(0)}%</div></div>
+      <div class="readout-col"><div class="readout-label">Elasticity</div><div class="readout-val" style="color:${eColor(ind.e)}">${ind.e}</div></div>
+      <div class="readout-col"><div class="readout-label">%ΔQ</div><div class="readout-val">${dQ>=0?'+':''}${(dQ*100).toFixed(1)}%</div></div>
+      <div class="readout-col"><div class="readout-label">Exact %ΔTR</div><div class="readout-val" style="color:${trChange>=0?EC.green:EC.red}">${trChange>=0?'+':''}${trChange.toFixed(1)}%</div></div>
+      <div class="readout-col"><div class="readout-label">Linear approx. (dashed)</div><div class="readout-val" style="color:var(--ink-soft)">${trApprox>=0?'+':''}${trApprox.toFixed(1)}%</div></div>
+    </div>
+    <div class="verdict ${Math.abs(ind.e)>1?'elastic':'inelastic'}" style="margin-top:0.5rem">
+      ${pChange===0
+        ? `${Math.abs(ind.e)>1?'Elastic':'Inelastic'} good: move the price slider to see the revenue effect.`
+        : Math.abs(ind.e)>1
+        ? `Elastic good: a ${pChange>0?'price rise hurts':'price cut grows'} total revenue.`
+        : `Inelastic good: a ${pChange>0?'price rise grows':'price cut hurts'} total revenue.`}
+    </div>`;
+}
+
+function v4Update() {
+  const dp=parseFloat(document.getElementById('v4-dp').value);
+  document.getElementById('v4-dp-val').textContent=(dp>=0?'+':'')+dp+'%';
+  v4Draw();
+}
+
+function v4Init() {
+  const s=setupCvs('cvs4');
+  v4ctx=s.ctx; v4W=s.W; v4H=s.H;
+
+  // ── D3 SVG force-label overlay (bar value labels %ΔP / %ΔTR) ──
+  if (v4Sim) v4Sim.stop();
+  v4Svg = d3Overlay('cvs4-ov', v4W, v4H);
+  if (v4Svg) {
+    const W=v4W, H=v4H;
+    const key=document.getElementById('v4-ind').value;
+    const ind=v4Industries[key];
+    const dp=parseFloat(document.getElementById('v4-dp').value)/100;
+    const dTR = (1+dp)*Math.pow(1+dp, ind.e) - 1;
+    const pChange=dp*100, trChange=dTR*100;
+    const barW=80, cx=W/2;
+    const chartTop=MT+4, chartBot=H-MB-22;
+    const midY=Math.round((chartTop+chartBot)/2);
+    const halfH=midY-chartTop-2;
+    const pH=Math.min(Math.abs(pChange)/100*halfH, halfH);
+    const tH=Math.min(Math.abs(trChange)/100*halfH, halfH);
+    const pValLblY = pChange>=0 ? midY-pH : midY+pH;
+    const tValLblY = trChange>=0 ? midY-tH : midY+tH;
+    v4ctx.font='bold 17px Libre Franklin,system-ui,sans-serif';
+    const pTxt=(pChange>=0?'+':'')+pChange.toFixed(0)+'%';
+    const tTxt=(trChange>=0?'+':'')+trChange.toFixed(1)+'%';
+    v4Nodes = [
+      d3LblNode('dP', pChange>=0?EC.red:EC.green, pTxt, v4ctx.measureText(pTxt).width+10, cx-barW*1.1, pValLblY),
+      d3LblNode('dTR', trChange>=0?EC.green:EC.red, tTxt, v4ctx.measureText(tTxt).width+10, cx+barW*1.1, tValLblY),
+    ];
+    v4Sim = d3LabelSim(v4Nodes);
+    v4Lbl = d3LabelLayer(v4Svg, v4Nodes, ()=>v4Sim);
+    v4Sim.on('tick', ()=>d3LabelTick(v4Nodes, v4Lbl.gs, v4Lbl.conns, v4W, v4H, ML, MR, MT, MB));
+    d3WireSliderSmoothness(document.getElementById('v4-dp'), ()=>v4Sim);
+    d3WireSliderSmoothness(document.getElementById('v4-ind'), ()=>v4Sim);
+  }
+
+  v4Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.6 - CONSUMER SURPLUS TRIANGLE
+// ══════════════════════════════════════════════════════════════════════
+const v6 = { a:120, b:2 };
+const xR6=[0,130], yR6=[0,65];
+let v6W, v6H, v6ctx;
+
+function v6Q(P) { return Math.max(0, v6.a - v6.b*P); }
+
+function v6Draw() {
+  const ctx=v6ctx, W=v6W, H=v6H;
+  let P  = parseFloat(document.getElementById('v6-p').value);
+  let Pn = parseFloat(document.getElementById('v6-pn').value);
+  if (Pn < P) { Pn=P; document.getElementById('v6-pn').value=P; document.getElementById('v6-pn-val').textContent='$'+P; }
+
+  const Pchoke = v6.a/v6.b;
+  const Q  = v6Q(P), Qn = v6Q(Pn);
+  const CS  = 0.5*Q*(Pchoke-P);
+  const CSnew = 0.5*Qn*(Pchoke-Pn);
+  const deltaRect = (Pn-P)*Qn;   // rectangle: existing buyers paying more
+  const deltaTri  = 0.5*(Pn-P)*(Q-Qn); // exit triangle
+
+  ctx.clearRect(0,0,W,H);
+  drawAxes(ctx, W, H, xR6, yR6);
+
+  // demand line
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
+  const [lx0,ly0]=toC(0,Pchoke,W,H,xR6,yR6);
+  const [lx1,ly1]=toC(v6.a,0,W,H,xR6,yR6);
+  ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
+
+  const [ox,oy]=toC(0,0,W,H,xR6,yR6);
+  const [px0,py0]=toC(0,P,W,H,xR6,yR6);
+  const [qx,qy]=toC(Q,P,W,H,xR6,yR6);
+  const [qnx,qny]=toC(Qn,Pn,W,H,xR6,yR6);
+  const [px0n,py0n]=toC(0,Pn,W,H,xR6,yR6);
+  const [chx,chy]=toC(0,Pchoke,W,H,xR6,yR6);
+
+  // remaining CS (blue triangle)
+  ctx.beginPath();
+  ctx.moveTo(chx,chy); ctx.lineTo(qnx,qny); ctx.lineTo(px0n,py0n); ctx.closePath();
+  ctx.fillStyle='rgba(26,86,219,0.18)';
+  ctx.fill();
+
+  if (Pn > P) {
+    // rectangle (green): (0..Qn) × (P..Pn)
+    ctx.fillStyle='rgba(39,174,96,0.3)';
+    ctx.fillRect(ML, py0n, qnx-ML, py0-py0n);
+
+    // exit triangle (yellow/gold): Qn..Q, P..Pn
+    ctx.beginPath();
+    ctx.moveTo(qnx,py0n); ctx.lineTo(qx,py0); ctx.lineTo(qnx,py0); ctx.closePath();
+    ctx.fillStyle='rgba(230,172,23,0.45)';
+    ctx.fill();
+  }
+
+  // dashed reference lines
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,py0); ctx.lineTo(qx,py0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(qx,oy); ctx.lineTo(qx,py0); ctx.stroke();
+  if (Pn>P) {
+    ctx.beginPath(); ctx.moveTo(ML,py0n); ctx.lineTo(qnx,py0n); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(qnx,oy); ctx.lineTo(qnx,py0n); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  dot(ctx,qx,py0,7,'#1f6fb2','#fff');
+  if(Pn>P) dot(ctx,qnx,py0n,7,EC.green,'#fff');
+
+  document.getElementById('v6-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">CS at P*=$${P}</div><div class="readout-val" style="color:#14568c">$${CS.toFixed(2)}</div></div>
+      ${Pn>P?`<div class="readout-col"><div class="readout-label">CS at P'=$${Pn}</div><div class="readout-val" style="color:#5f6875">$${CSnew.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">ΔCS</div><div class="readout-val" style="color:var(--d-second)">−$${(CS-CSnew).toFixed(2)}</div></div>` : ''}
+    </div>
+    ${Pn>P?`<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-soft)">
+      Lost CS = <span style="color:var(--green)">rectangle $${deltaRect.toFixed(2)}</span> (existing buyers overpay)
+      + <span style="color:#7d5a00">triangle $${deltaTri.toFixed(2)}</span> (buyers who exit)
+    </div>`:'<div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-soft)">Raise P\' above P* to see how CS decomposes.</div>'}`;
+}
+
+function v6Update() {
+  const P=parseFloat(document.getElementById('v6-p').value);
+  let Pn=parseFloat(document.getElementById('v6-pn').value);
+  document.getElementById('v6-p-val').textContent='$'+P;
+  document.getElementById('v6-pn-val').textContent='$'+Pn;
+  v6Draw();
+  // refresh calc box if visible
+  const cb = document.getElementById('v6-calc-box');
+  if (cb && cb.style.display !== 'none') v6ShowCalc();
+}
+
+let v6CalcVisible = false;
+function v6ToggleCalc() {
+  v6CalcVisible = !v6CalcVisible;
+  const cb = document.getElementById('v6-calc-box');
+  const btn = event.target;
+  if (cb) cb.style.display = v6CalcVisible ? 'block' : 'none';
+  if (btn) btn.textContent = v6CalcVisible ? 'Hide Calculation' : 'Show Calculation';
+  if (v6CalcVisible) v6ShowCalc();
+}
+
+function v6ShowCalc() {
+  const P  = parseFloat(document.getElementById('v6-p').value);
+  const Pn = parseFloat(document.getElementById('v6-pn').value);
+  const Pchoke = v6.a / v6.b;
+  const Q  = v6Q(P), Qn = v6Q(Pn);
+  const CS = 0.5*Q*(Pchoke-P);
+  const CSnew = 0.5*Qn*(Pchoke-Pn);
+  const dRect = (Pn-P)*Qn, dTri = 0.5*(Pn-P)*(Q-Qn);
+  const cb = document.getElementById('v6-calc-box');
+  if (!cb) return;
+  cb.style.fontFamily = 'Libre Franklin,system-ui,sans-serif';
+  cb.style.fontSize   = '0.92rem';
+  cb.innerHTML = `
+    <strong>Demand:</strong> Q = ${v6.a} &minus; ${v6.b}P &nbsp;&rarr;&nbsp; Choke price P<sub>max</sub> = ${v6.a} / ${v6.b} = <strong>$${Pchoke.toFixed(2)}</strong><br><br>
+    <strong>At P* = $${P}:</strong><br>
+    &nbsp;&nbsp;Q* = ${v6.a} &minus; ${v6.b} &times; ${P} = <strong>${Q.toFixed(1)}</strong><br>
+    &nbsp;&nbsp;CS = (1/2) &times; Q* &times; (P<sub>max</sub> &minus; P*)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (1/2) &times; ${Q.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${P})<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong style="color:#14568c;">$${CS.toFixed(2)}</strong>
+    ${Pn>P?`<br><br><strong>At P' = $${Pn}:</strong><br>
+    &nbsp;&nbsp;Q' = ${v6.a} &minus; ${v6.b} &times; ${Pn} = <strong>${Qn.toFixed(1)}</strong><br>
+    &nbsp;&nbsp;CS' = (1/2) &times; ${Qn.toFixed(1)} &times; (${Pchoke.toFixed(1)} &minus; ${Pn}) = <strong>$${CSnew.toFixed(2)}</strong><br><br>
+    <strong>Lost CS = $${(CS-CSnew).toFixed(2)}</strong><br>
+    &nbsp;&nbsp;= Rectangle (existing buyers pay more): Q' &times; (P' &minus; P*) = ${Qn.toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:var(--green);">$${dRect.toFixed(2)}</strong><br>
+    &nbsp;&nbsp;+ Triangle (buyers who exit): (1/2) &times; (Q* &minus; Q') &times; (P' &minus; P*)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;= (1/2) &times; ${(Q-Qn).toFixed(1)} &times; ${(Pn-P).toFixed(1)} = <strong style="color:#7d5a00;">$${dTri.toFixed(2)}</strong>` : ''}`;
+}
+
+function v6Init() {
+  const s=setupCvs('cvs6');
+  v6ctx=s.ctx; v6W=s.W; v6H=s.H;
+  v6Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.7 - SURGE PRICING SIMULATOR
+// ══════════════════════════════════════════════════════════════════════
+const v7 = { a:40, b:2, Pnorm:5 };
+const xR7=[0,45], yR7=[0,22];
+let v7W, v7H, v7ctx;
+let v7Svg, v7Sim, v7Nodes, v7Lbl;
+
+function v7Q(P) { return Math.max(0, v7.a - v7.b*P); }
+
+function v7Draw() {
+  const ctx=v7ctx, W=v7W, H=v7H;
+  if (!ctx) return;
+  const P=parseFloat(document.getElementById('v7-p').value);
+  const Pnorm=v7.Pnorm;
+  const Pchoke=v7.a/v7.b;
+  const Q=v7Q(P), Qnorm=v7Q(Pnorm);
+  const CS=0.5*Q*(Pchoke-P);
+  const TR=P*Q;
+  const TRnorm=Pnorm*Qnorm;
+
+  ctx.clearRect(0,0,W,H);
+  drawAxes(ctx,W,H,xR7,yR7,'Rides','P ($/ride)');
+
+  // demand line
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
+  const [lx0,ly0]=toC(0,Pchoke,W,H,xR7,yR7);
+  const [lx1,ly1]=toC(v7.a,0,W,H,xR7,yR7);
+  ctx.moveTo(lx0,ly0); ctx.lineTo(lx1,ly1); ctx.stroke();
+
+  const [ox,oy]=toC(0,0,W,H,xR7,yR7);
+  const [qx,py]=toC(Q,P,W,H,xR7,yR7);
+  const [chx,chy]=toC(0,Pchoke,W,H,xR7,yR7);
+  const [zerox]=toC(0,0,W,H,xR7,yR7);
+
+  // CS triangle (blue)
+  ctx.beginPath();
+  ctx.moveTo(chx,chy); ctx.lineTo(qx,py); ctx.lineTo(zerox,py); ctx.closePath();
+  ctx.fillStyle='rgba(26,86,219,0.18)'; ctx.fill();
+
+  // TR rectangle (green)
+  ctx.fillStyle='rgba(39,174,96,0.3)';
+  ctx.fillRect(zerox, py, qx-zerox, oy-py);
+
+  // dashed lines
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,py); ctx.lineTo(qx,py); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(qx,oy); ctx.lineTo(qx,py); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // normal price reference
+  const [,pyn]=toC(0,Pnorm,W,H,xR7,yR7);
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(ML,pyn); ctx.lineTo(W-MR,pyn); ctx.stroke();
+  ctx.setLineDash([]);
+
+  dot(ctx,qx,py,8,'#f39c12','#fff');
+
+  // D3 SVG force label for "normal $X"
+  if (v7Nodes) d3MoveAnchor(v7Nodes[0], ML+4, pyn);
+
+  const mult=P/Pnorm;
+  document.getElementById('v7-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Surge price</div><div class="readout-val">$${P.toFixed(2)} (${mult.toFixed(1)}×)</div></div>
+      <div class="readout-col"><div class="readout-label">Riders</div><div class="readout-val">${Q.toFixed(1)} (was ${Qnorm.toFixed(1)})</div></div>
+      <div class="readout-col"><div class="readout-label">App revenue</div><div class="readout-val" style="color:var(--green)">$${TR.toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Consumer Surplus</div><div class="readout-val" style="color:#14568c">$${CS.toFixed(2)}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-soft)">
+      ${Qnorm-Q>=0.05?`<strong>${(Qnorm-Q).toFixed(1)} riders priced out</strong> of the market.`:''}
+      ${Math.abs(TR-TRnorm)<0.005?'Revenue: no change vs normal.':TR>TRnorm?`Revenue up $${(TR-TRnorm).toFixed(2)} vs normal.`:`Revenue down $${(TRnorm-TR).toFixed(2)} vs normal.`}
+    </div>`;
+
+  /* Old / new / change readout. Baseline is the normal (non-surge) price
+     Pnorm, exactly the reference line the dashed "normal $X" label marks,
+     so these numbers agree with the picture. */
+  if (window.ecDelta) {
+    const CSnorm = 0.5*Qnorm*(Pchoke-Pnorm);
+    ecDelta('v7-delta', [
+      { label: 'Surge price',     old: Pnorm,  now: P,  prefix: '$' },
+      { label: 'Riders',          old: Qnorm,  now: Q,  dp: 1 },
+      { label: 'App revenue',    old: TRnorm, now: TR, prefix: '$' },
+      { label: 'Consumer Surplus', old: CSnorm, now: CS, prefix: '$' },
+    ]);
+  }
+}
+
+function v7Update() {
+  const P=parseFloat(document.getElementById('v7-p').value);
+  document.getElementById('v7-p-val').textContent='$'+P.toFixed(2);
+  v7Draw();
+}
+
+function v7Init() {
+  const s=setupCvs('cvs7');
+  v7ctx=s.ctx; v7W=s.W; v7H=s.H;
+
+  // ── D3 SVG force-label overlay ("normal $X" reference label) ──
+  if (v7Sim) v7Sim.stop();
+  v7Svg = d3Overlay('cvs7-ov', v7W, v7H);
+  if (v7Svg) {
+    const [,pyn]=toC(0, v7.Pnorm, v7W, v7H, xR7, yR7);
+    const normTxt='normal $'+v7.Pnorm;
+    v7ctx.font='16px Libre Franklin,system-ui,sans-serif';
+    v7Nodes = [ d3LblNode('normal', '#9aa3b0', normTxt, v7ctx.measureText(normTxt).width+10, ML+4, pyn) ];
+    v7Sim = d3LabelSim(v7Nodes);
+    v7Lbl = d3LabelLayer(v7Svg, v7Nodes, ()=>v7Sim);
+    v7Sim.on('tick', ()=>d3LabelTick(v7Nodes, v7Lbl.gs, v7Lbl.conns, v7W, v7H, ML, MR, MT, MB));
+    d3WireSliderSmoothness(document.getElementById('v7-p'), ()=>v7Sim);
+  }
+
+  v7Draw();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.8a - THREE-PANEL MARKET DEMAND ANIMATION
+// Consumer 1: Q = 30 - P  (choke 30)
+// Consumer 2: Q = 24 - 2P (choke 12)
+// Market: kinked at P=12
+// ══════════════════════════════════════════════════════════════════════
+const V8A_C1 = {a:30, b:1, color:EC.red};
+const V8A_C2 = {a:24, b:2, color:EC.accent2};
+const xR8a=[0,36], yR8a=[0,36];
+
+// Per-canvas D3 SVG overlay state for the 4.8a three-panel animation
+// (cvs8a, cvs8b each get one "Q = a − bP" formula label; cvs8c gets the
+// kink label + two market-formula segment labels).
+const v8aOv = {}; // canvasId -> {svg, sim, nodes, lbl, W, H}
+
+function v8aGetOverlay(canvasId, W, H) {
+  let o = v8aOv[canvasId];
+  if (o && o.W===W && o.H===H) return o;
+  if (o && o.sim) o.sim.stop(); // stop stale sim before rebuilding the SVG
+  const svg = d3Overlay(canvasId+'-ov', W, H);
+  o = v8aOv[canvasId] = { svg, sim:null, nodes:null, lbl:null, W, H };
+  return o;
+}
+
+function v8aQmarket(P) {
+  const q1 = Math.max(0, V8A_C1.a - V8A_C1.b*P);
+  const q2 = Math.max(0, V8A_C2.a - V8A_C2.b*P);
+  return q1 + q2;
+}
+
+function v8aPanelDraw(canvasId, color, a, b, P, label) {
+  const cvs = document.getElementById(canvasId);
+  if (!cvs) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cvs.width/dpr, H = cvs.height/dpr;
+  const ctx = cvs.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const ML2=44,MR2=10,MT2=14,MB2=30;
+  const pw=W-ML2-MR2, ph=H-MT2-MB2;
+  const toXY=(q,p)=>[ML2+(q/xR8a[1])*pw, MT2+(1-p/yR8a[1])*ph];
+  const choke=a/b; // price where Q=0
+
+  // Axes
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
+  ctx.fillStyle='#5f6875'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Q',W-MR2,H-MB2+3);
+  ctx.textAlign='right'; ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
+
+  // Demand line
+  const clampedChoke=Math.min(choke,yR8a[1]);
+  const [x0,y0]=toXY(0,clampedChoke);
+  const [x1,y1]=toXY(a,0);
+  ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=3;
+  ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+
+  // Choke price tick and label on y-axis
+  if (choke <= yR8a[1]) {
+    const [,cy]=toXY(0,choke);
+    ctx.strokeStyle='#5f6875'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ML2-4,cy); ctx.lineTo(ML2,cy); ctx.stroke();
+    ctx.fillStyle='#8b95a5'; ctx.font='14px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+    // Just the dollar value: on a single consumer's demand the y-intercept IS
+    // the choke price, so the full word overflowed the narrow left margin.
+    ctx.fillText(`$${choke.toFixed(0)}`,ML2-5,cy+3);
+  }
+
+  // Demand formula label -- D3 SVG draggable force label
+  const midP=clampedChoke*0.5;
+  const midQ=a-b*midP;
+  const [mlx,mly]=toXY(midQ,midP);
+  const formula=b===1?`Q = ${a} − P`:`Q = ${a} − ${b}P`;
+  ctx.font='bold 14px Libre Franklin,system-ui,sans-serif';
+  const fW=ctx.measureText(formula).width;
+  {
+    const ov = v8aGetOverlay(canvasId, W, H);
+    if (ov.svg && !ov.nodes) {
+      ov.nodes = [ d3LblNode('formula', color, formula, fW+8, mlx, mly, {boxOff:{x:38,y:-16}}) ];
+      ov.sim = d3LabelSim(ov.nodes);
+      ov.lbl = d3LabelLayer(ov.svg, ov.nodes, ()=>ov.sim);
+      ov.sim.on('tick', ()=>d3LabelTick(ov.nodes, ov.lbl.gs, ov.lbl.conns, W, H, ML2, MR2, MT2, MB2));
+      d3WireSliderSmoothness(document.getElementById('v8a-p'), ()=>ov.sim);
+    }
+    if (ov.nodes) d3MoveAnchor(ov.nodes[0], mlx, mly);
+  }
+
+  // Current price dashed lines
+  const Q=Math.max(0,a-b*P);
+  const [px,py]=toXY(0,P);
+  const [qx,qy]=toXY(Q,P);
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
+  if (Q>0) {
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(qx,py); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(qx,py); ctx.lineTo(qx,H-MB2); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(W-MR2,py); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // P label on y-axis (skip if too close to choke label)
+  ctx.fillStyle=color; ctx.font='bold 16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+  if (P>0.5 && Math.abs(P-choke)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
+
+  // Q label on x-axis
+  ctx.textAlign='center';
+  if (Q>0.5) ctx.fillText(`Q=${Q.toFixed(0)}`,qx,H-MB2+12);
+  else ctx.fillText('Q=0',ML2+pw*0.5,H-MB2+12);
+
+  // Dot on demand curve at price level
+  if (Q>0) dot(ctx,qx,qy,5,color,'#fff');
+  ctx.setTransform(1,0,0,1,0,0);
+}
+
+function v8aMarketDraw(P) {
+  const cvs = document.getElementById('cvs8c');
+  if (!cvs) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cvs.width/dpr, H = cvs.height/dpr;
+  const ctx = cvs.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const ML2=44,MR2=10,MT2=14,MB2=30;
+  const pw=W-ML2-MR2, ph=H-MT2-MB2;
+  const xMmax=60, yMmax=36;
+  const toXY=(q,p)=>[ML2+(q/xMmax)*pw, MT2+(1-p/yMmax)*ph];
+
+  // Axes
+  ctx.strokeStyle="rgba(28,36,51,0.14)"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML2,H-MB2); ctx.lineTo(W-MR2,H-MB2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ML2,MT2); ctx.lineTo(ML2,H-MB2); ctx.stroke();
+  ctx.fillStyle='#5f6875'; ctx.font='16px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Q',W-MR2,H-MB2+3); ctx.textAlign='right';
+  ctx.fillText('P',ML2-2,MT2+8); ctx.textAlign='left';
+
+  // Market demand curve (draw full curve then highlight up to current P)
+  ctx.beginPath(); ctx.strokeStyle='#dde'; ctx.lineWidth=1.5;
+  let first=true;
+  for(let p=yMmax;p>=0;p-=0.5){
+    const q=v8aQmarket(p);
+    const [cx,cy]=toXY(q,p);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+
+  // Active portion of curve up to current P
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
+  first=true;
+  for(let p=yMmax;p>=P;p-=0.5){
+    const q=v8aQmarket(p);
+    const [cx,cy]=toXY(q,p);
+    first?(ctx.moveTo(cx,cy),first=false):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+
+  // Choke price labels on y-axis
+  const [,cy30]=toXY(0,30);
+  ctx.strokeStyle='#5f6875'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML2-4,cy30); ctx.lineTo(ML2,cy30); ctx.stroke();
+  // Compact dollar-value ticks in the margin; the "Qm=30-P" and "kink P=$12"
+  // force-labels already carry the choke/kink naming, so the full words here
+  // were both redundant and overflowing the narrow left margin.
+  ctx.fillStyle='#8b95a5'; ctx.font='14px Libre Franklin,system-ui,sans-serif'; ctx.textAlign='right';
+  ctx.fillText('$30',ML2-4,cy30+3);
+
+  // P=12: Consumer 2's choke price (kink)
+  const [kx,ky]=toXY(v8aQmarket(12),12);
+  const [,cy12]=toXY(0,12);
+  ctx.beginPath(); ctx.moveTo(ML2-4,cy12); ctx.lineTo(ML2,cy12); ctx.stroke();
+  ctx.fillText('$12',ML2-4,cy12+3);
+
+  // Kink dot
+  dot(ctx,kx,ky,5,'var(--ink-soft)','#fff');
+
+  // D3 SVG draggable force labels: kink label + formula segments
+  ctx.font='bold 14px Libre Franklin,system-ui,sans-serif';
+  const [ulx,uly]=toXY(v8aQmarket(23),23);
+  const [llx,lly]=toXY(v8aQmarket(6),6);
+  const kinkTxt='kink P=$12', upTxt='Qm = 30 − P', loTxt='Qm = 54 − 3P';
+  {
+    const ov = v8aGetOverlay('cvs8c', W, H);
+    if (ov.svg && !ov.nodes) {
+      ov.nodes = [
+        d3LblNode('kink', 'var(--ink-soft)', kinkTxt, ctx.measureText(kinkTxt).width+8, kx, ky, {boxOff:{x:54,y:-6}}),
+        d3LblNode('upper', '#1f6fb2', upTxt, ctx.measureText(upTxt).width+8, ulx, uly, {boxOff:{x:50,y:-4}}),
+        d3LblNode('lower', '#1f6fb2', loTxt, ctx.measureText(loTxt).width+8, llx, lly, {boxOff:{x:-8,y:24}}),
+      ];
+      ov.sim = d3LabelSim(ov.nodes);
+      ov.lbl = d3LabelLayer(ov.svg, ov.nodes, ()=>ov.sim);
+      ov.sim.on('tick', ()=>d3LabelTick(ov.nodes, ov.lbl.gs, ov.lbl.conns, W, H, ML2, MR2, MT2, MB2));
+      d3WireSliderSmoothness(document.getElementById('v8a-p'), ()=>ov.sim);
+    }
+    if (ov.nodes) {
+      d3MoveAnchor(ov.nodes[0], kx, ky);
+      d3MoveAnchor(ov.nodes[1], ulx, uly);
+      d3MoveAnchor(ov.nodes[2], llx, lly);
+    }
+  }
+
+  // Current price dashed lines
+  const Qm=v8aQmarket(P);
+  const [px,py]=toXY(0,P);
+  const [qx,qy]=toXY(Qm,P);
+  ctx.setLineDash([4,3]); ctx.strokeStyle='#9aa3b0'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(qx,py); ctx.stroke();
+  if(Qm>0) { ctx.beginPath(); ctx.moveTo(qx,py); ctx.lineTo(qx,H-MB2); ctx.stroke(); }
+  ctx.setLineDash([]);
+
+  ctx.fillStyle='#1f6fb2'; ctx.font='bold 16px Libre Franklin,system-ui,sans-serif';
+  ctx.textAlign='right'; if(P>0.5 && Math.abs(P-30)>3 && Math.abs(P-12)>3) ctx.fillText(`$${P.toFixed(0)}`,ML2-3,py+4);
+  ctx.textAlign='center';
+  if(Qm>0.5) ctx.fillText(`Q=${Qm.toFixed(0)}`,qx,H-MB2+12);
+  if(Qm>0) dot(ctx,qx,qy,5,'#1f6fb2','#fff');
+
+  ctx.setTransform(1,0,0,1,0,0);
+}
+
+function v8aUpdate() {
+  const P = parseFloat(document.getElementById('v8a-p').value);
+  document.getElementById('v8a-p-val').textContent = '$' + P.toFixed(0);
+
+  // Resize canvases if needed
+  ['cvs8a','cvs8b','cvs8c'].forEach(id=>{
+    const cvs=document.getElementById(id); if(!cvs) return;
+    const dpr=window.devicePixelRatio||1;
+    const w=cvs.parentElement?Math.max(80,cvs.parentElement.clientWidth):120;
+    // Taller panels when stacked full-width (narrow screens) so the plots are not
+    // wide-and-short; a bit shorter when three-across on a wide screen.
+    const ph = (cvs.parentElement && cvs.parentElement.clientWidth > 300) ? 260 : 240;
+    if(cvs.width!==Math.round(w*dpr) || cvs.height!==Math.round(ph*dpr)){
+      cvs.width=Math.round(w*dpr); cvs.height=Math.round(ph*dpr);
+      cvs.style.height=ph+'px';
+    }
+  });
+
+  v8aPanelDraw('cvs8a', V8A_C1.color, V8A_C1.a, V8A_C1.b, P, 'Consumer 1');
+  v8aPanelDraw('cvs8b', V8A_C2.color, V8A_C2.a, V8A_C2.b, P, 'Consumer 2');
+  v8aMarketDraw(P);
+
+  const Q1=Math.max(0,V8A_C1.a-V8A_C1.b*P);
+  const Q2=Math.max(0,V8A_C2.a-V8A_C2.b*P);
+  const Qm=Q1+Q2;
+  let regime='';
+  if(P>30) regime='P > $30: neither consumer is buying. Market Q = 0.';
+  else if(P>12) regime=`$12 < P &le; $30: only Consumer 1 is buying. Market Q = Q<sub>1</sub> = 30 &minus; P = ${Q1.toFixed(0)}.`;
+  else regime=`P &le; $12: both consumers are buying. Market Q = Q<sub>1</sub> + Q<sub>2</sub> = (30&minus;P) + (24&minus;2P) = 54&minus;3P = ${Qm.toFixed(0)}.`;
+
+  document.getElementById('v8a-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Q<sub>1</sub> (Consumer 1)</div><div class="readout-val" style="color:var(--d-second)">${Q1.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Q<sub>2</sub> (Consumer 2)</div><div class="readout-val" style="color:var(--accent-2)">${Q2.toFixed(0)}</div></div>
+      <div class="readout-col"><div class="readout-label">Market Q</div><div class="readout-val" style="color:#14568c">${Qm.toFixed(0)}</div></div>
+    </div>
+    <div style="margin-top:0.4rem;font-size:0.83rem;color:var(--ink-soft)">${regime}</div>`;
+}
+
+function v8aInit() {
+  ['cvs8a','cvs8b','cvs8c'].forEach(id=>{
+    const cvs=document.getElementById(id); if(!cvs) return;
+    const dpr=window.devicePixelRatio||1;
+    const w=cvs.parentElement?Math.max(80,cvs.parentElement.clientWidth):120;
+    cvs.width=Math.round(w*dpr); cvs.height=Math.round(220*dpr);
+    cvs.style.height='220px';
+  });
+  v8aUpdate();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FIG 4.8b - MARKET DEMAND BUILDER (typed inputs, 2 consumers)
+// ══════════════════════════════════════════════════════════════════════
+const xR8=[0,90], yR8=[0,42];
+let v8W, v8H, v8ctx;
+let v8Svg, v8Sim, v8Nodes, v8Lbl, v8NodeSig='';
+
+function v8GetConsumer(i) {
+  const aIds=['v8-c1-a-in','v8-c2-a-in'];
+  const bIds=['v8-c1-b-in','v8-c2-b-in'];
+  const a=parseFloat(document.getElementById(aIds[i])?.value||30);
+  const b=parseFloat(document.getElementById(bIds[i])?.value||1);
+  return {a:isNaN(a)||a<=0?30:a, b:isNaN(b)||b<=0?1:b};
+}
+
+function v8QiNew(i,P) {
+  const {a,b}=v8GetConsumer(i);
+  return Math.max(0, a - b*P);
+}
+function v8QmNew(P) { return v8QiNew(0,P)+v8QiNew(1,P); }
+
+function v8Draw() {
+  const ctx=v8ctx, W=v8W, H=v8H;
+  if (!ctx) return;
+  ctx.clearRect(0,0,W,H);
+  const c1=v8GetConsumer(0), c2=v8GetConsumer(1);
+  const Pmax=Math.max(c1.a/c1.b, c2.a/c2.b, 35);
+  const Qmax=Math.max(c1.a+c2.a, 80);
+  const xRl=[0,Qmax*1.1], yRl=[0,Pmax*1.1];
+  drawAxes(ctx,W,H,xRl,yRl,'Q','P($)');
+
+  // Consumer 1 line
+  ctx.beginPath(); ctx.strokeStyle=EC.red; ctx.lineWidth=1.8; ctx.globalAlpha=0.7;
+  const [c1x0,c1y0]=toC(0,Math.min(c1.a/c1.b,yRl[1]),W,H,xRl,yRl);
+  const [c1x1,c1y1]=toC(Math.min(c1.a,xRl[1]),0,W,H,xRl,yRl);
+  ctx.moveTo(c1x0,c1y0); ctx.lineTo(c1x1,c1y1); ctx.stroke();
+
+  // Consumer 2 line
+  ctx.beginPath(); ctx.strokeStyle=EC.accent2; ctx.lineWidth=1.8;
+  const [c2x0,c2y0]=toC(0,Math.min(c2.a/c2.b,yRl[1]),W,H,xRl,yRl);
+  const [c2x1,c2y1]=toC(Math.min(c2.a,xRl[1]),0,W,H,xRl,yRl);
+  ctx.moveTo(c2x0,c2y0); ctx.lineTo(c2x1,c2y1); ctx.stroke(); ctx.globalAlpha=1;
+
+  // Market demand
+  const pts=[];
+  for(let step=0;step<=200;step++){
+    const P=Pmax*(1-step/200);
+    const Q=v8QmNew(P);
+    if(Q>=0) pts.push([Q,P]);
+  }
+  ctx.beginPath(); ctx.strokeStyle='#1f6fb2'; ctx.lineWidth=3;
+  pts.forEach(([Q,P],idx)=>{
+    const [cx,cy]=toC(Q,P,W,H,xRl,yRl);
+    idx===0?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);
+  });
+  ctx.stroke();
+
+  // Kink dots
+  ctx.font='16px Libre Franklin,system-ui,sans-serif';
+  const kinkInfo=[];
+  [c1,c2].forEach((c,i)=>{
+    const Pk=c.a/c.b;
+    if(Pk<=yRl[1]){
+      const Qk=v8QmNew(Pk);
+      const [kx,ky]=toC(Qk,Pk,W,H,xRl,yRl);
+      const col=i===0?EC.red:EC.accent2;
+      dot(ctx,kx,ky,5,col,'#fff');
+      // i=0 is Consumer 1's choke (top-left of the steep segment): push RIGHT into
+      // the open upper area. i=1 is the kink where Consumer 2 enters (mid-tangle):
+      // push LEFT toward the open gap between the two demand lines.
+      kinkInfo.push({id:'kink'+i, color:col, label:`P=$${Pk.toFixed(0)}`, ax:kx, ay:ky, boxOff:(i===0?{x:54,y:2}:{x:-56,y:0})});
+    }
+  });
+
+  // D₁, D₂, Market D anchors
+  const c1midP = c1.a/(2*c1.b);
+  const [c1ax,c1ay] = toC(c1.a/2, c1midP, W, H, xRl, yRl);
+  const c2midP = c2.a/(2*c2.b);
+  const [c2ax,c2ay] = toC(c2.a/2, c2midP, W, H, xRl, yRl);
+  const midP=Pmax*0.3;
+  const [mx,my]=toC(v8QmNew(midP),midP,W,H,xRl,yRl);
+
+  // Full label spec for this frame (kink labels appear/disappear as the
+  // typed equations cross the visible price range)
+  const labelSpec = [
+    ...kinkInfo,
+    {id:'D1', color:EC.red, label:'D₁', lw:24, ax:c1ax, ay:c1ay, boxOff:{x:22,y:-16}},
+    {id:'D2', color:EC.accent2, label:'D₂', lw:24, ax:c2ax, ay:c2ay, boxOff:{x:22,y:-16}},
+    {id:'mktD', color:'#1f6fb2', label:'Market D', lw:60, ax:mx, ay:my, boxOff:{x:72,y:2}},
+  ];
+  ctx.font='bold 16px Libre Franklin,system-ui,sans-serif';
+  labelSpec.forEach(s=>{ if(s.lw===undefined) s.lw = ctx.measureText(s.label).width+10; });
+
+  const sig = labelSpec.map(s=>s.id).join(',');
+  if (v8Svg && (sig !== v8NodeSig || !v8Nodes)) {
+    // Node-set changed (kink label appeared/disappeared) -- rebuild layer,
+    // carrying over x/y/fx/fy from matching ids so dragged labels don't jump
+    const old = {}; (v8Nodes||[]).forEach(n=>old[n.id]=n);
+    if (v8Sim) v8Sim.stop();
+    v8Svg.selectAll('*').remove();
+    v8Nodes = labelSpec.map(s=>{
+      const prev = old[s.id];
+      const n = d3LblNode(s.id, s.color, s.label, s.lw, s.ax, s.ay, {boxOff: s.boxOff});
+      if (prev) { n.x=prev.x; n.y=prev.y; n.fx=prev.fx; n.fy=prev.fy; n.vx=prev.vx; n.vy=prev.vy; }
+      return n;
+    });
+    v8Sim = d3LabelSim(v8Nodes);
+    v8Lbl = d3LabelLayer(v8Svg, v8Nodes, ()=>v8Sim);
+    v8Sim.on('tick', ()=>d3LabelTick(v8Nodes, v8Lbl.gs, v8Lbl.conns, v8W, v8H, ML, MR, MT, MB));
+    v8NodeSig = sig;
+    v8Sim.alpha(0.6).restart();
+  } else if (v8Nodes) {
+    labelSpec.forEach(s=>{
+      const n = v8Nodes.find(x=>x.id===s.id);
+      if (n) d3MoveAnchor(n, s.ax, s.ay);
+    });
+  }
+}
+
+function v8Update() {
+  const c1=v8GetConsumer(0), c2=v8GetConsumer(1);
+  const p1=document.getElementById('v8-c1-preview'), p2=document.getElementById('v8-c2-preview');
+  if(p1) p1.textContent=`choke P=$${(c1.a/c1.b).toFixed(2)}`;
+  if(p2) p2.textContent=`choke P=$${(c2.a/c2.b).toFixed(2)}`;
+  v8Draw();
+
+  // Functional form
+  const Pk1=c1.a/c1.b, Pk2=c2.a/c2.b;
+  const Pkmax=Math.max(Pk1,Pk2), Pkmin=Math.min(Pk1,Pk2);
+  const cHigh = Pk1>Pk2 ? c1 : c2;
+  const cLow  = Pk1<Pk2 ? c1 : c2;
+  const sumA = c1.a+c2.a, sumB = c1.b+c2.b;
+
+  // Write "30 − P", not "30 − 1P", and "$12", not "$12.0"
+  const num = v => (Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : String(+v.toFixed(2)));
+  const term = (a, b) => num(a) + ' &minus; ' + (Math.abs(b - 1) < 1e-9 ? '' : num(b)) + 'P';
+  const fn=document.getElementById('v8-functional');
+  if(fn){
+    // With equal choke prices there is no one-consumer range to show
+    const midRow = Pkmax - Pkmin > 1e-9
+      ? `= ${term(cHigh.a, cHigh.b)} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if $${num(Pkmin)} &lt; P &le; $${num(Pkmax)}<br>`
+      : '';
+    fn.innerHTML=`<strong>Market Demand Q<sub>m</sub>(P):</strong><br>
+= 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if P &gt; $${num(Pkmax)}<br>
+${midRow}= ${term(sumA, sumB)} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if P &le; $${num(Pkmin)}`;
+  }
+
+  document.getElementById('v8-readout').innerHTML=
+    `<div class="readout-row">
+      <div class="readout-col"><div class="readout-label">Consumer 1 choke P</div><div class="readout-val" style="color:var(--d-second)">$${(c1.a/c1.b).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Consumer 2 choke P</div><div class="readout-val" style="color:var(--accent-2)">$${(c2.a/c2.b).toFixed(2)}</div></div>
+      <div class="readout-col"><div class="readout-label">Market Q at P=$10</div><div class="readout-val" style="color:#14568c">${v8QmNew(10).toFixed(1)}</div></div>
+    </div>`;
+}
+
+function v8Init() {
+  const s=setupCvs('cvs8');
+  v8ctx=s.ctx; v8W=s.W; v8H=s.H;
+
+  // ── D3 SVG force-label overlay (rebuilt fresh on resize; node set is
+  // rebuilt inside v8Draw whenever the visible kink-label set changes) ──
+  if (v8Sim) { v8Sim.stop(); v8Sim=null; }
+  v8Nodes=null; v8Lbl=null; v8NodeSig='';
+  v8Svg = d3Overlay('cvs8-ov', v8W, v8H);
+  ['v8-c1-a-in','v8-c1-b-in','v8-c2-a-in','v8-c2-b-in'].forEach(id=>
+    d3WireSliderSmoothness(document.getElementById(id), ()=>v8Sim));
+
+  v8Update();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════════════
+
+function redrawAll4() {
+  v1Init(); v1Draw();
+  v2Init(); v2Draw();
+  v3Init(); v3Draw();
+  v4Init(); v4Draw();
+  v6Init(); v6Draw();
+  v7Init(); v7Draw();
+  v8aInit();
+  v8Init();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  v1Init();
+  v2Init(); v2ParseEq();
+  v3Init();
+  v4Init();
+  v6Init();
+  v7Init();
+  v8aInit();
+  v8Init();
+  // ResizeObserver handles zoom-level changes
+  ['cvs1','cvs2','cvs3','cvs4','cvs6','cvs7','cvs8','cvs8a','cvs8b','cvs8c'].forEach(id => {
+    observeCanvasResize(id, redrawAll4);
+  });
+});
+
+/* Section rail: mark the figure currently being read (DESIGN 2.2). Scrolls the
+   strip itself on mobile, never scrollIntoView, which walks up and drags the
+   whole page while the reader is scrolling it. */
+(function railTracking() {
+  const links = [...document.querySelectorAll('.rail a')];
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+    let best = 0, bestId = null;
+    for (const [id, r] of seen) if (r > best) { best = r; bestId = id; }
+    if (!bestId) return;
+    for (const a of links) a.classList.remove('on');
+    const hit = byId.get(bestId);
+    if (!hit) return;
+    hit.classList.add('on');
+    const strip = hit.closest('ol');
+    if (strip && strip.scrollWidth > strip.clientWidth) {
+      strip.scrollTo({ left: Math.max(0, hit.offsetLeft - (strip.clientWidth - hit.offsetWidth) / 2), behavior: 'smooth' });
+    }
+  }, { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+  document.querySelectorAll('section.sec[id]').forEach(x => io.observe(x));
+})();
+
+window.addEventListener('resize', redrawAll4);
+</script>
+  <!-- Ask the Course AI, floating 24/7 assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+  <script src="assets/deltabar.js"></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
+<script src="assets/nav.js" defer></script>
+<script src="assets/figplace.js" defer></script>
+<script src="assets/figlabels.js" defer></script>
+<script src="assets/figreset.js" defer></script>
+</body>
+</html>
