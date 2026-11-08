@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Randomly generated practice problems with full worked solutions for EC224 Intermediate Microeconomics, Week 4: Elasticity &amp; Consumer Welfare." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <title>Week 4: Practice Problems · EC224</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -127,7 +128,6 @@
     .footer-logo { height: 22px; opacity: 0.5; }
     @media (max-width: 560px) {
       .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
-      .topbar > a:not(.wordmark), .topbar > .crumb-sep:first-of-type { display: none; }
       .topbar .btn { padding: 0.4rem 0.6rem; white-space: nowrap; }
     }
   </style>
@@ -144,11 +144,11 @@
   <span class="topbar-end"><button class="btn" data-nav-open>All weeks</button></span>
 </div>
 
-<main class="layout-solo" id="main-content">
+<main class="layout-solo wk-page" id="main-content">
 
   <header class="page-hd">
-    <h1>Elasticity &amp; Consumer Welfare</h1>
-    <p class="byline">Prof. Naveen Sunder</p>
+    <h1>Practice problems</h1>
+    <p class="byline">Week 4: Elasticity &amp; Consumer Welfare</p>
   </header>
 
   <div class="note" style="margin:var(--s-6) 0 var(--s-7)">Randomly generated problems. Enter your answer, check it, then reveal the full worked solution.</div>
@@ -164,7 +164,7 @@
   <div id="prob-container"></div>
 
   <div class="new-prob-row">
-    <button class="new-prob-btn" onclick="newProblem()">New problem →</button>
+    <button class="new-prob-btn" onclick="newProblem()">New problem</button>
     <span class="attempt-badge" id="attempt-badge"></span>
   </div>
 
@@ -244,7 +244,7 @@ function genArc() {
         { label: 'Midpoint price', math: `\\bar{P} = \\frac{${P1}+${P2}}{2} = ${Pmid}` },
         { label: 'Midpoint quantity', math: `\\bar{Q} = \\frac{${Q1}+${Q2}}{2} = ${Qmid}` },
         { label: 'Apply midpoint formula', math: `e_{arc} = \\frac{${Q2-Q1}/${Qmid}}{${P2-P1}/${Pmid}} = \\frac{${fmt((Q2-Q1)/Qmid)}}{${fmt((P2-P1)/Pmid)}} = ${edRound}` },
-        { label: 'Note', math: `\\text{This equals the point elasticity at }\\bar{P}=${Pmid}\\text{ for a linear demand.}` },
+        { label: 'Note', text: `This equals the point elasticity at \\(\\bar{P}=${Pmid}\\) for a linear demand.` },
       ]
     }
   };
@@ -288,7 +288,7 @@ function genTR() {
         { label: 'Point elasticity at P', math: `e_d = -${b}\\cdot\\frac{${P}}{${Q}} = ${edRound} \\implies \\text{${Math.abs(edRound)>1?'Elastic':'Inelastic'}}` },
         { label: 'New price and quantity', math: `P' = ${newP},\\quad Q' = ${a}-${b}(${newP}) = ${newQ}` },
         { label: 'New TR and change', math: `TR_1 = ${newP}\\times${newQ} = ${TR1},\\quad \\Delta TR = ${trDiff > 0 ? '+' : ''}${trDiff}` },
-        { label: 'Verdict', math: `\\text{Since demand is ${Math.abs(edRound)>1?'elastic (price effect < quantity effect)':'inelastic (price effect > quantity effect)'}, TR ${trChange}.}` },
+        { label: 'Verdict', text: `Since demand is ${Math.abs(edRound)>1?'elastic (price effect &lt; quantity effect)':'inelastic (price effect &gt; quantity effect)'}, TR ${trChange}.` },
       ]
     }
   };
@@ -316,7 +316,7 @@ function genCS() {
         { label: 'Choke price (set Q=0)', math: `0 = ${a} - ${b}P \\implies P_{\\max} = ${Pmax}` },
         { label: 'Quantity at P*', math: `Q^* = ${a} - ${b}(${P}) = ${Q}` },
         { label: 'Area of CS triangle', math: `CS = \\tfrac{1}{2}\\times Q^*\\times (P_{\\max}-P^*) = \\tfrac{1}{2}\\times${Q}\\times(${Pmax}-${P}) = ${CSround}` },
-        { label: 'Interpretation', math: `\\text{Consumers gain \\$${CSround} of surplus: they collectively value these ${Q} units at \\$${CSround} more than they pay.}` },
+        { label: 'Interpretation', text: `Consumers gain $${CSround} of surplus: they collectively value these ${Q} units at $${CSround} more than they pay.` },
       ]
     }
   };
@@ -370,9 +370,9 @@ function renderProblem() {
         ${s.steps.map(st => `
           <div class="sol-step">
             <span class="sol-label">${st.label}</span>
-            <span>\\(${st.math}\\)</span>
+            <span${st.text ? ' class="sol-text"' : ''}>${st.text ? st.text : `\\(${st.math}\\)`}</span>
           </div>`).join('')}
-        ${p.type === 'point' ? `<div class="sol-verdict ${s.region}">${s.regionLabel} · TR ${s.trEffect} when price rises</div>` : ''}
+        ${p.type === 'point' ? `<div class="sol-verdict ${s.region}">${s.regionLabel}: TR ${s.trEffect} when price rises</div>` : ''}
       </div>
     </div>`;
 

@@ -1,270 +1,199 @@
 /* ============================================================================
- * EC224: floating "Ask the Course AI" button, an AI study assistant.
+ * EC224 course AI: the "Ask" button in the corner of every student page.
  *
- * Drops a quirky, econ-themed floating button (a supply & demand cross inside a
- * chat bubble) into the bottom-right of any page it's loaded on. Click it for a
- * small popover chat, perfect for a quick question. A ↗ button expands to the
- * full assistant page (ask.html), carrying whatever you've typed along with it,
- * for longer questions where you want the side-by-side page preview.
+ * A small labelled button (the course AI's mark plus "Ask") opens a popover with
+ * the question-and-answer transcript from assets/chatbot.js. "Full page" goes to
+ * ask.html, carrying any half-typed question along, for the side-by-side source
+ * preview. Styles: assets/ask.css (linked by chatbot.js).
  *
- * Requires assets/chatbot.js (window.EC224Bot) to be loaded first.
+ * Two rules keep it out of the way:
+ *  - while a figure (a kit plot, its controls, a film, an older canvas figure)
+ *    sits under the button, the button steps aside. Each kit figure has its own
+ *    "Ask about this figure" link (assets/ask-figures.js), so nothing is lost;
+ *  - it never animates for attention. A first-time visitor sees one short hint
+ *    beside it, once, and never again.
+ *
+ * window.EC224Ask.open({ context, starters, opener }) opens the popover from
+ * elsewhere on the page (the figure links use it). Requires assets/chatbot.js.
  * ==========================================================================*/
 (function () {
   "use strict";
 
-  if (window.__ec224Fab) return;            // guard against double-inject
+  if (window.__ec224Fab) return;            // guard against a double inject
   window.__ec224Fab = true;
 
   var FULL_PAGE = "ask.html";
+  var SEEN_KEY = "ec224-fab-seen";
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
-  // supply & demand cross in a chat bubble: white, for the round button
-  // The button is a small week cover (see the landing page): a tinted card with
-  // a supply-and-demand cross in the data palette, not white line art on a
-  // saturated blue circle. Colours are hardcoded because the diagram is
-  // full-colour like the covers, not tinted by the button's text colour.
-  var FAB_ICON =
-    '<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round" aria-hidden="true">' +
-    '<path d="M10 7 V36 H41" stroke="currentColor" stroke-opacity="0.55" stroke-width="2.4" fill="none"/><path d="M15 13 L36 31" stroke="#c85a3c" stroke-width="3.4"/><path d="M15 31 L36 13" stroke="#1f6fb2" stroke-width="3.4"/><circle cx="25.5" cy="22" r="3.4" fill="#2f7d55"/>' +
-    '</svg>';
+  // Two questions per week that the course pages answer well; other pages get the general set.
+  var STARTERS = {
+    2: ["Why can't indifference curves cross?", "What does the MRS measure?"],
+    3: ["What is the difference between Slutsky and Hicks?", "How can I tell a shift in demand from a movement along it?"],
+    4: ["When does raising the price raise revenue?", "What is the difference between point and arc elasticity?"],
+    5: ["Why does the MRTS diminish along an isoquant?", "How do returns to scale differ from diminishing marginal product?"],
+    6: ["Why is the long-run average cost curve an envelope?", "How does a firm pick the cheapest mix of labor and capital?"],
+    7: ["When should a competitive firm shut down?", "Why is the firm's supply curve part of its marginal cost curve?"],
+    8: ["When is marginal revenue less than price?", "What causes deadweight loss under monopoly?"],
+    9: ["How does a two-part tariff capture consumer surplus?", "Why is a natural monopoly hard to regulate?"],
+    10: ["How does Stackelberg differ from Cournot?", "Why do Hotelling competitors cluster in the middle?"],
+    11: ["How does a Pigouvian tax fix an externality?", "What does the Coase theorem say?"],
+    12: ["Why can lemons drive good cars out of a market?", "How does signaling separate worker types?"],
+    all: ["What is the difference between Slutsky and Hicks?", "Why does the MRTS diminish along an isoquant?", "When is marginal revenue less than price?"],
+  };
+  var FIGURE_STARTERS = ["Explain the idea behind this figure", "Give me a hint, not the answer"];
 
-  // The four-point sparkle is the standard "AI" signal (Gemini, Copilot,
-  // Notion AI all use it). It replaces the old "24/7" pill, which read as a
-  // third-party support widget rather than a course AI.
-  var SPARKLE =
-    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
-    '<path d="M12 2c.4 5.2.8 6.6 2.2 7.9C15.5 11.2 16.8 11.6 22 12c-5.2.4-6.5.8-7.8 2.1' +
-    'C12.8 15.4 12.4 16.8 12 22c-.4-5.2-.8-6.6-2.1-7.9C8.6 12.8 7.2 12.4 2 12' +
-    'c5.2-.4 6.5-.8 7.9-2.1C11.2 8.6 11.6 7.2 12 2z"/></svg>';
+  // the parts of a page the button must never cover
+  var FIGURE_SEL = ".kfig .stage, .kfig .panel, .kfig .ecask-fig, figure.film, video, .fig-bay, .fig-plot, .jxgbox, canvas, .fc-btn-row, .fc-card-inner";
 
-  // chevron-down, shown while the popover is open
-  var CLOSE_ICON =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" ' +
-    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
-
-  // colored logo for the popover header
-  // The same diagram in the site's data palette (blue demand, orange-red
-  // supply) on a tinted card, matching the week covers.
-  var MINI_LOGO =
-    '<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round" aria-hidden="true">' +
-    '<rect x="2" y="2" width="44" height="44" rx="9" fill="#e7eaf0"/>' +
-    '<path d="M10 7 V36 H41" stroke="currentColor" stroke-opacity="0.55" stroke-width="2.1" fill="none"/><path d="M15 13 L36 31" stroke="#c85a3c" stroke-width="3"/><path d="M15 31 L36 13" stroke="#1f6fb2" stroke-width="3"/><circle cx="25.5" cy="22" r="3.4" fill="#2f7d55"/>' +
-    '</svg>';
-
-  var EXPAND_ICON =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
-    'stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/>' +
-    '<path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>';
-
-  function injectCss() {
-    var css =
-// The button is a week-cover chip: tinted card, brand ring, soft shadow,
-// with the colour diagram inside. No saturated-blue circle, no pulsing ring
-// (both read as a third-party support widget rather than part of the course).
-".ecfab-btn{position:fixed;right:22px;bottom:22px;z-index:9998;width:62px;height:62px;border-radius:18px;" +
-"cursor:pointer;background:#ffffff;border:1.5px solid #7a1f5c;box-shadow:0 8px 22px rgba(122,31,92,.18);" +
-"display:flex;align-items:center;justify-content:center;transition:transform .16s,box-shadow .16s;-webkit-tap-highlight-color:transparent;}" +
-".ecfab-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(122,31,92,.28);}" +
-".ecfab-btn svg{width:40px;height:40px;}" +
-// The AI sparkle sits in the corner where the "24/7" pill used to be.
-".ecfab-badge{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;" +
-"background:#7a1f5c;color:#fff;border:2px solid #eff1ee;display:flex;align-items:center;justify-content:center;" +
-"box-shadow:0 2px 7px rgba(122,31,92,.32);pointer-events:none;}" +
-".ecfab-badge svg{width:13px;height:13px;}" +
-".ecfab-open .ecfab-badge{display:none;}" +
-".ecfab-label{position:fixed;right:92px;bottom:37px;z-index:9998;background:#14181b;color:#fff;font-size:.8125rem;font-weight:500;" +
-"padding:7px 12px;border-radius:10px;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.22);opacity:0;transform:translateX(8px);" +
-"pointer-events:none;transition:opacity .16s,transform .16s;}" +
-".ecfab-label::after{content:'';position:absolute;right:-5px;top:50%;margin-top:-5px;border:5px solid transparent;border-left-color:#111827;}" +
-".ecfab-wrap:hover .ecfab-label,.ecfab-label.peek{opacity:1;transform:none;}" +
-".ecfab-open .ecfab-label{opacity:0 !important;}" +
-".ecfab-pop{position:fixed;right:22px;bottom:92px;z-index:9998;width:372px;max-width:calc(100vw - 32px);height:526px;" +
-"max-height:calc(100vh - 130px);background:#fff;border:1px solid #e4e4e4;border-radius:16px;box-shadow:0 18px 50px rgba(15,23,42,.28);" +
-"display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;" +
-"transition:opacity .18s,transform .18s;font-family:'Libre Franklin',system-ui,-apple-system,sans-serif;}" +
-".ecfab-open .ecfab-pop{opacity:1;transform:none;pointer-events:auto;}" +
-".ecfab-head{display:flex;align-items:center;gap:.6rem;padding:.7rem .85rem;border-bottom:1px solid #eee;" +
-"background:linear-gradient(180deg,#f8faff,#fff);}" +
-".ecfab-mini{width:32px;height:32px;flex:0 0 auto;}" +
-".ecfab-htxt{line-height:1.15;min-width:0;}" +
-".ecfab-title{font-weight:600;font-size:.95rem;color:#1a1a1a;}" +
-".ecfab-sub{font-size:.8125rem;color:#5f6875;}" +
-".ecfab-actions{margin-left:auto;display:flex;gap:.3rem;flex:0 0 auto;}" +
-".ecfab-iconbtn{border:1px solid #e5e7eb;background:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#374151;" +
-"display:inline-flex;align-items:center;justify-content:center;transition:all .12s;}" +
-".ecfab-iconbtn:hover{border-color:#2563eb;color:#2563eb;background:#f5f8ff;}" +
-".ecfab-iconbtn svg{width:16px;height:16px;}" +
-".ecfab-iconbtn.x{font-size:1.15rem;line-height:1;font-weight:400;}" +
-".ecfab-body{flex:1;min-height:0;display:flex;}" +
-".ecfab-body>.ecbot{flex:1;min-width:0;}" +
-".ecfab-foot{padding:.5rem .8rem;border-top:1px solid #f0f0f0;font-size:.8125rem;color:#6b7280;text-align:center;background:#fafafa;}" +
-".ecfab-foot a{color:#2563eb;text-decoration:none;font-weight:600;}" +
-".ecfab-foot a:hover{text-decoration:underline;}" +
-/* Dark mode for the popup chrome (the inner .ecbot themes itself in
-   chatbot.js). Without this the popup was a white card on a near-black page.
-   Colours match shared.css dark tokens. */
-// Dark mode: the cover chip uses the dark accent tint and a light blue ring.
-'html[data-theme="dark"] .ecfab-btn{background:#1b2740;border-color:#6ea0ff;box-shadow:0 8px 22px rgba(0,0,0,.5);}' +
-'html[data-theme="dark"] .ecfab-badge{background:#6ea0ff;color:#0b1220;border-color:#15171c;}' +
-'html[data-theme="dark"] .ecfab-pop{background:#15171c;border-color:#2c313a;box-shadow:0 18px 50px rgba(0,0,0,.6);}' +
-'html[data-theme="dark"] .ecfab-head{background:linear-gradient(180deg,#1d2027,#15171c);border-bottom-color:#2c313a;}' +
-'html[data-theme="dark"] .ecfab-title{color:#e7e9ee;}' +
-'html[data-theme="dark"] .ecfab-sub{color:#5f6875;}' +
-'html[data-theme="dark"] .ecfab-iconbtn{background:#1d2027;border-color:#2c313a;color:#c3c8d2;}' +
-'html[data-theme="dark"] .ecfab-iconbtn:hover{border-color:#6ea0ff;color:#6ea0ff;background:#22304a;}' +
-'html[data-theme="dark"] .ecfab-foot{background:#1d2027;border-top-color:#2c313a;color:#5f6875;}' +
-'html[data-theme="dark"] .ecfab-foot a{color:#6ea0ff;}' +
-/* On phones the figures fill the width, so the floating button sat on top of
-   figure content (a slider value at the bottom-right of week6 Fig 6.1, for
-   one). Keep the button, it is a headline feature, but shrink it from 60 to
-   48px (still above the 44px tap-target minimum), tuck it lower into the
-   corner, and drop the pulse ring, whose expanding shadow is visually noisy
-   right next to a figure. The peek label was already hidden here.
-   Even at 44px it still sat on the last x tick of full-width plots (Fig 8.1),
-   so while a figure is under its corner it tucks sideways into the page
-   gutter, leaving a 16px tab that still opens the chat (see tuck() below). */
-"@media (max-width:480px){.ecfab-pop{right:12px;left:12px;width:auto;bottom:82px;height:auto;top:66px;max-height:none;}" +
-".ecfab-label{display:none;}" +
-".ecfab-btn{right:max(8px,env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));width:44px;height:44px;border-radius:13px;transition:transform .2s,box-shadow .16s;}" +
-".ecfab-btn svg{width:26px;height:26px;}" +
-".ecfab-tuck .ecfab-btn{transform:translateX(36px);box-shadow:0 4px 12px rgba(122,31,92,.16);}" +
-".ecfab-tuck .ecfab-badge{display:none;}" +
-".ecfab-btn::after{display:none;}" +
-".ecfab-badge{font-size:.5rem;padding:1px 4px;}}";
-    var s = document.createElement("style");
-    s.textContent = css;
-    document.head.appendChild(s);
+  function weekStarters() {
+    var m = location.pathname.match(/week(\d+)/);
+    return (m && STARTERS[+m[1]]) || STARTERS.all;
   }
 
   function build() {
-    if (!window.EC224Bot) { // module missing: fail quietly, no broken UI
-      console.warn("[ec224] ask-widget: EC224Bot not found (load assets/chatbot.js first)");
-      return;
-    }
-    injectCss();
+    var Bot = window.EC224Bot;
+    if (!Bot) { console.warn("[ec224] ask-widget: EC224Bot not found (load assets/chatbot.js first)"); return; }
 
     var wrap = document.createElement("div");
     wrap.className = "ecfab-wrap";
+    wrap.style.visibility = "hidden";     // until assets/ask.css has loaded
     wrap.innerHTML =
-      '<div class="ecfab-label">Ask the Course&nbsp;AI</div>' +
-      '<button class="ecfab-btn" type="button" aria-label="Ask the Course AI, an AI study assistant" aria-expanded="false">' +
-      '<span class="ecfab-badge">' + SPARKLE + '</span><span class="ecfab-ico">' + FAB_ICON + '</span></button>' +
-      '<div class="ecfab-pop" role="dialog" aria-label="Ask the Course AI">' +
+      '<p class="ecfab-hint" aria-hidden="true"><b>Stuck on something?</b> Ask the course AI. It answers from these pages and the textbook.</p>' +
+      '<button class="ecfab-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="ecfab-pop">' +
+        '<span class="ea-mark">' + Bot.MARK + '</span><span class="ecfab-lbl">Ask</span>' +
+        '<span class="ecfab-sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"> the course AI</span></button>' +
+      '<div class="ecfab-pop" id="ecfab-pop" role="dialog" aria-modal="false" aria-labelledby="ecfab-title">' +
         '<div class="ecfab-head">' +
-          '<span class="ecfab-mini">' + MINI_LOGO + '</span>' +
-          '<div class="ecfab-htxt"><div class="ecfab-title">Ask the Course AI</div>' +
-          '<div class="ecfab-sub">answers from the course pages</div></div>' +
+          '<span class="ea-mark">' + Bot.MARK + '</span>' +
+          '<div class="ecfab-htxt"><p class="ecfab-title" id="ecfab-title">Ask the Course AI</p>' +
+          '<p class="ecfab-sub">From the course materials</p></div>' +
           '<div class="ecfab-actions">' +
-            '<a class="ecfab-iconbtn ecfab-expand" href="' + FULL_PAGE + '" ' +
-              'title="Open the full assistant (bigger, with page preview)" aria-label="Open the full assistant">' + EXPAND_ICON + '</a>' +
-            '<button class="ecfab-iconbtn x ecfab-close" type="button" title="Close" aria-label="Close">&times;</button>' +
+            '<a class="ecfab-full" href="' + FULL_PAGE + '" title="The full page shows each source next to the answer">Full page</a>' +
+            '<button class="ecfab-close" type="button" aria-label="Close">' + X_ICON + '</button>' +
           '</div>' +
         '</div>' +
         '<div class="ecfab-body"><div class="ecfab-mount"></div></div>' +
-        '<div class="ecfab-foot">Longer question? <a class="ecfab-full" href="' + FULL_PAGE + '">Open the full assistant &#8599;</a></div>' +
       '</div>';
     document.body.appendChild(wrap);
+    Bot.ensureCss().then(function () { wrap.style.visibility = ""; });
 
     var btn = wrap.querySelector(".ecfab-btn");
-    var ico = wrap.querySelector(".ecfab-ico");
+    var lbl = wrap.querySelector(".ecfab-lbl");
     var pop = wrap.querySelector(".ecfab-pop");
-    var closeBtn = wrap.querySelector(".ecfab-close");
-    var mount = wrap.querySelector(".ecfab-mount");
-    var expandLinks = wrap.querySelectorAll(".ecfab-expand,.ecfab-full");
-
-    // mount the compact chat (bare: the popover supplies the header)
-    var handle = window.EC224Bot.mountCompact(mount, {
+    var hint = wrap.querySelector(".ecfab-hint");
+    var full = wrap.querySelector(".ecfab-full");
+    var handle = Bot.mountThread(wrap.querySelector(".ecfab-mount"), {
       bare: true,
-      intro: "Hi! Quick econ question? Ask away: I answer from the EC224 course pages and can show you the exact spot. For a longer dig, hit the ↗ up top.",
-      placeholder: "Ask a quick question…",
+      starters: weekStarters(),
+      placeholder: "Ask about the course",
     });
 
-    // carry the in-progress question to the full page
-    function syncExpandHref() {
-      var q = handle && handle.input ? handle.input.value.trim() : "";
-      var href = FULL_PAGE + (q ? "?q=" + encodeURIComponent(q) : "");
-      expandLinks.forEach(function (a) { a.setAttribute("href", href); });
+    // carry a half-typed question to the full page
+    function syncFull() {
+      var q = handle.input.value.trim();
+      full.setAttribute("href", FULL_PAGE + (q ? "?q=" + encodeURIComponent(q) : ""));
     }
-    if (handle && handle.input) handle.input.addEventListener("input", syncExpandHref);
+    handle.input.addEventListener("input", syncFull);
 
-    var open = false;
-    function setOpen(v) {
+    var open = false, opener = null;
+    function setOpen(v, o) {
+      if (v === open) { if (v) handle.focus(); return; }
       open = v;
       wrap.classList.toggle("ecfab-open", v);
       btn.setAttribute("aria-expanded", v ? "true" : "false");
-      ico.innerHTML = v ? CLOSE_ICON : FAB_ICON;
+      lbl.textContent = v ? "Close" : "Ask";
       if (v) {
-        wrap.classList.add("ecfab-seen");
-        try { localStorage.setItem("ec224-fab-seen", "1"); } catch (e) {}
-        syncExpandHref();
-        setTimeout(function () { if (handle && handle.focus) handle.focus(); }, 60);
+        opener = o || btn;
+        hideHint();
+        markSeen();
+        syncFull();
+        setTimeout(function () { handle.focus(); }, 40);
+      } else {
+        var back = opener && document.contains(opener) ? opener : btn;
+        opener = null;
+        if (wrap.contains(document.activeElement) || document.activeElement === document.body) back.focus();
       }
+      queueAway();
     }
-    // stopPropagation matters: setOpen swaps the button's inner SVG, which
-    // detaches whatever <path> the pointer landed on. Without this, the
-    // outside-click handler below then sees that detached node as "outside the
-    // widget" and closes the popover in the same click that opened it, so the
-    // button appeared dead when clicked on the diagram itself.
+
     btn.addEventListener("click", function (e) { e.stopPropagation(); setOpen(!open); });
-    closeBtn.addEventListener("click", function () { setOpen(false); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && open) setOpen(false); });
-    // click outside closes (but not clicks inside the citation lightbox)
+    wrap.querySelector(".ecfab-close").addEventListener("click", function () { setOpen(false); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && open) { e.preventDefault(); setOpen(false); }
+    });
+    // a click outside closes it (but not a click in the source preview it opened)
     document.addEventListener("click", function (e) {
-      if (!open) return;
+      if (!open || !e.target.isConnected) return;
       if (wrap.contains(e.target)) return;
-      if (e.target.closest && e.target.closest(".ecbot-lb")) return;
+      if (e.target.closest && e.target.closest(".ecbot-lb, .ecask-fig")) return;
       setOpen(false);
     });
 
-    // Phones: slide the button into the right-hand gutter while a figure is
-    // under its corner, so it never covers plot content. It stays tappable.
-    var phone = window.matchMedia ? window.matchMedia("(max-width:480px)") : null;
-    var tuckQueued = false;
-    function tuck() {
-      tuckQueued = false;
-      var on = false;
-      if (phone && phone.matches && !open && document.elementsFromPoint) {
+    // ---- step aside while a figure is under the button ----
+    var awayQueued = false;
+    function overlaps(a, b) { return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top; }
+    function checkAway() {
+      awayQueued = false;
+      var away = false;
+      if (!open) {
+        var cs = getComputedStyle(btn);
         var W = window.innerWidth, H = window.innerHeight;
-        var pts = [[W - 30, H - 32], [W - 50, H - 32], [W - 30, H - 52], [W - 50, H - 52]];
-        for (var i = 0; i < pts.length && !on; i++) {
-          var stack = document.elementsFromPoint(pts[i][0], pts[i][1]);
-          for (var j = 0; j < stack.length; j++) {
-            var el = stack[j];
-            if (wrap.contains(el)) continue;
-            if (el.closest && el.closest(".fig-bay,.fig-plot,.jxgbox,canvas,figure")) { on = true; break; }
-          }
+        var right = parseFloat(cs.right) || 0, bottom = parseFloat(cs.bottom) || 0;
+        var r = { right: W - right + 4, bottom: H - bottom + 4 };
+        r.left = r.right - btn.offsetWidth - 8; r.top = r.bottom - btn.offsetHeight - 8;
+        var figs = document.querySelectorAll(FIGURE_SEL);
+        for (var i = 0; i < figs.length && !away; i++) {
+          if (wrap.contains(figs[i])) continue;
+          var fr = figs[i].getBoundingClientRect();
+          if (fr.width && fr.height && overlaps(r, fr)) away = true;
         }
       }
-      wrap.classList.toggle("ecfab-tuck", on);
+      wrap.classList.toggle("ecfab-away", away);
     }
-    function queueTuck() { if (!tuckQueued) { tuckQueued = true; requestAnimationFrame(tuck); } }
-    window.addEventListener("scroll", queueTuck, { passive: true });
-    window.addEventListener("resize", queueTuck);
-    btn.addEventListener("click", queueTuck);
-    setTimeout(tuck, 600);
+    function queueAway() { if (!awayQueued) { awayQueued = true; requestAnimationFrame(checkAway); } }
+    window.addEventListener("scroll", queueAway, { passive: true });
+    window.addEventListener("resize", queueAway);
+    if ("ResizeObserver" in window) new ResizeObserver(queueAway).observe(document.body);
+    setTimeout(checkAway, 300);
 
-    // one-time gentle nudge for first-time visitors
+    // ---- one hint for a first-time visitor ----
+    function markSeen() { try { localStorage.setItem(SEEN_KEY, "1"); } catch (e) {} }
+    function hideHint() { hint.classList.remove("show"); }
     var seen = false;
-    try { seen = !!localStorage.getItem("ec224-fab-seen"); } catch (e) {}
-    if (seen) {
-      wrap.classList.add("ecfab-seen");
-    } else {
-      var label = wrap.querySelector(".ecfab-label");
+    try { seen = !!localStorage.getItem(SEEN_KEY); } catch (e) {}
+    if (!seen) {
       setTimeout(function () {
-        if (open) return;
-        label.classList.add("peek");
-        var drop = function () { label.classList.remove("peek"); window.removeEventListener("scroll", drop); };
-        // Dismiss the nudge the moment the reader starts scrolling, so it never
-        // lingers over a figure they have scrolled to. Otherwise it clears on
-        // its own after a few seconds.
-        window.addEventListener("scroll", drop, { passive: true, once: true });
-        setTimeout(drop, 4200);
-      }, 1400);
+        if (open || wrap.classList.contains("ecfab-away")) return;   // try again on the next visit
+        hint.classList.add("show");
+        // never cover a control: if the hint lands on a button, link or field, drop it
+        requestAnimationFrame(function () {
+          var hr = hint.getBoundingClientRect(), els = document.querySelectorAll(FIGURE_SEL + ", button, a, input, textarea, select");
+          for (var i = 0; i < els.length; i++) { if (wrap.contains(els[i])) continue; var er = els[i].getBoundingClientRect(); if (er.width && er.height && overlaps(hr, er)) { hideHint(); return; } }
+        });
+        markSeen();
+        var y0 = window.scrollY;
+        var onScroll = function () {
+          if (Math.abs(window.scrollY - y0) > 80) { hideHint(); window.removeEventListener("scroll", onScroll); }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        setTimeout(hideHint, 7000);
+      }, 1500);
     }
+
+    // ---- open from elsewhere on the page (the figure links) ----
+    window.EC224Ask = {
+      open: function (o) {
+        o = o || {};
+        handle.setContext(o.context || null);
+        if (!handle.hasTurns()) handle.setStarters(o.context ? (o.starters || FIGURE_STARTERS) : weekStarters());
+        setOpen(true, o.opener);
+      },
+      close: function () { setOpen(false); },
+      isOpen: function () { return open; },
+    };
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", build);
-  } else {
-    build();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build);
+  else build();
 })();

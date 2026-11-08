@@ -1,63 +1,134 @@
 /* ============================================================================
- * EC224 course chatbot: shared dev module.
+ * EC224 course AI: shared module (window.EC224Bot).
  *
- * window.EC224Bot:
- *   .ask(workerUrl, question)        -> Promise<{answer, answered, sources, matches}>
- *   .locateInFrame(frame, chunkText) -> bool   (scroll+highlight a passage; same-origin only)
- *   .prettyLabel(url)                -> "Week 3 · demand"
- *   .mountCompact(rootEl, opts)      -> builds the compact widget (chat + "show on page" lightbox)
+ *   .ask(workerUrl, question)        -> Promise<{answer, answered, sources, matches, suggestions}>
+ *                                       rejects with err.kind = "busy" | "slow" | "offline" | "server"
+ *   .mountThread(rootEl, opts)       -> the question-and-answer transcript with its question box
+ *   .mountCompact(rootEl, opts)      -> same thing (older name, kept for the dev pages)
+ *   .locateInFrame(frame, chunkText) -> bool   (scroll to and highlight a passage; same-origin only)
+ *   .openPreview(match)              -> the source page in a lightbox, jumped to the passage
+ *   .prettyLabel(url)                -> "Week 3 visualizations"
+ *   .renderRich(el, text, onDone)    -> Markdown + KaTeX into el
+ *   .MARK                            -> the assistant's mark (inline SVG, currentColor)
  *
  * The live-preview trick: this script is served from falconeconsim.github.io and so are
  * the course pages, so an <iframe> of a course page is SAME-ORIGIN, which lets us reach
- * into it with JS to scroll to, and highlight, the exact sentence the answer came from.
- * (Off the live origin, e.g. file://, that's blocked; we fall back to a plain link.)
+ * into it to scroll to, and highlight, the exact sentence the answer came from.
+ * Off the live origin that is blocked, and the preview falls back to a plain page.
+ *
+ * Styles live in assets/ask.css, which this script links itself (most pages only load
+ * the scripts). See the header of that file for the visual rules.
  * ==========================================================================*/
 (function () {
   "use strict";
 
   var DEFAULT_WORKER = "https://ec224-chatbot.zachtwinship.workers.dev/";
+  var TIMEOUT_MS = 40000;
+  var SCRIPT_SRC = (document.currentScript && document.currentScript.src) || "";
 
-  var LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">' +
-    '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/>' +
-    '<path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
-  var BOOK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">' +
+  /* The mark: the axes of a figure, a convex curve and a point on it. It is the
+     figures' own picture (a point you find on a curve), not a chat bubble or a
+     sparkle, and it is drawn in currentColor so it sits on any ground. */
+  var MARK =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+    '<path d="M3 2.5V21h18.5" stroke-width="2.4"/>' +
+    '<path d="M8 2.6C8.8 10.8 12.2 15 22 15.8" stroke-width="2.6"/>' +
+    '<circle cx="11.6" cy="12" r="3.6" fill="currentColor" stroke="none"/></svg>';
+
+  var LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">' +
+    '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
+  var BOOK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19h14"/></svg>';
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+  // ---- stylesheet ------------------------------------------------------------
+  var cssReady = null;
+  function ensureCss() {
+    if (cssReady) return cssReady;
+    cssReady = new Promise(function (resolve) {
+      var have = document.querySelector('link[rel="stylesheet"][href$="ask.css"]');
+      if (have) {
+        if (have.sheet) resolve();
+        else { have.addEventListener("load", resolve); have.addEventListener("error", resolve); setTimeout(resolve, 3000); }
+        return;
+      }
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = SCRIPT_SRC ? SCRIPT_SRC.replace(/chatbot\.js(\?.*)?$/, "ask.css") : "assets/ask.css";
+      link.setAttribute("data-ea-css", "1");
+      link.onload = link.onerror = function () { resolve(); };
+      setTimeout(resolve, 3000);   // never leave the widget hidden on a slow network
+      document.head.appendChild(link);
+    });
+    return cssReady;
+  }
+  ensureCss();
 
   // ---- API call ------------------------------------------------------------
+  function failure(kind, detail) {
+    var e = new Error(detail || kind);
+    e.kind = kind;
+    return e;
+  }
+
+  // The worker answers {answer, answered, sources, matches, suggestions}. Besides real
+  // HTTP errors, it reports a Gemini quota hit as a 200 whose only content is a
+  // "rate limit" sentence (no `answered` field): that is treated as "busy" too.
   async function ask(workerUrl, question) {
-    var res = await fetch(workerUrl || DEFAULT_WORKER, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: question }),
-    });
-    var data = await res.json();
-    if (!res.ok && !data.answer) throw new Error(data.error || ("HTTP " + res.status));
-    // tolerate the old response shape (no `answered` field)
-    if (typeof data.answered === "undefined") data.answered = !!(data.sources && data.sources.length);
-    if (!data.matches) {
-      data.matches = (data.sources || []).map(function (u) { return { url: u, title: u, text: "" }; });
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS) : null;
+    var res;
+    try {
+      res = await fetch(workerUrl || DEFAULT_WORKER, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question }),
+        signal: ctrl ? ctrl.signal : undefined,
+      });
+    } catch (e) {
+      throw failure(e && e.name === "AbortError" ? "slow" : "offline", String(e));
+    } finally {
+      if (timer) clearTimeout(timer);
     }
+    if (res.status === 429 || res.status === 503) throw failure("busy", "HTTP " + res.status);
+    var data;
+    try { data = await res.json(); } catch (e) { throw failure("server", "HTTP " + res.status + " (not JSON)"); }
+    if (!res.ok && !(data && data.answer)) throw failure("server", (data && data.error) || ("HTTP " + res.status));
+    var srcs = data.sources || [];
+    if (typeof data.answered === "undefined") {
+      if (!srcs.length && /rate limit|too many requests/i.test(data.answer || "")) throw failure("busy", "quota");
+      data.answered = !!srcs.length;     // tolerate the old response shape
+    }
+    if (!data.matches) data.matches = srcs.map(function (u) { return { url: u, title: u, text: "" }; });
+    if (!data.suggestions) data.suggestions = [];
     return data;
   }
 
-  // ---- pretty source labels ------------------------------------------------
+  // ---- source labels ---------------------------------------------------------
   function prettyLabel(url) {
-    var path = String(url).replace(/^https?:\/\/[^/]+\//, "").replace(/\.html$/, "");
-    if (!path || path === "index") return "Home";
+    var path = String(url).replace(/^https?:\/\/[^/]+\//, "").replace(/[?#].*$/, "").replace(/\.html$/, "");
+    if (!path || path === "index") return "Course home";
     var m = path.match(/^week(\d+)(?:-(.*))?$/);
     if (m) {
-      var kind = { "": "overview", "viz": "visualizations", "viz-claude-dev": "viz (Claude)",
-        "viz-dev": "viz (Gemini)", "practice": "practice", "slides": "slides",
-        "videos": "videos", "flashcards": "flashcards" }[m[2] || ""] || (m[2] || "");
-      return "Week " + m[1] + (kind ? " · " + kind : "");
+      var kind = { "": "overview", "viz": "visualizations", "viz-classic": "visualizations (classic)",
+        "viz-claude-dev": "visualizations (Claude dev)", "viz-dev": "visualizations (dev)", "practice": "practice",
+        "slides": "slides", "videos": "videos", "flashcards": "flashcards" }[m[2] || ""];
+      return "Week " + m[1] + " " + (kind || (m[2] || "").replace(/-/g, " "));
     }
-    return path;
+    return path.replace(/-/g, " ");
+  }
+  // "Textbook · Ch. 3" from the worker reads as "Textbook, chapter 3"
+  function bookLabel(m) {
+    var l = String(m.label || m.title || "Course textbook");
+    var ch = l.match(/ch(?:apter)?\.?\s*(\d+)/i);
+    return ch ? "Textbook, chapter " + ch[1] : l.replace(/\s*·\s*/g, ", ");
   }
 
-  // ---- shared answer renderer: Markdown + KaTeX -----------------------------
-  /* The model returns Markdown plus math in mixed delimiters ($...$, $...$,
-     \\(...\\), \\[...\\]). Both the floating widget and ask.html render answers
-     through this, so a formula like $U_1$ renders instead of showing raw.
+  // ---- answer renderer: Markdown + KaTeX ------------------------------------
+  /* The model returns Markdown plus math in mixed delimiters ($...$, $$...$$,
+     \(...\), \[...\]). Each math span goes through katex.renderToString (which
+     safely handles < and >), and the prose around it is HTML-escaped and given a
+     small Markdown pass (bold, italic, code, headings, bullets, line breaks).
 
      Currency vs math: a $...$ span is math only when the opening $ is NOT
      followed by a space or a digit, so $I$ and $P_X$ render while "$5.99" and
@@ -67,7 +138,7 @@
     window.__ecKatexReady = new Promise(function (resolve) {
       if (window.katex && window.katex.renderToString) { resolve(); return; }
       var base = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/";
-      if (!document.querySelector('link[data-ec-katex]')) {
+      if (!document.querySelector("link[data-ec-katex]")) {
         var css = document.createElement("link");
         css.rel = "stylesheet"; css.href = base + "katex.min.css";
         css.setAttribute("data-ec-katex", "1");
@@ -83,12 +154,11 @@
   }
 
   function _escHtml(s) {
-    return s.replace(/[&<>]/g, function (c) {
-      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : "&quot;";
     });
   }
 
-  // Lightweight Markdown for the prose between math spans (already math-free).
   function _proseToHtml(s) {
     s = _escHtml(s);
     s = s.replace(/\*\*([^*]+?)\*\*/g, "<strong>$1</strong>");
@@ -96,13 +166,11 @@
     s = s.replace(/(^|[\s(>])\*([^*\s][^*]*?)\*(?=[\s).,;:<]|$)/g, "$1<em>$2</em>");
     s = s.replace(/(^|[\s(>])_([^_\s][^_]*?)_(?=[\s).,;:<]|$)/g, "$1<em>$2</em>");
     return s.split("\n").map(function (ln) {
-      // Headings: ###, ####, ## -> a bold lead line (chat bubbles are small).
       var h = ln.match(/^\s*(#{1,4})\s+(.*)$/);
-      if (h) return '<span class="ecbot-h">' + h[2] + '</span>';
-      // Bullets: "* item" / "- item"
+      if (h) return '<span class="ecbot-h">' + h[2] + "</span>";
       var b = ln.match(/^\s*[\*\-]\s+(.*)$/);
       if (b) return "&bull;&nbsp;" + b[1];
-      return ln;   // numbered "1." lines pass through with their number intact
+      return ln;   // numbered "1." lines keep their number
     }).join("<br>");
   }
 
@@ -115,9 +183,7 @@
       var display = m[1] !== undefined || m[2] !== undefined;
       var latex = m[1] || m[2] || m[3] || m[4] || "";
       try {
-        out += window.katex.renderToString(latex, {
-          displayMode: display, throwOnError: false, errorColor: "#c0392b"
-        });
+        out += window.katex.renderToString(latex, { displayMode: display, throwOnError: false, errorColor: "#93301f" });
       } catch (e) { out += _escHtml(m[0]); }
       last = re.lastIndex;
     }
@@ -140,14 +206,13 @@
     var s = doc.createElement("style");
     s.id = "ec224-hl-style";
     s.textContent =
-      ".ec224-hl{background:#fde68a !important;box-shadow:0 0 0 4px #fde68a;border-radius:3px;" +
-      "transition:background .4s;} ::selection{background:#fde68a;color:#1a1a1a;}" +
-      /* Declutter the live preview: it is a reading pane, not a working page.
-         Hide the site chrome (top bar, the figure/section rail, the week-nav
-         overlay, the footer) and the floating chat widget, and give the content
-         the full width, so the reader sees just the passage in context. */
+      ".ec224-hl{background:#f0d9a8 !important;box-shadow:0 0 0 4px #f0d9a8;border-radius:3px;}" +
+      "::selection{background:#f0d9a8;color:#14181b;}" +
+      /* The preview is a reading pane, not a working page: hide the site chrome
+         (top bar, section rail, week nav, footer) and the floating Ask button, and
+         give the content the full width. */
       ".topbar,.top-bar,.rail,.left-nav,.left-nav-overlay,.left-nav-toggle," +
-      ".site-foot,.home-foot,.hub-footer,.site-footer,.ecfab-wrap{display:none !important;}" +
+      ".site-foot,.home-foot,.hub-footer,.site-footer,.ecfab-wrap,.ecask-fig{display:none !important;}" +
       ".layout{display:block !important;max-width:none !important;padding:1.25rem 1.5rem 3rem !important;}" +
       "body{padding-top:0 !important;}";
     (doc.head || doc.documentElement).appendChild(s);
@@ -167,25 +232,21 @@
     return out;
   }
 
-  // Returns true if it found + highlighted the passage; false if not found.
-  // Throws on cross-origin (caller should treat as "preview unavailable").
+  // true if it found and highlighted the passage; false if not found.
+  // Throws on cross-origin (the caller treats that as "preview limited").
   function locateInFrame(frame, chunkText) {
     var win = frame.contentWindow;
     var doc = frame.contentDocument || (win && win.document);
     if (!win || !doc) throw new Error("no frame document");
-    injectFrameStyles(doc); // will throw SecurityError if cross-origin
+    injectFrameStyles(doc); // throws SecurityError when cross-origin
 
-    if (!win.find) return false; // window.find unsupported
+    if (!win.find) return false;
     var phrases = candidatePhrases(chunkText);
     for (var i = 0; i < phrases.length; i++) {
       try {
         win.getSelection().removeAllRanges();
-        // find(text, caseSensitive, backwards, wrapAround, wholeWord, searchInFrames, showDialog)
-        if (win.find(phrases[i], false, false, true)) {
-          highlightSelection(win, doc);
-          return true;
-        }
-      } catch (e) { /* try next phrase */ }
+        if (win.find(phrases[i], false, false, true)) { highlightSelection(win, doc); return true; }
+      } catch (e) { /* try the next phrase */ }
     }
     return false;
   }
@@ -199,302 +260,302 @@
     try {
       var mark = doc.createElement("span");
       mark.className = "ec224-hl";
-      range.surroundContents(mark); // works when the range is inside one text node
+      range.surroundContents(mark); // works when the range sits inside one text node
       el = mark;
       sel.removeAllRanges();
     } catch (e) { /* multi-node range: keep the native selection highlight */ }
-    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // scroll the frame itself, never the page around it (scrollIntoView would move both)
+    if (el && el.getBoundingClientRect) {
+      var r = el.getBoundingClientRect();
+      win.scrollTo({ top: Math.max(0, win.scrollY + r.top - win.innerHeight / 2 + r.height / 2), behavior: "smooth" });
+    }
   }
 
-  // ---- compact embeddable widget ------------------------------------------
-  var CSS_INJECTED = false;
-  function injectWidgetCss() {
-    if (CSS_INJECTED) return; CSS_INJECTED = true;
-    var css =
-".ecbot{--ec:#1a56db;font-family:'Libre Franklin',system-ui,-apple-system,sans-serif;color:#1a1a1a;" +
-"border:1px solid #e4e4e4;border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.06);max-width:600px;}" +
-".ecbot-head{padding:.8rem 1.05rem;border-bottom:1px solid #eee;font-weight:600;font-size:.96rem;display:flex;align-items:center;gap:.5rem;}" +
-".ecbot-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex:0 0 auto;}" +
-".ecbot-sub{margin-left:auto;font-weight:400;font-size:.72rem;color:#8a8a8a;}" +
-".ecbot-log{height:330px;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.65rem;background:#fafafa;}" +
-".ecbot-msg{padding:.6rem .85rem;border-radius:12px;font-size:.9rem;line-height:1.5;max-width:90%;white-space:pre-wrap;word-wrap:break-word;}" +
-".ecbot-msg.user{align-self:flex-end;background:var(--ec);color:#fff;border-bottom-right-radius:4px;}" +
-".ecbot-msg.bot{align-self:flex-start;background:#fff;border:1px solid #e8e8e8;border-bottom-left-radius:4px;white-space:normal;}" +
-".ecbot-msg.bot .ecbot-h{display:block;font-weight:700;font-size:1.02em;margin:.6em 0 .18em;}" +
-".ecbot-msg.bot .ecbot-h:first-child{margin-top:0;}" +
-".ecbot-msg.bot code{background:#f3f4f6;padding:.05em .3em;border-radius:4px;font-size:.92em;}" +
-".ecbot-msg.bot .katex-display{overflow-x:auto;overflow-y:hidden;margin:.5em 0;}" +
-".ecbot-msg.note{align-self:flex-start;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.86rem;}" +
-".ecbot-msg.error{align-self:flex-start;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;}" +
-".ecbot-cites{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem;}" +
-".ecbot-cite{font-size:.74rem;font-weight:600;color:var(--ec);background:#eef2ff;border:1px solid #dbe3ff;" +
-"border-radius:999px;padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}" +
-".ecbot-cite:hover{background:#dbe3ff;}.ecbot-cite svg{width:11px;height:11px;}" +
-".ecbot-cite-book{color:#6b7280;background:#f3f4f6;border-color:#e5e7eb;cursor:default;}" +
-".ecbot-cite-book:hover{background:#f3f4f6;}" +
-".ecbot-follow{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;}" +
-".ecbot-chip{font-size:.74rem;color:#444;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:3px 10px;cursor:pointer;}" +
-".ecbot-chip:hover{background:#e5e7eb;}" +
-".ecbot-typing{display:inline-flex;gap:3px;}.ecbot-typing span{width:6px;height:6px;border-radius:50%;background:#5f6875;animation:ecbot-blink 1.2s infinite both;}" +
-".ecbot-typing span:nth-child(2){animation-delay:.2s;}.ecbot-typing span:nth-child(3){animation-delay:.4s;}" +
-"@keyframes ecbot-blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}" +
-".ecbot-form{display:flex;gap:.5rem;padding:.7rem;border-top:1px solid #eee;}" +
-".ecbot-input{flex:1;border:1px solid #ddd;border-radius:8px;padding:.55rem .8rem;font:inherit;font-size:.9rem;outline:none;}" +
-".ecbot-input:focus{border-color:var(--ec);}" +
-".ecbot-send{border:none;background:var(--ec);color:#fff;font-weight:600;font-size:.9rem;padding:0 1.1rem;border-radius:8px;cursor:pointer;}" +
-".ecbot-send:disabled{opacity:.55;cursor:default;}" +
-/* bare mode: drop outer chrome so the widget can fill a popover/panel */
-".ecbot.ecbot-bare{border:0;box-shadow:none;border-radius:0;max-width:none;height:100%;display:flex;flex-direction:column;min-height:0;}" +
-".ecbot-bare .ecbot-log{flex:1;height:auto;min-height:0;}" +
-/* lightbox */
-".ecbot-lb{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2.5vh 2vw;}" +
-".ecbot-lb[hidden]{display:none;}" +
-".ecbot-lb-card{background:#fff;border-radius:14px;width:min(1000px,96vw);height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);}" +
-".ecbot-lb-bar{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;border-bottom:1px solid #eee;font-size:.85rem;}" +
-".ecbot-lb-bar b{font-weight:600;}.ecbot-lb-status{color:#6b7280;font-size:.78rem;}" +
-".ecbot-lb-bar a{margin-left:auto;color:var(--ec);font-size:.8rem;text-decoration:none;}" +
-".ecbot-lb-x{border:none;background:#f3f4f6;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:1.1rem;line-height:1;}" +
-".ecbot-lb-frame{flex:1;border:0;width:100%;background:#fff;}" +
-".ecbot-fallback{padding:2rem;text-align:center;color:#6b7280;font-size:.9rem;}" +
-/* Dark mode. The widget hardcoded light surfaces, so on a dark-themed page it
-   dropped a white card into a near-black layout. These override only colours,
-   matched to shared.css's dark tokens (white #15171c, panel #1d2027, rule
-   #2c313a, text #e7e9ee, muted #9aa3b2, accent #6ea0ff). */
-'html[data-theme="dark"] .ecbot{--ec:#6ea0ff;background:#15171c;border-color:#2c313a;color:#e7e9ee;box-shadow:0 4px 24px rgba(0,0,0,.5);}' +
-'html[data-theme="dark"] .ecbot-head{border-bottom-color:#2c313a;}' +
-'html[data-theme="dark"] .ecbot-sub{color:#9aa3b2;}' +
-'html[data-theme="dark"] .ecbot-log{background:#1a1d24;}' +
-'html[data-theme="dark"] .ecbot-msg.bot{background:#1d2027;border-color:#2c313a;color:#e7e9ee;}' +
-'html[data-theme="dark"] .ecbot-msg.note{background:#2a2410;border-color:#5c4a1a;color:#e5c07b;}' +
-'html[data-theme="dark"] .ecbot-msg.error{background:#2a1416;border-color:#7a2f2f;color:#f2a2a2;}' +
-'html[data-theme="dark"] .ecbot-cite{background:#1b2740;border-color:#33425f;}' +
-'html[data-theme="dark"] .ecbot-cite-book{background:#22262e;border-color:#2c313a;color:#9aa3b2;}' +
-'html[data-theme="dark"] .ecbot-chip{background:#22262e;border-color:#2c313a;color:#c3c8d2;}' +
-'html[data-theme="dark"] .ecbot-chip:hover{background:#2c313a;}' +
-'html[data-theme="dark"] .ecbot-form{border-top-color:#2c313a;}' +
-'html[data-theme="dark"] .ecbot-input{background:#1d2027;border-color:#2c313a;color:#e7e9ee;}' +
-'html[data-theme="dark"] .ecbot-lb-card{background:#15171c;}' +
-'html[data-theme="dark"] .ecbot-lb-bar{border-bottom-color:#2c313a;}' +
-'html[data-theme="dark"] .ecbot-lb-x{background:#22262e;color:#e7e9ee;}' +
-'html[data-theme="dark"] .ecbot-lb-frame{background:#15171c;}';
-    var s = document.createElement("style");
-    s.textContent = css;
-    document.head.appendChild(s);
+  // Status line for a preview frame once it has loaded.
+  function previewStatus(frame, match) {
+    try {
+      return locateInFrame(frame, match.text || "")
+        ? "Highlighted the passage the answer came from"
+        : "The page is open; the exact passage could not be pinpointed";
+    } catch (err) {
+      return "Open the page on the live site to jump to the passage";
+    }
   }
 
-  // shared lightbox (one per page)
+  // ---- source lightbox (one per page) ---------------------------------------
   var lb = null;
   function ensureLightbox() {
     if (lb) return lb;
     var el = document.createElement("div");
     el.className = "ecbot-lb";
     el.hidden = true;
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-modal", "true");
+    el.setAttribute("aria-label", "Source page preview");
     el.innerHTML =
       '<div class="ecbot-lb-card">' +
       '<div class="ecbot-lb-bar"><b class="ecbot-lb-title"></b>' +
-      '<span class="ecbot-lb-status"></span>' +
-      '<a class="ecbot-lb-open" target="_blank" rel="noopener">open in new tab ↗</a>' +
-      '<button class="ecbot-lb-x" aria-label="Close">×</button></div>' +
+      '<span class="ecbot-lb-status" aria-live="polite"></span>' +
+      '<a class="ecbot-lb-open" target="_blank" rel="noopener">Open in a new tab</a>' +
+      '<button type="button" class="ecbot-lb-x" aria-label="Close the preview">' + X_ICON + "</button></div>" +
       '<iframe class="ecbot-lb-frame" title="Course page preview"></iframe>' +
       "</div>";
     document.body.appendChild(el);
     var frame = el.querySelector(".ecbot-lb-frame");
-    var status = el.querySelector(".ecbot-lb-status");
-    function close() { el.hidden = true; frame.src = "about:blank"; }
+    var opener = null;
+    function close() {
+      if (el.hidden) return;
+      el.hidden = true; frame.src = "about:blank";
+      if (opener && opener.focus) opener.focus();
+      opener = null;
+    }
     el.querySelector(".ecbot-lb-x").addEventListener("click", close);
     el.addEventListener("click", function (e) { if (e.target === el) close(); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el.hidden) close(); });
-    lb = { el: el, frame: frame, status: status,
-      title: el.querySelector(".ecbot-lb-title"), open: el.querySelector(".ecbot-lb-open"), close: close };
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !el.hidden) { e.stopPropagation(); close(); }
+    }, true);
+    lb = { el: el, frame: frame, status: el.querySelector(".ecbot-lb-status"), title: el.querySelector(".ecbot-lb-title"),
+      open: el.querySelector(".ecbot-lb-open"), close: close, setOpener: function (o) { opener = o; } };
     return lb;
   }
 
-  function openPreview(match) {
-    injectWidgetCss();
+  function openPreview(match, openerEl) {
     var L = ensureLightbox();
     L.title.textContent = prettyLabel(match.url);
     L.open.href = match.url;
-    L.status.textContent = "loading…";
+    L.status.textContent = "Loading the page";
+    L.setOpener(openerEl || document.activeElement);
     L.el.hidden = false;
-    L.frame.onload = function () {
-      try {
-        var found = locateInFrame(L.frame, match.text || "");
-        L.status.textContent = found ? "✓ jumped to the relevant passage"
-                                      : "loaded (couldn't auto-locate the exact line)";
-      } catch (err) {
-        // cross-origin (off the live site): can't reach into the frame
-        L.status.textContent = "preview limited (open from the live site to auto-highlight)";
-      }
-    };
+    L.frame.onload = function () { L.status.textContent = previewStatus(L.frame, match); };
     L.frame.src = match.url;
+    setTimeout(function () { L.el.querySelector(".ecbot-lb-x").focus(); }, 30);
   }
 
-  // build one compact widget into rootEl
-  function mountCompact(root, opts) {
+  // ---- the transcript ---------------------------------------------------------
+  var STATUS = {
+    busy:    ["The course AI is busy right now.", "Lots of people are asking at once. Wait a minute, then try again."],
+    slow:    ["The course AI is taking too long to answer.", "Try again in a minute."],
+    offline: ["Could not reach the course AI.", "Check your connection, then try again."],
+    server:  ["The course AI hit a problem with that question.", "Try again, or ask it a different way."],
+  };
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  /* opts:
+       workerUrl, bare (no own header: fills a popover), title, subtitle,
+       intro (text above the starters), starters ([question, ...]), placeholder,
+       logHeight, fill (the log grows to fill its parent),
+       onAnswer(data, turn)                 called after an answer is shown
+       onSourceClick(match, button, buttons) replaces the default lightbox preview
+     returns { ask(q), input, focus(), prefill(q), setContext(ctx|null), setStarters([..]) }
+       ctx = { label: "Figure 8.1, CS/PS triangle anatomy", prompt: "text sent before the question" } */
+  function mountThread(root, opts) {
     opts = opts || {};
-    injectWidgetCss();
+    ensureCss();
     var workerUrl = opts.workerUrl || DEFAULT_WORKER;
-    var intro = opts.intro ||
-      "Ask me anything about the EC224 course material: I answer only from the course pages, " +
-      "and I can show you the exact spot on the page.";
 
     root.classList.add("ecbot");
-    if (opts.bare) root.classList.add("ecbot-bare");   // fill a popover, no own header
-    var head = opts.bare ? "" :
-      '<div class="ecbot-head"><span class="ecbot-dot"></span>' + (opts.title || "Ask the Course AI") +
-      '<span class="ecbot-sub">' + (opts.subtitle || "answers from the course site") + "</span></div>";
-    root.innerHTML = head +
-      '<div class="ecbot-log" aria-live="polite"></div>' +
+    if (opts.bare) root.classList.add("ecbot-bare");
+    if (opts.fill) root.classList.add("ecbot-fill");
+    root.innerHTML = (opts.bare ? "" :
+      '<div class="ecbot-head"><span class="ea-mark">' + MARK + "</span>" + _escHtml(opts.title || "Ask the Course AI") +
+      (opts.subtitle ? '<span class="ecbot-sub">' + _escHtml(opts.subtitle) + "</span>" : "") + "</div>") +
+      '<div class="ecbot-log" role="log" aria-live="polite" aria-relevant="additions" tabindex="-1"></div>' +
       '<form class="ecbot-form" autocomplete="off">' +
-      '<input class="ecbot-input" type="text" placeholder="' + (opts.placeholder || "Type your question…") + '" aria-label="Your question">' +
-      '<button class="ecbot-send" type="submit">Send</button></form>';
+      '<p class="ecbot-ctx" hidden><span>About</span><b></b><button type="button">Ask in general</button></p>' +
+      '<div class="ecbot-row">' +
+      '<input class="ecbot-input" type="text" enterkeyhint="send" maxlength="500" aria-label="Your question" placeholder="' +
+      _escHtml(opts.placeholder || "Ask about the course") + '">' +
+      '<button class="ecbot-send" type="submit">Ask</button></div></form>';
 
     var log = root.querySelector(".ecbot-log");
     var form = root.querySelector(".ecbot-form");
     var input = root.querySelector(".ecbot-input");
     var send = root.querySelector(".ecbot-send");
+    var ctxRow = root.querySelector(".ecbot-ctx");
+    var ctxName = ctxRow.querySelector("b");
     if (opts.logHeight) log.style.height = opts.logHeight;
 
-    addMsg(intro, "bot");
+    var context = null, busy = false, basePlaceholder = input.placeholder;
 
-    /* Math rendering uses KaTeX (synchronous, reliable, no font-cache state to
-       race), loaded once on demand since the chat widget appears on pages that
-       do not include a math renderer themselves.
-
-       The model returns Markdown plus math in mixed delimiters ($...$, $$...$$,
-       \(...\), \[...\]). We render both: each math span goes through
-       katex.renderToString (which safely handles < and > that would otherwise
-       break innerHTML), and the prose around it gets HTML-escaped and a small
-       Markdown pass (bold, italic, code, bullets, line breaks).
-
-       Currency vs math: a $...$ span counts as math only when the opening $ is
-       NOT followed by a space or a digit. That renders variables like $I$ or
-       $P_X$ while leaving "$5.99" and "between $5 and $10" as plain text. */
-
-    function renderRich(el, text) {
-      window.EC224Bot.renderRich(el, text, function () { log.scrollTop = log.scrollHeight; });
-    }
-
-    function addMsg(text, cls) {
-      var el = document.createElement("div");
-      el.className = "ecbot-msg " + cls;
-      if (cls === "bot") {
-        // Render prose into a dedicated child, not the bubble itself: renderRich
-        // rewrites innerHTML asynchronously (after KaTeX loads), which would wipe
-        // any cites/follow-up chips appended to the bubble right after this call.
-        var body = document.createElement("div");
-        body.className = "ecbot-body";
-        body.textContent = text;   // safe fallback shown until KaTeX is ready
-        el.appendChild(body);
-        renderRich(body, text);
-      } else {
-        el.textContent = text;
+    // empty state: one line of what this is, and a few questions to start with
+    var intro = el("div", "ecbot-empty");
+    function drawIntro(starters) {
+      intro.innerHTML = "";
+      intro.appendChild(el("p", "ecbot-intro", opts.intro ||
+        "Ask about anything in EC224. Answers come from the course pages and textbook, with a link to the passage they came from."));
+      if (starters && starters.length) {
+        var box = el("div", "ecbot-starters");
+        starters.forEach(function (q) {
+          var b = el("button", "ecbot-chip", q);
+          b.type = "button";
+          b.addEventListener("click", function () { submit(q); });
+          box.appendChild(b);
+        });
+        intro.appendChild(box);
       }
-      log.appendChild(el); log.scrollTop = log.scrollHeight;
-      return el;
     }
-    function addTyping() {
-      var el = document.createElement("div");
-      el.className = "ecbot-msg bot";
-      el.innerHTML = '<span class="ecbot-typing"><span></span><span></span><span></span></span>';
-      log.appendChild(el); log.scrollTop = log.scrollHeight;
-      return el;
+    drawIntro(opts.starters);
+    log.appendChild(intro);
+
+    function scrollToTurn(turn) {
+      var top = turn.offsetTop - log.offsetTop - 8;
+      if (top > log.scrollTop || turn.offsetTop - log.offsetTop + turn.offsetHeight > log.scrollTop + log.clientHeight) log.scrollTop = Math.max(0, top);
     }
-    function addCites(parent, matches) {
+
+    function addCites(turn, matches) {
       if (!matches || !matches.length) return;
-      var wrap = document.createElement("div");
-      wrap.className = "ecbot-cites";
+      var row = el("div", "ecbot-from");
+      row.appendChild(el("span", null, "From"));
+      var buttons = [];
       matches.forEach(function (m) {
         if (m.kind === "textbook" || !m.url) {
-          // instructor textbook: non-clickable placeholder (no link yet)
-          var s = document.createElement("span");
-          s.className = "ecbot-cite ecbot-cite-book";
-          s.innerHTML = BOOK_ICON + (m.label || "Course textbook");
-          s.title = "From the course textbook, not published online yet";
-          wrap.appendChild(s);
+          // the course textbook: named, never linked (it is not published online)
+          var s = el("span", "ecbot-cite ecbot-cite-book");
+          s.innerHTML = BOOK_ICON + _escHtml(bookLabel(m));
+          s.title = "From the course textbook, which is not online";
+          row.appendChild(s);
           return;
         }
-        var b = document.createElement("button");
-        b.type = "button"; b.className = "ecbot-cite";
-        b.innerHTML = LINK_ICON + prettyLabel(m.url);
-        b.title = "Show me where on " + prettyLabel(m.url);
-        b.addEventListener("click", function () { openPreview(m); });
-        wrap.appendChild(b);
+        var b = el("button", "ecbot-cite");
+        b.type = "button";
+        b.innerHTML = LINK_ICON + _escHtml(prettyLabel(m.url));
+        b.title = "Show the passage on " + prettyLabel(m.url);
+        b.addEventListener("click", function () {
+          if (opts.onSourceClick) opts.onSourceClick(m, b, buttons);
+          else openPreview(m, b);
+        });
+        buttons.push(b);
+        row.appendChild(b);
       });
-      parent.appendChild(wrap);
-      log.scrollTop = log.scrollHeight;
-    }
-    function addFollowups(parent, q, suggestions) {
-      // Prefer the model's own contextual follow-ups (from the worker); fall back
-      // to the generic three when it didn't return any.
-      var actions;
-      if (suggestions && suggestions.length) {
-        actions = suggestions.slice(0, 3).map(function (s) { return [s, s]; });
-      } else {
-        actions = [
-          ["Explain more simply", "Explain more simply, for a beginner: " + q],
-          ["Give an example", "Give a concrete worked example for: " + q],
-          ["Show the formula", "What is the key formula or definition for: " + q],
-        ];
-      }
-      var wrap = document.createElement("div");
-      wrap.className = "ecbot-follow";
-      actions.forEach(function (a) {
-        var c = document.createElement("button");
-        c.type = "button"; c.className = "ecbot-chip"; c.textContent = a[0];
-        c.addEventListener("click", function () { submit(a[1], a[0]); });
-        wrap.appendChild(c);
-      });
-      parent.appendChild(wrap);
-      log.scrollTop = log.scrollHeight;
+      turn.appendChild(row);
+      return buttons;
     }
 
-    async function submit(question, displayAs) {
-      addMsg(displayAs || question, "user");
-      input.value = "";
-      input.disabled = send.disabled = true;
-      var typing = addTyping();
+    function addNext(turn, q, suggestions) {
+      var list = (suggestions && suggestions.length)
+        ? suggestions.slice(0, 3).map(function (s) { return [s, s]; })
+        : [["Explain it more simply", "Explain more simply, for a beginner: " + q],
+           ["Give me an example", "Give a concrete worked example for: " + q],
+           ["Show the formula", "What is the key formula or definition for: " + q]];
+      var box = el("div", "ecbot-next");
+      list.forEach(function (a) {
+        var c = el("button", "ecbot-chip", a[0]);
+        c.type = "button";
+        c.addEventListener("click", function () { submit(a[1], a[0]); });
+        box.appendChild(c);
+      });
+      turn.appendChild(box);
+    }
+
+    function setBusy(v) {
+      busy = v;
+      send.disabled = v;
+      input.setAttribute("aria-busy", v ? "true" : "false");
+    }
+
+    // ask the worker for one turn; on failure, offer to try the same question again
+    async function run(turn, payload, shownQ) {
+      var slot = el("div", "ecbot-slot");
+      turn.appendChild(slot);
+      slot.appendChild(el("p", "ecbot-wait", "Reading the course pages"));
+      setBusy(true);
       try {
-        var data = await ask(workerUrl, question);
-        typing.remove();
-        var cls = data.answered ? "bot" : "note";
-        var bubble = addMsg(data.answer, cls);
+        var data = await ask(workerUrl, payload);
+        slot.innerHTML = "";
         if (data.answered) {
-          addCites(bubble, data.matches);   // sources ONLY when actually answered
-          addFollowups(bubble, question, data.suggestions);
+          var body = el("div", "ecbot-a ecbot-body");
+          body.textContent = data.answer || "";      // shown until KaTeX is ready
+          slot.appendChild(body);
+          renderRich(body, data.answer || "", function () { scrollToTurn(turn); });
+          var buttons = addCites(slot, data.matches);
+          addNext(slot, shownQ, data.suggestions);
+          if (opts.onAnswer) opts.onAnswer(data, turn, buttons || []);
+        } else {
+          slot.appendChild(el("p", "ecbot-note", data.answer ||
+            "That is not in the EC224 course materials, so the course AI can't answer it."));
+          if (opts.onAnswer) opts.onAnswer(data, turn, []);
         }
       } catch (err) {
-        typing.remove();
-        addMsg("Network error: couldn't reach the assistant. Please try again.", "error");
+        var kind = (err && err.kind) || "server";
+        var words = STATUS[kind] || STATUS.server;
+        slot.innerHTML = "";
+        var st = el("div", "ecbot-status" + (kind === "busy" || kind === "slow" ? "" : " is-error"));
+        st.setAttribute("role", "status");
+        st.appendChild(el("b", null, words[0]));
+        st.appendChild(document.createTextNode(words[1]));
+        var again = el("button", "ecbot-retry", "Try again");
+        again.type = "button";
+        again.addEventListener("click", function () {
+          if (busy) return;
+          slot.remove();
+          run(turn, payload, shownQ);
+        });
+        slot.appendChild(st);
+        slot.appendChild(again);
+        if (window.console && console.warn) console.warn("[ec224] course AI: " + kind + " (" + (err && err.message) + ")");
       } finally {
-        input.disabled = send.disabled = false;
-        input.focus();
+        setBusy(false);
+        scrollToTurn(turn);
       }
     }
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var q = input.value.trim();
-      if (q) submit(q);
-    });
+    function submit(question, displayAs) {
+      question = String(question || "").trim();
+      if (!question || busy) return;
+      if (intro.parentNode) intro.remove();
+      var turn = el("section", "ecbot-turn");
+      if (context) turn.appendChild(el("p", "ecbot-about", "About " + context.label));
+      turn.appendChild(el("p", "ecbot-q", displayAs || question));
+      log.appendChild(turn);
+      input.value = "";
+      input.dispatchEvent(new Event("input"));
+      var payload = context ? context.prompt + "\n\nMy question: " + question : question;
+      scrollToTurn(turn);
+      return run(turn, payload, question);
+    }
+
+    function setContext(ctx) {
+      context = ctx || null;
+      ctxRow.hidden = !context;
+      ctxName.textContent = context ? context.label : "";
+      input.placeholder = context && context.placeholder ? context.placeholder : basePlaceholder;
+    }
+    ctxRow.querySelector("button").addEventListener("click", function () { setContext(null); input.focus(); });
+
+    form.addEventListener("submit", function (e) { e.preventDefault(); submit(input.value); });
 
     return {
       ask: function (q) { return submit(q); },
       input: input,
-      focus: function () { input.focus(); },
-      prefill: function (q) { input.value = q || ""; },
+      log: log,
+      focus: function () { try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); } },
+      prefill: function (q) { input.value = q || ""; input.dispatchEvent(new Event("input")); },
+      setContext: setContext,
+      setStarters: function (list) { drawIntro(list); },
+      hasTurns: function () { return !!log.querySelector(".ecbot-turn"); },
     };
   }
 
   window.EC224Bot = {
     DEFAULT_WORKER: DEFAULT_WORKER,
+    MARK: MARK,
     ask: ask,
     prettyLabel: prettyLabel,
+    bookLabel: bookLabel,
     locateInFrame: locateInFrame,
     injectFrameStyles: injectFrameStyles,
+    previewStatus: previewStatus,
     openPreview: openPreview,
-    mountCompact: mountCompact,
+    mountThread: mountThread,
+    mountCompact: mountThread,
     renderRich: renderRich,
     richToHtml: _richToHtml,
+    ensureCss: ensureCss,
   };
 })();

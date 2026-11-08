@@ -57,7 +57,7 @@
   ];
 
   var PART_LABEL = {
-    viz:        "Visualizations",
+    viz:        "Interactive figures",
     practice:   "Practice",
     slides:     "Slides",
     videos:     "Videos",

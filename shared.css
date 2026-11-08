@@ -1834,6 +1834,149 @@ b.b, .gw-step b.b { color: #a8431f; }
    viz pages did not, so their crumb wrapped "Week / 5" onto two lines. */
 @media (max-width: 560px) {
   .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
-  .topbar > a:not(.wordmark), .topbar > .crumb-sep:first-of-type { display: none; }
+  /* Keep the parent link ("Week 2") and drop the current page's name, which
+     the h1 already says. It used to be the other way round, which left the
+     drawer as the only way back up to the week. */
+  .topbar > a:not(.wordmark) + .crumb-sep,
+  .topbar > a:not(.wordmark) ~ .crumb-here { display: none; }
   .topbar .btn { padding: 0.4rem 0.6rem; white-space: nowrap; }
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   COURSE PAGES, MATCHED TO THE FIGURES  (November 2026 pass)
+   The figure pages were rebuilt on the Predict, then see kit
+   (assets/predict/kit/kit.css). These rules bring the pages around them, the
+   home page, the week hubs, flashcards, practice, slides and videos, onto the
+   same language, taken from the kit rather than invented:
+     - what you act on is heavy: kit questions are Libre Franklin 800, so hub
+       rows and flashcard titles are too; page titles stay at the display
+       weight the figure pages use, so a hub and its figure page share a title
+     - a group opens on a 2px ink rule, the same rule that opens each figure
+     - every control a student touches is plum, 12px radius, 48px or more
+       tall, bold: the kit's .btn, scaled for a page instead of a panel
+     - nothing explanatory under 17px
+   Scope: .wk-page is on the <main> of the hubs, practice, slides and video
+   pages; the flashcard and practice selectors name classes that exist only on
+   those pages. None of these classes appear on a weekN-viz page.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* One visible keyboard focus ring site-wide, the kit's ring. Zero specificity,
+   so any component that draws its own (the rail, the drawer, the kit) keeps it. */
+:where(html[data-ds="v2"]) :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The week numeral. It sat at 16% opacity, 1.3:1 against the paper, so it was
+   a smudge rather than the unit's mark. The AXIS plan says the unit speaks
+   through the axis rule and this numeral at full strength; this is that. */
+.numeral { opacity: 1; }
+
+/* Topbar crumbs: a 48px row with 23px links. The links now fill the bar's
+   height, so the tap target is the bar, not the word. */
+.topbar > a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.topbar .btn { min-height: 2.25rem; }
+
+/* ── hub and sub-page header ── */
+.wk-page .page-hd { margin-bottom: var(--s-7); position: relative; max-width: var(--measure-wide); }
+.wk-page .page-hd h1 { font-weight: 400; letter-spacing: -0.015em; }
+.wk-page .page-hd .numeral { position: absolute; left: auto; right: calc(100% + 1rem); top: -0.45rem; }
+@media (max-width: 1200px) { .wk-page .page-hd .numeral { display: none; } }
+.wk-page .byline { margin-top: var(--s-3); font-size: var(--t-body); color: var(--ink-soft); }
+
+/* ── hub rows ── */
+.wk-page .hub-group {
+  font-size: var(--t-body); font-weight: 700; color: var(--ink);
+  margin: var(--s-8) 0 0; padding-bottom: var(--s-3);
+  border-bottom: 2px solid var(--ink);
+}
+.wk-page .hub-group:first-child { margin-top: var(--s-5); }
+.wk-page .hub-group + .hub-item { border-top: 0; }
+.wk-page .hub-item { padding: var(--s-5) 0 var(--s-5); }
+.wk-page .hub-item:last-child { border-bottom: 0; }
+.wk-page .hub-title {
+  font-size: 1.625rem; font-weight: 800; letter-spacing: -0.012em; line-height: 1.2;
+}
+.wk-page .hub-desc { font-size: var(--t-body); }
+.wk-page .hub-item:focus-visible { outline-offset: 6px; border-radius: 4px; }
+.wk-page .note { font-size: var(--t-body); }
+
+/* ── flashcards ── */
+/* h1.fc-title: each deck declares html[data-ds="v2"] .fc-title itself, later in the page */
+html[data-ds="v2"] h1.fc-title { color: var(--ink); font-weight: 800; letter-spacing: -0.012em; }
+html[data-ds="v2"] .fc-sum-title { color: var(--ink); font-weight: 800; }
+html[data-ds="v2"] .fc-ftag {
+  min-height: 2.75rem; padding: 0.45rem 1rem; font-size: var(--t-body-sm); font-weight: 600;
+  border: 2px solid var(--edge); color: var(--ink);
+}
+html[data-ds="v2"] .fc-ftag:hover { border-color: var(--accent); color: var(--accent); }
+html[data-ds="v2"] .fc-ftag.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+@media (max-width: 560px) {
+  html[data-ds="v2"] .fc-ftag { min-height: 2.5rem; padding: 0.3rem 0.85rem; font-size: var(--t-small); }
+}
+html[data-ds="v2"] .fc-front, html[data-ds="v2"] .fc-back { border: 2px solid var(--ink); }
+html[data-ds="v2"] .fc-front:hover { box-shadow: none; transform: none; border-color: var(--accent); }
+html[data-ds="v2"] .fc-q { font-size: var(--t-lead); line-height: 1.45; }
+html[data-ds="v2"] .fc-a { font-size: var(--t-body); }
+html[data-ds="v2"] .fc-hint, html[data-ds="v2"] .fc-rate-label { font-size: var(--t-small); letter-spacing: 0; }
+html[data-ds="v2"] .fc-rbtn { border-width: 2px; min-height: 3.5rem; font-size: var(--t-body-sm); font-weight: 700; }
+html[data-ds="v2"] .fc-rbtn:hover { opacity: 1; transform: none; background: var(--paper-sunk); }
+html[data-ds="v2"] .fc-rbtn .kh { opacity: 1; }
+html[data-ds="v2"] .fc-btn-primary, html[data-ds="v2"] .fc-btn-outline {
+  min-height: 3.25rem; font-size: var(--t-body-sm); font-weight: 700; border-radius: 12px;
+}
+html[data-ds="v2"] .fc-btn-primary { background: var(--accent); color: #fff; }
+html[data-ds="v2"] .fc-btn-primary:hover { background: #63174a; opacity: 1; }
+html[data-ds="v2"] .fc-btn-outline { border: 2px solid var(--accent); color: var(--accent); }
+html[data-ds="v2"] .fc-btn-outline:hover { background: #f3e6ee; }
+/* Keyboard hints are for keyboards. On a touch screen they were three grey
+   boxes under every card. */
+@media (hover: none) {
+  html[data-ds="v2"] .fc-kbd, html[data-ds="v2"] .fc-rbtn .kh { display: none; }
+}
+
+/* ── practice problems: the kit's buttons ── */
+html[data-ds="v2"] :is(.pp-btn, .prob-btn, .new-prob-btn) {
+  font-family: var(--font-body); font-size: var(--t-body-sm); font-weight: 700; letter-spacing: 0;
+  min-height: 3rem; padding: 0.6rem 1.3rem; border-radius: 12px;
+  border: 2px solid var(--accent); background: transparent; color: var(--accent);
+  cursor: pointer; transition: background-color var(--dur-state) var(--ease-out);
+}
+html[data-ds="v2"] :is(.pp-btn, .prob-btn, .new-prob-btn):hover { background: #f3e6ee; color: var(--accent); border-color: var(--accent); }
+html[data-ds="v2"] :is(.btn-check, .prob-btn-check) { background: var(--accent); color: #fff; }
+html[data-ds="v2"] :is(.btn-check, .prob-btn-check):hover { background: #63174a; color: #fff; }
+html[data-ds="v2"] .btn-row { gap: var(--s-3); margin: var(--s-4) 0; }
+html[data-ds="v2"] .attempts-tag {
+  border: 0; background: none; padding: 0; font-family: var(--font-body);
+  font-size: var(--t-small); color: var(--ink-soft);
+}
+html[data-ds="v2"] :is(.type-btn, .mode-btn) {
+  min-height: 2.75rem; font-size: var(--t-body-sm); font-weight: 600; line-height: 1.25;
+  border: 2px solid var(--edge); border-radius: 12px; color: var(--ink);
+}
+html[data-ds="v2"] :is(.type-btn, .mode-btn):hover { border-color: var(--accent); color: var(--accent); }
+html[data-ds="v2"] :is(.type-btn, .mode-btn).active { background: var(--accent); border-color: var(--accent); color: #fff; }
+html[data-ds="v2"] .ans-input {
+  min-height: 2.75rem; font-size: var(--t-body); border: 2px solid var(--edge);
+}
+html[data-ds="v2"] .ans-input:focus { outline: 3px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+html[data-ds="v2"] .ans-input.correct { border-color: var(--d-gain-ink); }
+html[data-ds="v2"] .ans-input.incorrect { border-color: var(--d-loss-ink); }
+
+/* Practice text. Hints, worked-solution steps and feedback were 13px, the
+   caption size, on the pages where a student reads most closely. Explanatory
+   text is 17px or more, as on the figure pages. */
+html[data-ds="v2"] .prob-statement { font-size: var(--t-body); }
+html[data-ds="v2"] :is(.method-hint, .fb-hint, .fb-ok, .fb-wrong, .fb-error, .fb-partial, .prob-feedback, .step-body, .intuition-body, .sol-text, .prob-given) { font-size: var(--t-body-sm); }
+html[data-ds="v2"] :is(.answer-section-label, .ans-heading, .answers-title) { font-size: var(--t-body); font-weight: 700; color: var(--ink); }
+html[data-ds="v2"] :is(.sol-label, .step-title, .intuition-title) { font-size: var(--t-body-sm); font-weight: 700; font-family: var(--font-body); }
+html[data-ds="v2"] :is(.intuition-label, .prob-type-badge, .prob-num, .sol-verdict) { font-size: var(--t-small); }
+html[data-ds="v2"] .ans-label { font-size: var(--t-body); }
+html[data-ds="v2"] .type-tag {
+  min-height: 2.75rem; padding: 0.45rem 1rem; border-radius: 99px; cursor: pointer;
+  font-family: var(--font-body); font-size: var(--t-body-sm); font-weight: 600;
+  border: 2px solid var(--edge); background: var(--paper-raised); color: var(--ink);
+}
+html[data-ds="v2"] .type-tag:hover { border-color: var(--accent); color: var(--accent); }
+html[data-ds="v2"] .type-tag.active { background: var(--accent); border-color: var(--accent); color: #fff; }

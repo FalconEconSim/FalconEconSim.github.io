@@ -24,7 +24,7 @@
  *    The section loses its fig-sec class (that is the old prose | bay split). Unmapped sections are kept as they are.
  *    Element ids inside a dropped bay that other pages link to must be listed with --keep-id id=fNN (put on that
  *    figure's bay).
- *  - end of body: keeps the footer; loads chatbot.js, ask-widget.js, nav.js, autoplay-video.js and film.js (films
+ *  - end of body: keeps the footer; loads chatbot.js, ask-widget.js, ask-figures.js ("Ask about this figure"), nav.js, autoplay-video.js and film.js (films
  *    only), the rail tracker, then kit.js, the week's models.js and figs.js, and the lab page's own mount script with
  *    { films: false } added (the page shows the site's film player instead of the kit's).
  *  - CSS pruning runs twice: before the --edits (so an edit can still name kept CSS) and after them (rules the edits
@@ -245,6 +245,7 @@ let html = '<!DOCTYPE html>\n' + src.match(/<html\b[^>]*>/)[0] + '\n<head>\n' +
   '</head>\n' + src.slice(bodyStart, src.indexOf('>', bodyStart) + 1) + '\n' + pre + out + '\n    </main>\n  </div>\n\n' + footer + '\n\n' +
   I + '<!-- Ask the Course AI, floating 24/7 assistant -->\n' +
   I + '<script src="assets/chatbot.js"></script>\n' + I + '<script src="assets/ask-widget.js"></script>\n' +
+  I + '<script src="assets/ask-figures.js"></script>\n' +
   I + '<script src="assets/nav.js" defer></script>\n' +
   (hasFilm ? I + '<script src="assets/autoplay-video.js"></script>\n' + I + '<script src="assets/film.js"></script>\n' : '') +
   (rail ? I + '<script>\n/* Section rail: mark the section being read. Scrolls the strip itself on mobile, never scrollIntoView. */\n' + rail + '\n  </script>\n' : '') +
@@ -274,6 +275,9 @@ html = html.slice(0, headEnd).replace(/( *)(<style\b(?![^>]*id="kit-page-css")[^
   return r.html ? ind + r.html + '\n' : '';
 }) + html.slice(headEnd);
 if (kitHits.length) warn('kept page CSS names classes the kit also uses inside its figures; check in a browser that none reaches a .kfig element:\n    ' + kitHits.join('\n    '));
+// the course now calls these pages "Interactive Figures" (hubs and drawer say so); match the crumb and the tab title
+html = html.replace('<span class="crumb-here">Visualizations</span>', '<span class="crumb-here">Interactive Figures</span>')
+  .replace(/<title>([^<]*)<\/title>/, (m, t) => '<title>' + t.replace(/Interactive Visualizations/, 'Interactive Figures').replace(/ Visualizations:/, ' Interactive Figures:') + '</title>');
 html = BOM + html.replace(/\n/g, '\r\n');
 log.forEach(l => console.log(l));
 // --out <file>: write somewhere else (to diff a rebuild against the committed page)
