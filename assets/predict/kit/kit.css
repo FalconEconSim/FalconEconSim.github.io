@@ -1,0 +1,172 @@
+/* Predict-then-see kit: figure styles, scoped. Every rule sits under .kfig (the class the kit puts on each
+ * figure root), and the design tokens are defined on .kfig too, so this sheet can be linked from any site page
+ * (weekN-viz.html) without touching the page's own tokens, buttons, films or body. The standalone preview pages
+ * (lab/predict/weekN/) also link kit-page.css for their body, header, figure index and footer.
+ * Film palette: paper ground, thick ink, one plum accent that always means "you". */
+.kfig {
+  --paper: #eff1ee;
+  --raised: #ffffff;
+  --ink: #14181b;
+  --soft: #4a5257;
+  --mute: #8b9396;
+  --line: #d3d8d4;
+  --plum: #7a1f5c;
+  --plum-dark: #63174a;
+  --plum-wash: #f3e6ee;
+  --blue: #14568c;
+  --orange: #a8431f;
+  --green: #256647;
+  --red: #93301f;
+  --gold: #7d5a00;
+  --purple: #5a4590;
+  --radius: 12px;
+}
+.kfig, .kfig * { box-sizing: border-box; }
+.kfig [hidden] { display: none !important; }
+.kfig { color: var(--ink); font-family: 'Libre Franklin', system-ui, sans-serif; font-size: 18px; line-height: 1.5; text-align: left; }
+.kfig b { font-weight: 700; }
+.kfig sub { font-size: 0.72em; line-height: 0; }
+.kfig :focus-visible { outline: 3px solid var(--plum); outline-offset: 3px; }
+.kfig .c-blue { color: var(--blue); }
+.kfig .c-orange { color: var(--orange); }
+.kfig .c-green { color: var(--green); }
+.kfig .c-gold { color: var(--gold); }
+.kfig .c-red { color: var(--red); }
+.kfig .c-purple { color: var(--purple); }
+.kfig .c-plum { color: var(--plum); }
+/* ---------- figure layout ---------- */
+.kfig { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, 1fr);
+  grid-template-areas: "film filmcap" "stage head" "stage panel"; grid-template-rows: auto auto 1fr;
+  column-gap: 48px; padding: 64px 0 56px; border-bottom: 2px solid var(--ink);
+  scroll-margin-top: 12px; }
+.kfig:last-child { border-bottom: 0; }
+.kfig .fig-head { grid-area: head; scroll-margin-top: var(--kit-top, 12px); }
+/* --kit-top: the height of any sticky bar above the figure (a site page sets it; 0 on the lab pages) */
+.kfig .stage { grid-area: stage; position: sticky; top: calc(var(--kit-top, 0px) + 16px); align-self: start; }
+.kfig .panel { grid-area: panel; }
+.kfig .film { grid-area: film; margin: 0 0 28px; }
+.kfig .film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #14181b; border-radius: 10px; }
+.kfig .film-cap { grid-area: filmcap; align-self: center; margin: 0 0 28px; color: var(--soft); font-size: 18px; }
+.kfig .film-cap b { display: block; color: var(--ink); font-size: 21px; font-weight: 800; margin-bottom: 4px; }
+/* touch targets over the SVG: touch-action works on HTML, not on SVG children */
+.kfig .k-hits { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; z-index: 1; }
+.kfig .k-hit { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; pointer-events: auto; touch-action: none; }
+.kfig .k-hit.k-area { margin: 0; border-radius: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .kfig .k-hit { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
+}
+.kfig .plot { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; overflow: visible; }
+.kfig .plot text { font-family: 'Libre Franklin', system-ui, sans-serif; }
+.kfig .plot:focus-visible { outline: 3px solid var(--plum); outline-offset: 6px; border-radius: 6px; }
+.kfig .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.kfig .fig-num { margin: 0 0 8px; font-weight: 800; color: var(--plum); font-size: 18px; }
+.kfig .fig-num span { color: var(--soft); font-weight: 600; margin-left: 12px; }
+.kfig .q { margin: 0; font-size: clamp(30px, 3.1vw, 42px); line-height: 1.08; font-weight: 800; letter-spacing: -0.015em; }
+.kfig .setup { margin: 16px 0 0; font-size: 18px; color: var(--ink); max-width: 34em; }
+/* ---------- predict panel ---------- */
+.kfig .steps { list-style: none; counter-reset: st; margin: 26px 0 0; padding: 0; }
+.kfig .steps li { counter-increment: st; position: relative; padding: 0 0 14px 46px; min-height: 34px; }
+.kfig .steps li::before { content: counter(st); position: absolute; left: 0; top: -2px; width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 800; font-size: 16px; border: 2.5px solid var(--line); color: var(--soft); background: var(--paper); }
+.kfig .steps li.now::before { background: var(--plum); border-color: var(--plum); color: #fff; }
+.kfig .steps li.done::before { content: ''; background: var(--green); border-color: var(--green); }
+.kfig .steps li.done::after { content: ''; position: absolute; left: 11px; top: 6px; width: 7px; height: 13px;
+  border: solid #fff; border-width: 0 3.5px 3.5px 0; transform: rotate(45deg); }
+.kfig .steps .lbl { display: block; font-weight: 700; font-size: 19px; line-height: 1.35; }
+.kfig .steps li.later .lbl { color: var(--mute); font-weight: 600; }
+.kfig .steps li.done .lbl { color: var(--green); }
+.kfig .steps .how { display: block; color: var(--plum); font-size: 18px; margin-top: 2px; font-weight: 500; }
+.kfig .steps .nope { display: block; color: var(--red); font-size: 17px; margin-top: 4px; font-weight: 700; }
+.kfig .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 14px; }
+.kfig .btn { font: inherit; font-weight: 700; font-size: 20px; border-radius: var(--radius); padding: 15px 28px; min-height: 56px;
+  border: 2.5px solid var(--plum); background: var(--plum); color: #fff; cursor: pointer;
+  transition: transform .12s ease, background-color .15s ease, box-shadow .15s ease; }
+.kfig .btn:hover:not(:disabled) { background: var(--plum-dark); }
+.kfig .btn:active:not(:disabled) { transform: translateY(1px); }
+.kfig .btn:disabled { background: transparent; color: var(--mute); border-color: var(--line); cursor: not-allowed; }
+.kfig .btn.ready { box-shadow: 0 0 0 6px rgba(122, 31, 92, .16); }
+.kfig .btn.ghost { background: transparent; color: var(--plum); }
+.kfig .btn.ghost:hover { background: var(--plum-wash); }
+.kfig .linkish { font: inherit; font-size: 17px; background: none; border: 0; padding: 8px 0; color: var(--soft); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.kfig .linkish:hover { color: var(--ink); }
+/* ---------- verdict ---------- */
+.kfig .verdict { margin-top: 26px; animation: rise .45s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .kfig .verdict { animation: none; }
+}
+.kfig .v-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.kfig .v-head { margin: 0; font-size: clamp(36px, 3.6vw, 48px); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+.kfig .tone-great .v-head, .kfig .tone-good .v-head { color: var(--green); }
+.kfig .tone-ok .v-head { color: var(--gold); }
+.kfig .tone-learn .v-head { color: var(--plum); }
+.kfig .v-score { margin: 0; white-space: nowrap; }
+.kfig .v-num { font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.kfig .v-of { font-size: 18px; color: var(--soft); font-weight: 600; }
+.kfig .v-cheer { margin: 6px 0 0; font-size: 18px; color: var(--soft); }
+/* host pages (weekN-viz.html) carry global table / th / td rules (mono font, shaded headers, row hover, a 480px
+   min-width on phones): the verdict table resets what it does not set itself */
+.kfig .v-table, .kfig .v-table th, .kfig .v-table td { font-family: inherit; font-size: inherit; text-transform: none; letter-spacing: normal; background: none; color: inherit; border: 0; }
+.kfig .v-table tr:hover td { background: none; }
+.kfig .v-table { width: 100%; min-width: 0; border-collapse: collapse; margin: 18px 0 4px; font-size: 19px; }
+.kfig .v-table thead th { font-size: 16px; color: var(--soft); font-weight: 700; text-align: right; padding: 0 0 6px 12px; border-bottom: 2px solid var(--line); }
+.kfig .v-table tbody th { text-align: left; font-weight: 700; padding: 8px 8px 8px 0; }
+.kfig .v-table td { text-align: right; padding: 8px 0 8px 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kfig .v-table td.you { color: var(--plum); font-weight: 600; }
+.kfig .v-table td.ans { font-weight: 800; }
+.kfig .why { margin: 14px 0 0; font-size: 18px; }
+/* ---------- explore ---------- */
+.kfig .explore { margin-top: 26px; padding-top: 20px; border-top: 2px solid var(--line); }
+.kfig .ex-title { margin: 0; font-size: 22px; font-weight: 800; }
+.kfig .ex-hint { margin: 4px 0 14px; color: var(--soft); }
+.kfig .ex-controls { display: flex; flex-wrap: wrap; gap: 14px; }
+.kfig .stepper { display: inline-flex; align-items: center; gap: 10px; background: var(--raised); border: 2px solid var(--line); border-radius: 16px; padding: 6px 8px 6px 16px; }
+.kfig .st-lbl { font-weight: 600; font-size: 17px; margin-right: 4px; }
+.kfig .st-btn { width: 48px; height: 48px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--paper); color: var(--ink);
+  font: inherit; font-size: 26px; font-weight: 700; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.kfig .st-btn:hover:not(:disabled) { background: var(--ink); color: #fff; }
+.kfig .st-btn:disabled { border-color: var(--line); color: var(--mute); cursor: not-allowed; }
+.kfig .st-val { min-width: 3.6em; text-align: center; font-weight: 800; font-size: 21px; font-variant-numeric: tabular-nums; }
+.kfig .seg-wrap { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.kfig .seg-lbl { font-weight: 600; font-size: 17px; }
+.kfig .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.kfig .seg button { font: inherit; font-weight: 700; font-size: 17px; padding: 10px 16px; min-height: 50px; border: 2.5px solid var(--ink); border-radius: 12px; background: var(--raised); color: var(--ink); cursor: pointer; }
+.kfig .seg button:hover { background: var(--plum-wash); }
+.kfig .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.kfig .ex-readout { margin: 16px 0 0; font-size: 19px; min-height: 3em; }
+.kfig .ex-readout .good { color: var(--green); font-weight: 700; }
+.kfig .ex-readout .bad { color: var(--red); }
+.kfig .again { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 24px; }
+.kfig .tally { margin: 0; display: flex; gap: 16px; color: var(--soft); font-size: 17px; flex-wrap: wrap; }
+.kfig .tally b { color: var(--ink); font-size: 20px; }
+/* breathing ring on the handle that wants moving */
+.kfig .breath { animation: breath 1.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes breath { 0%, 100% { transform: scale(.75); opacity: .9; } 50% { transform: scale(1.15); opacity: .35; } }
+@media (prefers-reduced-motion: reduce) {
+  .kfig .breath { animation: none; }
+}
+.kfig.is-revealing .plot { cursor: progress; }
+/* ---------- tablet and phone ---------- */
+@media (max-width: 980px) {
+  .kfig { grid-template-columns: minmax(0, 1fr); grid-template-areas: "film" "filmcap" "head" "stage" "panel"; grid-template-rows: auto; padding: 44px 0 40px; }
+  .kfig .film { margin-bottom: 10px; }
+  .kfig .film-cap { margin-bottom: 24px; }
+  .kfig .stage { margin-top: 18px; position: relative; top: 0; }
+}
+@media (max-width: 640px) {
+  .kfig .q { font-size: 30px; }
+  .kfig .setup { font-size: 17px; }
+  .kfig .film-cap { font-size: 17px; }
+  .kfig .steps { margin-top: 18px; }
+  .kfig .steps .lbl { font-size: 18px; }
+  .kfig .steps .how { font-size: 17px; }
+  .kfig .btn { width: 100%; }
+  .kfig .actions { gap: 4px; }
+  .kfig .v-table { font-size: 17px; }
+  /* long answer cells wrap at spaces (or anywhere, as a last resort) instead of running past the panel */
+  .kfig .v-table td { white-space: normal; overflow-wrap: anywhere; }
+  .kfig .v-table td.ans { min-width: 4.5em; }
+  .kfig .stepper { width: 100%; justify-content: space-between; }
+  .kfig .seg button { flex: 1 1 auto; padding: 10px 12px; }
+  .kfig { font-size: 17px; }
+}

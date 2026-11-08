@@ -10,58 +10,59 @@
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <link rel="stylesheet" href="assets/vizpage.css" />
-  <script src="assets/figkit.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-  <style>
-    .demo-svg-wrap{padding:0;}
-    .demo-svg-wrap svg{display:block;width:100%;}
-    .viz-hero{padding:2.8rem 0 2rem;border-bottom:1px solid var(--rule-strong);position:relative;}
-    .viz-ghost{position:absolute;right:0;top:0.8rem;font-size:7rem;font-weight:700;color:#f0f0f0;line-height:1;user-select:none;pointer-events:none;}
-    .viz-week-label{font-size:0.74rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--unit-ink);margin-bottom:0.4rem;position:relative;z-index:1;}
-    .viz-title{font-size:2rem;font-weight:600;line-height:1.2;color:var(--text);max-width:560px;margin-bottom:0.3rem;position:relative;z-index:1;}
-    .viz-instructor{font-size:0.9rem;color:var(--ink-soft);}
-    .toc{background:var(--off-white);border:1px solid var(--rule-strong);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
-    .toc-title{font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--ink-soft);margin-bottom:0.6rem;}
-    .toc ol{margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
-    .toc li{font-size:0.855rem;color:var(--ink-soft);}
-    .toc a{color:var(--unit-ink);text-decoration:none;}
-    .toc a:hover{text-decoration:underline;}
-    .fig-section{border-top:2px solid var(--rule-strong);padding-top:2.5rem;margin-top:3rem;}
-    .fig-hdr{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;}
-    .fig-label{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;letter-spacing: normal;text-transform: none;color:var(--unit-ink);background:var(--accent-light);padding:3px 8px;border-radius:4px;}
-    .fig-title{font-size:1.25rem;font-weight:600;color:var(--text);}
-    .cvs-wrap{border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;background:#fff;}
-    canvas{display:block;width:100%;cursor:default;}
-    .viz-ctrl-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;}
-    .viz-slider-group{display:flex;align-items:center;gap:0.5rem;}
-    .viz-slider-label{font-family:var(--font-mono);font-size:0.75rem;color:var(--ink-soft);white-space:nowrap;}
-    .viz-slider{width:130px;accent-color:var(--unit-ink);}
-    .viz-slider:focus-visible{outline:3px solid var(--unit-ink);outline-offset:3px;border-radius:3px;}
-    .viz-slider-val{font-family:var(--font-mono);font-size:0.82rem;color:var(--unit-ink);min-width:36px;}
-    .viz-btn{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--rule-strong);background:var(--off-white);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s;}
-    .viz-btn:hover,.viz-btn.active{background:var(--accent-light);border-color:var(--unit-ink);color:var(--unit-ink);}
-    .viz-btn.red{background:#fff5f5;border-color:#fcc;color:var(--d-second);}
-    .viz-btn.green{background:#f0fdf4;border-color:#bbf7d0;color:#167c3a;}
-    .viz-readout{background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.85rem 1.1rem;font-size:0.84rem;line-height:1.75;margin-top:0.9rem;}
-    .readout-row{display:flex;gap:2rem;flex-wrap:wrap;}
-    .readout-col{flex:1;min-width:110px;}
-    .readout-val{font-size:1.05rem;font-weight:600;color:var(--unit-ink);font-family:var(--font-mono);}
-    .two-col-panels{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
-    .insight-box{background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
-    .step-box{background:#f8fafb;border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;margin-top:0.75rem;display:none;}
-    .step-box.visible{display:block;}
-    .scenario-tabs{display:flex;gap:0.5rem;margin-bottom:1rem;}
-    .scenario-tab{font-size:0.78rem;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--rule-strong);background:var(--off-white);color:var(--ink-soft);cursor:pointer;}
-    .scenario-tab.active{background:var(--unit-ink);color:#fff;border-color:var(--unit-ink);}
-    .hub-footer{border-top:1px solid var(--rule-strong);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
-    .hub-footer-left{font-size:0.82rem;color:var(--ink-soft);}
-    .hub-footer-left a{color:var(--ink-soft);text-decoration:none;}
-    .hub-footer-left a:hover{color:var(--unit-ink);}
-    .footer-logo{height:22px;opacity:0.5;}
-    @media(max-width:580px){.two-col-panels{grid-template-columns:1fr;}}
-  </style>
+  <!-- Predict, then see: the kit figure styles (scoped to .kfig) and their placement in the site page -->
+  <link rel="stylesheet" href="assets/predict/kit/kit.css" />
+  <link rel="stylesheet" href="assets/predict/kit/kit-site.css" />
+  <style>.toc {background:var(--off-white);border:1px solid var(--rule-strong);border-radius:10px;padding:1.1rem 1.4rem;margin:1.8rem 0 0;}
+    
+    .toc ol {margin:0;padding-left:0.5rem;display:flex;flex-direction:column;gap:0.28rem;}
+    .toc li {font-size:0.855rem;color:var(--ink-soft);}
+    .toc a {color:var(--unit-ink);text-decoration:none;}
+    .toc a:hover {text-decoration:underline;}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    .insight-box {background:#f0f4ff;border:1px solid #c7d9f8;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;line-height:1.65;margin-top:0.75rem;}
+    
+    
+    
+    
+    
+    .hub-footer {border-top:1px solid var(--rule-strong);padding:1.6rem 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:3rem;}
+    .hub-footer-left {font-size:0.82rem;color:var(--ink-soft);}
+    .hub-footer-left a {color:var(--ink-soft);text-decoration:none;}
+    .hub-footer-left a:hover {color:var(--unit-ink);}
+    .footer-logo {height:22px;opacity:0.5;}
+</style>
+  <style id="kit-page-css">
+  /* the Replay button that sits inside 7.9's explore hint */
+  .ex-hint .ex-play { display: inline-block; margin: 0.5rem 0 0; }
+  /* 7.7 and 7.9 hold two or three small graphs side by side: give their stage more of the row */
+  @media (min-width: 981px) { #f77.kfig, #f79.kfig { grid-template-columns: minmax(0, 2.15fr) minmax(320px, 1fr); } }
+  /* that narrower panel: let the verdict's answer cells wrap ("up, $5.51 to $6.65") instead of running past its edge */
+  #f77.kfig .v-table td, #f79.kfig .v-table td { white-space: normal; }
+</style>
 </head>
 <body>
+
 
 
 
@@ -99,125 +100,96 @@
   </header>
 
   <!-- FIG 7.1 -->
-  <section class="sec page fig-sec" id="sec-71">
+  
+      <section class="sec page" id="sec-71">
       <div class="fig-prose">
         <div class="fig-hd">
       <span class="fig-n">Fig 7.1</span>
       <h3>Profit Landscape (TR vs TC)</h3>
     </div>
         <p class="fig-intro">
-      The firm earns profit wherever TR &gt; TC. Drag the price slider to change the slope of the TR line (revenue from
-      each unit sold). The vertical gap between TR and TC is shaded green when positive and red when negative. The bottom
-      panel shows the profit curve directly. Drag the vertical cursor to see MR vs MC at any quantity, and find q* where
-      the slopes are equal (MR = MC).
+      The firm earns profit wherever TR &gt; TC: profit is the vertical gap between the two curves. In Fig 7.1 below, find
+      the output where that gap is widest. The plum bar shows the gap at your guess, and a dashed line parallel to TR can be
+      pulled down until it just touches TC. After the reveal, change the price or the fixed cost and move the marker to
+      compare MR with MC at any quantity: q* is where the slopes are equal (MR = MC).
     </p>
         <div class="insight-box">
       <strong>Key insight:</strong> The firm maximizes profit where MR = MC (the revenue from one more unit exactly equals its cost). To the left of q*, MR &gt; MC (produce more). To the right, MC &gt; MR (cut back).
     </div>
       </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="two-col-panels">
-      <div class="panel cvs-wrap">
-        <div class="panel-label">Total Revenue (TR) vs Total Cost (TC)</div>
-        <canvas id="cvs71a"></canvas>
-      </div>
-      <div class="panel cvs-wrap">
-        <div class="panel-label">Profit &pi;(q) = TR &minus; TC</div>
-        <canvas id="cvs71b"></canvas>
-      </div>
-    </div>
-          <div class="ctrl-row">
-      <div class="ctrl">
-        <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v71-p-val">$10.00</span></span>
-        <input type="range" class="ctrl-track" id="v71-p" min="3.5" max="15" step="any" value="10" oninput="v71Update()" aria-label="Market price P*">
-      </div>
-      <div class="ctrl">
-        <span class="ctrl-label">Fixed Cost TFC: <span class="ctrl-value" id="v71-tfc-val">$5</span></span>
-        <input type="range" class="ctrl-track" id="v71-tfc" min="0" max="20" step="0.5" value="5" oninput="v71Update()" aria-label="Total fixed cost TFC">
-      </div>
-      <div class="ctrl">
-        <span class="ctrl-label">Variable Cost shift: <span class="ctrl-value" id="v71-ms-val">0</span></span>
-        <input type="range" class="ctrl-track" id="v71-ms" min="-3" max="3" step="0.25" value="0" oninput="v71Update()" aria-label="Variable cost curve shift">
-      </div>
-      <button class="btn" onclick="v71Reset()">Reset</button>
-    </div>
-          <div class="fig-state" id="v71-readout"></div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f71" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <!-- FIG 7.2 -->
-  <section class="sec page fig-sec" id="sec-72">
+  
+      <section class="sec page" id="sec-72">
       <div class="fig-prose">
         <div class="fig-hd">
       <span class="fig-n">Fig 7.2</span>
       <h3>Profit Rectangle Anatomy</h3>
     </div>
         <p class="fig-intro">
-      The profit rectangle has height = P* &minus; SAC(q*) and width = q*. The area = total profit. Use the price slider
-      to change P*. Toggle "Show Common Mistakes" to see ghost rectangles using SAVC or SMC as the bottom edge (both wrong).
+      The profit rectangle has height = P* &minus; SAC(q*) and width = q*. The area = total profit. In Fig 7.2 below,
+      draw the rectangle yourself; after the reveal, move the price P* along its axis and compare the common mistake of using
+      SAVC as the bottom edge (it leaves out the fixed cost).
     </p>
       </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs72-wrap"></div></div>
-          <div class="ctrl-row">
-      <div class="ctrl">
-        <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v72-p-val">$7.00</span></span>
-        <input type="range" class="ctrl-track" id="v72-p" min="2" max="12" step="any" value="7" oninput="v72Update()" aria-label="Market price P* for profit rectangle">
-      </div>
-      <button class="btn" id="v72-mistakes-btn" onclick="v72ToggleMistakes()">Show Common Mistakes</button>
-    </div>
-          <div class="fig-state" id="v72-readout"></div>
-          <div class="fig-state" id="v72-calc-box"></div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f72" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <!-- FIG 7.3 -->
-  <section class="sec page fig-sec" id="sec-73">
+  
+      <section class="sec page" id="sec-73">
       <div class="fig-prose">
         <div class="fig-hd">
       <span class="fig-n">Fig 7.3</span>
       <h3>Shutdown Decision Zone Map</h3>
     </div>
         <p class="fig-intro">
-      Use the price slider to set P*. The colored zone shows whether the firm should shut down, operate at a loss,
-      break even, or earn positive profit. The algebraic proof of the shutdown rule always stays visible:
-      it never changes. What changes is the price you choose, and therefore which zone (and which decision) applies.
+      In Fig 7.3 below, find the two prices that divide the zones: below the shutdown price the firm should shut down,
+      between the two it operates at a loss, at the break-even price it breaks even, and above it the firm earns a profit.
+      After the reveal, move the price P* through the zones. The algebraic proof of the shutdown rule never changes. What
+      changes is the price, and therefore which zone (and which decision) applies.
     </p>
-      </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="two-col-panels">
-      <div class="fig-plot"><div class="demo-svg-wrap" id="cvs73-wrap"></div></div>
-      <div style="padding:1rem;background:#f8fafb;border:1px solid var(--rule-strong);border-radius:10px;display:flex;flex-direction:column;gap:0.5rem;">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--unit-ink);text-transform: none;letter-spacing: normal;margin-bottom:0.25rem;">Algebraic Proof: When to Produce <span style="font-weight:500;text-transform:none;letter-spacing:normal;color:#5f6875;">(this logic never changes, only the price below does)</span></div>
-        <div id="v73-proof-step0" style="font-size:0.88rem;line-height:1.7;color:var(--text);">Produce if operating loss &lt; shutdown loss:</div>
-        <div id="v73-proof-step1" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 1:</strong> Profits &gt; &minus;TFC &nbsp;&rarr;&nbsp; keep producing</div>
-        <div id="v73-proof-step2" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 2:</strong> TR &minus; TVC &minus; TFC &gt; &minus;TFC</div>
-        <div id="v73-proof-step3" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 3:</strong> TR &minus; TVC &gt; 0 &nbsp;&rarr;&nbsp; TR &gt; TVC</div>
-        <div id="v73-proof-step4" style="font-size:0.88rem;line-height:1.7;color:var(--text);"><strong>Step 4:</strong> P&middot;q &gt; AVC&middot;q</div>
-        <div id="v73-proof-step5" style="font-size:0.88rem;line-height:1.7;color:var(--unit-ink);font-weight:700;"><strong>Conclusion: P &gt; AVC</strong> &nbsp;&#10003;&nbsp; produce whenever price covers average variable cost; shut down otherwise.</div>
-        <div id="v73-zone-label" style="margin-top:auto;padding:0.6rem 0.9rem;border-radius:7px;font-size:0.85rem;font-weight:600;background:#f0fdf4;color:#167c3a;"></div>
-      </div>
+        <div class="insight-box">
+      <strong>Algebraic proof: when to produce.</strong> Produce if the operating loss is smaller than the shutdown loss:
+      <ol style="margin:0.4rem 0 0.2rem 1.1rem;padding:0;line-height:1.7;">
+        <li>Profit &gt; &minus;TFC &rarr; keep producing</li>
+        <li>TR &minus; TVC &minus; TFC &gt; &minus;TFC</li>
+        <li>TR &minus; TVC &gt; 0, so TR &gt; TVC</li>
+        <li>P&middot;q &gt; AVC&middot;q</li>
+      </ol>
+      <strong>Conclusion: P &gt; AVC.</strong> Produce whenever price covers average variable cost; shut down otherwise.
     </div>
-          <div class="ctrl-row">
-      <div class="ctrl">
-        <span class="ctrl-label">Market Price P*: <span class="ctrl-value" id="v73-p-val">$6.00</span></span>
-        <input type="range" class="ctrl-track" id="v73-p" min="0" max="10" step="any" value="6" oninput="v73Update()" aria-label="Market price P* for shutdown decision">
       </div>
-    </div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f73" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <!-- FIG 7.5 -->
-  <section class="sec page" id="sec-75">
-      <div class="fig-hd">
-        <span class="fig-n">Fig 7.5</span>
-        <h3>Supply Curve Emergence</h3>
+  
+      <section class="sec page" id="sec-75">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 7.5</span>
+      <h3>Supply Curve Emergence</h3>
+    </div>
+        <p class="fig-intro">
+      Watch the price sweep upward from zero. Below the shutdown price (min(SAVC) = $4), the firm supplies nothing.
+      Once price crosses $4, the SMC curve becomes the supply curve and each (q, P) point traces out in the right
+      panel, building the supply curve dot by dot.
+    </p>
+        <div class="insight-box" style="margin-top:0;margin-bottom:0.9rem;">
+      <strong>The core idea: how we get a supply curve out of a cost curve.</strong>
+      <ol style="margin:0.4rem 0 0.2rem 1.1rem;padding:0;line-height:1.7;">
+        <li>Pick a price <em>P</em>.</li>
+        <li>The firm maximizes profit by producing where <strong>P = SMC</strong> (the profit-maximizing rule).</li>
+        <li>That intersection pins down a specific quantity <em>q</em>.</li>
+        <li>Plot the point <strong>(q, P)</strong>: that's one point on the firm's supply curve.</li>
+        <li>Repeat for every price &hellip; and the dots you trace out land <em>exactly on the SMC curve</em>.</li>
+      </ol>
+      <strong>That's why the SMC curve (above the shutdown point) <em>is</em> the firm's supply curve</strong>:
+      profit-maximization (P = SMC) directly maps each price to the quantity the firm will supply at that price.
+    </div>
       </div>
       <figure class="film" id="film-7-5">
         <div class="film-frame">
@@ -251,29 +223,12 @@
           </details>
         </figcaption>
       </figure>
-      <div class="fig-prose">
-        <p class="fig-intro">
-      Watch the price sweep upward from zero. Below the shutdown price (min(SAVC) = $4), the firm supplies nothing.
-      Once price crosses $4, the SMC curve becomes the supply curve and each (q, P) point traces out in the right
-      panel, building the supply curve dot by dot.
-    </p>
-        <div class="insight-box" style="margin-top:0;margin-bottom:0.9rem;">
-      <strong>The core idea: how we get a supply curve out of a cost curve.</strong>
-      <ol style="margin:0.4rem 0 0.2rem 1.1rem;padding:0;line-height:1.7;">
-        <li>Pick a price <em>P</em>.</li>
-        <li>The firm maximizes profit by producing where <strong>P = SMC</strong> (the profit-maximizing rule).</li>
-        <li>That intersection pins down a specific quantity <em>q</em>.</li>
-        <li>Plot the point <strong>(q, P)</strong>: that's one point on the firm's supply curve.</li>
-        <li>Repeat for every price &hellip; and the dots you trace out land <em>exactly on the SMC curve</em>.</li>
-      </ol>
-      <strong>That's why the SMC curve (above the shutdown point) <em>is</em> the firm's supply curve</strong>:
-      profit-maximization (P = SMC) directly maps each price to the quantity the firm will supply at that price.
-    </div>
-      </div>
+      <div class="kit-bay"><div id="f75" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <!-- FIG 7.7 -->
-  <section class="sec page fig-sec" id="sec-77">
+  
+      <section class="sec page" id="sec-77">
       <div class="fig-prose">
         <div class="fig-hd">
       <span class="fig-n">Fig 7.7</span>
@@ -281,33 +236,17 @@
     </div>
         <p class="fig-intro">
       The market mechanism has three linked panels: the typical firm (left), the market (center), and the typical consumer
-      (right). Choose a shock scenario and click through the steps to see how causality flows from consumer to market to firm.
+      (right). In Fig 7.7 below, trace one shock through all three panels yourself; after
+      the reveal, switch between six shocks to see how causality flows from consumer to market to firm (or, for a cost
+      shock, from firm to market to consumer).
     </p>
       </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="ctrl-row" style="margin-bottom:0.75rem;">
-      <select class="ctrl-track" id="v77-scenario" onchange="v77Reset()" style="width:auto;font-size:0.82rem;padding:4px 8px;">
-        <option value="sub">Price of Substitute Rises</option>
-        <option value="sub_fall">Price of Substitute Falls</option>
-        <option value="income">Consumer Income Rises</option>
-        <option value="income_fall">Consumer Income Falls</option>
-        <option value="input">Input Price Rises</option>
-        <option value="input_fall">Input Price Falls</option>
-      </select>
-    </div>
-          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs77-wrap"></div></div>
-          <div class="ctrl-row">
-      <button class="btn" id="v77-step-btn" onclick="v77NextStep()">Step 1: Consumer Effect &rarr;</button>
-      <button class="btn" onclick="v77Reset()">Reset steps</button>
-    </div>
-          <div class="fig-state" id="v77-readout">Choose a scenario and click through the steps to trace the causal chain.</div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f77" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <!-- FIG 7.8 -->
-  <section class="sec page fig-sec" id="sec-78">
+  
+      <section class="sec page" id="sec-78">
       <div class="fig-prose">
         <div class="fig-hd">
       <span class="fig-n">Fig 7.8</span>
@@ -315,29 +254,34 @@
     </div>
         <p class="fig-intro">
       Market supply is the <strong>horizontal sum</strong> of all individual firm supply curves: at each price, add up
-      the quantities each firm wants to supply. Adjust the number of firms to see exactly how the arithmetic works.
+      the quantities each firm wants to supply. In Fig 7.8 below, predict where market supply starts and how much the
+      market supplies at one price; after the reveal, change the number of firms and move the price to see exactly how the
+      arithmetic works.
     </p>
-        <div id="v78-math-display"></div>
         <div class="insight-box"><strong>Key insight:</strong> At each price, add quantities across all firms; never add prices. If each of n identical firms supplies q units, market supply is Q = n &times; q. The market supply curve is flatter than any individual firm's supply curve (each $1 rise in price adds n times as many units) and shifts right as n grows. With identical firms its price elasticity at any given price is the same as one firm's: flatter is not the same as more elastic.</div>
       </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="ctrl-row">
-      <div class="ctrl">
-        <span class="ctrl-label">Number of firms n: <span class="ctrl-value" id="v78-n-val">10</span></span>
-        <input type="range" class="ctrl-track" id="v78-n" min="1" max="50" step="1" value="10" oninput="v78Update()" aria-label="Number of firms n in market">
-      </div>
-    </div>
-          <div class="fig-state" id="v78-readout"></div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f78" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <!-- FIG 7.9 -->
-  <section class="sec page fig-sec" id="sec-79">
-      <div class="fig-hd">
-        <span class="fig-n">Fig 7.9</span>
-        <h3>Long-Run Entry/Exit Machine</h3>
+  
+      <section class="sec page" id="sec-79">
+      <div class="fig-prose">
+        <div class="fig-hd">
+      <span class="fig-n">Fig 7.9</span>
+      <h3>Long-Run Entry/Exit Machine</h3>
+    </div>
+        <p class="fig-intro">
+      Each firm has the cost curves of Fig 7.8 (min SAC = $5.51 at q = 3.58), and market supply is n firms' SMC curves added
+      together. Demand has just risen from D (Qd = 3,558.6 &minus; 548.4P) to D&prime; (Qd = 4,086 &minus; 548.4P), as in the
+      animation. With 150 firms price is $6.40 and each firm earns $3.31 (green rectangle). New firms
+      enter, market supply shifts right, the price falls, and the profit rectangle shrinks toward zero at long-run
+      equilibrium (n &asymp; 297, P* = $5.51 = minimum SAC, the flat LRS line). In Fig 7.9 below, predict that equilibrium
+      and the number of firms; after the reveal, replay the entry or step the number of firms. An industry with
+      <em>too many</em> firms (n = 450) runs the other way: price is $4.73, below SAC, the rectangle turns red (a loss of $2.69 per firm), and firms exit until
+      price climbs back to the same zero-profit equilibrium at $5.51.
+    </p>
+        <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly, just not earning excess returns.</div>
       </div>
       <figure class="film" id="film-7-9">
         <div class="film-frame">
@@ -370,39 +314,7 @@
           </details>
         </figcaption>
       </figure>
-      <div class="fig-prose">
-        <p class="fig-intro">
-      Each firm has the cost curves of Fig 7.8 (min SAC = $5.51 at q = 3.58), and market supply is n firms' SMC curves added
-      together. Demand has just risen from D (Qd = 3,558.6 &minus; 548.4P) to D&prime; (Qd = 4,086 &minus; 548.4P), as in the
-      animation. With 150 firms price is $6.40 and each firm earns $3.31 (green rectangle). Click "Run Entry" to
-      watch new firms enter, market supply shift right, price fall, and the profit rectangle shrink toward zero at long-run
-      equilibrium (n &asymp; 297, P* = $5.51 = minimum SAC, the dotted LRS line). Click "Run Exit" to start instead from an industry with
-      <em>too many</em> firms (n = 450): price is $4.73, below SAC, the rectangle turns red (a loss of $2.69 per firm), and firms exit until
-      price climbs back to the same zero-profit equilibrium at $5.51.
-    </p>
-        <div class="insight-box"><strong>Zero economic profit is healthy:</strong> it means the firm earns exactly its opportunity cost. Owners are compensated fairly, just not earning excess returns.</div>
-      </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="two-col-panels">
-      <div class="fig-plot">
-        <div class="panel-label">Market (Supply and Demand)</div>
-        <div class="demo-svg-wrap" id="cvs79a-wrap"></div>
-      </div>
-      <div class="fig-plot">
-        <div class="panel-label">Firm (Profit Rectangle)</div>
-        <div class="demo-svg-wrap" id="cvs79b-wrap"></div>
-      </div>
-    </div>
-          <div class="ctrl-row">
-      <button class="viz-btn green" onclick="v79RunEntry()">Run Entry (n=150 &rarr; 297, profit &rarr; 0)</button>
-      <button class="viz-btn red" onclick="v79RunExit()">Run Exit (n=450 &rarr; 297, loss &rarr; 0)</button>
-      <button class="btn" onclick="v79Reset()">Reset to n=150</button>
-    </div>
-          <div class="fig-state" id="v79-readout"></div>
-          <div id="v79-delta" class="delta-bar"></div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f79" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <footer class="site-foot">
@@ -412,1370 +324,20 @@
     </div>
     <img src="assets/bentleylogo.png" alt="Bentley University" class="footer-logo" />
   </footer>
-  </main>
-</div>
-
-<script>
-/* Figure colour tokens read once from shared.css :root. Canvas and D3 cannot
-   resolve CSS var(), so their colours come from here; CSS and inline styles use
-   var() directly. Fallbacks equal the token values. */
-var EC=(function(){var c=getComputedStyle(document.documentElement);function g(n,f){return (c.getPropertyValue(n)||"").trim()||f;}return{red:g("--d-second","#c85a3c"),green:g("--green","#2f5c3a"),gold:g("--gold","#a07800"),indicator:g("--indicator","#7d3c98"),slate:g("--slate","#2c3e50"),purple:g("--purple","#6b52a8"),amber:g("--amber","#d4813a"),steel:g("--steel","#3d5a80"),accent2:g("--accent-2","#2980b9")};})();
-
-// ─────────────────────────────────────────────────────────────────────────
-// SHARED UTILITIES
-// ─────────────────────────────────────────────────────────────────────────
-const ML=42,MR=18,MT=18,MB=32;
-
-// Force-simulation label collision avoidance (D3-style physics, Canvas version)
-/* bounds: optional {x0,y0,x1,y1} in canvas pixels. Without it the sim pushes
-   labels apart and away from curves but nothing keeps them on the canvas, so
-   at narrow widths they get shoved off the edge and clipped. Clamping runs
-   inside the iteration loop so a clamped label still takes part in later
-   collision passes rather than freezing on top of a neighbour. */
-function resolveLabels(items, linePts=[], iter=150, pad=6, bounds=null) {
-  for (let it=0; it<iter; it++) {
-    for (let i=0; i<items.length; i++) {
-      for (let j=i+1; j<items.length; j++) {
-        const a=items[i], b=items[j];
-        const gx=(a.w+b.w)/2+pad, gy=(a.h+b.h)/2+pad;
-        const dx=a.x-b.x, dy=a.y-b.y;
-        if (Math.abs(dx)<gx && Math.abs(dy)<gy) {
-          const sx=Math.sign(dx||(j%2?1:-1))*(gx-Math.abs(dx))*0.5;
-          const sy=Math.sign(dy||(i%2?1:-1))*(gy-Math.abs(dy))*0.5;
-          a.x+=sx; a.y+=sy; b.x-=sx; b.y-=sy;
-        }
-      }
-      const lm=items[i]; lm.x+=(lm.ax-lm.x)*0.05; lm.y+=(lm.ay-lm.y)*0.05;
-    }
-    for (const lm of items) {
-      const hw=lm.w/2+8, hh=lm.h/2+8;
-      /* (x,y) is the box's TOP-LEFT here, so the avoid-test has to run from the
-         box's centre. Comparing the corner against half-extents shifted the
-         whole avoidance zone half a label to the left, which let the right-hand
-         part of a label settle straight on top of a curve or a dot. */
-      const lcx=lm.x+lm.w/2, lcy=lm.y+lm.h/2;
-      for (const [lx,ly] of linePts) {
-        const dx=lcx-lx, dy=lcy-ly;
-        if (Math.abs(dx)<hw && Math.abs(dy)<hh) {
-          lm.x+=Math.sign(dx||1)*(hw-Math.abs(dx))*0.4;
-          lm.y+=Math.sign(dy||1)*(hh-Math.abs(dy))*0.4;
-        }
-      }
-    }
-    if (bounds) {
-      // (x,y) is the label box's top-left, so the far edge is x+w / y+h.
-      for (const lm of items) {
-        lm.x = Math.max(bounds.x0, Math.min(lm.x, bounds.x1 - lm.w));
-        lm.y = Math.max(bounds.y0, Math.min(lm.y, bounds.y1 - lm.h));
-      }
-    }
-  }
-}
-function drawForceLabel(ctx, lbl) {
-  /* DESIGN 4.3: haloed text, not an outlined box. The halo is a stroke in the
-     plot's own background colour painted under the glyphs, which is what keeps
-     MLU's in-chart labels legible over data without a container. 13px, not 9px:
-     at our plot sizes that is the same optical size as MLU's 16px at theirs. */
-  const {x,y,ax,ay,text,color='#4a5566',w,h} = lbl;
-  const FS = 13;
-  const bw = w || ctx.measureText(text).width*1.45+10;
-  const bh = h || FS + 5;
-  const cx = x + bw / 2, cy = y + bh / 2;
-  ctx.save();
-  // Connector only when the label has actually been pushed clear of its anchor;
-  // below that a leader line is noise.
-  if (Math.hypot(cx - ax, cy - ay) > 26) {
-    /* Stop the leader at the label's border, not its centre: run it to the
-       centre and the dashed line is drawn straight through the text, since the
-       halo masks the glyphs but not the gaps between them. */
-    const ldx = ax - cx, ldy = ay - cy;
-    const lhw = bw / 2 + 2, lhh = bh / 2 + 2;
-    const lt = Math.min(Math.abs(ldx) > 1e-6 ? lhw / Math.abs(ldx) : Infinity,
-                        Math.abs(ldy) > 1e-6 ? lhh / Math.abs(ldy) : Infinity, 1);
-    ctx.globalAlpha = 0.55;
-    ctx.strokeStyle = color; ctx.lineWidth = 0.9; ctx.setLineDash([4, 3]);
-    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx + ldx * lt, cy + ldy * lt); ctx.stroke();
-    ctx.setLineDash([]); ctx.globalAlpha = 1;
-  }
-  ctx.font = '500 ' + FS + 'px "Libre Franklin",system-ui,sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6;    // wide enough that the halo closes between letters
-  ctx.strokeText(text, cx, cy);
-  ctx.fillStyle = color;
-  ctx.fillText(text, cx, cy);
-  ctx.restore();
-}
-
-function setupCvs7(id){
-  const cv=document.getElementById(id); if(!cv)return null;
-  const dpr=window.devicePixelRatio||1;
-  const W=Math.min(cv.clientWidth||500, 680);
-  const H=Math.round(W*0.47);
-  cv.width=W*dpr; cv.height=H*dpr;
-  cv.style.height=H+'px';
-  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  return {ctx,W,H};
-}
-
-function toC7(x,y,W,H,xR,yR){
-  const pw=W-ML-MR,ph=H-MT-MB;
-  return[ML+(x-xR[0])/(xR[1]-xR[0])*pw, MT+(yR[1]-y)/(yR[1]-yR[0])*ph];
-}
-
-/* Round tick values (1/2/5 x 10^k). The previous code cut each range into four
-   equal steps, so axes read as arbitrary numbers and the printed label did not
-   match the tick's true position (a tick at 1.375 was painted "1.4", and on the
-   y-axis toFixed(0) turned 11.25 into "11"). */
-function niceTicks(lo, hi, target) {
-  const span = hi - lo;
-  if (!(span > 0)) return [lo];
-  const raw = span / (target || 4);
-  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const nrm = raw / mag;
-  const step = (nrm < 1.5 ? 1 : nrm < 3 ? 2 : nrm < 7 ? 5 : 10) * mag;
-  const out = [];
-  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) {
-    out.push(Math.abs(v) < step * 1e-6 ? 0 : +v.toFixed(6));
-  }
-  return out;
-}
-function fmtTick(v) { return Number.isInteger(v) ? String(v) : String(+v.toFixed(2)); }
-
-function drawAxes7(ctx,W,H,xR,yR,xLabel,yLabel){
-  if (ctx.canvas && ctx.canvas.dataset) { ctx.canvas.dataset.xr = xR[0]+","+xR[1]; ctx.canvas.dataset.yr = yR[0]+","+yR[1]; }
-  const[ox,oy]=toC7(xR[0],yR[0],W,H,xR,yR);
-  const[x1]   =toC7(xR[1],yR[0],W,H,xR,yR);
-  const[,y2]  =toC7(xR[0],yR[1],W,H,xR,yR);
-  // Horizontal grid lines at 4 ticks
-  const ny=4;
-  ctx.save();
-  for(const yv of niceTicks(yR[0],yR[1],ny)){
-    const[,cy]=toC7(xR[0],yv,W,H,xR,yR);
-    ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(ox,cy);ctx.lineTo(x1,cy);ctx.stroke();
-  }
-  // Axis lines
-  ctx.strokeStyle='#ccc';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(x1,oy);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox,y2);ctx.stroke();
-  // Tick text
-  const nx=4;
-  ctx.font="12px 'Libre Franklin',sans-serif";ctx.fillStyle='#8b95a5';
-  for(const xv of niceTicks(xR[0],xR[1],5)){
-    const[cx]=toC7(xv,yR[0],W,H,xR,yR);
-    ctx.textAlign='center';
-    ctx.fillText(fmtTick(xv),cx,oy+13);
-  }
-  for(const yv of niceTicks(yR[0],yR[1],ny)){
-    const[,cy]=toC7(xR[0],yv,W,H,xR,yR);
-    ctx.textAlign='right';ctx.fillText(fmtTick(yv),ox-4,cy+3);
-  }
-  // Axis labels
-  ctx.fillStyle='#666';ctx.font="13px 'Libre Franklin',sans-serif";
-  if(xLabel){ctx.textAlign='center';ctx.fillText(xLabel,ox+(x1-ox)/2,H-4);}
-  if(yLabel){ctx.save();ctx.translate(12,y2+(oy-y2)/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(yLabel,0,0);ctx.restore();}
-  ctx.restore();
-}
-
-function dot7(ctx,x,y,r,fill,stroke){
-  ctx.beginPath();ctx.arc(x,y,r,0,2*Math.PI);
-  ctx.fillStyle=fill||'#1f6fb2';ctx.fill();
-  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke();}
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// COST FUNCTIONS (cubic model: TC = (1/3)q^3 - 2q^2 + 7q + 5)
-// ─────────────────────────────────────────────────────────────────────────
-const TFC7=5;
-function TC7(q){return q*q*q/3 - 2*q*q + 7*q + 5;}
-function SMC7(q){return q*q - 4*q + 7;}
-function TVC7(q){return q*q*q/3 - 2*q*q + 7*q;}
-function SAVC7(q){return q>0.01?TVC7(q)/q:7;}
-function SAC7(q){return q>0.01?TC7(q)/q:999;}
-
-// q* = argmax pi(q) given P: SMC = P => q^2 - 4q + 7 = P => q^2 - 4q + (7-P) = 0
-function qStar7(P){
-  const disc=16-4*(7-P);
-  if(disc<0)return 0;
-  return 2+Math.sqrt(disc)/2; // rising portion
-}
-
-// Parametric versions for Fig 7.1 (tfc = fixed cost, ms = variable cost shift)
-function v71TC(q,tfc,ms){return q*q*q/3-2*q*q+(7+ms)*q+tfc;}
-function v71SMC(q,ms){return q*q-4*q+7+ms;}
-function v71TVC(q,ms){return q*q*q/3-2*q*q+(7+ms)*q;}
-function v71SAVC(q,ms){return q>0.01?v71TVC(q,ms)/q:(7+ms);}
-function v71SAC(q,tfc,ms){return q>0.01?v71TC(q,tfc,ms)/q:999;}
-function v71qStar(P,ms){const disc=16-4*(7+ms-P);if(disc<0)return 0;return 2+Math.sqrt(disc)/2;}
-
-// ─────────────────────────────────────────────────────────────────────────
-// FIG 7.1: PROFIT LANDSCAPE
-// ─────────────────────────────────────────────────────────────────────────
-let v71cursor=5;
-const V71_P_BASE=10;
-
-function v71Draw(){
-  const P=parseFloat(document.getElementById('v71-p').value);
-  const tfc=parseFloat(document.getElementById('v71-tfc').value);
-  const ms=parseFloat(document.getElementById('v71-ms').value);
-  const cvA=document.getElementById('cvs71a'), cvB=document.getElementById('cvs71b');
-  if(!cvA||!cvB)return;
-  const dpr=window.devicePixelRatio||1;
-  const W=Math.min(cvA.clientWidth||480, 480);
-  const H=320;
-  [cvA,cvB].forEach(cv=>{
-    cv.width=W*dpr; cv.style.width=W+'px';
-    cv.height=H*dpr; cv.style.height=H+'px';
-  });
-  const ctxA=cvA.getContext('2d'); ctxA.setTransform(dpr,0,0,dpr,0,0);
-  const ctxB=cvB.getContext('2d'); ctxB.setTransform(dpr,0,0,dpr,0,0);
-  const HA=H,HB=H;
-  const xR=[0,9],yRA=[0,30];
-  let piPeak71=0;
-  for(let qq=0;qq<=9;qq+=0.1){ piPeak71=Math.max(piPeak71, P*qq-v71TC(qq,tfc,ms)); }
-  // Fixed: the reachable profit peak is about 51 across the three sliders.
-  const yRB=[-8,52];
-
-  // TOP: TR and TC
-  ctxA.clearRect(0,0,W,HA);
-  drawAxes7(ctxA,W,HA,xR,yRA,'Quantity q','$');
-
-  // Ghost TR (faded, dashed, thinner): raising Market Price P* pivots TR
-  // steeper through the origin, so the baseline P*=$10 ray is kept on screen
-  // for comparison whenever the price differs from baseline.
-  const pShifted71 = Math.abs(P - V71_P_BASE) > 0.01;
-  if(pShifted71){
-    const trQmaxBase=V71_P_BASE>0?Math.min(9, yRA[1]/V71_P_BASE):9;
-    ctxA.save();
-    ctxA.setLineDash([5,4]); ctxA.strokeStyle='#1f6fb2'; ctxA.lineWidth=1.4; ctxA.globalAlpha=0.45;
-    const[gx0,gy0]=toC7(0,0,W,HA,xR,yRA);
-    const[gx1,gy1]=toC7(trQmaxBase,V71_P_BASE*trQmaxBase,W,HA,xR,yRA);
-    ctxA.beginPath(); ctxA.moveTo(gx0,gy0); ctxA.lineTo(gx1,gy1); ctxA.stroke();
-    ctxA.restore();
-    const gLblQ71=Math.min(8, trQmaxBase*0.55);
-    const[glx71,gly71]=toC7(gLblQ71,V71_P_BASE*gLblQ71,W,HA,xR,yRA);
-    ctxA.save(); ctxA.globalAlpha=0.55; ctxA.fillStyle='#1f6fb2';
-    ctxA.font='12px Libre Franklin,system-ui,sans-serif'; ctxA.textAlign='left'; ctxA.textBaseline='alphabetic';
-    ctxA.fillText('TR', glx71+4, gly71-4);
-    ctxA.restore();
-  }
-
-  const linePts71=[];
-  ctxA.beginPath();let first=true;
-  for(let q=0;q<=9;q+=0.05){
-    const tc=v71TC(q,tfc,ms);if(tc>30)break;
-    const[cx,cy]=toC7(q,tc,W,HA,xR,yRA);
-    if(q%1<0.05) linePts71.push([cx,cy]);
-    first?(ctxA.moveTo(cx,cy),first=false):ctxA.lineTo(cx,cy);
-  }
-  ctxA.strokeStyle=EC.red;ctxA.lineWidth=3;ctxA.stroke();
-
-  const trQmax = P>0 ? Math.min(9, yRA[1]/P) : 9;
-  ctxA.beginPath();
-  const[tx0,ty0]=toC7(0,0,W,HA,xR,yRA);
-  const[tx1,ty1]=toC7(trQmax,P*trQmax,W,HA,xR,yRA);
-  for(let t=0;t<=1;t+=0.15) linePts71.push([tx0+(tx1-tx0)*t,ty0+(ty1-ty0)*t]);
-  ctxA.moveTo(tx0,ty0);ctxA.lineTo(tx1,ty1);
-  ctxA.strokeStyle='#1f6fb2';ctxA.lineWidth=3;ctxA.stroke();
-
-  ctxA.font='bold 13px Libre Franklin,system-ui,sans-serif';
-  let qTC=8; while(qTC>0.6 && v71TC(qTC,tfc,ms)>yRA[1]*0.9) qTC-=0.05;
-  const[tcLx,tcLy]=toC7(qTC,v71TC(qTC,tfc,ms),W,HA,xR,yRA);
-  const trLblQ = Math.min(8, trQmax*0.85);
-  const[trlx,trly]=toC7(trLblQ,P*trLblQ,W,HA,xR,yRA);
-  const trText71=pShifted71?'TR′':'TR';
-  const lbls71=[
-    {ax:tcLx,ay:tcLy,x:tcLx+20,y:tcLy-10,w:ctxA.measureText('TC').width+8,h:13,text:'TC',color:EC.red,fontSize: 13,bold:true},
-    {ax:trlx,ay:trly,x:trlx+20,y:trly-10,w:ctxA.measureText(trText71).width+8,h:13,text:trText71,color:'#1f6fb2',fontSize: 13,bold:true},
-  ];
-  resolveLabels(lbls71,linePts71,80,6,{x0:8,y0:8,x1:W-12,y1:HA-12});
-  lbls71.forEach(l=>drawForceLabel(ctxA,l));
-
-  for(let q=0;q<=9;q+=0.1){
-    const tr=P*q,tc=v71TC(q,tfc,ms);
-    if(tr>30&&tc>30)break;
-    const[qx,tcy]=toC7(q,Math.min(tc,29.5),W,HA,xR,yRA);
-    const[,try_]=toC7(q,Math.min(P*q,29.5),W,HA,xR,yRA);
-    if(Math.abs(tcy-try_)<0.5)continue;
-    ctxA.fillStyle=tr>tc?'rgba(39,174,96,0.12)':'rgba(231,76,60,0.10)';
-    ctxA.fillRect(qx-0.5,Math.min(tcy,try_),1.0,Math.abs(tcy-try_));
-  }
-
-  const q=Math.min(v71cursor,8.9);
-  const[curX]=toC7(q,0,W,HA,xR,yRA);
-  ctxA.setLineDash([4,4]);ctxA.strokeStyle='#9aa3b0';ctxA.lineWidth=1;
-  ctxA.beginPath();ctxA.moveTo(curX,MT);ctxA.lineTo(curX,HA-MB);ctxA.stroke();
-  ctxA.setLineDash([]);
-  const mc=v71SMC(q,ms), tr_val=P*q, tc_val=v71TC(q,tfc,ms), pi=tr_val-tc_val;
-  if(tc_val<=yRA[1])dot7(ctxA,curX,toC7(q,tc_val,W,HA,xR,yRA)[1],5,EC.red);
-  if(tr_val<=yRA[1])dot7(ctxA,curX,toC7(q,tr_val,W,HA,xR,yRA)[1],5,'#1f6fb2');
-  ctxA.fillStyle=mc>P?EC.red:EC.green;
-  ctxA.font='bold 13px Libre Franklin,system-ui,sans-serif';ctxA.textAlign='left';
-  const note=mc>P?'MC > MR: cut back':mc<P?'MR > MC: expand':'Profit max';
-  // Fixed top-left status, not curX+6: tracking the point ran this annotation
-  // into the "TC" curve label near the top-right intersection.
-  ctxA.fillText(note,ML+4,MT+12);
-
-  // BOTTOM: Profit curve
-  ctxB.clearRect(0,0,W,HB);
-  drawAxes7(ctxB,W,HB,xR,yRB,'Quantity q','Profit');
-  const[,zy]=toC7(0,0,W,HB,xR,yRB);
-  ctxB.strokeStyle='#c9c2b6';ctxB.lineWidth=1;
-  ctxB.beginPath();ctxB.moveTo(ML,zy);ctxB.lineTo(W-MR,zy);ctxB.stroke();
-  ctxB.beginPath();first=true;
-  for(let q2=0;q2<=9;q2+=0.05){
-    const pi2=P*q2-v71TC(q2,tfc,ms);
-    if(pi2<yRB[0]||pi2>yRB[1])continue;
-    const[cx,cy]=toC7(q2,pi2,W,HB,xR,yRB);
-    first?(ctxB.moveTo(cx,cy),first=false):ctxB.lineTo(cx,cy);
-  }
-  ctxB.strokeStyle=EC.purple;ctxB.lineWidth=3;ctxB.stroke();
-  if(pi>=yRB[0]&&pi<=yRB[1]){
-    const[piX,piY]=toC7(q,pi,W,HB,xR,yRB);
-    dot7(ctxB,piX,piY,5,EC.purple,'#fff');
-  }
-  ctxB.setLineDash([4,4]);ctxB.strokeStyle='#9aa3b0';ctxB.lineWidth=1;
-  ctxB.beginPath();ctxB.moveTo(curX,MT);ctxB.lineTo(curX,HB-MB);ctxB.stroke();
-  ctxB.setLineDash([]);
-
-  document.getElementById('v71-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">Quantity q</div><div class="readout-val">${q.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Price P* = MR</div><div class="readout-val">$${P.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">TFC</div><div class="readout-val">$${tfc.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">VC shift</div><div class="readout-val">${ms>=0?'+':''}${ms.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">TC(q)</div><div class="readout-val">$${tc_val.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">TR = P*q</div><div class="readout-val">$${tr_val.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit &pi;</div><div class="readout-val" style="color:${pi>=0?EC.green:EC.red}">${pi>=0?'+':''}$${pi.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">MC</div><div class="readout-val">$${mc.toFixed(2)}</div></div>
-    </div>`;
-}
-
-function v71Update(){
-  const P=parseFloat(document.getElementById('v71-p').value);
-  const tfc=parseFloat(document.getElementById('v71-tfc').value);
-  const ms=parseFloat(document.getElementById('v71-ms').value);
-  document.getElementById('v71-p-val').textContent='$'+P.toFixed(2);
-  document.getElementById('v71-tfc-val').textContent='$'+tfc.toFixed(2);
-  document.getElementById('v71-ms-val').textContent=(ms>=0?'+':'')+ms.toFixed(2);
-  v71Draw();
-}
-function v71Reset(){
-  // DESIGN 6.2: a button that moves a value tweens it, so the reader sees
-  // which way the figure travels rather than it snapping.
-  ecSetSliders('v71reset', { 'v71-p': 10, 'v71-tfc': 5, 'v71-ms': 0 }, v71Update);
-  return;
-  v71Update();
-}
-
-// Cursor drag on top canvas
-window.addEventListener('DOMContentLoaded',()=>{
-  const cv=document.getElementById('cvs71a');
-  if(!cv)return;
-  let dragging=false;
-  function setQ(e){
-    const r=cv.getBoundingClientRect();
-    const dpr=window.devicePixelRatio||1;
-    const px=(e.clientX-r.left)*(cv.width/r.width)/dpr;
-    const W=cv.width/dpr;
-    const q=0+(px-ML)/(W-ML-MR)*9;
-    v71cursor=Math.max(0.1,Math.min(8.9,q));
-    v71Draw();
-  }
-  cv.addEventListener('mousedown',e=>{dragging=true;setQ(e);});
-  cv.addEventListener('mousemove',e=>{if(dragging)setQ(e);});
-  cv.addEventListener('mouseup',()=>dragging=false);
-  cv.addEventListener('mouseleave',()=>dragging=false);
-  cv.addEventListener('touchstart',e=>{e.preventDefault();dragging=true;setQ(e.touches[0]);},{passive:false});
-  cv.addEventListener('touchmove',e=>{if(!dragging)return;e.preventDefault();setQ(e.touches[0]);},{passive:false});
-  cv.addEventListener('touchend',()=>dragging=false);
-  cv.style.cursor='ew-resize';
-});
-
-// ─────────────────────────────────────────────────────────────────────────
-// FIG 7.2: PROFIT RECTANGLE
-// ─────────────────────────────────────────────────────────────────────────
-let v72showMistakes=false;
-function v72Update(){
-  const P=parseFloat(document.getElementById('v72-p').value);
-  document.getElementById('v72-p-val').textContent='$'+P.toFixed(2);
-  v72Draw(P);
-}
-function v72ToggleMistakes(){
-  v72showMistakes=!v72showMistakes;
-  const btn=document.getElementById('v72-mistakes-btn');
-  btn.textContent=v72showMistakes?'Hide Common Mistakes':'Show Common Mistakes';
-  btn.classList.toggle('on',v72showMistakes);
-  v72Update();
-}
-// ── D3 SVG helpers ────────────────────────────────────────────────────────
-const D3W=680,D3H=560,D3H2=620,D3PAD={top:28,right:36,bottom:52,left:70};
-const LABEL_H=15;          /* fallback, until a figure measures its own */
-/* Text size for one figure's labels, in this page's units, remembered on the
-   node list so each figure carries its own. */
-function d3Metrics(svg,nodes){
-  let m={font:12,height:LABEL_H};
-  try{ if(window.EC224Place&&EC224Place.labelSize) m=EC224Place.labelSize(svg,nodes.length); }catch(e){}
-  nodes._fs=m.font; nodes._lh=m.height;
-  return m;
-}
-function d3LH(nodes){ return (nodes&&nodes._lh)||LABEL_H; }
-function d3FS(nodes){ return (nodes&&nodes._fs)||12; }
-function d3MakeSvg(wrapId){
-  d3.select('#'+wrapId).selectAll('svg').remove();
-  return d3.select('#'+wrapId).append('svg')
-    .attr('viewBox',`0 0 ${D3W} ${D3H}`)
-    .style('width','100%').style('display','block')
-    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
-}
-function d3MakeSvg2(wrapId){
-  d3.select('#'+wrapId).selectAll('svg').remove();
-  return d3.select('#'+wrapId).append('svg')
-    .attr('viewBox',`0 0 ${D3W} ${D3H2}`)
-    .style('width','100%').style('display','block')
-    .style('font-family',"'Libre Franklin',system-ui,sans-serif");
-}
-function d3AddAxes(svg,scX,scY,xLabel,yLabel){
-  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
-    .append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right)
-    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
-  svg.append('g').attr('transform',`translate(0,${D3H-D3PAD.bottom})`).call(
-    d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
-  svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
-    d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
-  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(xLabel);
-  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H-D3PAD.top-D3PAD.bottom)/2)).attr('y',19).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(yLabel);
-}
-function d3AddAxes2(svg,scX,scY,xLabel,yLabel){
-  svg.append('g').selectAll('line').data(scY.ticks(4)).enter()
-    .append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right)
-    .attr('y1',d=>scY(d)).attr('y2',d=>scY(d)).attr('stroke','#f0f0f0').attr('stroke-width',1);
-  svg.append('g').attr('transform',`translate(0,${D3H2-D3PAD.bottom})`).call(
-    d3.axisBottom(scX).ticks(8).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
-  svg.append('g').attr('transform',`translate(${D3PAD.left},0)`).call(
-    d3.axisLeft(scY).ticks(6).tickSize(4)
-  ).call(g=>{g.select('.domain').attr('stroke','#ccc');g.selectAll('.tick line').attr('stroke','#ccc');g.selectAll('.tick text').attr('fill','var(--ink-soft)').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg):12).attr('font-family',"'Libre Franklin',sans-serif");});
-  if(xLabel) svg.append('text').attr('x',D3PAD.left+(D3W-D3PAD.left-D3PAD.right)/2).attr('y',D3H2-6).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(xLabel);
-  if(yLabel) svg.append('text').attr('transform','rotate(-90)').attr('x',-(D3PAD.top+(D3H2-D3PAD.top-D3PAD.bottom)/2)).attr('y',19).attr('text-anchor','middle').attr('fill','#666').attr('font-size',(window.EC224Place&&EC224Place.tickSize)?EC224Place.tickSize(svg)*1.06:13).text(yLabel);
-}
-function d3TickClamp2(nodes,gs,conns){
-  nodes.forEach(d=>{
-    d.x=Math.max(D3PAD.left-4,Math.min(D3W-d.lw-4,d.x));
-    d.y=Math.max(D3PAD.top,Math.min(D3H2-D3PAD.bottom-d3LH(nodes),d.y));
-  });
-  gs.attr('transform',d=>`translate(${d.x},${d.y})`);
-  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+d3LH(nodes)/2);
-}
-function d3AddCurve(svg,fn,scX,scY,color,yMax,dash=''){
-  const pts=[];
-  for(let q=0.4;q<=9.0;q+=0.04){const v=fn(q);if(!isFinite(v)||v<0||v>yMax)continue;pts.push([scX(q),scY(v)]);}
-  return svg.append('path').attr('fill','none').attr('stroke',color).attr('stroke-width',2)
-    .attr('stroke-dasharray',dash).attr('d',d3.line()(pts));
-}
-// Labels are placed once, deterministically, and are not draggable: see
-// assets/figplace.js. The connector line stays; there are no anchor dots.
-function d3AddLabels(svg,nodes,sim){
-  if(sim&&sim._cfg){sim._cfg.svg=svg;nodes._place=sim._cfg;}
-  const conns=svg.selectAll(null).data(nodes).enter()
-    .append('line').attr('stroke',d=>d.color).attr('stroke-width',0.9).attr('stroke-dasharray','4,3').attr('opacity',0.55).attr('data-place-leader',1);
-  const gs=svg.selectAll(null).data(nodes).enter()
-    .append('g').attr('class','fig-label');
-  const M=d3Metrics(svg,nodes);
-  gs.append('rect').attr('height',M.height).attr('rx',3)
-    .attr('fill','white').attr('stroke',d=>d.color).attr('stroke-width',0.8).attr('opacity',0.95);
-  gs.append('text').attr('y',M.height*0.74)
-    .attr('text-anchor','middle').attr('fill',d=>d.color).attr('font-size',M.font).attr('font-weight',600)
-    .text(d=>d.label);
-  d3SizeLabels(gs);
-  return {conns,gs};
-}
-// Size each label box to the text inside it, rather than to a number typed
-// in at the call site against a typeface the site no longer uses.
-function d3SizeLabels(gs){
-  const pad=Math.max(12,Math.round(d3FS(gs.data())*1.15));
-  gs.each(function(d){
-    var t=this.querySelector('text');
-    if(!t)return;
-    try{var w=t.getComputedTextLength();if(w)d.lw=Math.max(22,Math.round(w+pad));}catch(e){}
-  });
-  gs.select('rect').attr('width',d=>d.lw);
-  gs.select('text').attr('x',d=>d.lw/2);
-}
-function d3MakeSim(nodes){
-  return EC224Place.staticSim(nodes,{
-    origin:"topleft",
-    w:d=>d.lw, h:()=>d3LH(nodes),
-    bounds:{x0:D3PAD.left-4,y0:D3PAD.top,x1:D3W-4,y1:D3H-D3PAD.bottom},
-    prefer:d=>d.boxOff?{x:-d.lw/2+d.boxOff.x,y:-d3LH(nodes)/2+d.boxOff.y}:null
-  });
-}
-function d3TickClamp(nodes,gs,conns){
-  if(gs)d3SizeLabels(gs);          // text may have changed since last frame
-  EC224Place.reflow(nodes,nodes._place);   // solve against THIS frame's curves
-  nodes.forEach(d=>{
-    // a label given its own panel is held inside it, not inside the figure
-    const b=d._b||d.panel;
-    const x0=b?b.x0:D3PAD.left-4, x1=b?b.x1:D3W-4;
-    const y0=b?b.y0:D3PAD.top,    y1=b?b.y1:D3H-D3PAD.bottom;
-    d.x=Math.max(x0,Math.min(x1-d.lw,d.x));
-    d.y=Math.max(y0,Math.min(y1-d3LH(nodes),d.y));
-  });
-  gs.attr('transform',d=>`translate(${d.x},${d.y})`);
-  conns.attr('x1',d=>d.fx_anchor).attr('y1',d=>d.fy_anchor).attr('x2',d=>d.x+d.lw/2).attr('y2',d=>d.y+d3LH(nodes)/2);
-}
-function d3Node(id,color,label,lw,ax,ay,extra={}){
-  return{id,color,label,lw,ax,ay,fx_anchor:ax,fy_anchor:ay,x:ax,y:ay,...extra};
-}
-// Move a label node's anchor (and the node rigidly with it) to a new screen point.
-function d3MoveAnchor(node,nx,ny){
-  if(!node)return;
-  const dx=nx-node.fx_anchor,dy=ny-node.fy_anchor;
-  node.x+=dx;node.y+=dy;node.vx=0;node.vy=0;
-  node.fx_anchor=nx;node.fy_anchor=ny;node.ax=nx;node.ay=ny;
-}
-
-// ── FIG 7.2 D3 SVG ───────────────────────────────────────────────────────
-let v72svg=null,v72sim=null,v72nodes=null,v72gs=null,v72conns=null;
-let v72rectG=null,v72pLine=null;
-
-function v72InitSvg(){
-  const yMax=14;
-  const scX=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scY=d3.scaleLinear().domain([0,yMax]).range([D3H-D3PAD.bottom,D3PAD.top]);
-  v72svg=d3MakeSvg('cvs72-wrap');
-  d3AddAxes(v72svg,scX,scY,'Quantity q','$/unit');
-  // Zone-color backgrounds before curves
-  // Curves drawn into named group so rect can be inserted after axis but before labels
-  d3AddCurve(v72svg,SAVC7,scX,scY,'#f39c12',yMax);
-  d3AddCurve(v72svg,SAC7,scX,scY,EC.slate,yMax);
-  d3AddCurve(v72svg,SMC7,scX,scY,'#1f6fb2',yMax);
-  // Price line
-  v72pLine=v72svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
-  // Rect group (inserted before labels)
-  v72rectG=v72svg.append('g');
-  // Labels
-  const P=parseFloat(document.getElementById('v72-p').value);
-  const qStar=Math.max(0.1,qStar7(P));
-  v72nodes=[
-    d3Node('SAVC','#f39c12','SAVC',46,scX(4.5),scY(SAVC7(4.5))),
-    d3Node('SAC',EC.slate,'SAC',36,scX(5.5),scY(SAC7(5.5))),
-    d3Node('SMC','#1f6fb2','SMC',36,scX(5),scY(SMC7(5))),
-    d3Node('P',EC.indicator,'P*',30,scX(8),scY(P)),
-  ];
-  v72sim=d3MakeSim(v72nodes);
-  const els=d3AddLabels(v72svg,v72nodes,v72sim);
-  v72gs=els.gs;v72conns=els.conns;
-  v72sim.on('tick',()=>d3TickClamp(v72nodes,v72gs,v72conns));
-  v72svg._scX=scX;v72svg._scY=scY;
-  v72DrawUpdate(P);
-}
-
-function v72DrawUpdate(P){
-  if(!v72svg)return;
-  const scX=v72svg._scX,scY=v72svg._scY,yMax=14;
-  const qStar=Math.max(0.1,qStar7(P));
-  const sacQ=SAC7(qStar),savcQ=SAVC7(qStar);
-  const profit=qStar*(P-sacQ);
-  const x0=scX(0),x1=scX(qStar),py=scY(Math.min(P,yMax-0.01));
-  const sy=scY(Math.min(sacQ,yMax-0.01));
-  const vy=scY(Math.min(savcQ,yMax-0.01));
-  // Price line. Start no later than q* so the equilibrium dot always sits ON the
-  // line (at P<$3, q* clamps to 0.1, left of the line's usual 0.3 start, which
-  // left the dot floating in a visible gap before the first dash).
-  v72pLine.attr('x1',scX(Math.min(0.3,qStar))).attr('x2',scX(8.8)).attr('y1',py).attr('y2',py);
-  // Rectangles
-  v72rectG.selectAll('*').remove();
-  /* Below min SAVC ($4) the profit-maximising choice is to shut down: q* = 0
-     and the loss is exactly TFC. The figure used to keep producing on SMC
-     (or at q = 0.1), reporting losses far larger than shutting down would. */
-  const shut=P<PSD75;
-  if(v72showMistakes&&P>4&&P>savcQ){
-    v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,vy)).attr('width',x1-x0).attr('height',Math.abs(py-vy))
-      .attr('fill','rgba(255,200,0,0.15)').attr('stroke','rgba(255,180,0,0.5)').attr('stroke-dasharray','3,3').attr('stroke-width',1);
-    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',Math.min(py,vy)+14).attr('text-anchor','middle').attr('font-size',12).attr('fill','rgba(230,130,0,0.85)').text('Wrong: uses SAVC');
-  }
-  if(!shut&&P>sacQ&&sacQ<yMax){
-    v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,sy)).attr('width',x1-x0).attr('height',Math.abs(py-sy))
-      .attr('fill','rgba(39,174,96,0.25)').attr('stroke',EC.green).attr('stroke-width',2);
-    v72rectG.append('text').attr('x',x1-4).attr('y',(py+sy)/2+4).attr('text-anchor','end').attr('font-size',12).attr('font-weight',600).attr('fill',EC.green).text('Height = P*−SAC');
-  } else if(!shut&&P<sacQ&&sacQ<yMax){
-    v72rectG.append('rect').attr('x',x0).attr('y',Math.min(py,sy)).attr('width',x1-x0).attr('height',Math.abs(py-sy))
-      .attr('fill','rgba(231,76,60,0.2)').attr('stroke',EC.red).attr('stroke-width',2);
-    v72rectG.append('text').attr('x',(x0+x1)/2).attr('y',(py+sy)/2+4).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).attr('fill',EC.red).text('Loss');
-  }
-  v72rectG.append('circle').attr('cx',shut?x0:x1).attr('cy',py).attr('r',6).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
-  // SAC(q*) dot only when SAC is inside the y-domain (at very low prices q* is
-  // tiny and SAC(q*) is huge; clamping pinned an orphan dot to the top edge)
-  if(!shut&&sacQ<yMax)v72rectG.append('circle').attr('cx',x1).attr('cy',sy).attr('r',6).attr('fill',EC.slate).attr('stroke','white').attr('stroke-width',1.5);
-  // Move P label anchor
-  const pNode=v72nodes.find(n=>n.id==='P');
-  if(pNode){
-    const nx=scX(8),ny=scY(Math.min(P,yMax-0.01));
-    const dx=nx-pNode.fx_anchor,dy=ny-pNode.fy_anchor;
-    pNode.x+=dx;pNode.y+=dy;pNode.vx=0;pNode.vy=0;
-    pNode.fx_anchor=nx;pNode.fy_anchor=ny;
-  }
-  // Re-render labels immediately: the force sim cools after load, so without
-  // this the moved anchor (P* tracking the price line) never reaches the screen.
-  if(v72gs)d3TickClamp(v72nodes,v72gs,v72conns);
-  if(shut){
-    document.getElementById('v72-readout').innerHTML=
-      `<div class="readout-row">
-        <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">0 (shut down)</div></div>
-        <div class="readout-col"><div class="readout-label">P*</div><div class="readout-val">$${P.toFixed(2)}</div></div>
-        <div class="readout-col"><div class="readout-label">min SAVC</div><div class="readout-val">$${PSD75.toFixed(2)}</div></div>
-        <div class="readout-col"><div class="readout-label">Profit</div><div class="readout-val" style="color:${EC.red}">&minus;$${TFC7.toFixed(2)}</div></div>
-      </div>`;
-    document.getElementById('v72-calc-box').innerHTML=
-      `<div style="font-size:0.84rem;line-height:1.65;color:var(--text);"><strong>Shut down.</strong> At P* = $${P.toFixed(2)}, price is below the minimum of SAVC ($${PSD75.toFixed(2)}), so every unit sold loses money even before fixed costs. The firm produces nothing and loses only its fixed cost, TFC = $${TFC7.toFixed(2)}. There is no profit rectangle. Raise the price above $${PSD75.toFixed(2)} to see the firm produce again (see Fig 7.3).</div>`;
-    return;
-  }
-  document.getElementById('v72-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">q*</div><div class="readout-val">${qStar.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">P*</div><div class="readout-val">$${P.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">SAC(q*)</div><div class="readout-val">$${sacQ.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit = q*(P*-SAC)</div><div class="readout-val" style="color:${profit>=0?EC.green:EC.red}">${profit>=0?'+':''}$${profit.toFixed(2)}</div></div>
-    </div>`;
-
-  // Calculation + explanation box: shows WHY the rectangle's area equals total profit
-  const margin=P-sacQ;
-  const marginColor=margin>=0?EC.green:EC.red;
-  const profitColor=profit>=0?EC.green:EC.red;
-  const profitWord=profit>=0?'profit':'loss';
-  document.getElementById('v72-calc-box').innerHTML=
-    `<div style="font-family:'Libre Franklin',system-ui,sans-serif;">
-      <div style="font-weight:700;color:var(--unit-ink);font-size:0.8rem;text-transform: none;letter-spacing: normal;margin-bottom:0.4rem;">The Calculation</div>
-      <div style="font-size:1.0rem;font-weight:600;color:var(--text);margin-bottom:0.5rem;">
-        Profit = (P* &minus; SAC) &times; q*&nbsp; = &nbsp;($${P.toFixed(2)} &minus; $${sacQ.toFixed(2)}) &times; ${qStar.toFixed(2)}&nbsp; = &nbsp;<span style="color:${marginColor}">$${margin.toFixed(2)}</span> &times; ${qStar.toFixed(2)} &nbsp;=&nbsp; <span style="color:${profitColor}">${profit>=0?'+':'−'}$${Math.abs(profit).toFixed(2)}</span>
-      </div>
-      <div style="font-size:0.84rem;line-height:1.65;color:var(--text);">
-        <strong>Why does the rectangle's area equal ${profitWord}?</strong> Because a rectangle's area is height &times; width,
-        and that's exactly what total profit is built from. The <strong>height</strong> (P* &minus; SAC) is the
-        <em>per-unit profit margin</em>: how much the firm earns (or loses) on each individual unit sold. The
-        <strong>width</strong> (q*) is the <em>quantity produced</em>. Multiplying a per-unit amount by the number of
-        units gives the total, so height &times; width = per-unit profit &times; units = total ${profitWord}. That's why the
-        shaded rectangle's area is literally the firm's ${profitWord}, not just a visual analogy.
-      </div>
-    </div>`;
-}
-function v72Draw(P){v72DrawUpdate(P);}
-window.resetV72Labels=function(){
-  if(!v72nodes||!v72sim)return;
-  v72nodes.forEach(d=>{d.x=d.fx_anchor+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.fy_anchor+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
-  v72sim.alpha(0.5).restart();
-};
-
-// ─────────────────────────────────────────────────────────────────────────
-// FIG 7.3: SHUTDOWN ZONE MAP
-// ─────────────────────────────────────────────────────────────────────────
-function v73Update(){
-  const P=parseFloat(document.getElementById('v73-p').value);
-  document.getElementById('v73-p-val').textContent='$'+P.toFixed(2);
-  v73Draw(P);
-}
-// ── FIG 7.3 D3 SVG ───────────────────────────────────────────────────────
-let v73svg=null,v73sim=null,v73nodes=null,v73gs=null,v73conns=null,v73pLine=null;
-
-function v73InitSvg(){
-  const yMax=14;
-  const scX=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scY=d3.scaleLinear().domain([0,yMax]).range([D3H2-D3PAD.bottom,D3PAD.top]);
-  v73svg=d3MakeSvg2('cvs73-wrap');
-  const zones=[{from:0,to:4,color:'rgba(231,76,60,0.1)'},{from:4,to:5.5,color:'rgba(230,126,34,0.1)'},{from:5.5,to:14,color:'rgba(39,174,96,0.08)'}];
-  zones.forEach(z=>{
-    v73svg.append('rect').attr('x',D3PAD.left).attr('y',scY(Math.min(z.to,yMax-0.01))).attr('width',D3W-D3PAD.left-D3PAD.right).attr('height',scY(z.from)-scY(Math.min(z.to,yMax-0.01))).attr('fill',z.color);
-  });
-  d3AddAxes2(v73svg,scX,scY,'Quantity q','$/unit');
-  d3AddCurve(v73svg,SAVC7,scX,scY,'#f39c12',yMax);
-  d3AddCurve(v73svg,SAC7,scX,scY,EC.slate,yMax);
-  d3AddCurve(v73svg,SMC7,scX,scY,'#1f6fb2',yMax);
-  v73pLine=v73svg.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
-  const P=parseFloat(document.getElementById('v73-p').value);
-  v73nodes=[
-    d3Node('SAVC','#f39c12','SAVC',46,scX(5),scY(SAVC7(5))),
-    d3Node('SAC',EC.slate,'SAC',36,scX(6),scY(SAC7(6))),
-    d3Node('SMC','#1f6fb2','SMC',36,scX(5),scY(SMC7(5))),
-    d3Node('P',EC.indicator,'P*',30,scX(7.5),scY(P)),
-  ];
-  v73sim=d3MakeSim(v73nodes);
-  const els=d3AddLabels(v73svg,v73nodes,v73sim);
-  v73gs=els.gs;v73conns=els.conns;
-  v73sim.on('tick',()=>d3TickClamp2(v73nodes,v73gs,v73conns));
-  v73svg._scX=scX;v73svg._scY=scY;
-  v73DrawUpdate(P);
-}
-
-function v73DrawUpdate(P){
-  if(!v73svg)return;
-  const scX=v73svg._scX,scY=v73svg._scY,yMax=14;
-  const py=scY(Math.max(0,Math.min(P,yMax-0.01)));
-  v73pLine.attr('x1',scX(0.3)).attr('x2',scX(8.8)).attr('y1',py).attr('y2',py);
-  const pNode=v73nodes.find(n=>n.id==='P');
-  if(pNode){
-    const nx=scX(7.5),ny=py;
-    const dx=nx-pNode.fx_anchor,dy=ny-pNode.fy_anchor;
-    pNode.x+=dx;pNode.y+=dy;pNode.vx=0;pNode.vy=0;
-    pNode.fx_anchor=nx;pNode.fy_anchor=ny;
-  }
-  // Re-render labels immediately (sim may be cool, e.g. programmatic slider input)
-  if(v73gs)d3TickClamp2(v73nodes,v73gs,v73conns);
-  let zLabel='',zColor=EC.green,zBg='#f0fdf4';
-  if(P<4){zLabel='Shut down: P < min(SAVC) = $4';zColor=EC.red;zBg='#fff5f5';}
-  else if(P<5.5){zLabel='Operate at loss: P > min(SAVC) but < min(SAC)';zColor='#c05800';zBg='#fff7ed';}
-  else if(P<6){zLabel='Near break-even: P &approx; min(SAC)';zColor=EC.gold;zBg='#fffbeb';}
-  else{zLabel='Positive profit: P > min(SAC)';zColor=EC.green;zBg='#f0fdf4';}
-  const zl=document.getElementById('v73-zone-label');
-  if(zl){zl.style.background=zBg;zl.style.color=zColor;zl.innerHTML=zLabel;}
-}
-function v73Draw(P){v73DrawUpdate(P);}
-window.resetV73Labels=function(){
-  if(!v73nodes||!v73sim)return;
-  v73nodes.forEach(d=>{d.x=d.fx_anchor+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.fy_anchor+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
-  v73sim.alpha(0.5).restart();
-};
-
-function v73Draw_OLD_UNUSED(P){
-  const xR=[0,9],yR=[0,14];
-  // Color zones
-  const zones=[
-    {from:0,to:4,color:'rgba(231,76,60,0.12)',label:'Shut down (P < min SAVC)'},
-    {from:4,to:5.5,color:'rgba(230,126,34,0.12)',label:'Operate at loss'},
-    {from:5.5,to:14,color:'rgba(39,174,96,0.1)',label:'Profit'},
-  ];
-  if(false){
-
-  const curveLbls73=[];
-  const linePts73=[];
-  function drawCurve73(fn,col,lbl,q0=0.4){
-    ctx.beginPath();let fst=true;
-    for(let q=q0;q<=9;q+=0.05){
-      const v=fn(q);if(v<0||v>14)continue;
-      const[cx,cy]=toC7(q,v,W,H,xR,yR);
-      if(q%0.5<0.05) linePts73.push([cx,cy]);
-      fst?(ctx.moveTo(cx,cy),fst=false):ctx.lineTo(cx,cy);
-    }
-    ctx.strokeStyle=col;ctx.lineWidth=3;ctx.stroke();
-    const ql=fn===SMC7?7:fn===SAC7?6:5;
-    const[ax,ay]=toC7(ql,fn(ql),W,H,xR,yR);
-    ctx.font='bold 12px Libre Franklin,system-ui,sans-serif';
-    const tw=ctx.measureText(lbl).width;
-    curveLbls73.push({x:ax+tw/2+5,y:ay-6,ax,ay,text:lbl,color:col,fontSize: 13,bold:true,w:tw+6,h:12});
-  }
-  drawCurve73(SAVC7,'#f39c12','SAVC');
-  drawCurve73(SAC7,EC.slate,'SAC');
-  drawCurve73(SMC7,'#1f6fb2','SMC');
-
-  // Horizontal price line + P* label as force label
-  const[,py]=toC7(0,P,W,H,xR,yR);
-  ctx.strokeStyle=EC.indicator;ctx.lineWidth=3;ctx.setLineDash([6,4]);
-  ctx.beginPath();ctx.moveTo(ML,py);ctx.lineTo(W-MR,py);ctx.stroke();
-  ctx.setLineDash([]);
-  } // end if(false)
-} // end v73Draw_OLD_UNUSED
-
-// NOTE: per Prof. Sunder's feedback, the algebraic proof of the shutdown rule
-// (steps above) is now always visible, it never changes, so there's no need
-// to gate it behind a "Next Step" click. Only the price (and the resulting
-// produce/shut-down zone) is dynamic, via the slider below.
-
-// ─────────────────────────────────────────────────────────────────────────
-// FIG 7.5: SUPPLY CURVE EMERGENCE
-// ─────────────────────────────────────────────────────────────────────────
-// ── FIG 7.5 D3 SVG ───────────────────────────────────────────────────────
-let v75P=0, v75animRunning=false, v75animId=null, v75supplyPts=[];
-let v75svgA=null,v75svgB=null,v75scXa=null,v75scYa=null,v75scXb=null,v75scYb=null;
-let v75pLineEl=null,v75smcHi=null,v75smcLo=null,v75supplyDots=null,v75nodes75=null,v75sim75=null,v75gs75=null,v75conns75=null;
-let v75dropLine=null,v75isectDot=null,v75qLabel=null,v75mcOverlay=null;
-const PSD75=4;
-
-function v75InitSvg(){
-  const yMax=14;
-  v75scXa=d3.scaleLinear().domain([0,9]).range([D3PAD.left,D3W-D3PAD.right]);
-  v75scYa=d3.scaleLinear().domain([0,yMax]).range([D3H2-D3PAD.bottom,D3PAD.top]);
-  v75scXb=d3.scaleLinear().domain([0,7]).range([D3PAD.left,D3W-D3PAD.right]);
-  v75scYb=d3.scaleLinear().domain([0,yMax]).range([D3H2-D3PAD.bottom,D3PAD.top]);
-
-  // LEFT panel
-  v75svgA=d3MakeSvg2('cvs75a-wrap');
-  d3AddAxes2(v75svgA,v75scXa,v75scYa,'q','$/unit');
-  d3AddCurve(v75svgA,SAVC7,v75scXa,v75scYa,'#f39c12',yMax);
-  // The supply portion of SMC is its RISING branch above the shutdown price
-  // (q >= 3, where SMC(3) = 4 = min SAVC). Filtering on v >= PSD alone also caught
-  // the parabola's DESCENDING branch (q <= 1, where SMC is also >= 4), and
-  // d3.line() bridged the two branches with a spurious horizontal chord at P=4
-  // from q=1 to q=3, cutting straight across the dip. Split by q instead
-  // (with a hair of overlap at q=3 so the gray and blue strokes join seamlessly).
-  // SMC non-supply portion (gray): everything left of q=3
-  {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<0||v>yMax||q>3.05)continue;pts.push([v75scXa(q),v75scYa(v)]);}
-  v75svgA.append('path').attr('fill','none').attr('stroke','#9aa3b0').attr('stroke-width',2).attr('d',d3.line()(pts));}
-  // SMC above PSD (supply, blue, highlighted): rising branch only
-  {const pts=[];for(let q=0.4;q<=9;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v>yMax||q<2.95)continue;pts.push([v75scXa(q),v75scYa(v)]);}
-  v75smcHi=v75svgA.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2).attr('d',d3.line()(pts));}
-  v75pLineEl=v75svgA.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0).attr('x1',v75scXa(0.3)).attr('x2',v75scXa(8.8));
-  // Vertical drop-line from the P=MC intersection down to the q-axis (shows "this price gives this quantity")
-  v75dropLine=v75svgA.append('line').attr('stroke',EC.indicator).attr('stroke-width',1.4).attr('stroke-dasharray','3,3').attr('opacity',0);
-  // q label at the foot of the drop-line (sits just above the axis, to the right
-  // of the drop-line: drawn IN the tick row it collided with tick numbers
-  // whenever q passed an integer during the sweep)
-  v75qLabel=v75svgA.append('text').attr('text-anchor','start').attr('font-size',12).attr('font-weight',700).attr('fill',EC.indicator).attr('opacity',0);
-  // Intersection dot where the price line crosses MC -- the (q, P) pairing made visible
-  v75isectDot=v75svgA.append('circle').attr('r',5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5).attr('opacity',0);
-  // Labels for left panel
-  v75nodes75=[
-    d3Node('SAVC','#f39c12','SAVC',46,v75scXa(5),v75scYa(SAVC7(5))),
-    d3Node('SMC','#1f6fb2','SMC',36,v75scXa(5),v75scYa(SMC7(5))),
-  ];
-  v75sim75=d3MakeSim(v75nodes75);
-  const els=d3AddLabels(v75svgA,v75nodes75,v75sim75);
-  v75gs75=els.gs;v75conns75=els.conns;
-  v75sim75.on('tick',()=>d3TickClamp2(v75nodes75,v75gs75,v75conns75));
-
-  // RIGHT panel
-  v75svgB=d3MakeSvg2('cvs75b-wrap');
-  d3AddAxes2(v75svgB,v75scXb,v75scYb,'q (supply)','P');
-  // Faint reference overlay of the MC curve (above shutdown point), revealed once the
-  // sweep completes -- so students can see the accumulated dots land exactly on it.
-  // (rising branch only, see the chord note above; q<2.95 excludes the
-  // descending branch that also satisfies v >= PSD)
-  {const pts=[];for(let q=0.4;q<=7;q+=0.04){const v=SMC7(q);if(!isFinite(v)||v<PSD75||v>yMax||q<2.95)continue;pts.push([v75scXb(q),v75scYb(v)]);}
-  v75mcOverlay=v75svgB.append('path').attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',2.5)
-    .attr('stroke-dasharray','2,3').attr('opacity',0).attr('d',d3.line()(pts));}
-  v75supplyDots=v75svgB.append('g');
-}
-
-function v75DrawPanels(){
-  if(!v75svgA||!v75svgB){v75InitSvg();return;}
-  const yMax=14;
-  // Update price line
-  if(v75P>0){
-    const py=v75scYa(Math.min(v75P,yMax-0.01));
-    v75pLineEl.attr('y1',py).attr('y2',py).attr('opacity',0.85);
-    v75smcHi.attr('stroke',v75P>=PSD75?'#1f6fb2':'#9aa3b0');
-  }
-  // Mark the MC = P intersection: drop a vertical line to the q-axis and label q
-  if(v75P>=PSD75){
-    const q=qStar7(v75P);
-    const ix=v75scXa(q), iy=v75scYa(Math.min(v75P,yMax-0.01));
-    const baseY=v75scYa(0);
-    v75isectDot.attr('cx',ix).attr('cy',iy).attr('opacity',1);
-    v75dropLine.attr('x1',ix).attr('x2',ix).attr('y1',iy).attr('y2',baseY).attr('opacity',0.7);
-    v75qLabel.attr('x',ix+6).attr('y',baseY-6).text('q='+q.toFixed(1)).attr('opacity',1);
-  } else {
-    v75isectDot.attr('opacity',0);
-    v75dropLine.attr('opacity',0);
-    v75qLabel.attr('opacity',0);
-  }
-  // Supply dots right panel
-  v75supplyDots.selectAll('circle').data(v75supplyPts).join('circle')
-    .attr('cx',d=>v75scXb(d.q)).attr('cy',d=>v75scYb(d.P)).attr('r',3).attr('fill','#1f6fb2');
-  // Reveal the faint MC overlay once the sweep finishes -- the punchline: the dots ARE the MC curve
-  if(v75mcOverlay) v75mcOverlay.attr('opacity', (!v75animRunning && v75P>=13.4) ? 0.55 : 0);
-  const ro=document.getElementById('v75-readout');
-  if(ro){
-    if(v75P<=0) ro.innerHTML=`Press "Animate" to watch the supply curve emerge.`;
-    else if(v75P<PSD75)ro.innerHTML=`Step 1 to 3: P=$${v75P.toFixed(2)} &lt; P<sub>SD</sub>=$${PSD75} (min SAVC) &rarr; producing would lose more than shutting down. The firm supplies <strong>q = 0</strong>.`;
-    else if(v75P<13.4){
-      const q=qStar7(v75P);
-      ro.innerHTML=`Step 1 to 4: at P=$${v75P.toFixed(2)}, the profit-maximizing rule <strong>MC = P</strong> is satisfied at <strong>q = ${q.toFixed(2)}</strong> (purple dot, left). That pins down the point <strong>(q, P) = (${q.toFixed(2)}, $${v75P.toFixed(2)})</strong>, plotted on the right.`;
-    } else {
-      ro.innerHTML=`Step 5: sweep complete. The accumulated (q, P) points trace out a curve identical to SMC (dashed overlay, right). <strong>The MC curve above the shutdown point IS the firm's supply curve.</strong>`;
-    }
-  }
-}
-function v75ToggleAnim(){
-  v75animRunning=!v75animRunning;
-  document.getElementById('v75-anim-btn').textContent=v75animRunning?'Pause':'Animate Price Sweep';
-  if(v75animRunning)v75animate();
-}
-function v75animate(){
-  if(!v75animRunning)return;
-  v75P=Math.min(13.5,v75P+0.12);
-  if(v75P>=PSD75){const q=qStar7(v75P);v75supplyPts.push({q,P:v75P});}
-  v75DrawPanels();
-  if(v75P<13.5)requestAnimationFrame(v75animate);
-  else{v75animRunning=false;document.getElementById('v75-anim-btn').textContent='Animate Price Sweep';}
-}
-function v75Reset(){
-  v75P=0;v75supplyPts=[];v75animRunning=false;
-  document.getElementById('v75-anim-btn').textContent='Animate Price Sweep';
-  if(v75svgA){
-    v75pLineEl.attr('opacity',0);
-    v75dropLine.attr('opacity',0);
-    v75isectDot.attr('opacity',0);
-    v75qLabel.attr('opacity',0);
-    v75mcOverlay.attr('opacity',0);
-    v75supplyDots.selectAll('*').remove();
-  }
-  v75DrawPanels();
-}
-window.resetV75Labels=function(){
-  if(!v75nodes75||!v75sim75)return;
-  v75nodes75.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});
-  v75sim75.alpha(0.5).restart();
-};
-window.resetV79Labels=function(){
-  [v79nodesA,v79simA].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
-  [v79nodesB,v79simB].forEach((x,i)=>{if(i===0&&x){x.forEach(d=>{d.x=d.ax+Math.cos(Math.random()*6.28)*(110+Math.random()*50);d.y=d.ay+Math.sin(Math.random()*6.28)*(110+Math.random()*50);d.vx=0;d.vy=0;d.fx=null;d.fy=null;});}else if(i===1&&x)x.alpha(0.5).restart();});
-};
-// ─────────────────────────────────────────────────────────────────────────
-// FIG 7.7: THREE-PANEL DEMAND SHOCK
-// ─────────────────────────────────────────────────────────────────────────
-let v77step=0, v77shownSteps=[];
-const v77scenarios_data={
-  sub:{
-    causal:[2,1,0], shiftType:'demand_right', shiftPanels:[2,1],
-    steps:['Choose: "Price of Substitute Rises"',"Step 1: Consumer demand shifts right (d to d'). Consumers want more of this good now.",'Step 2: Market demand D shifts right to D\'. New equilibrium: higher price P2 and quantity Q2.','Step 3: Firm sees higher price P2. Moves up SMC to new q2. Profit rectangle appears.'],
-    labels:['','Consumer','Market','Firm']
-  },
-  sub_fall:{
-    causal:[2,1,0], shiftType:'demand_left', shiftPanels:[2,1],
-    steps:['Choose: "Price of Substitute Falls"',"Step 1: Consumer demand shifts left (d to d'). Substitute is cheaper so consumers want less of this good.",'Step 2: Market demand D shifts left to D\'. New equilibrium: lower price P2 and quantity Q2.','Step 3: Firm sees lower price P2. Moves down SMC to new q2. Profit rectangle shrinks.'],
-    labels:['','Consumer','Market','Firm']
-  },
-  income:{
-    causal:[2,1,0], shiftType:'demand_right', shiftPanels:[2,1],
-    steps:['Choose: "Consumer Income Rises"','Step 1: Consumer demand shifts right (normal good). Higher income means more spending.','Step 2: Market demand D shifts right. Price and quantity both rise to new equilibrium.','Step 3: Firm earns positive profit at new higher price. Supply expands.'],
-    labels:['','Consumer','Market','Firm']
-  },
-  income_fall:{
-    causal:[2,1,0], shiftType:'demand_left', shiftPanels:[2,1],
-    steps:['Choose: "Consumer Income Falls"','Step 1: Consumer demand shifts left (normal good). Lower income means less spending.','Step 2: Market demand D shifts left. Price and quantity both fall to new equilibrium.','Step 3: Firm faces lower price. Profit rectangle shrinks or turns to a loss.'],
-    labels:['','Consumer','Market','Firm']
-  },
-  input:{
-    causal:[0,1,2], shiftType:'supply_left', shiftPanels:[0,1],
-    steps:['Choose: "Input Price Rises"','Step 1: Firm SMC shifts up (higher marginal cost). The firm panel shows SMC and the shifted SMC\'.','Step 2: Market supply S shifts left. New equilibrium: higher price, lower quantity.','Step 3: Consumer sees higher price. Demand curve unchanged but consumer buys less.'],
-    labels:['','Firm','Market','Consumer']
-  },
-  input_fall:{
-    causal:[0,1,2], shiftType:'supply_right', shiftPanels:[0,1],
-    steps:['Choose: "Input Price Falls"','Step 1: Firm SMC shifts down (lower marginal cost). Firm panel shows SMC and shifted SMC\'.','Step 2: Market supply S shifts right. New equilibrium: lower price, higher quantity.','Step 3: Consumer sees lower price. Demand curve unchanged but consumer buys more.'],
-    labels:['','Firm','Market','Consumer']
-  },
-};
-function v77Reset(){
-  v77step=0; v77shownSteps=[];
-  const sc=document.getElementById('v77-scenario')?.value||'sub';
-  const data=v77scenarios_data[sc]||v77scenarios_data['sub'];
-  const btn=document.getElementById('v77-step-btn');
-  btn.textContent='Step 1: '+data.labels[1]+' Effect →';
-  btn.onclick=v77NextStep;btn.disabled=false;
-  document.getElementById('v77-readout').innerHTML='Choose a scenario and click through the steps to trace the causal chain.';
-  v77Draw();
-}
-function v77NextStep(){
-  v77step=Math.min(3,v77step+1);
-  const sc=document.getElementById('v77-scenario').value;
-  const data=v77scenarios_data[sc]||v77scenarios_data['sub'];
-  v77shownSteps.push(`<strong>${data.labels[v77step]||'Result'}:</strong> ${data.steps[v77step]}`);
-  document.getElementById('v77-readout').innerHTML=v77shownSteps.join('<br>');
-  const btn=document.getElementById('v77-step-btn');
-  if(v77step<3){btn.textContent='Step '+(v77step+1)+': '+data.labels[v77step+1]+' Effect →';}
-  else{btn.textContent='All steps shown';btn.disabled=true;}
-  v77Draw();
-}
-// ── FIG 7.7 D3 SVG ───────────────────────────────────────────────────────
-let v77svg=null,v77sim=null,v77nodes=null;
-function v77InitSvg(){
-  v77svg=d3MakeSvg('cvs77-wrap');
-  // Grid
-  v77svg.append('g').selectAll('line').data([0.25,0.5,0.75]).enter()
-    .append('line').attr('x1',0).attr('x2',D3W).attr('y1',d=>D3H*d).attr('y2',d=>D3H*d).attr('stroke','#f0f0f0').attr('stroke-width',1);
-  // Persistent D3 force labels for D and S in each panel (6 labels: D1,S1,D2,S2,D3,S3)
-  const pw=(D3W-D3PAD.left-D3PAD.right-20)/3;
-  const panelBot=D3H-D3PAD.bottom;
-  v77nodes=[];
-  for(let i=0;i<3;i++){
-    const ox=D3PAD.left+i*(pw+10);
-    /* the panel this label may live in, and nowhere else */
-    const box={x0:ox+2,y0:D3PAD.top+2,x1:ox+pw-2,y1:panelBot-2};
-    /* the far end of each curve, which is where it is drawn */
-    const midY=(D3PAD.top+20+panelBot-10)/2;
-    if(i===0){
-      v77nodes.push(d3Node('D'+i,EC.indicator,'P = MR',44,ox+40,midY,{panel:box}));
-      v77nodes.push(d3Node('S'+i,EC.red,'SMC',30,ox+pw-10,D3PAD.top+20,{panel:box}));
-    } else if(i===1){
-      v77nodes.push(d3Node('D'+i,'#1f6fb2','D',20,ox+pw-10,panelBot-10,{panel:box}));
-      v77nodes.push(d3Node('S'+i,EC.red,'S',20,ox+pw-10,D3PAD.top+20,{panel:box}));
-    } else {
-      v77nodes.push(d3Node('D'+i,'#1f6fb2','d',20,ox+pw-10,panelBot-10,{panel:box}));
-    }
-  }
-  v77sim=d3MakeSim(v77nodes);
-  v77sim._cfg.bounds=d=>(d&&d.panel)||{x0:D3PAD.left-4,y0:D3PAD.top,x1:D3W-4,y1:D3H-D3PAD.bottom};
-  const els=d3AddLabels(v77svg,v77nodes,v77sim);
-  v77sim.on('tick',()=>d3TickClamp(v77nodes,els.gs,els.conns));
-}
-function v77Draw(){
-  if(!v77svg)v77InitSvg();
-  v77svg.selectAll('.v77-dyn').remove();
-  const g=v77svg.append('g').attr('class','v77-dyn');
-  const sc=document.getElementById('v77-scenario')?.value||'sub';
-  const data=v77scenarios_data[sc]||v77scenarios_data['sub'];
-  const panels=['Firm','Market','Consumer'];
-  const pw=(D3W-D3PAD.left-D3PAD.right-20)/3;
-  const causalOrder=data.causal||[2,1,0];
-  const panelShiftStep={};
-  causalOrder.forEach((panelIdx,orderPos)=>{ panelShiftStep[panelIdx]=orderPos+1; });
-  panels.forEach((label,i)=>{
-    const ox=D3PAD.left+i*(pw+10);
-    const oy=D3PAD.top, bot=D3H-D3PAD.bottom;
-    g.append('rect').attr('x',ox).attr('y',oy).attr('width',pw).attr('height',bot-oy).attr('fill','none').attr('stroke','#e0e4f0').attr('stroke-width',1);
-    g.append('text').attr('x',ox+pw/2).attr('y',oy+14).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).attr('fill','var(--ink-soft)').text(label);
-    /* What each panel shows. A competitive firm is a price taker: it faces a
-       horizontal price line P = MR and supplies along its SMC, so it has no
-       downward-sloping demand curve of its own. A consumer has a demand curve
-       but no supply curve. Only the market has both D and S. */
-    const midY=(oy+20+bot-10)/2;
-    const priceUp=(data.shiftType==='demand_right'||data.shiftType==='supply_left');
-    if(i!==2) g.append('line').attr('x1',ox+10).attr('y1',bot-10).attr('x2',ox+pw-10).attr('y2',oy+20).attr('stroke',EC.red).attr('stroke-width',2);
-    if(i!==0) g.append('line').attr('x1',ox+10).attr('y1',oy+20).attr('x2',ox+pw-10).attr('y2',bot-10).attr('stroke','#1f6fb2').attr('stroke-width',2);
-    if(i!==1) g.append('line').attr('x1',ox+10).attr('y1',midY).attr('x2',ox+pw-10).attr('y2',midY).attr('stroke',EC.indicator).attr('stroke-width',2);
-    // The price the firm (demand shocks) or the consumer (cost shocks) takes
-    // from the market changes once the market step has run.
-    const takerPanel=(data.causal&&data.causal[0]===0)?2:0;
-    if(i===takerPanel && v77step>=panelShiftStep[i]){
-      const py=midY+(priceUp?-22:22);
-      g.append('line').attr('x1',ox+10).attr('y1',py).attr('x2',ox+pw-10).attr('y2',py).attr('stroke',EC.indicator).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-      g.append('text').attr('x',ox+pw-12).attr('y',priceUp?py-5:py+13).attr('text-anchor','end').attr('font-size',10).attr('font-weight',600).attr('fill',EC.indicator).text(priceUp?'P₂ (higher)':'P₂ (lower)');
-    }
-    // Shifted curve: only for panels in shiftPanels, using correct direction for this scenario
-    const sp=data.shiftPanels||[2,1];
-    if(v77step>=panelShiftStep[i] && sp.includes(i)){
-      const sh=20;
-      const st=data.shiftType||'demand_right';
-      if(st==='demand_right'){
-        g.append('line').attr('x1',ox+10+sh).attr('y1',oy+20).attr('x2',ox+pw-10+sh).attr('y2',bot-10).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10+sh+8).attr('y',oy+30).attr('text-anchor','start').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text(i===2?'d′ →':'D′ →');
-      } else if(st==='demand_left'){
-        g.append('line').attr('x1',ox+10-sh).attr('y1',oy+20).attr('x2',ox+pw-10-sh).attr('y2',bot-10).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10-sh-2).attr('y',oy+30).attr('text-anchor','end').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text(i===2?'← d′':'← D′');
-      } else if(st==='supply_left'){
-        g.append('line').attr('x1',ox+10-sh).attr('y1',bot-10).attr('x2',ox+pw-10-sh).attr('y2',oy+20).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10-sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text(i===0?'← SMC′':'← S′');
-      } else if(st==='supply_right'){
-        g.append('line').attr('x1',ox+10+sh).attr('y1',bot-10).attr('x2',ox+pw-10+sh).attr('y2',oy+20).attr('stroke',EC.green).attr('stroke-width',2).attr('stroke-dasharray','4,3');
-        g.append('text').attr('x',ox+10+sh+2).attr('y',bot-20).attr('text-anchor','start').attr('font-size',10).attr('font-weight',600).attr('fill',EC.green).text(i===0?'SMC′ →':'S′ →');
-      }
-    }
-  });
-  // Causal-flow arrows between adjacent panels: 'input' flows Firm→Market→Consumer
-  // (left to right); 'sub'/'income' flow Consumer→Market→Firm (right to left).
-  const midY=(D3PAD.top+D3H-D3PAD.bottom)/2;
-  const firmFirst=(data.causal&&data.causal[0]===0);
-  const arrowGlyph=firmFirst?'→':'←';
-  // Gutter positions follow the causal direction: 'input' flows Firm→Market→Consumer
-  // so its first arrow is in the LEFT gutter; 'sub'/'income' flow Consumer→Market→Firm
-  // so their first arrow is in the RIGHT gutter (previously step 1 always lit the left
-  // gutter, leaving a stray arrow far from the panel that had actually shifted).
-  const axLeft=D3PAD.left+pw+10, axRight=D3PAD.left+pw*2+20;
-  const arrowOrder=firmFirst?[axLeft,axRight]:[axRight,axLeft];
-  arrowOrder.forEach((ax,k)=>{
-    if(v77step>=k+1){
-      g.append('line').attr('x1',ax-8).attr('y1',midY).attr('x2',ax+8).attr('y2',midY).attr('stroke','rgba(100,100,200,0.6)').attr('stroke-width',2.5);
-      g.append('text').attr('x',ax).attr('y',midY-6).attr('text-anchor','middle').attr('font-size',12).attr('fill','rgba(100,100,200,0.8)').text(arrowGlyph);
-    }
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// FIG 7.8: MARKET SUPPLY BUILDER (math display)
-// ─────────────────────────────────────────────────────────────────────────
-function v78Update(){
-  const n=parseInt(document.getElementById('v78-n').value);
-  document.getElementById('v78-n-val').textContent=n;
-  v78DrawMath(n);
-}
-
-function v78DrawMath(n){
-  /* Each firm's supply is its SMC above min SAVC: q* = 2 + sqrt(P - 3) for
-     P >= $4 (qStar7). The table used to use a "linear approximation"
-     q = (P - 4)/2, which is 0 at P = $4 where the firm actually produces 3,
-     and 2 at P = $8 where SMC gives 4.24, so it contradicted the P = SMC
-     rule stated right above it. */
-  const prices=[4,5,6,7,8,9,10,12];
-  const q8=qStar7(8);
-  let rows='';
-  for(const P of prices){
-    const qf=qStar7(P);
-    const Qm=n*qf;
-    const highlight=P===8?'background:var(--accent-light);':'';
-    rows+=`<tr style="${highlight}">
-      <td style="padding:0.45rem 0.8rem;text-align:center;">$${P.toFixed(0)}</td>
-      <td style="padding:0.45rem 0.8rem;text-align:center;">${qf.toFixed(2)}</td>
-      <td style="padding:0.45rem 0.8rem;text-align:center;">&times; ${n}</td>
-      <td style="padding:0.45rem 0.8rem;text-align:center;font-weight:600;color:var(--unit-ink);">${Qm.toFixed(1)}</td>
-    </tr>`;
-  }
-  document.getElementById('v78-math-display').innerHTML=`
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.9rem;">
-      <div style="flex:1;min-width:220px;font-family:var(--font-body);font-variant-numeric:tabular-nums;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
-        <div style="font-weight:700;color:var(--unit-ink);margin-bottom:0.35rem;font-family:'Libre Franklin',sans-serif;">Individual Firm Supply</div>
-        <div>Set P = SMC: &nbsp;P = q&sup2; &minus; 4q + 7</div>
-        <div style="margin-top:0.2rem;">Solve: &nbsp;<strong>q* = 2 + &radic;(P &minus; 3)</strong> &nbsp;for P &ge; $4</div>
-        <div style="margin-top:0.35rem;color:var(--ink-soft);font-size:0.79rem;">Below $4 (min SAVC) the firm shuts down: q* = 0</div>
-      </div>
-      <div style="flex:1;min-width:220px;font-family:var(--font-body);font-variant-numeric:tabular-nums;font-size:0.84rem;background:var(--off-white);border:1px solid var(--rule-strong);border-radius:8px;padding:0.9rem 1.1rem;">
-        <div style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-family:'Libre Franklin',sans-serif;">Market Supply (${n} firms)</div>
-        <div>Q<sub>mkt</sub> = n &times; q* = ${n} &times; (2 + &radic;(P &minus; 3))</div>
-        <div style="margin-top:0.35rem;color:var(--ink-soft);font-size:0.79rem;">At P = $8: Q = ${n} &times; ${q8.toFixed(2)} = ${(n*q8).toFixed(1)}</div>
-      </div>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:0.87rem;">
-      <thead>
-        <tr style="background:var(--off-white);border-bottom:2px solid var(--rule-strong);">
-          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'Libre Franklin',sans-serif;">Price P</th>
-          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'Libre Franklin',sans-serif;">Firm q* = 2 + &radic;(P&minus;3)</th>
-          <th style="padding:0.45rem 0.8rem;text-align:center;font-family:'Libre Franklin',sans-serif;">Multiply</th>
-          <th style="padding:0.45rem 0.8rem;text-align:center;color:var(--unit-ink);font-family:'Libre Franklin',sans-serif;">Market Q = n &times; q*</th>
-        </tr>
-      </thead>
-      <tbody style="font-family:var(--font-body);font-variant-numeric:tabular-nums;">${rows}</tbody>
-    </table>`;
-  document.getElementById('v78-readout').innerHTML=
-    `<strong>Horizontal summation:</strong> At P = $8, each of ${n} firms supplies q* = ${q8.toFixed(2)} units, so market supply Q = ${n} &times; ${q8.toFixed(2)} = <strong>${(n*q8).toFixed(1)} units</strong>. Add quantities at each price, never add prices.`;
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// FIG 7.9: LONG-RUN ENTRY/EXIT
-// ─────────────────────────────────────────────────────────────────────────
-// One firm model throughout, the same as Figs 7.5 and 7.8:
-//   TC = q^3/3 - 2q^2 + 7q + 5, SMC = q^2 - 4q + 7, min SAC = $5.51 at q = 3.584,
-//   firm supply q(P) = 2 + sqrt(P - 3) for P >= 4 (min AVC), market supply n*q(P).
-// Demand matches the film above: it has just risen from D (Qd = 3558.6 - 548.4P,
-// long run n = 150 at $5.51) to D' (Qd = 4086 - 548.4P). With 150 firms the
-// short-run price is $6.40; entry stops near n = 297, where P is back at $5.51.
-const V79_LR_N=297;
-const V79_A1=4086, V79_A0=3558.6, V79_B=548.4;
-let v79n=150, v79animId=null;
-function v79Qs(n,P){return P<4?0:n*(2+Math.sqrt(P-3));}
-// Solve n(2+s) = A - B(3+s^2) for s = sqrt(P-3): B s^2 + n s + (2n + 3B - A) = 0.
-function v79PofN(n){
-  const c=2*n+3*V79_B-V79_A1;
-  const s=(-n+Math.sqrt(n*n-4*V79_B*c))/(2*V79_B);
-  return 3+s*s;
-}
-function v79Stats(n){
-  const P=v79PofN(n);
-  const q=qStar7(P);
-  const profit=q*(P-SAC7(q));
-  return {n,P,q,Q:V79_A1-V79_B*P,profit};
-}
-let v79Start=v79Stats(150);
-// ── FIG 7.9 D3 SVG ───────────────────────────────────────────────────────
-let v79svgA=null,v79svgB=null;
-let v79nodesA=null,v79simA=null,v79gsA=null,v79connsA=null;
-let v79nodesB=null,v79simB=null,v79gsB=null,v79connsB=null;
-const V79_QMAX=2000, V79_PMAX=8;
-
-function v79InitSvg(){
-  // --- Left panel: Market ---
-  const scXM=d3.scaleLinear().domain([0,V79_QMAX]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYM=d3.scaleLinear().domain([0,V79_PMAX]).range([D3H2-D3PAD.bottom,D3PAD.top]);
-  v79svgA=d3MakeSvg2('cvs79a-wrap');
-  d3AddAxes2(v79svgA,scXM,scYM,'Q (market)','P ($)');
-  // Eleven Q ticks collide at phone width: keep every other one (y ticks are all < 100)
-  v79svgA.selectAll('g.tick').filter(d=>d>=100&&d%400!==0).select('text').remove();
-  // At phone width the last Q tick (2,000), centred on the plot's right edge,
-  // ran past the edge of the svg and was cut off; there is no room for it
-  // beside 1,600 either, so it is dropped there (the axis still reads 0..1,600)
-  if(v79svgA.node().getBoundingClientRect().width<480)
-    v79svgA.selectAll('g.tick').filter(d=>d===V79_QMAX).select('text').remove();
-  // Long-run supply: flat at min SAC = $5.51 (constant-cost industry)
-  v79svgA.append('line').attr('x1',scXM(0)).attr('x2',scXM(V79_QMAX)).attr('y1',scYM(5.51)).attr('y2',scYM(5.51))
-    .attr('stroke',EC.slate).attr('stroke-width',1.2).attr('stroke-dasharray','2,4').attr('opacity',0.6);
-  // Original demand D (faded) and the new demand D'
-  const dem=(A,cls,op,w,dash)=>{
-    const pts=[];
-    for(let P2=0;P2<=V79_PMAX+1e-9;P2+=0.05){const Q2=A-V79_B*P2;if(Q2<0||Q2>V79_QMAX)continue;pts.push([scXM(Q2),scYM(P2)]);}
-    v79svgA.append('path').attr('class',cls).attr('fill','none').attr('stroke','#1f6fb2').attr('stroke-width',w)
-      .attr('stroke-dasharray',dash).attr('opacity',op).attr('d',d3.line()(pts));
-  };
-  dem(V79_A0,'v79-demand0',0.45,1.4,'5,4');
-  dem(V79_A1,'v79-demand',1,2,'');
-  v79svgA.append('g').attr('class','v79-dyn-mkt');
-  v79nodesA=[
-    d3Node('D1','#1f6fb2','D′',26,scXM(V79_A1-V79_B*6.9),scYM(6.9)),
-    d3Node('S',EC.red,'S',20,scXM(v79Qs(150,7.2)),scYM(7.2)),
-    d3Node('EQ',EC.indicator,'n=150, P*=$6.40',88,scXM(576),scYM(6.4)),
-    d3Node('D0','#1f6fb2','D',20,scXM(V79_A0-V79_B*3.5),scYM(3.5)),
-    d3Node('LRS',EC.slate,'LRS $5.51',70,scXM(1850),scYM(5.51)),
-  ];
-  v79simA=d3MakeSim(v79nodesA);
-  const elsA=d3AddLabels(v79svgA,v79nodesA,v79simA);
-  v79gsA=elsA.gs;v79connsA=elsA.conns;
-  v79simA.on('tick',()=>d3TickClamp2(v79nodesA,v79gsA,v79connsA));
-  v79svgA._scXM=scXM;v79svgA._scYM=scYM;
-
-  // --- Right panel: Firm ---
-  const scXF=d3.scaleLinear().domain([0,7]).range([D3PAD.left,D3W-D3PAD.right]);
-  const scYF=d3.scaleLinear().domain([0,10]).range([D3H2-D3PAD.bottom,D3PAD.top]);
-  v79svgB=d3MakeSvg2('cvs79b-wrap');
-  d3AddAxes2(v79svgB,scXF,scYF,'q (one firm)','$ per unit');
-  d3AddCurve(v79svgB,q=>SAC7(q),scXF,scYF,EC.slate,10);
-  d3AddCurve(v79svgB,q=>SMC7(q),scXF,scYF,'#1f6fb2',10);
-  v79svgB.append('g').attr('class','v79-dyn-firm');
-  v79nodesB=[
-    d3Node('SAC',EC.slate,'SAC',30,scXF(6.5),scYF(SAC7(6.5))),
-    d3Node('SMC','#1f6fb2','SMC',30,scXF(4.4),scYF(SMC7(4.4))),
-    d3Node('PI',EC.indicator,'P*, π',96,scXF(3.84),scYF(6.4)),
-  ];
-  v79simB=d3MakeSim(v79nodesB);
-  const elsB=d3AddLabels(v79svgB,v79nodesB,v79simB);
-  v79gsB=elsB.gs;v79connsB=elsB.conns;
-  v79simB.on('tick',()=>d3TickClamp2(v79nodesB,v79gsB,v79connsB));
-  v79svgB._scXF=scXF;v79svgB._scYF=scYF;
-}
-
-// Set a readout label's text and size its plate to the text, so the number never overruns the box.
-function v79FitLabel(gs,node){
-  const g=gs.filter(d=>d===node), t=g.select('text').text(node.label);
-  let w=node.lw; try{w=t.node().getComputedTextLength()+14;}catch(e){}
-  if(w>10){node.lw=w; g.select('rect').attr('width',w); t.attr('x',w/2);}
-}
-function v79Draw(){
-  if(!v79svgA||!v79svgB)v79InitSvg();
-  const n=v79n, st=v79Stats(n), P=st.P;
-  const scXM=v79svgA._scXM, scYM=v79svgA._scYM;
-  const scXF=v79svgB._scXF, scYF=v79svgB._scYF;
-  const supPath=(nn)=>{
-    const pts=[];
-    for(let P2=4;P2<=V79_PMAX+1e-9;P2+=0.05){const Q2=v79Qs(nn,P2);if(Q2>V79_QMAX)break;pts.push([scXM(Q2),scYM(P2)]);}
-    return pts.length>1?d3.line()(pts):null;
-  };
-
-  const gM=v79svgA.select('g.v79-dyn-mkt');
-  gM.selectAll('*').remove();
-  // Ghost of the supply curve the current run started from
-  const nShifted79 = n !== v79Start.n;
-  if(nShifted79){
-    const d0=supPath(v79Start.n);
-    if(d0)gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',1.4)
-      .attr('stroke-dasharray','5,4').attr('opacity',0.45).attr('d',d0);
-  }
-  const d1=supPath(n);
-  if(d1)gM.append('path').attr('fill','none').attr('stroke',EC.red).attr('stroke-width',2).attr('d',d1);
-  gM.append('circle').attr('cx',scXM(st.Q)).attr('cy',scYM(P)).attr('r',5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
-  const eqN=v79nodesA.find(d=>d.id==='EQ');
-  if(eqN){
-    eqN.label='n='+n+', P*=$'+P.toFixed(2);
-    d3MoveAnchor(eqN,scXM(st.Q),scYM(P));
-    v79FitLabel(v79gsA,eqN);
-  }
-  // S label stays on the current supply curve at P = $7.20
-  const sN=v79nodesA.find(d=>d.id==='S');
-  if(sN){
-    const Qs72=Math.min(V79_QMAX-20,v79Qs(n,7.2));
-    d3MoveAnchor(sN,scXM(Qs72),scYM(7.2));
-    sN.label = nShifted79 ? 'S′' : 'S';
-    sN.lw = nShifted79 ? 26 : 20;
-    v79gsA.filter(d=>d.id==='S').select('rect').attr('width',d=>d.lw);
-    v79gsA.filter(d=>d.id==='S').select('text').attr('x',d=>d.lw/2).text(d=>d.label);
-  }
-
-  // Firm: price line + profit (green) or loss (red) rectangle
-  const gF=v79svgB.select('g.v79-dyn-firm');
-  gF.selectAll('*').remove();
-  const py=scYF(P);
-  gF.append('line').attr('x1',D3PAD.left).attr('x2',D3W-D3PAD.right).attr('y1',py).attr('y2',py)
-    .attr('stroke',EC.indicator).attr('stroke-width',1.8).attr('stroke-dasharray','6,4').attr('opacity',0.85);
-  const qf=st.q, sacF=SAC7(qf), profit=st.profit;
-  const qfx=scXF(qf), sacy=scYF(sacF);
-  const rectY=Math.min(py,sacy), rectH=Math.abs(py-sacy);
-  const cs=getComputedStyle(document.documentElement);
-  const gain=(cs.getPropertyValue('--d-gain')||'').trim()||'#2f7d55';
-  const loss=(cs.getPropertyValue('--d-loss')||'').trim()||'#b03a2e';
-  if(rectH>1){
-    gF.append('rect').attr('x',D3PAD.left).attr('y',rectY).attr('width',qfx-D3PAD.left).attr('height',rectH)
-      .attr('fill',profit>0?gain:loss).attr('fill-opacity',0.22)
-      .attr('stroke',profit>0?gain:loss).attr('stroke-width',1.5);
-  }
-  gF.append('circle').attr('cx',qfx).attr('cy',py).attr('r',4.5).attr('fill',EC.indicator).attr('stroke','white').attr('stroke-width',1.5);
-  const piN=v79nodesB.find(d=>d.id==='PI');
-  if(piN){
-    const pr=Math.abs(profit)<0.005?0:profit;
-    piN.label='P*=$'+P.toFixed(2)+', π='+(pr>0?'+':pr<0?'−':'')+'$'+Math.abs(pr).toFixed(2);
-    d3MoveAnchor(piN,qfx,py);
-    v79FitLabel(v79gsB,piN);
-  }
-  if(v79gsA)d3TickClamp2(v79nodesA,v79gsA,v79connsA);
-  if(v79gsB)d3TickClamp2(v79nodesB,v79gsB,v79connsB);
-
-  const pr=Math.abs(profit)<0.005?0:profit;
-  document.getElementById('v79-readout').innerHTML=
-    `<div class="readout-row">
-      <div class="readout-col"><div class="readout-label">Firms (n)</div><div class="readout-val">${n}</div></div>
-      <div class="readout-col"><div class="readout-label">P*</div><div class="readout-val">$${P.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Market Q</div><div class="readout-val">${Math.round(st.Q).toLocaleString()}</div></div>
-      <div class="readout-col"><div class="readout-label">q* per firm</div><div class="readout-val">${qf.toFixed(2)}</div></div>
-      <div class="readout-col"><div class="readout-label">Profit &pi; per firm</div><div class="readout-val" style="color:${pr>=0?'var(--d-gain-ink)':'var(--d-loss-ink)'}">${pr>0?'+':pr<0?'&minus;':''}$${Math.abs(pr).toFixed(2)}</div></div>
-    </div>`;
-
-  if (window.ecDelta) {
-    ecDelta('v79-delta', [
-      { label: 'Firms (n)',            old: v79Start.n,      now: st.n,      dp: 0 },
-      { label: 'Equilibrium price P*', old: v79Start.P,      now: st.P,      prefix: '$' },
-      { label: 'Market quantity Q',    old: v79Start.Q,      now: st.Q,      dp: 0 },
-      { label: 'Firm profit',          old: v79Start.profit, now: st.profit, prefix: '$' },
-    ]);
-  }
-}
-function v79RunEntry(){
-  // Entry: start where firms are PROFITABLE (P > SAC), positive profit attracts new
-  // entrants. Supply grows, price falls, until profit is competed down to zero.
-  v79n=150;v79Start=v79Stats(v79n);v79Draw();
-  if(v79animId)clearInterval(v79animId);
-  v79animId=setInterval(()=>{
-    if(v79n>=V79_LR_N){clearInterval(v79animId);v79animId=null;return;}
-    v79n++;v79Draw();
-  },40);
-}
-function v79RunExit(){
-  // Exit: start where firms are LOSING money (P < SAC), losses push firms out of the
-  // industry. Supply shrinks, price rises, until losses are eliminated at zero profit.
-  v79n=450;v79Start=v79Stats(v79n);v79Draw();
-  if(v79animId)clearInterval(v79animId);
-  v79animId=setInterval(()=>{
-    if(v79n<=V79_LR_N){clearInterval(v79animId);v79animId=null;return;}
-    v79n--;v79Draw();
-  },40);
-}
-function v79Reset(){
-  if(v79animId){clearInterval(v79animId);v79animId=null;}
-  v79n=150;v79Start=v79Stats(v79n);v79Draw();
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded',()=>{
-  v71Update();
-  v72InitSvg(); v72Draw(parseFloat(document.getElementById('v72-p').value));
-  v73InitSvg(); v73Draw(parseFloat(document.getElementById('v73-p').value));
-  v73Update();
-  v77InitSvg();
-  document.getElementById('v77-scenario').value='sub';
-  v77Reset();
-  v78Update();
-  v79InitSvg(); v79Draw();
+  
+    </main>
+  </div>
 
 
-  // ResizeObserver only for canvas-based figures (7.1 uses canvas)
-  const ro=new ResizeObserver(()=>{
-    v71Draw();
-  });
-  // Observe only the 7.1 canvas wraps
-  document.querySelectorAll('.cvs-wrap:has(canvas)').forEach(el=>ro.observe(el));
-});
 
-/* Section rail: mark the figure currently being read (DESIGN 2.2). Scrolls the
-   strip itself on mobile, never scrollIntoView, which walks up and drags the
-   whole page while the reader is scrolling it. */
+  <!-- Ask the Course AI, floating 24/7 assistant -->
+  <script src="assets/chatbot.js"></script>
+  <script src="assets/ask-widget.js"></script>
+  <script src="assets/nav.js" defer></script>
+  <script src="assets/autoplay-video.js"></script>
+  <script src="assets/film.js"></script>
+  <script>
+/* Section rail: mark the section being read. Scrolls the strip itself on mobile, never scrollIntoView. */
 (function railTracking() {
   const links = [...document.querySelectorAll('.rail a')];
   if (!links.length || !('IntersectionObserver' in window)) return;
@@ -1797,18 +359,11 @@ window.addEventListener('DOMContentLoaded',()=>{
   }, { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
   document.querySelectorAll('section.sec[id]').forEach(x => io.observe(x));
 })();
-
-
-</script>
-  <!-- Ask the Course AI, floating 24/7 assistant -->
-  <script src="assets/chatbot.js"></script>
-  <script src="assets/ask-widget.js"></script>
-  <script src="assets/deltabar.js"></script>
-  <script src="assets/autoplay-video.js"></script>
-  <script src="assets/film.js"></script>
-<script src="assets/nav.js" defer></script>
-<script src="assets/figplace.js" defer></script>
-<script src="assets/figlabels.js" defer></script>
-<script src="assets/figreset.js" defer></script>
+  </script>
+  <!-- Predict, then see: engine, this week's economics and figures (single source: assets/predict/) -->
+  <script src="assets/predict/kit/kit.js"></script>
+  <script src="assets/predict/week7/models.js"></script>
+  <script src="assets/predict/week7/figs.js"></script>
+  <script>Kit.mount(window.W7FIGS, { films: false, store: 'ec224-w7-predict' });</script>
 </body>
 </html>

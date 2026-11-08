@@ -1,0 +1,29 @@
+/* Predict-then-see figures on the live site pages (weekN-viz.html).
+ * Link order: shared.css, assets/vizpage.css, assets/predict/kit/kit.css, then this file.
+ * Markup it expects (see lab/predict/SWITCHOVER.md, "Integration pattern"):
+ *   <section class="sec page" id="sec-...">  heading + prose  [film]  <div class="kit-bay"><div id="f21" class="mathjax_ignore tex2jax_ignore"></div></div>  </section>
+ * kit.css styles the figure itself (scoped to .kfig); this file only places it in the site's page grid. */
+
+/* the site's sticky top bar is 3rem tall, and up to 1100px the rail is a sticky strip under it (about 3.5rem):
+   the kit's sticky plot and its "Try a new one" scroll stop below both */
+.kit-bay { --kit-top: 3rem; }
+@media (max-width: 1100px) { .kit-bay { --kit-top: 6.5rem; } }
+/* same reason for in-page anchors (the rail links): the site pads 4.5rem, which leaves a heading under the strip */
+@media (max-width: 1100px) { html[data-ds="v2"] { scroll-padding-top: 7rem; } }
+
+/* the figure gets the whole content column (plot and panel side by side), not the reading measure */
+.sec.page > .kit-bay { grid-column: full-start / full-end; margin-top: var(--s-7); min-width: 0; }
+.sec.page > .film { grid-column: wide-start / wide-end; margin: var(--s-7) 0 0; }
+.sec.page > .fig-prose + .film { margin-top: var(--s-7); }
+
+/* phones: the figure takes a little of the page gutter back, so the plot is as wide as the lab preview's */
+@media (max-width: 560px) { .sec.page > .kit-bay { margin-inline: -0.75rem; } }
+
+/* inside a site section the figure needs no rule or padding of its own: the section supplies them */
+.kit-bay > .kfig { padding: var(--s-6) 0 0; border-bottom: 0; border-top: 2px solid var(--ink); }
+
+/* the site sets every h2 in its display weight with !important; the question keeps the kit's heavy weight */
+html[data-ds="v2"] .kfig h2.q { font-family: 'Libre Franklin', system-ui, sans-serif !important; font-weight: 800 !important; }
+
+/* sections with a figure sit a little further apart, so one figure's buttons never crowd the next heading */
+.sec.page:has(> .kit-bay) { margin-bottom: var(--s-10); }

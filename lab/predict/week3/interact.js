@@ -1,10 +1,11 @@
-// Run: cd C:\MicroSite && PORT=4383 node serve.js, then node lab/predict/week3/interact.js
+// Run: cd C:\MicroSite && PORT=4363 node serve.js, then PORT=4363 node lab/predict/week3/interact.js
+// (PAGE=week3-viz.html runs the same suite on the live page)
 // (needs playwright-core in C:/MicroSite/review/node_modules and Edge).
 // Interaction suite for lab/predict/week3: real mouse drags/taps to the exact answers (6+ rounds per
 // figure, incl. "Try a new one"), every explore control and handle, keyboard-only completion, touch
 // taps/drags via CDP, and a scroll check. Fails loudly; exits 1 on any problem or console error.
 const { chromium } = require('C:/MicroSite/review/node_modules/playwright-core');
-const URL = 'http://localhost:4383/lab/predict/week3/';
+const URL = 'http://localhost:' + (process.env.PORT || 4363) + '/' + (process.env.PAGE || 'lab/predict/week3/');
 let problems = [];
 const bad = m => { problems.push(m); console.log('PROBLEM', m); };
 
@@ -23,6 +24,9 @@ async function plan(page, key) {
   // returns a list of actions [{kind:'tap'|'drag', from:[x,y], to:[x,y]}] in client coords, computed one at a time
   return page.evaluate(key => {
     const f = window.__figs[key], s = f.sol, p = f.p, T = window.__t, M = window.W3;
+    // a tap or drag that starts near the pull knob (3.1, 3.3) would grab the knob: pull it to the far corner first
+    const kn = f.handles().find(h => h.tool), tgt = key === 'f31' && f.cur === 0 ? T.cl(f, s.X1, T.stack(f).ty(s.Ys)) : key === 'f33' && f.cur === 0 ? T.h(f, 0) : null;
+    if (kn && tgt) { const k = T.clp(f, kn.px[0], kn.px[1]); if (Math.hypot(k[0] - tgt[0], k[1] - tgt[1]) < 60) return { kind: 'drag', from: k, to: T.cl(f, f.dom.X * 0.97, T.stack(f).ty(f.dom.Yt * 0.97)) }; }
     if (key === 'f31') { const st = T.stack(f); return f.cur === 0 ? { kind: 'tap', to: T.cl(f, s.X1, st.ty(s.Ys)) } : { kind: 'tap', to: T.cl(f, s.X1, st.by(p.P1)) }; }
     if (key === 'f32') {
       if (f.cur === 0) { const h = f.handles()[0]; return { kind: 'drag', from: T.h(f, 0), to: T.cl(f, h.x, (s.Mc - p.P1 * h.x) / p.Py) }; }
@@ -43,7 +47,7 @@ async function act(page, a) {
   await page.mouse.up();
 }
 async function view(page, key) {
-  await page.evaluate(key => { const r = document.getElementById(key).querySelector('.stage').getBoundingClientRect(); window.scrollBy({ top: r.top - 20, behavior: 'instant' }); }, key);
+  await page.evaluate(key => { const r = document.getElementById(key).querySelector('.stage').getBoundingClientRect(); window.scrollBy({ top: r.top - (location.pathname.includes('-viz') ? 150 : 20), behavior: 'instant' }); }, key);
   await page.waitForTimeout(80);
 }
 

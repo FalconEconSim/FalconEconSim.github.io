@@ -8,6 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="assets/vizpage.css" />
+  <!-- Predict, then see: the kit figure styles (scoped to .kfig) and their placement in the site page -->
+  <link rel="stylesheet" href="assets/predict/kit/kit.css" />
+  <link rel="stylesheet" href="assets/predict/kit/kit-site.css" />
+  <style id="kit-page-css">@media (min-width: 700px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 820px; } }
+/* phones: keep guesses like $2,440 whole in the verdict table (kit.css lets cells break anywhere, which split the narrow You column) */
+#f121 .v-table td.you, #f122 .v-table td.you { overflow-wrap: normal; }
+/* live page: its <main id="main-content"> has no side padding, so kit-site.css's phone bleed (-0.75rem) pushed the y labels off screen */
+@media (max-width: 560px) { #main-content > .sec.page > .kit-bay { margin-inline: 0; } }</style>
   <script>
     window.MathJax = {
       tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
@@ -16,17 +26,9 @@
     };
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
-  <link rel="stylesheet" href="shared.css" />
-  <link rel="stylesheet" href="assets/vizpage.css" />
-  <script src="assets/theme.js"></script>
-  <script src="assets/figkit.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-  <style>
-    .demo-svg-wrap { padding: 0; }
-    .demo-svg-wrap svg { display: block; width: 100%; }
-  </style>
 </head>
 <body>
+
 
 
 <div class="topbar">
@@ -54,16 +56,34 @@
       <span class="numeral">12</span>
       <h1>Adverse Selection &amp; Moral Hazard</h1>
       <p class="byline">Prof. Naveen Sunder</p>
+      <p class="lede">Each figure asks one question. Answer it on the graph by dragging (your guess shows in plum), then press Reveal and watch the answer draw itself in. Point at a graph to read the numbers under the pointer; a dragged point always shows where it is.</p>
     </div>
   </header>
 
   <div class="sec-divider">Hidden Quality</div>
 
   <!-- FIG 12.1 -->
-  <section class="sec page fig-sec" id="sec-121">
-      <div class="fig-hd">
-        <span class="fig-n">Fig 12.1</span>
-        <h3>The Market for Lemons: When Do Peaches Survive?</h3>
+  
+      <section class="sec page" id="sec-121">
+      <div class="fig-prose">
+        <div class="sec-hd">
+          <span class="sec-n">§ 12.1</span>
+          <h2>The Market for Lemons: When Do Peaches Survive?</h2>
+        </div>
+        <p class="fig-intro">
+      Buyers cannot tell a peach from a lemon, so they offer the average value \(\mathbb{E}[WTP] = 1{,}200 + 1{,}200p\),
+      where \(p\) is the fraction of peaches. Peach sellers will only sell if that average clears their $2,000 reserve
+      price. Above the knife-edge \(p^{*} = 2/3\) the market pools and both types trade; below
+      it, the average is too low, peaches exit, and only lemons are left. Fig 12.1 below asks you to find the knife-edge
+      and the price at half peaches; after the reveal, drag the point along the offer line to change the peach fraction.
+    </p>
+        <div class="explain">
+      <div class="ex-h">Reading the graph</div>
+      <p>The rising blue line is what buyers will pay, the <em>average</em> value of a car drawn from the pool, \(\mathbb{E}[WTP] = 1{,}200 + 1{,}200p\); it climbs as the fraction of peaches \(p\) rises. The flat dashed line is the peach seller&rsquo;s \(\$2{,}000\) reserve: they only sell if buyers offer at least that. Where blue crosses the reserve is the knife-edge \(p^{*} = 2/3\). The green region to its right is <em>pooling</em> (both types trade); the red region to its left is <em>separating</em> (peaches have exited).</p>
+      <div class="ex-h">The economics</div>
+      <p>Because buyers cannot tell a peach from a lemon, they price the average. When there are too few peaches, that average sits below what a peach is worth to its owner, so peach sellers walk away, which lowers the average further. The market is left trading only lemons even though buyers and peach sellers would both gain from a deal at the right price. This is adverse selection: hidden quality, not high cost, is what unravels the market, and every lost peach sale destroys a real \(\$400\) gain from trade.</p>
+    </div>
+        <div class="insight-box red"><strong>Information can destroy a market.</strong> Adverse selection means a market that would function perfectly under full information can collapse: once the average price buyers will pay falls below the peach seller&rsquo;s reserve, good cars exit, the pool worsens, and only lemons trade. The $400 gain from every peach sale is lost.</div>
       </div>
       <figure class="film" id="film-12-1">
         <div class="film-frame">
@@ -97,51 +117,26 @@
           </details>
         </figcaption>
       </figure>
-      <div class="fig-prose">
-        <p class="fig-intro">
-      Buyers cannot tell a peach from a lemon, so they offer the average value \(\mathbb{E}[WTP] = 1{,}200 + 1{,}200p\),
-      where \(p\) is the fraction of peaches. Peach sellers will only sell if that average clears their $2,000 reserve
-      price. Slide the peach fraction: above the knife-edge \(p^{*} = 2/3\) the market pools and both types trade; below
-      it, the average is too low, peaches exit, and only lemons are left.
-    </p>
-        <div class="explain">
-      <div class="ex-h">Reading the graph</div>
-      <p>The rising blue line is what buyers will pay, the <em>average</em> value of a car drawn from the pool, \(\mathbb{E}[WTP] = 1{,}200 + 1{,}200p\); it climbs as the fraction of peaches \(p\) rises. The flat dashed line is the peach seller&rsquo;s \(\$2{,}000\) reserve: they only sell if buyers offer at least that. Where blue crosses the reserve is the knife-edge \(p^{*} = 2/3\). The green region to its right is <em>pooling</em> (both types trade); the red region to its left is <em>separating</em> (peaches have exited).</p>
-      <div class="ex-h">The economics</div>
-      <p>Because buyers cannot tell a peach from a lemon, they price the average. When there are too few peaches, that average sits below what a peach is worth to its owner, so peach sellers walk away, which lowers the average further. The market is left trading only lemons even though buyers and peach sellers would both gain from a deal at the right price. This is adverse selection: hidden quality, not high cost, is what unravels the market, and every lost peach sale destroys a real \(\$400\) gain from trade.</p>
-    </div>
-        <div class="insight-box red"><strong>Information can destroy a market.</strong> Adverse selection means a market that would function perfectly under full information can collapse: once the average price buyers will pay falls below the peach seller&rsquo;s reserve, good cars exit, the pool worsens, and only lemons trade. The $400 gain from every peach sale is lost.</div>
-      </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs121-wrap"></div></div>
-          <div class="ctrl-row">
-      <div class="ctrl">
-        <span class="ctrl-label">Fraction of peaches p: <span class="ctrl-value" id="v121-p-val">0.50</span></span>
-        <input type="range" id="v121-p" min="0" max="1" step="0.003333333333333333" value="0.5" oninput="v121Draw()">
-      </div>
-      <button class="btn" onclick="document.getElementById('v121-p').value=String(2/3);v121Draw()">Knife-edge (p* = ⅔)</button>
-    </div>
-          <div class="fig-state" id="v121-readout"></div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f121" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
   <div class="sec-divider">Credible Signals</div>
 
   <!-- FIG 12.2 -->
-  <section class="sec page fig-sec" id="sec-122">
+  
+      <section class="sec page" id="sec-122">
       <div class="fig-prose">
-        <div class="fig-hd">
-      <span class="fig-n">Fig 12.2</span>
-      <h3>Spence Signaling: The Separating Range</h3>
-    </div>
+        <div class="sec-hd">
+          <span class="sec-n">§ 12.2</span>
+          <h2>Spence Signaling: The Separating Range</h2>
+        </div>
         <p class="fig-intro">
       High-productivity workers earn \(y_H = \$100k\), low types \(y_L = \$40k\); education costs the high type \(c_H = s\)
       but the low type \(c_L = 3s\) (single crossing). An employer pays the high wage only above an education threshold
-      \(s^{*}\). Slide it: the threshold separates the types only when it is high enough that the low type will not mimic
+      \(s^{*}\). The threshold separates the types only when it is high enough that the low type will not mimic
       (\(s^{*} \ge 20\)) yet low enough that the high type still bothers (\(s^{*} \le 60\)). The green band is the whole
-      separating range; \(s^{*} = 20\) is the least-wasteful one.
+      separating range; \(s^{*} = 20\) is the least-wasteful one. In Fig 12.2 below, mark both edges of that range on the
+      graph before the payoff lines appear; after the reveal, drag the threshold to see what each type nets.
     </p>
         <div class="explain">
       <div class="ex-h">Reading the graph</div>
@@ -151,141 +146,25 @@
     </div>
         <div class="insight-box"><strong>Single-crossing is the whole trick.</strong> A signal separates types only when it is cheaper for the high type, so the low type will not mimic it. Because education adds no productivity in this model, any positive signaling level is pure social waste, a cost paid solely to prove who you are.</div>
       </div>
-      <div class="fig-bay">
-        <div class="fig-bay-inner">
-          <div class="fig-plot"><div class="demo-svg-wrap" id="cvs122-wrap"></div></div>
-          <div class="ctrl-row">
-      <div class="ctrl">
-        <span class="ctrl-label">Education threshold s*: <span class="ctrl-value" id="v122-s-val">20</span></span>
-        <input type="range" id="v122-s" min="0" max="80" step="1" value="20" oninput="v122Draw()">
-      </div>
-      <button class="btn" onclick="document.getElementById('v122-s').value=20;v122Draw()">Least-cost (s* = 20)</button>
-    </div>
-          <div class="fig-state" id="v122-readout"></div>
-        </div>
-      </div>
+      <div class="kit-bay"><div id="f122" class="mathjax_ignore tex2jax_ignore"></div></div>
     </section>
 
-  </main>
-</div>
+  
+    </main>
+  </div>
 
-<script src="assets/figplace.js"></script>
-<script src="assets/vizkit.js"></script>
-<script>
 
-// ── FIG 12.1: lemons market ─────────────────────────────────────────────────
-function v121Draw() {
-  var p = parseFloat(document.getElementById('v121-p').value);
-  // The slider steps in 1/300ths so it can land exactly on p* = 2/3.
-  var knife = Math.abs(p - 2 / 3) < 1e-6;
-  if (knife) p = 2 / 3;
-  document.getElementById('v121-p-val').textContent = knife ? '2/3' : p.toFixed(3);
-  var EWTP = knife ? 2000 : 1200 + 1200 * p, reserve = 2000, pstar = 2 / 3;
-  var pooling = EWTP >= reserve;
-  var usd = function (v) { return '$' + Math.round(v).toLocaleString('en-US'); };
 
-  var scX = d3.scaleLinear().domain([0, 1]).range([D3PAD.left, D3W - D3PAD.right]);
-  var scY = d3.scaleLinear().domain([1000, 2600]).range([D3H - D3PAD.bottom, D3PAD.top]);
-  var svg = d3MakeSvg('cvs121-wrap');
-  d3AddAxes(svg, scX, scY, 'Fraction of peaches  p', 'Dollars', function (d) { return d.toFixed(1); }, function (d) { return '$' + (d / 1000).toFixed(1) + 'k'; });
-
-  // shaded pooling (p >= p*) vs separating (p < p*) regions
-  svg.append('rect').attr('x', scX(0)).attr('y', D3PAD.top).attr('width', scX(pstar) - scX(0)).attr('height', (D3H - D3PAD.bottom) - D3PAD.top).attr('fill', FILL_DWL).attr('opacity', 0.5);
-  svg.append('rect').attr('x', scX(pstar)).attr('y', D3PAD.top).attr('width', scX(1) - scX(pstar)).attr('height', (D3H - D3PAD.bottom) - D3PAD.top).attr('fill', FILL_GAIN).attr('opacity', 0.6);
-  d3Halo(svg, scX(pstar / 2), scY(2450), 'Separating: peaches exit', { color: STROKE_DWL, size: 10 });
-  d3Halo(svg, scX((pstar + 1) / 2), scY(2450), 'Pooling: both trade', { color: STROKE_GAIN, size: 10 });
-
-  // E[WTP] line and peach reserve
-  d3Seg(svg, scX, scY, 0, 1200, 1, 2400, EC.primary, 3);
-  d3Seg(svg, scX, scY, 0, reserve, 1, reserve, EC.second, 2, '6,4');
-  d3Halo(svg, scX(0.12), scY(1200 + 1200 * 0.12 + 60), 'E[WTP]', { color: EC.primary, anchor: 'start', size: 10 });
-  d3Halo(svg, scX(0.9), scY(reserve + 55), 'Peach reserve $2,000', { color: EC.second, anchor: 'end', size: 10 });
-  // knife-edge marker
-  d3Seg(svg, scX, scY, pstar, 1000, pstar, 2600, EC.slate, 1, '2,3');
-  d3Halo(svg, scX(pstar), scY(1080), 'p* = ⅔', { color: EC.slate, size: 10 });
-  // current p
-  d3Dot(svg, scX(p), scY(EWTP), EC.indicator, 6);
-  d3Halo(svg, scX(p), scY(EWTP) - 12, usd(EWTP), { color: EC.indicator, size: 10 });
-
-  document.getElementById('v121-readout').innerHTML =
-    '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">E[WTP]</div><div class="readout-val">' + usd(EWTP) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Peach reserve</div><div class="readout-val">$2,000</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Outcome</div><div class="readout-val">' + (knife ? 'Knife-edge' : pooling ? 'Pooling' : 'Separating') + '</div></div>' +
-    '</div><p style="margin-top:.6rem;color:' + (pooling ? EC.gain : EC.loss) + '">' +
-    (knife
-      ? 'E[WTP] = $2,000 exactly equals the $2,000 reserve. Peach sellers are just willing to stay, so both types still trade, but any lower p tips the market into separating.'
-      : pooling
-      ? 'E[WTP] = ' + usd(EWTP) + ' clears the $2,000 reserve, so peach sellers stay: both types trade (pooling). Buyers of lemons overpay a little.'
-      : 'E[WTP] = ' + usd(EWTP) + ' is below the $2,000 reserve, so peach sellers exit. Only lemons trade, and the $400 gain from every peach sale is destroyed.') +
-    '</p>';
-}
-
-// ── FIG 12.2: Spence signalling ─────────────────────────────────────────────
-function v122Draw() {
-  var s = parseFloat(document.getElementById('v122-s').value);
-  document.getElementById('v122-s-val').textContent = s;
-  var yH = 100, yL = 40;   // $000
-  // low type mimic payoff = yH - 3s; high type signal payoff = yH - s; outside = yL
-  var lowMimic = yH - 3 * s, highSignal = yH - s;
-  var valid = s >= 20 && s <= 60;
-  // Money in $000 with the sign in front of the dollar: -$140k, not $-140k.
-  var k = function (x) { return (x < 0 ? '-$' + (-x) : '$' + x) + 'k'; };
-
-  var scX = d3.scaleLinear().domain([0, 80]).range([D3PAD.left, D3W - D3PAD.right]);
-  var scY = d3.scaleLinear().domain([0, 110]).range([D3H - D3PAD.bottom, D3PAD.top]);
-  var svg = d3MakeSvg('cvs122-wrap');
-  d3AddAxes(svg, scX, scY, 'Education threshold  s*', 'Net payoff ($000)', null, function (d) { return '$' + d + 'k'; });
-
-  // valid separating band [20, 60]
-  svg.append('rect').attr('x', scX(20)).attr('y', D3PAD.top).attr('width', scX(60) - scX(20)).attr('height', (D3H - D3PAD.bottom) - D3PAD.top).attr('fill', FILL_GAIN).attr('opacity', 0.55);
-  d3Halo(svg, scX(40), scY(104), 'Separating range 20 ≤ s* ≤ 60', { color: STROKE_GAIN, size: 10 });
-
-  d3Seg(svg, scX, scY, 0, yL, 80, yL, EC.slate, 2, '6,4');                 // outside option yL = 40
-  d3Seg(svg, scX, scY, 0, yH, 80, yH - 80, EC.primary, 3);                 // high type signals: 100 - s
-  d3Seg(svg, scX, scY, 0, yH, 80 / 3, 0, EC.second, 3);                    // low type mimics: 100 - 3s
-  d3Halo(svg, scX(70), scY(yH - 70 + 4), 'High type: 100 − s', { color: EC.primary, anchor: 'end', size: 10 });
-  d3Halo(svg, scX(20), scY(yH - 3 * 20 + 5), 'Low type mimic: 100 − 3s', { color: EC.second, anchor: 'start', size: 10 });
-  // Left end of the dashed line, just under it: the one corner no payoff line
-  // crosses at any width. At the right end the label either sat on the
-  // high-type line (desktop) or was pushed 40px clear of its own line (phone).
-  // Two short lines keep it left of the low-type line at every width. The $40k value is the tick right beside it.
-  // One text element with two lines, so the placer treats it as one block.
-  var oy = scY(yL) + ((window.EC224Place && EC224Place.haloFont) ? EC224Place.haloFont(svg, 10) : 10) + 5;
-  var oT = d3Halo(svg, scX(0) + 6, oy, 'Outside', { color: EC.slate, anchor: 'start', size: 10 });
-  oT.append('tspan').attr('x', scX(0) + 6).attr('dy', '1.15em').text('option');
-  var oB = oT.node().getBBox();
-  d3.select(oT.node().previousSibling).attr('y', oB.y - 1.5).attr('height', oB.height + 3);
-
-  // threshold marker
-  d3Seg(svg, scX, scY, s, 0, s, 108, EC.indicator, 1.4, '3,3');
-  d3Dot(svg, scX(s), scY(Math.max(0, lowMimic)), EC.second, 5);
-  d3Dot(svg, scX(s), scY(highSignal), EC.primary, 5);
-
-  document.getElementById('v122-readout').innerHTML =
-    '<div class="readout-row">' +
-    '<div class="readout-col"><div class="readout-label">High type nets</div><div class="readout-val">' + k(highSignal) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Low type if mimics</div><div class="readout-val">' + k(lowMimic) + '</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Outside option</div><div class="readout-val">$40k</div></div>' +
-    '<div class="readout-col"><div class="readout-label">Separating?</div><div class="readout-val">' + (valid ? 'Yes' : 'No') + '</div></div>' +
-    '</div><p style="margin-top:.6rem;color:' + (valid ? EC.gain : EC.loss) + '">' +
-    (valid
-      ? 'Valid signal. The low type would net ' + k(lowMimic) + ' by faking it, ' + (lowMimic < yL ? 'below' : 'no better than') + ' its $40k outside option, so it does not bother; the high type nets ' + k(highSignal) + ', ' + (highSignal > yL ? 'above' : 'still at least') + ' $40k, so it does. The types separate.'
-      : (s < 20
-        ? 'Threshold too low: the low type nets ' + k(lowMimic) + ' by mimicking, above its $40k outside option, so it copies the high type and the signal fails.'
-        : 'Threshold too high: the high type nets only ' + k(highSignal) + ', below its $40k outside option, so even the high type skips education. No separation.')) +
-    '</p>';
-}
-
-document.addEventListener('DOMContentLoaded', function () { v121Draw(); v122Draw(); });
-</script>
-  <!-- Ask the Course AI, floating assistant -->
+  <!-- Ask the Course AI, floating 24/7 assistant -->
   <script src="assets/chatbot.js"></script>
   <script src="assets/ask-widget.js"></script>
-<script src="assets/nav.js" defer></script>
-<script src="assets/figlabels.js" defer></script>
-<script src="assets/figreset.js" defer></script>
+  <script src="assets/nav.js" defer></script>
   <script src="assets/autoplay-video.js"></script>
   <script src="assets/film.js"></script>
+  <!-- Predict, then see: engine, this week's economics and figures (single source: assets/predict/) -->
+  <script src="assets/predict/kit/kit.js"></script>
+  <script src="assets/predict/week12/models.js"></script>
+  <script src="assets/predict/week12/figs.js"></script>
+  <script>Kit.mount(window.W12FIGS, { films: false, store: 'ec224-w12-predict' });</script>
 </body>
 </html>

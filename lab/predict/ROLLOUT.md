@@ -10,14 +10,15 @@ made is tremendous... start adding these review/new animations across all lectur
   figs.js, models.js, NOTES.md). Open it, use it, read its code and NOTES before anything.
   Also glance at `lab/week11/v2/` (direct-manipulation handles): its big grabbable handles
   and snapping are welcome inside the "Explore" step after a reveal.
-- The shared engine (built in phase 1): `lab/predict/kit/` (kit.css, kit.js and docs in
-  `lab/predict/kit/README.md`). Week pages use the kit; they don't copy-paste engine code.
-- Week preview pages: `lab/predict/weekN/index.html` (+ that week's figs js). One page per
+- The shared engine (built in phase 1): `assets/predict/kit/` (kit.css, kit.js and docs in
+  `assets/predict/kit/README.md`; moved from `lab/predict/kit/` at the switchover). Week pages use the kit; they don't copy-paste engine code.
+- Week preview pages: `lab/predict/weekN/index.html`; since the switchover each week's models.js,
+  figs.js, verify.js and NOTES.md live in `assets/predict/weekN/` (one source for the preview and the live page). One page per
   week with all of that week's figures, in the same order and numbering as `weekN-viz.html`.
 - Films: `media/films/*.mp4` with posters. Weeks 2-4 currently have fig25, fig31, fig32,
   fig48 (and new ones may land during the chunk). Where a figure has a film, show it at the
   top of that figure's section with a plain `<video controls playsinline muted
-  preload="metadata" poster=...>` (paths `../../../media/films/...`), before the question.
+  preload="metadata" poster=...>` (the kit does this from the spec's `film`; paths `../../../media/films/...` from a lab page), before the question.
 
 ## Per figure
 Every figure on the week's viz page gets a predict-then-see version:
