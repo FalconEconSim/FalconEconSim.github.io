@@ -638,10 +638,9 @@
   }
   var f77 = {
     // several panels share one frame (data 0..100): every handle below carries its own tag in its panel's
-    // units (rule 1). The hover readout (rule 2) works in the firm panel on wide screens only: the kit draws
-    // its guides to the frame's own axes, which are the firm panel's axes only when the panels sit side by side.
-    hover: { snap: 0.02, text: function (f, x, y) {
-      if (f.S.narrow) return null;
+    // units (rule 1). The hover readout (rule 2) works in the firm panel; its guides stop at that panel's axes
+    // (side by side on wide screens, stacked on narrow ones).
+    hover: { snap: 0.02, guides: function (f) { var Fp = chainPanels(f.S)[0]; return { x: Fp.x0, y: Fp.y0 }; }, text: function (f, x, y) {
       var Fp = chainPanels(f.S)[0], l = pLocal(Fp, x, y); if (!l || l[0] < 0.05) return null;
       var pf = f.predicting || CH.SC[f.p.sc].dem ? PF0 : { c: f.sol.c1, F: CH.F };
       return 'q = ' + fixed(l[0], 2) + ', ' + d2(l[1]) + '\nSMC ' + d2(F.smc(pf, l[0])) + ', SAC ' + d2(F.sac(pf, l[0]));
@@ -952,10 +951,9 @@
   function lrDem(p, A) { return function (P) { var Q = A - p.B * P; return Q >= 0 ? Q : null; }; }
   var f79 = {
     // several panels share one frame (data 0..100): every handle carries its own tag in its panel's units
-    // (rule 1). Hover (rule 2): profit at the hovered output in the firm panel at the price it shows, on wide
-    // screens only (the kit's guides run to the frame's axes, which are the firm panel's when side by side).
-    hover: { snap: 0.02, text: function (f, x, y) {
-      if (f.S.narrow) return null;
+    // (rule 1). Hover (rule 2): profit at the hovered output in the firm panel at the price it shows; its guides
+    // stop at that panel's axes (side by side on wide screens, stacked on narrow ones).
+    hover: { snap: 0.02, guides: function (f) { var Fp = lrPanels(f, f.S)[0]; return { x: Fp.x0, y: Fp.y0 }; }, text: function (f, x, y) {
       var Fp = lrPanels(f, f.S)[0], l = pLocal(Fp, x, y); if (!l || l[0] < 0.05) return null;
       var p = f.p, st = LR.at(p, f.exploring ? Math.round(f.ex.n) : p.n0, p.A1), q = l[0];
       return 'q = ' + fixed(q, 2) + ', ' + d2(l[1]) + '\nprofit at ' + money(st.P) + ': ' + d2(q * st.P - F.tc(p, q));

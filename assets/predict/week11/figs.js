@@ -24,9 +24,6 @@
   }
   var AXQ = { xtitle: 'Quantity', ytitle: '$ per unit' };
   // is a handle that passes test(h) being dragged or keyed right now? (hide a static label that repeats its tag)
-  // a touch screen: grab full-height divider lines only near their knob, so a swipe over the plot scrolls the page
-  // (the kit's touchstart guard runs a handle's own hit test, so a tall hit strip would block scrolling)
-  function coarse() { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } }
   function busy(f, test) { var d = f.drag; return !!((d && d.kind === 'handle' && test(d.h)) || (f.kbd && f._kh && test(f._kh))); }
 
   /* =====================================================================
@@ -208,7 +205,8 @@
         var x = S.x(get());
         return { px: [x, S.y0 - 52], c: col, grip: 'h', step: step, active: active, split: true,
           tag: function (f) { return splitTag(f, get(), f.exploring); },
-          hit: function (pt) { return (coarse() ? Math.abs(pt.y - (S.y0 - 52)) < 44 : pt.y > S.y1 - 10 && pt.y < S.y0 + 10) ? Math.abs(pt.x - x) : 1e9; },
+          // full-height strip for the mouse; on touch the kit grabs it only within 44px of the knob, so a swipe scrolls
+          hit: function (pt) { return pt.y > S.y1 - 10 && pt.y < S.y0 + 10 ? Math.abs(pt.x - x) : 1e9; },
           set: function (f, X) { setv(f, Math.round(clamp(X, 0, T))); },
           key: function (f, dx, dy) { setv(f, clamp(get() + (dx || dy), 0, T)); if (f.exploring) { f.ex.touched = true; f.resolve(); } } };
       }
@@ -323,7 +321,7 @@
       if (f.predicting && (f.cur >= 1 || f.done[1])) {
         var x = S.x(f.g.q);
         return [{ px: [x, S.y1 + 18], grip: 'h', step: 1, active: f.cur === 1, qs: true, tag: function (f) { return 'Q* = ' + num(f.g.q); },
-          hit: function (pt) { return (coarse() ? Math.abs(pt.y - (S.y1 + 18)) < 44 : pt.y > S.y1 - 12 && pt.y < S.y0 + 10) ? Math.abs(pt.x - x) : 1e9; },
+          hit: function (pt) { return pt.y > S.y1 - 12 && pt.y < S.y0 + 10 ? Math.abs(pt.x - x) : 1e9; },   // touch: near the knob only (kit)
           set: function (f, X) { f.g.q = Math.round(clamp(X, 0, f.dom.X)); },
           key: function (f, dx, dy) { f.g.q = clamp(f.g.q + (dx || dy), 0, f.dom.X); } }];
       }

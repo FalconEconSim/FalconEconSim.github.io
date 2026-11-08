@@ -127,3 +127,7 @@ hover, page top and section starts.
 - 3.4 has 25 fixed scenarios (no numbers randomized); shifts are scored on direction only.
 - 3.2: below the price that puts B off the frame, the new-price stepper stops (B drag likewise).
 - Labels are placed by the kit's heuristic; with rare draws a tag can sit a little away from its point.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). The hand-made `§ 3.N` headings in live-edits.json are gone (the builder writes them now). 3.1 and 3.3 hover guides stop at the hovered panel's axes (`hover.guides`, `stackGuides`), which removes the first known limit; Explore steppers now follow an on-graph handle (kit), which removes the second.

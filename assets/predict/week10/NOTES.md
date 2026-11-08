@@ -137,3 +137,7 @@ two rounds.
 - 10.2 Explore: when both vendors stand on the same spot the A handle is grabbed first.
 - 10.5 drawing score is forgiving near the cliff (any jump within 2% of the rival's price is fine).
 - 10.1 at phone width: the drag tags with two lines are wide; they move above the finger.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). The 10.1 keyboard workaround (keyboard users got the pull knob alone in step 2) is gone: Space reaches the knob, arrows pull, Enter puts it down and hands the keys back (kit); kbdHint updated. 10.2 and 10.3 hovers use `hover.at` for the ring on the axis instead of a huge y snap. The preview style lost the phone-gutter rule (kit-site.css does it for every page). live-edits.json lost the 10.1 heading edit.

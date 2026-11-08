@@ -94,24 +94,18 @@
       step: function (f) { return f.sol.pull.step; },
       label: function (f, L) { return 'π = ' + (f.sol.pull.step < 1 ? cents(L) : money(L)); },
       // the knob starts on the right, where the curve is above demand again, away from the answers
-      ray: function (f) { var q = o.rayQ * f.sol.choke; return [q, rayY(f, q)]; }
+      ray: function (f) { var q = o.rayQ * f.sol.choke; return [q, rayY(f, q)]; },
+      // Pulled to the tangency, the knob sits on the very point the student must tap next, and a tap near a
+      // knob grabs the knob. So when it is let go near demand, it slides along its curve to the right-hand
+      // start position (same level, same curve; Kit.pull park), leaving the touching point free to tap.
+      park: function (f, x, y) {
+        var S = f.S, n = G.nearest(x, y, [[0, f.p.a], [f.sol.choke, 0]], (S.x1 - S.x0) / S.X, (S.y0 - S.y1) / S.Y);
+        if (Math.hypot(S.x(n.x) - S.x(x), S.y(n.y) - S.y(y)) > 44) return null;
+        var q = o.rayQ * f.sol.choke, yq = rayY(f, q);
+        return yq > 0 && yq < f.dom.Y ? [q, yq] : null;
+      }
     });
     function rayY(f, q) { var s = f.lv && f.lv.iso; return f.sol.iso.curve(s && s.round === f.round ? s.L : f.sol.pull.start, q); }
-    // Pulled to the tangency, the knob sits on the very point the student must tap next, and a tap near a
-    // knob grabs the knob. So when it is let go near demand, it moves along its curve to the right-hand
-    // start position (same level, same curve), leaving the touching point free to tap.
-    var handle = P.handle;
-    P.handle = function (f, S) {
-      var h = handle(f, S); if (!h) return h;
-      h.drop = function (f) {
-        var s = f.lv && f.lv.iso, S = f.S; if (!s || s.x == null) return;
-        var n = G.nearest(s.x, s.y, [[0, f.p.a], [f.sol.choke, 0]], (S.x1 - S.x0) / S.X, (S.y0 - S.y1) / S.Y);
-        if (Math.hypot(S.x(n.x) - S.x(s.x), S.y(n.y) - S.y(s.y)) > 44) return;
-        var q = o.rayQ * f.sol.choke, y = rayY(f, q);
-        if (y > 0 && y < f.dom.Y) { s.x = q; s.y = y; }
-      };
-      return h;
-    };
     return P;
   }
   var pull91 = isoPull({ rayQ: 0.8, when: function (f) { return f.predicting && f.done[0]; } });
@@ -710,25 +704,6 @@
     }
   };
 
-  // Workaround for a kit edge case (reported to the lead): "Try a new one" scrolls the question into view
-  // only when its top is above 0. Near the end of a short page the page shrinks as the verdict goes, the
-  // browser clamps the scroll, and the question can stop at 0 to --kit-top, under the sticky top bar
-  // (9.4 on the live page: 24px). After the kit's handler, scroll again if the question is under the chrome.
-  function kitTopPx(el) {
-    var v = (getComputedStyle(el).getPropertyValue('--kit-top') || '').trim(), n = parseFloat(v) || 0;
-    return /rem$/.test(v) ? n * parseFloat(getComputedStyle(document.documentElement).fontSize) : n;
-  }
-  function bindNewone(f) {
-    if (f._nw9) return; var b = f.$('.newone'); if (!b) return; f._nw9 = true;
-    b.addEventListener('click', function () {
-      requestAnimationFrame(function () {
-        var q = f.$('.fig-head'); if (!q) return;
-        var top = kitTopPx(f.root), r = q.getBoundingClientRect();
-        if (r.top < top - 1) q.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-      });
-    });
-  }
-  [f91, f92, f93, f94].forEach(function (sp) { var r = sp.render; sp.render = function (f, S, D) { bindNewone(f); return r.apply(this, arguments); }; });
 
   window.W9FIGS = [f91, f92, f93, f94];
 })();

@@ -92,14 +92,13 @@
         prompt: 'Now A commits to its output first and B replies along your B line. The dashed blue curve is one of A\'s iso-profit curves (same profit for A all along it; lower means more). Pull it down until it just touches your B line, then tap the point (q<sub>A</sub>, q<sub>B</sub>) where the market ends up.',
         kstart: function (f) { return { x: Math.round(f.dom.X * 0.3), y: Math.round(f.dom.Y * 0.6) }; } }
     ],
-    kbdHint: 'Keyboard: up and down arrows move the end on the q_B axis, Space switches to the other end (left and right arrows), Enter confirms the line. Then Space picks the iso-profit knob (up and down arrows pull it) and Space again goes back; Enter drops the Stackelberg point, arrows move it, Enter confirms.',
+    kbdHint: 'Keyboard: up and down arrows move the end on the q_B axis, Space switches to the other end (left and right arrows), Enter confirms the line. Then Space switches to the iso-profit knob (up and down arrows pull it) and Enter puts it down; Enter then drops the Stackelberg point, arrows move it, Enter confirms.',
     initGuess: function (f) { var st = MC1.start(f.dom); return { top: st.top, bot: st.bot, m1: false, m2: false, s: null }; },
     handles: function (f, S) {
       var g = f.g;
-      // keyboard users who confirmed B's line (Enter) get the pull knob alone in step 2: Space picks it, arrows
-      // pull, Space hands the keys back to the tap step (the kit's lone-knob toggle). A pointer press brings the ends back.
-      var kb = f.kbd && f.cur >= 1 && f.kstep !== 0;   // kstep 0: arrows still on an end that just finished step 1
-      if (f.predicting) return byStep(f, kb ? [pull101.handle(f, S)] : [
+      // keyboard in step 2: Space switches to the pull knob, arrows pull, Enter puts it down and hands the keys
+      // back to the tap step (kit behavior since the kit-fix round)
+      if (f.predicting) return byStep(f, [
         vHandle(S, 0, g.top, function (f, Y) { f.g.top = Y; f.g.m1 = true; }, { step: 0, active: f.cur === 0 && !g.m1, snap: 1 }),
         hHandle(S, g.bot, 0, function (f, X) { f.g.bot = Math.max(1, X); f.g.m2 = true; }, { step: 0, active: f.cur === 0 && !g.m2, snap: 1 }),
         pull101.handle(f, S)
@@ -232,8 +231,8 @@
     axes: { xtitle: 'Location on the beach (miles)', ytitle: 'A\'s share of the beach', yfmt: function (v) { return num(v, 0) + '%'; }, xfmt: function (v) { return num(v, 2); } },
     aspect: 0.62, narrowAspect: 0.95,
     // rule 2: A's share if A stood at the spot under the pointer. Explore only: in the question it is the answer.
-    // The y snap is larger than the axis, so the ring sits on the beach at that spot (y means nothing here).
-    hover: { snap: { x: 0.01, y: 1000 }, when: function (f) { return f.exploring; },
+    // The ring sits on the beach at that spot (hover.at; y means nothing here).
+    hover: { snap: { x: 0.01, y: 1 }, at: function (f, x) { return [x, 0]; }, when: function (f) { return f.exploring; },
       text: function (f, x) { return 'A at ' + fx(x, 2) + ': A\'s share ' + pct(100 * share(x, f.p.b)); } },
     question: function (f) { return 'Vendor B stands at ' + num(f.p.b, 2) + '. Where should A stand, and where do both end up?'; },
     setup: function (f) {
@@ -351,8 +350,8 @@
     },
     aspect: 0.7,
     // rule 2: the Cournot price at the whole number of firms under the pointer. Explore only: it is the answer.
-    // The ring sits on the n axis (the y snap is larger than the axis).
-    hover: { snap: { x: 1, y: 1e6 }, when: function (f) { return f.exploring; },
+    // The ring sits on the n axis (hover.at).
+    hover: { snap: { x: 1, y: 1 }, at: function (f, x) { return [x, 0]; }, when: function (f) { return f.exploring; },
       text: function (f, x) { var n = Math.round(x); return n < 1 || n > MN.NMAX ? null : 'n = ' + n + ': P* = ' + money(MN.P(f.p, n)); } },
     question: function (f) { return 'What is the market price with one firm, with ' + f.p.k + ' firms, and where does it head as more firms enter?'; },
     setup: function (f) {

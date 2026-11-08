@@ -230,7 +230,8 @@
     ty: function (f, y) { return stack(f, f.S).ty(y); }, iy: function (f, Y) { return stack(f, f.S).iy(Y); } });
   var f62 = {
     coords: coords62,
-    hover: { snap: { x: 0.1, y: 0.01 }, text: function (f, x, y) {
+    // the guides stop at the hovered panel's own axes (the top panel's L axis sits at frame y = tl)
+    hover: { snap: { x: 0.1, y: 0.01 }, guides: function (f, x, y) { return { x: 0, y: at62(f, y) === 'top' ? stack(f, f.S).tl : 0 }; }, text: function (f, x, y) {
       var c = coords62(f, x, y); if (!c) return null;
       if (at62(f, y) !== 'top') return c;
       var T = stack(f, f.S), K = clamp(snapTo(T.iy(y), 0.1), 0, f.dom.Yt);

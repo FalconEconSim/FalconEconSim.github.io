@@ -116,3 +116,7 @@ touch), revealed, Explore drag and hover, the film, the top of the page, plus fo
   above the line rather than right beside it.
 - 12.1 rounds p guesses to 0.01; p* is scored with full marks within 0.015, so 2/3 is reached at 0.67.
 - 12.2 explore can show negative net pay for the low type (e.g. -$110k at s* = 70), as the site does.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The preview style lost the verdict "You" cell rule and the phone-gutter rule (kit.css / kit-site.css do both now). live-edits.json lost the empty-style edit and the two heading edits (the builder writes `§ 12.N` headings now, on one line).

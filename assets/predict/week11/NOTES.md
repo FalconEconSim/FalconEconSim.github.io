@@ -146,3 +146,7 @@ with figure 2.3 replaced by 11.2) all OK at 1440 and 390 (rail anchors, drawer, 
 touch swipe scrolls, every figure skip / explore / new round); screenshot script `wk11/shots.js` in the
 scratchpad (hover, place drag, tag drags, draw with pen readout, reveal, Explore drags and hover) at 1440
 and 390 on the preview and the live page, two rounds.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). The coarse-pointer hit strips in 11.2 / 11.3 are plain strips again: on touch the kit grabs a custom hit only within 44px of the knob. The preview `<style>` (stage overflow clip) is gone: kit.css clips the hit-target layer. live-edits.json lost the 11.1 heading edit; the rebuild drops an empty `<style>`.

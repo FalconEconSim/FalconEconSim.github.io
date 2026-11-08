@@ -174,3 +174,7 @@ the 8.1 "PS" label off the "buyers want" tag on phones.
   different question of it.
 - Labels are placed by a deterministic heuristic; with rare draws a tag can sit a little away from its
   point, mostly on phones.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). live-edits.json lost the 8.4 heading edit. The rebuild also drops the dead `.toc` and `.step-box` rules.

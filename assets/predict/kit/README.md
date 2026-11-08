@@ -162,7 +162,7 @@ Return them from `spec.handles(f, S)` for whatever mode you are in (check `f.pre
   key: function (f, dx, dy) { ... },               // custom keyboard nudge (else arrows move x / y)
   kstep: 0.1 | { x, y },        // arrow-key step when there is no snap
   grab / drop: function (f) { },
-  tag: false | 'text' | function (f, h) { },   // live coordinate tag (see "Live coordinates"); tagValue: false
+  tag: false | 'text' | function (f, h) { },   // live coordinate tag (see "Live coordinates"); tagValue: false; tagColor: 2nd-line color
   tool: true }                  // set by Kit.pull: a helper knob, never a step answer
 ```
 
@@ -215,8 +215,8 @@ controls: [
 
 Steppers tween: `set` runs every frame with in-between values and once more with `final = true`.
 `min` and `max` may be numbers or `fn(f)`, read again on every click (bounds that depend on the round or on
-another control). The buttons' disabled state is refreshed after each stepper / seg click, not when an
-on-graph handle moves, but the clamp at click time always uses the current bounds. A `controls` array built
+another control). The steppers' values and disabled state are refreshed after each stepper / seg click and
+whenever an on-graph Explore handle moves (drag or arrow keys); the clamp at click time uses the current bounds. A `controls` array built
 by `fn(f)` is evaluated once per reveal (call `f.buildExplore()` from a seg's `set` to rebuild it).
 Rapid clicks step from the pending target, so values never drift. Buttons disable at min / max.
 
@@ -286,7 +286,11 @@ hover: {
   dp: 2,                   // decimals of the value (default 2), or fmt: function (v, f) { return Kit.money(v); }
   snap: 0.1,               // the readout point snaps to this grid (number or {x, y}); default about 1% of each axis
   when: function (f) { return f.exploring; },   // optional gate; default: always except during the reveal
-  text: function (f, x, y) { return '...'; }    // optional: the whole pill text ('\n' for two lines)
+  text: function (f, x, y) { return '...'; },   // optional: the whole pill text ('\n' for two lines)
+  at: function (f, x, y) { return [x, 0]; },    // optional: where the ring sits (a value of x only rides on the axis / a curve)
+  guides: function (f, x, y) { return { x: 0, y: T.tl }; },   // optional: data x / y where the dashed guides stop (the
+                                                // hovered panel's own axes when one frame holds several panels); false: none
+  vc: C.tGold                                   // optional: color of the pill's second line (default blue)
 }
 hover: true                // coordinates only
 ```
@@ -318,7 +322,9 @@ var pullIC = Kit.pull({
   // origin(f) -> [x, y] ray origin, pts(f, L) -> [[x, y]|null] for families that are not y(x) (L-shaped
   // isoquants; give levelAt too), draw(f, S, D, L, pts) custom drawing, c / w / dash / op / tc look,
   // showLabel: false, change(f, L) callback, X(f) / Y(f) data extent, ty(f, y) / iy(f, Y) data <-> frame
-  // y for stacked panels
+  // y for stacked panels (the default drawing is then cut at the panel's edges, X(f) by Y(f)),
+  // park(f, x, y) -> [x, y] | null: on release, if the knob sits on a spot the student must tap next (it was pulled
+  // to the tangency), slide it along its own curve (same level) to where the ray through [x, y] meets it (week 9)
 });
 // in the spec
 handles: function (f, S) { if (f.predicting) return [pullIC.handle(f, S)].filter(Boolean).concat(myHandles); ... },
@@ -329,7 +335,7 @@ A plum dashed curve with a knob on it. Dragging the knob anywhere makes the curv
 pointer (the level is `levelAt` of the pointer, snapped to `step`, kept in `range`), and the knob
 stays under the finger: it sits where the curve meets the ray from the origin through the pointer.
 Arrow keys step the level (Space selects the knob when other handles exist; a selected knob keeps
-the arrows even during a tap step). While it moves its tag shows "U = 8.9"; at rest a small label
+the arrows even during a tap step; Enter puts it down and hands the keys back to the current step). While it moves its tag shows "U = 8.9"; at rest a small label
 does. It is a tool, not an answer: `step` is undefined, so it never completes a step and is never
 scored; it disappears with the reveal (`when`). Accessors: `pullIC.level(f)`, `.moved(f)`,
 `.set(f, L)`, `.label(f)`. Week 2 uses it on 2.5 (Cobb-Douglas IC vs budget line) and 2.10
@@ -347,7 +353,8 @@ inside (cutting the line) and keep `range` well beyond the answer on both sides.
 ```
 
 Every round (first load and "Try a new one") opens straight in Explore with the truth drawn (`f.t(k)`
-is 1), no ghost, no score, no tally. Use it where the question would only be "read the value at a
+is 1), no ghost, no score, no tally. On first view the base picture draws in (`f.base()`) as in any
+figure; an `explore.init` needs no workaround for it any more. Use it where the question would only be "read the value at a
 point" (week 4's 4.2: slide along the demand curve and read the elasticity); put the value in the
 handle's `tag` and the readout. Keep a light question instead only when it asks for more than the
 reading. Record the change in the week's NOTES.md.
@@ -401,8 +408,10 @@ Kit.mount([fig], { store: 'example' });
 - Touch: Chromium ignores `touch-action` on SVG children, and some touch paths fire no
   `touchstart`. The kit therefore lays HTML hit targets (`.k-hits > .k-hit`, `touch-action: none`)
   over every handle, and over the plot during place / draw steps. Pointer listeners live on the
-  `.stage`, not the `<svg>`. A handle's custom `hit` area larger than 64px is still usable by
-  mouse, but on touch only its 64px disc blocks scrolling: keep custom hit areas near the knob.
+  `.stage`, not the `<svg>`. A handle's custom `hit` area (a strip along a line or an axis) works in full
+  for the mouse; on touch (and pen) the kit takes a press only within 44px of the knob, so a swipe across
+  the plot still scrolls the page (week 11's own coarse-pointer test is gone). The hit targets are clipped
+  to the plot (`.k-hits` overflow clip), so a knob at the plot's edge never makes the page scroll sideways.
 - Keyboard: arrows move the active handle (focus then sticks to it), Space cycles handles,
   Enter places or confirms. Focus follows a step, not a list index: arrows keep moving the handle you are
   on even after they complete its step, and Enter then moves focus to the next step's handle as soon as it
@@ -418,7 +427,10 @@ Kit.mount([fig], { store: 'example' });
   MathJax on the host page would read "$80 ... $5" in a setup as math: the figure's element carries
   `class="mathjax_ignore tex2jax_ignore"` (build-live.js writes it).
 - Sticky offsets: `--kit-top` (on the figure or any ancestor) is the height of sticky chrome above
-  the figure; the sticky plot and the "Try a new one" scroll stop below it. kit-site.css sets it.
+  the figure; the sticky plot and the "Try a new one" scroll stop below it (the scroll runs after the next
+  layout and fires when the question's top is above `--kit-top`, also when a short page shrank under it).
+  kit-site.css sets it, and on phones (<= 560px) puts the figure on a 16px gutter from the screen edge
+  whatever padding the page's `<main>` has.
 - Test hook: `Kit.mount` sets `window.__figs[key]` to each Figure, handy for scripts
   (`f.handles()`, `f.S`, `f.sol`, `f.reveal(false)`).
 
@@ -453,3 +465,30 @@ Kit.mount([fig], { store: 'example' });
   6. `Kit.mount(..., { films: false })`; `--kit-top` sticky offset; `target()` returns the handle index;
      `Kit.fixed`, `Kit.dpOf`, `Kit.pill`, `Kit.axisInfo`; the verdict table resets host table styles.
   7. `exploreFirst: true` (rule 4): a figure that opens in Explore every round, no score; `verdict` optional.
+- Kit-fix round (Nov 2026, after the switchover; one pass over the shared bugs the week agents had worked around).
+  Backward compatible; weeks 2 to 12 verify, their preview and live pages load clean.
+  1. Explore-first figures draw their base picture in on first view (the in-view observer only did it while
+     predicting, so 4.2 and 5.3 opened blank). Their `explore.init` workarounds are gone.
+  2. "Try a new one" scrolls the question back below `--kit-top` (read from the question's scroll-margin-top, after
+     the next layout); before it only reacted to a question above 0. Week 9's `bindNewone` is gone.
+  3. Touch: a custom `hit` (a strip) grabs only within 44px of the knob, so a swipe over the plot scrolls (week 11's
+     coarse-pointer hits are gone). kit.css clips the hit-target layer to the plot (week 11's stage clip is gone).
+  4. kit.css verdict table: cells wrap at spaces at every width and never inside a number (break-word, not anywhere):
+     week 7's, week 9's and week 12's per-figure table rules are gone.
+  5. `D.label(..., { prio: 0 })` really places first (`(o && o.prio) || 1` turned 0 into 1).
+  6. The hover readout follows the mouse during and after a handle drag (it showed the pre-drag point on release).
+  7. `hover.guides` (where the dashed guides stop, or false) and `hover.at` (where the ring sits); `hover.vc` and a
+     handle's `tagColor` color the pill's second line. 3.1, 3.3 and 6.2 stop the guides at the hovered panel's
+     axes; 7.7 and 7.9 too, so their hover now also works on narrow (stacked) layouts. Week 10 uses `at` on 10.2 and
+     10.3 instead of a huge y snap.
+  8. `Kit.pull`: with `ty` the default drawing is cut at the panel's edges; `park(f, x, y)` slides a released knob
+     along its curve off a spot the student must tap next (week 9's hand-made `drop` now uses it); Enter on a picked
+     knob puts it down and hands the keys back to the current step (week 10's "keyboard users get the knob alone" is
+     gone; its kbdHint says Space, arrows, Enter).
+  9. Explore steppers refresh while an on-graph handle moves (drag or keys), and a handle's own `key` in Explore now
+     re-solves like a drag does.
+  10. The screen-reader live region gets plain text: tags dropped and entities decoded (`&times;`, `&ge;`, `&lt;`
+      were read out literally in the why text and the step prompts).
+  11. kit-site.css: on phones the figure sits on a 16px gutter from the screen edge on every page (the -0.75rem bleed
+      assumed week 2's `main.main-content` padding; weeks 4 to 12 have none, so plots started 4px from the edge).
+      Weeks 10 and 12's page-style workarounds are gone.

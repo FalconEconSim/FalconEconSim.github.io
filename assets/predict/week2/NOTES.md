@@ -100,3 +100,7 @@ horizontal overflow.
   the plot, or in other steps away from handles, the page scrolls.
 - Labels are placed by a deterministic heuristic; with rare draws a tag can sit a little away
   from its point.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+Nothing to remove here. The rebuild drops two dead CSS rules (`.kw`, `.nm`, kept before by substring matching) and some empty comments; the page is otherwise unchanged. The builder now reports the text of each dropped bay: 2.3 ("What moves the line", the relative-price insight), 2.4 (the fuel-tax vs lump-sum real-world example and the "Quick test"), 2.8 ("What the triangle shows") and 2.9 (the full transitivity contradiction) lived in bays; most of it is said in the prose too, the fuel-tax example is not on the live page.

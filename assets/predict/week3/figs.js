@@ -73,6 +73,8 @@
   function topText(x, y) { return 'X = ' + fixed(x, 1) + ', Y = ' + fixed(y, 1); }
   function botText(x, p) { return 'X = ' + fixed(x, 1) + ', P_X = ' + dol(p); }
   // fallback tag for any handle without its own: coordinates in the panel's own units
+  // hover guides stop at the hovered panel's own axes (the top panel's quantity axis sits at frame y = tl)
+  function stackGuides(f, x, Yf) { var q = panelAt(f, Yf); return { x: 0, y: q && q.top ? stack(f, f.S).tl : 0 }; }
   function stackCoords(f, x, y) { var q = panelAt(f, y); return !q ? null : q.top ? topText(x, q.y) : botText(x, q.p); }
   // the pull curve in the top panel: data <-> frame y, extent of the top panel
   function topPull(o) {
@@ -133,7 +135,7 @@
     kbdHint: 'Keyboard: Enter drops a point, arrow keys move it, Enter confirms. Space picks the dashed curve; arrows then pull it.',
     // rule 2: top panel U and cost at the new price (what she would compute by hand); bottom panel the point,
     // plus her spending on X in Explore (in the question that would hand over the demand curve X = k / P)
-    hover: { snap: { x: 0.1, y: 0.02 }, text: function (f, x, Yf) {
+    hover: { snap: { x: 0.1, y: 0.02 }, guides: stackGuides, text: function (f, x, Yf) {
       var q = panelAt(f, Yf); if (!q) return null; x = r1(x);
       if (q.top) return f31Top(f, x, r1(q.y));
       var pr = Math.round(q.p * 20) / 20;
@@ -425,7 +427,7 @@
     kbdHint: 'Keyboard: left and right arrows slide the point along the line, Enter confirms. Then left and right shift the demand curve, Enter confirms. Space picks the dashed curve; arrows then pull it.',
     // rule 2: the bundle and its cost in the top panel (cost is what she checks by hand: every bundle on the
     // orange line costs the new income), the point in the demand panel
-    hover: { snap: { x: 0.1, y: 0.02 }, text: function (f, x, Yf) {
+    hover: { snap: { x: 0.1, y: 0.02 }, guides: stackGuides, text: function (f, x, Yf) {
       var q = panelAt(f, Yf); if (!q) return null; x = r1(x);
       if (!q.top) return botText(x, Math.round(q.p * 20) / 20);
       var y = r1(q.y); return topText(x, y) + '\ncosts ' + money(M.income.Px * x + M.income.Py * y);

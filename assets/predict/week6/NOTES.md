@@ -145,3 +145,7 @@ Space back, step flow to Reveal).
   (they do when w = v); the stacked layout is about the mapping bundle -> cost, not a shared axis.
 - Labels are placed by the kit's deterministic heuristic; with rare draws a tag can sit a little away
   from its point, mostly on phones.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). live-edits.json lost the 6.6 heading edit and the three CSS edits (`.two-col`, `.v61-steps`, `canvas`): the builder prunes CSS again after the edits. 6.2 hover guides stop at the hovered panel's axes (`hover.guides`), which removes the first known limit.

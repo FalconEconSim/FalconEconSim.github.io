@@ -195,9 +195,7 @@
       };
     },
     explore: {
-      // kit workaround: the in-view observer only draws the base picture in while predicting, so an explore-first
-      // figure would keep f.base() at 0 on first load (nothing drawn). Show it at once then; new rounds still animate.
-      init: function (f) { f.ex.P = exStart(f); if (!f.seen && !f.rv.base) f.rv.base = 1; },
+      init: function (f) { f.ex.P = exStart(f); },
       hint: 'Slide the point along the curve, or use the arrow keys. The line is colored by elasticity: red elastic, gold unit elastic, blue inelastic.',
       controls: [],
       readout: function (f) {

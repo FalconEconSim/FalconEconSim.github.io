@@ -113,8 +113,18 @@ What the builder does (so you can check it, and so you can do it by hand if a pa
   `assets/predict/weekN/figs.js`, then the lab page's mount script with `films: false` added
   (`<script>Kit.mount(window.WNFIGS, { films: false, store: 'ec224-wN-predict' });</script>`,
   plus whatever else that script does, e.g. week 7's Enter listener).
-- **Drops**: every `.fig-bay` (old controls, JSXGraph boards, readouts), stray `.fig-hd` headers
-  (the kit prints "Figure N.M" itself), the `fig-sec` class (the old prose | bay split), JSXGraph,
+- **Headings**: every `.fig-hd` ("Fig 4.3" + h3, inside the prose or directly in the section) becomes the
+  section heading `<div class="sec-hd"><span class="sec-n">§ 4.3</span><h2>Title</h2></div>` (the kit prints
+  "Figure N.M" itself, so the old figure number would show twice); a section-level one goes to the top of the
+  prose. A section that already has a `.sec-hd` (week 2) keeps it and loses its section-level `.fig-hd`. Each
+  move is logged.
+- **CSS**: the dead-rule prune runs before the edits and again after them, on whole class / id tokens; an
+  emptied `<style>` goes.
+- **WARN lines** (read them): text inside a dropped bay (teaching content? week 7's 7.3 proof lived in one),
+  old controls or empty boxes still on the page after the edits, kept page CSS that names a class the kit uses
+  inside its figures, and a `--lede` that found no `<p class="lede">` (add the lede with an edit instead).
+  `--out <file>` writes the result elsewhere, to diff a rebuild against the committed page.
+- **Drops**: every `.fig-bay` (old controls, JSXGraph boards, readouts), the `fig-sec` class (the old prose | bay split), JSXGraph,
   D3, `assets/figkit.js`, `assets/deltabar.js`, `assets/figplace.js`, `assets/figlabels.js`,
   `assets/figreset.js`, the tooltip script and `#tip-global` (tips lived in the bays), and every
   other inline script. It prints each drop: read the list. If an unexpected script goes (a page
@@ -162,9 +172,17 @@ stacked on phones). kit-site.css does the placement; the figure is never squeeze
   sets `--kit-top` (sticky plot, "Try a new one" scroll) and `scroll-padding-top` for anchors.
 - A tap within about 32px of a pull knob (touch) grabs the knob, not a new point. Scripts that tap
   an answer should pull the knob somewhere else first (week 2's pull test pulls to (4.5, 17.6)).
-- Heredocs in Bash strip backslashes: write scripts and JSON with the Write tool. The viz pages are
-  CRLF with a BOM; the builder writes CRLF and keeps the BOM. Never PowerShell Get-/Set-Content.
+- Heredocs in Bash strip backslashes: write scripts and JSON with the Write tool. Line ends: git stores the
+  viz pages with LF (core.autocrlf), the working copies are CRLF, and the builder writes CRLF; only week 2's
+  classic page has a BOM, and the builder keeps a BOM only where the classic page had one. Never PowerShell
+  Get-/Set-Content.
 - Do not edit `weekN-viz-classic.html` or the classic tag; the builder reads the tag, not the file.
+- Fixed in the kit since the switchover (kit README Changelog, "Kit-fix round"; do not work around these in a
+  week any more): phone gutter on pages without `main.main-content` padding, blank explore-first figures on first
+  view, verdict cells that overflowed or split numbers, hit strips that blocked touch scrolling, the "Try a new
+  one" scroll under the top bar, hover guides across stacked panels (`hover.guides`), `prio: 0`, a stale hover after
+  a drag, the pull curve running out of its panel, Enter on a picked pull knob, a pull knob left on the tap target
+  (`park`). After a builder change, rerun every week's exact command from its NOTES.md and diff the page.
 
 ### 6. Checklist before you hand back
 - [ ] `node assets/predict/weekN/verify.js` passes.
@@ -184,9 +202,11 @@ stacked on phones). kit-site.css does the placement; the figure is never squeeze
 - [ ] NOTES.md updated (per figure: rule 1 / 2 / 3 / 4, the build command, checks run).
 
 Scripts: `PORT=<port> node lab/predict/tools/loadcheck.js weekN-viz.html lab/predict/weekN/` (console
-errors, failed requests, overflow) and `PORT=<port> OUT=<folder> node lab/predict/tools/livecheck.js weekN-viz.html`
-(rail, drawer, ask widget, keyboard tag on figure 2.3: change that key, touch scroll, every figure reveal /
-explore / new round, at 1440 and 390; exits 1 on any problem). Write your own shot script for the hover,
+errors, failed requests, overflow) and `PORT=<port> OUT=<folder> node lab/predict/tools/livecheck.js weekN-viz.html [figKey]`
+(rail, drawer, ask widget, keyboard tag on figKey (default the first figure that is not explore-first; a tap step
+gets Enter first), a touch swipe from a point no knob claims, every figure reveal (waits up to SKIP_WAIT, default
+6 s) / explore / new round (explore-first figures: no "Just show me", Explore again after a new round), at 1440
+and 390; exits 1 on any problem). Write your own shot script for the hover,
 drag-tag, pull, reveal and explore screenshots (week 2 used one per figure). They are plain
 Playwright (`C:\MicroSite\review\node_modules\playwright-core`, `chromium.launch({channel:'msedge'})`)
 and use `window.__figs[key]` to turn data coordinates into screen points:

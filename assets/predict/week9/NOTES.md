@@ -144,3 +144,7 @@ pull, guessed, revealed, Explore drag and hover, on the preview and the live pag
 - Labels are placed by the kit's deterministic heuristic; on phones a tag can sit on a dashed
   guide line in 9.2's reveal.
 - verify.js runs 4,000 draws for 9.1 (grid search cost), 20,000 for the rest.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+`bindNewone` is gone (the kit scrolls the question back below `--kit-top` itself). `isoPull` uses `Kit.pull`'s `park` instead of its own `drop` (same behavior). live-edits.json lost the MathJax restore (the builder keeps an async mathjax script since the lead's fix; the page had it twice). The preview style lost the 9.3 verdict-cell rule (kit.css wraps cells now).

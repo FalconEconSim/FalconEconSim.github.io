@@ -149,3 +149,9 @@ while dragging, a misplaced else; and the 7.7 verdict overflow on the live page)
   answer cells are long (7.7's "up, $5.51 to $6.65"); it wraps on narrower content. Kit-wide, not fixed here.
 - Keyboard: every handle exists from the start of a round (none appears mid-round), arrows move the
   current step's handle, Space switches, Enter confirms and hands the arrows to the next step.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). The build command no longer passes `--lede` (the header has no p.lede, so it never did anything; the builder now warns): the lede is the first edit, after the byline, so the page has one like weeks 2 to 6. The 7.5 / 7.9 heading edits are gone. The preview style lost the 7.7 / 7.9 verdict-cell rule (kit.css wraps cells at every width now). 7.7 and 7.9 hover guides stop at the firm panel's axes (`hover.guides`), so the hover also works in the stacked narrow layout.
+
+Command now: `node lab/predict/tools/build-live.js 7 sec-71=f71 sec-72=f72 sec-73=f73 sec-75=f75 sec-77=f77 sec-78=f78 sec-79=f79 --edits lab/predict/week7/live-edits.json`

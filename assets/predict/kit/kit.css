@@ -50,6 +50,10 @@
 .kfig .film-cap b { display: block; color: var(--ink); font-size: 21px; font-weight: 800; margin-bottom: 4px; }
 /* touch targets over the SVG: touch-action works on HTML, not on SVG children */
 .kfig .k-hits { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; z-index: 1; }
+/* a knob at the plot's edge must not push its 64px target past the page edge (sideways scroll on phones): the
+   targets are clipped to the plot. Only the target layer is clipped, not the stage, so an axis title or tick label
+   that pokes a few px out of the SVG (overflow: visible) is still drawn whole */
+.kfig .k-hits { overflow: hidden; overflow: clip; }
 .kfig .k-hit { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; pointer-events: auto; touch-action: none; }
 .kfig .k-hit.k-area { margin: 0; border-radius: 0; }
 @media (hover: hover) and (pointer: fine) {
@@ -111,7 +115,9 @@
 .kfig .v-table { width: 100%; min-width: 0; border-collapse: collapse; margin: 18px 0 4px; font-size: 19px; }
 .kfig .v-table thead th { font-size: 16px; color: var(--soft); font-weight: 700; text-align: right; padding: 0 0 6px 12px; border-bottom: 2px solid var(--line); }
 .kfig .v-table tbody th { text-align: left; font-weight: 700; padding: 8px 8px 8px 0; }
-.kfig .v-table td { text-align: right; padding: 8px 0 8px 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* cells wrap at spaces when the panel is narrow ("up, $5.51 to $6.65"), never inside a word or number ("$2,440"):
+   break-word does not lower a table cell's minimum width, so the column keeps its longest word whole */
+.kfig .v-table td { text-align: right; padding: 8px 0 8px 12px; font-variant-numeric: tabular-nums; white-space: normal; overflow-wrap: break-word; }
 .kfig .v-table td.you { color: var(--plum); font-weight: 600; }
 .kfig .v-table td.ans { font-weight: 800; }
 .kfig .why { margin: 14px 0 0; font-size: 18px; }
@@ -163,8 +169,6 @@
   .kfig .btn { width: 100%; }
   .kfig .actions { gap: 4px; }
   .kfig .v-table { font-size: 17px; }
-  /* long answer cells wrap at spaces (or anywhere, as a last resort) instead of running past the panel */
-  .kfig .v-table td { white-space: normal; overflow-wrap: anywhere; }
   .kfig .v-table td.ans { min-width: 4.5em; }
   .kfig .stepper { width: 100%; justify-content: space-between; }
   .kfig .seg button { flex: 1 1 auto; padding: 10px 12px; }

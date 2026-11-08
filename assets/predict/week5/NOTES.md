@@ -140,3 +140,7 @@ keyboard pull (Space then arrows), revealed, explore, explore-first 5.3, new rou
 - In 5.4 and 5.6 the second handle starts on top of the first answer's level; the newer handle wins the
   grab, so to re-adjust the first, move the second away first.
 - Labels are placed by the kit's heuristic; with rare draws a tag can sit a little away from its point.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). The 5.3 `explore.init` draw-in workaround is gone (kit). live-edits.json lost the 5.1 heading edit; the 5.10 edit puts the section heading inside the new prose.

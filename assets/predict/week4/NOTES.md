@@ -126,3 +126,7 @@ and the readout only).
   4.2 about where elasticity changes.
 - Labels are placed by a deterministic heuristic; with rare draws a tag can sit a little away from
   its point, mostly on phones.
+
+## Kit-fix round (Nov 2026, after the switchover)
+
+The live page was rebuilt with the command above after the builder change; its `.fig-hd` headings are now section headings (`§ N.M` + h2), as in weeks 2, 3 and 12, so the figure number no longer shows twice (the kit prints "Figure N.M"). The 4.2 `explore.init` workaround is gone (the kit draws an explore-first figure in on first view). live-edits.json lost the `.toc` edit (the builder drops it now, whole-token matching) and the 4.3 heading edit; the 4.8 edit puts the section heading inside the new prose.

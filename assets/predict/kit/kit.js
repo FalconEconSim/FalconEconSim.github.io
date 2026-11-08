@@ -37,6 +37,13 @@
       : r.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return (neg ? '-$' : '$') + s;
   }
+  // HTML -> plain text for the screen-reader live region: tags dropped, entities decoded (&times; -> x sign, &ge;, &lt;)
+  var plainEl = null;
+  function plain(h) {
+    h = String(h == null ? '' : h).replace(/<[^>]+>/g, '');
+    if (h.indexOf('&') < 0) return h;
+    try { plainEl = plainEl || document.createElement('textarea'); plainEl.innerHTML = h; return plainEl.value; } catch (e) { return h; }
+  }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   // "P_X" -> P<sub>X</sub>, "MU_{XY}" -> MU<sub>XY</sub>, for HTML (escapes first)
   function sub(s) { return esc(s).replace(/_\{([^}]*)\}|_([A-Za-z0-9])/g, function (m, a, b) { return '<sub>' + (a || b) + '</sub>'; }); }
@@ -358,6 +365,18 @@
     for (var i = 0, n = o.n || 200; i <= n; i++) { var p = fn(t0 + (t1 - t0) * i / n); pts.push(p && isFinite(p[0]) && isFinite(p[1]) ? p : null); }
     return this.path(pts, o);
   };
+  // a data polyline clipped to the box [0, X] x [0, Y] segment by segment (nulls split it); the parts that
+  // leave the box become gaps, cut exactly at its edges, so a dashed curve keeps one dash pattern per run
+  function clipPts(pts, X, Y) {
+    var out = [], last = null;
+    for (var i = 1; i < pts.length; i++) {
+      var a = pts[i - 1], b = pts[i]; if (!a || !b) { last = null; continue; }
+      var c = G.clipSeg(X, Y, a[0], a[1], b[0], b[1]); if (!c) { last = null; continue; }
+      if (!last || Math.abs(last[0] - c[0]) > 1e-9 || Math.abs(last[1] - c[1]) > 1e-9) { if (out.length) out.push(null); out.push([c[0], c[1]]); }
+      last = [c[2], c[3]]; out.push(last);
+    }
+    return out;
+  }
   D.area = function (pts, o) {
     o = o || {}; if (o.op != null && o.op <= 0.01) return this;
     var S = this.S;
@@ -401,7 +420,7 @@
     return this.add(o.layer || 'over', K.text(px, py, s, Object.assign({ size: size }, o)));
   };
   // queued, collision-avoiding label. cands: [{x, y, anchor}] in pixels, best first
-  D.label = function (s, cands, o) { this.q.push({ s: s, cands: cands, o: o || {}, prio: (o && o.prio) || 1 }); return this; };
+  D.label = function (s, cands, o) { this.q.push({ s: s, cands: cands, o: o || {}, prio: o && o.prio != null ? o.prio : 1 }); return this; };
   D.around = function (x, y, d) { var p = this.px(x, y); return around(p[0], p[1], d); };
   D.aroundP = around;
   // candidate spots along y = fn(x) at the given data xs (pref 'below' tries under the curve first)
@@ -626,6 +645,14 @@
             anchor(f, s, [X, y]);
             if (o.change) o.change(f, s.L);
           },
+          // o.park(f, x, y) -> [x, y] | null: let go on a spot the student must tap next (a tangency the knob was
+          // pulled to), the knob slides along its own curve (same level) to where the ray through that point meets it
+          drop: o.park ? function (f) {
+            var s = st(f); if (s.x == null) return;
+            var to = o.park(f, s.x, s.y); if (!to) return;
+            var x = s.x, y = s.y; anchor(f, s, to);
+            if (s.x == null) { s.x = x; s.y = y; }
+          } : undefined,
           key: function (f, dx, dy) {
             var s = st(f), r = rng(f), d = dy || dx;
             s.L = fit(f, s.L + d * (stp(f) || (r[1] - r[0]) / 50)); s.moved = true;
@@ -635,7 +662,9 @@
       },
       render: function (f, S, D) {
         if (!on(f)) return;
-        var s = st(f), P = pts(f, s.L).map(function (p) { return p ? [p[0], ty(f, p[1])] : null; });
+        // with ty (a panel inside the frame) the curve is cut at the panel's edges, so it never runs into the next panel
+        var s = st(f), raw = pts(f, s.L); if (o.ty) raw = clipPts(raw, Xmax(f), Ymax(f));
+        var P = raw.map(function (p) { return p ? [p[0], ty(f, p[1])] : null; });
         if (o.draw) o.draw(f, S, D, s.L, P);
         else D.path(P, { c: o.c || C.plum, w: o.w || 4, dash: o.dash == null ? '11 7' : o.dash, op: o.op == null ? 0.95 : o.op });
         if (o.showLabel !== false && s.x != null && !busy(f)) D.near(s.x, ty(f, s.y), label(f, s.L), { c: o.tc || C.plum, size: S.ss, ring: 90, d: 22 });
@@ -773,7 +802,7 @@
     var all = f.done.every(Boolean);
     var btn = f.$('.reveal'); btn.disabled = !all;
     btn.classList.toggle('ready', all);
-    var sr = all ? 'All guesses in. Press Reveal the answer.' : (spec.steps[f.cur] ? 'Step ' + (f.cur + 1) + ': ' + String(f.stepPrompt(f.cur)).replace(/<[^>]+>/g, '') : '');
+    var sr = all ? 'All guesses in. Press Reveal the answer.' : (spec.steps[f.cur] ? 'Step ' + (f.cur + 1) + ': ' + plain(f.stepPrompt(f.cur)) : '');
     f.$('.sr').textContent = (f.msg ? f.msg + ' ' : '') + sr + ' ' + (spec.kbdHint || 'Keyboard: arrow keys move the highlighted handle, Space switches handles, Enter places or confirms.');
   };
 
@@ -915,19 +944,25 @@
     var others = function (me) { return hs.filter(function (h) { return h !== me; }).map(function (h) { return [h.px[0], h.px[1], 21]; }); };
     var t = subj ? f.tagText(subj) : null;
     if (t) {
-      var r = pill(S, pen.L, subj.px[0], subj.px[1], t, { c: subj.c || C.plum, touch: touch && !!d, prev: f.tagPrev, avoid: others(subj) });
+      var r = pill(S, pen.L, subj.px[0], subj.px[1], t, { c: subj.c || C.plum, vc: subj.tagColor, touch: touch && !!d, prev: f.tagPrev, avoid: others(subj) });
       f.tagPrev = r.idx; out += r.svg;
     } else f.tagPrev = null;
     var hp = f.hov;
     if (!t && hp && f.hoverOn() && !(d && d.kind !== 'draw') && f.inPlot(hp, 0)) {
-      var hv = f.spec.hover, q = f.hoverPoint(hp), px = S.x(q.x), py = S.y(q.y);
+      var hv = f.spec.hover, q = f.hoverPoint(hp);
+      // hv.at(f, x, y) -> [x, y]: where the ring sits (a value that depends on x only rides on an axis or a curve)
+      var at = hv.at ? hv.at(f, q.x, q.y) : null; if (at) { q.x = at[0]; q.y = at[1]; }
+      var px = S.x(q.x), py = S.y(q.y);
       var txt = hv.text ? hv.text(f, q.x, q.y) : [f.coordText(q.x, q.y, { dx: q.dx, dy: q.dy, hover: true }), f.valueText(q.x, q.y)].filter(Boolean).join('\n');
       if (txt) {
+        // hv.guides: false (none) or fn(f, x, y) -> { x, y }: the data x / y where the guides stop (the hovered
+        // panel's own axes in a frame of stacked or side-by-side panels); default the frame's axes, x = 0 and y = 0
+        var gd = hv.guides === false ? false : typeof hv.guides === 'function' ? hv.guides(f, q.x, q.y) : {};
         var st = { c: C.soft, w: 1.5, dash: '4 5', op: 0.85 };
-        out += '<g pointer-events="none">' + K.pline(px, py, px, S.y0, st) + K.pline(px, py, S.x0, py, st) +
+        out += '<g pointer-events="none">' + (gd ? K.pline(px, py, px, S.y(gd.y || 0), st) + K.pline(px, py, S.x(gd.x || 0), py, st) : '') +
           '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="7" fill="none" stroke="' + C.ink + '" stroke-width="2.5"/>' +
           '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="2.5" fill="' + C.ink + '"/></g>';
-        out += pill(S, pen.L, px, py, txt, { c: C.ink, touch: touch, prev: f.hovPrev, avoid: others(null) }).svg;
+        out += pill(S, pen.L, px, py, txt, { c: C.ink, vc: hv.vc, touch: touch, prev: f.hovPrev, avoid: others(null) }).svg;
         f.hovPrev = null;
       }
     }
@@ -977,7 +1012,7 @@
       if (sx) X = clamp(snapTo(X, sx), 0, S.X); if (sy) Y = clamp(snapTo(Y, sy), 0, S.Y);
     }
     h.set(this, X, Y);
-    if (this.exploring) { this.ex.touched = true; this.resolve(); }
+    if (this.exploring) { this.ex.touched = true; this.resolve(); this.syncControls(); }   // steppers follow an on-graph handle
   };
 
   /* timelines: seq = [[key, startMs, durMs], ...]; values in f.rv go 0 -> 1 (eased) */
@@ -1060,7 +1095,7 @@
     f.$('.again').hidden = false;
     f.$('.tally').innerHTML = t.played ? '<span><b>' + t.played + '</b> ' + (t.played === 1 ? 'round' : 'rounds') + '</span><span>best <b>' + t.best + '</b></span>' +
       (t.streak >= 2 ? '<span><b>' + t.streak + '</b> in a row at 70+</span>' : '') : '';
-    f.$('.sr').textContent = (res ? tier(res.total).head + ' ' + res.total + ' of 100. ' : '') + v.why.replace(/<[^>]+>/g, '');
+    f.$('.sr').textContent = (res ? tier(res.total).head + ' ' + res.total + ' of 100. ' : '') + plain(v.why);
     var n = vd.querySelector('.v-num');
     if (n) {
       var to = +n.getAttribute('data-to');
@@ -1148,6 +1183,9 @@
     var hs = f.handles(), best = null, bi = -1, bd = touch ? 32 : 22;
     hs.forEach(function (h, i) {
       var d = h.hit ? h.hit(pt) : Math.hypot(pt.x - h.px[0], pt.y - h.px[1]);
+      // on touch a custom hit (a strip along a line or an axis) grabs only within 44px of the knob, so a swipe
+      // across the plot still scrolls the page; the mouse keeps the whole strip
+      if (touch && h.hit && Math.hypot(pt.x - h.px[0], pt.y - h.px[1]) > 44) d = Infinity;
       if (d < bd) { bd = d; best = h; bi = i; }
     });
     if (best) return { kind: 'handle', h: best, i: bi };
@@ -1180,7 +1218,11 @@
       f.move(pt);
     });
     stg.addEventListener('pointermove', function (e) {
-      if (f.drag && e.pointerId === f.dragId) { e.preventDefault(); f.move(f.local(e)); }
+      if (f.drag && e.pointerId === f.dragId) {
+        e.preventDefault(); var dp = f.local(e);
+        if (e.pointerType === 'mouse' && f.drag.kind !== 'draw') f.hov = f.spec.hover && f.inPlot(dp, 0) ? dp : null;   // so the readout is not stale on release
+        f.move(dp);
+      }
       else if (!f.drag && e.pointerType === 'mouse') {
         var pt = f.local(e), t = f.target(pt, false);
         stg.style.cursor = t ? (t.kind === 'handle' ? 'grab' : 'crosshair') : (f.spec.hover && f.hoverOn() && f.inPlot(pt, 0) ? 'crosshair' : '');
@@ -1200,6 +1242,10 @@
       var step = t.kind === 'handle' ? t.h.step : t.step;
       if (t.kind === 'handle' && t.h.drop) t.h.drop(f);
       if (f.predicting && step != null) f.completeStep(step);
+      if (e.pointerType === 'mouse') {   // the mouse is still over the plot: show what is under it now
+        var up = f.local(e), ut = f.target(up, false);
+        f.hovH = ut && ut.kind === 'handle' ? ut.i : null; f.hov = f.spec.hover && f.inPlot(up, 0) ? up : null;
+      }
       f.render();
     }
     stg.addEventListener('pointerup', end);
@@ -1210,8 +1256,12 @@
     f.$('.skip').addEventListener('click', function () { f.reveal(true); });
     f.$('.newone').addEventListener('click', function () {
       f.newRound(true);
-      var q = f.$('.fig-head'), r = q.getBoundingClientRect();
-      if (r.top < 0) q.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+      // after the next layout (the verdict and Explore are gone, so a short page may have shrunk and the browser
+      // clamped the scroll): if the question is above the sticky chrome (its scroll-margin-top is --kit-top), bring it back
+      requestAnimationFrame(function () {
+        var q = f.$('.fig-head'), top = parseFloat(getComputedStyle(q).scrollMarginTop) || 0;
+        if (q.getBoundingClientRect().top < top - 1) q.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+      });
     });
     f.root.addEventListener('click', function (e) {
       if (!f.exploring) return;
@@ -1219,11 +1269,11 @@
       b = e.target.closest('[data-act]');
       if (b && f.spec.explore.act) { f.ex.touched = true; f.spec.explore.act(f, b.getAttribute('data-act'), b); }
     });
-    // first time on screen: draw the base curves in
+    // first time on screen: draw the base curves in (also in an explore-first figure, which opens in Explore)
     if ('IntersectionObserver' in window && !RM) {
       var io = new IntersectionObserver(function (es) {
         es.forEach(function (en) {
-          if (en.isIntersecting && !f.seen) { f.seen = true; io.disconnect(); if (f.predicting && f.rv.base < 1) f.play([['base', 0, 1000]]); }
+          if (en.isIntersecting && !f.seen) { f.seen = true; io.disconnect(); if (!f.revealing && f.rv.base < 1) f.play([['base', 0, 1000]]); }
         });
       }, { threshold: 0.35 });
       io.observe(f.stage);
@@ -1321,7 +1371,7 @@
     // a lone tool knob (a pull curve before any point is placed): Space picks it, Space again hands the keys back to the step
     if (k === ' ' && hs.length === 1 && hs[0].tool) {
       f.kpick = !f.kpick; f.kfocus = 0; f.kstep = null; f.kbd = f.kpick;
-      f.$('.sr').textContent = f.kpick ? 'Curve knob selected: arrow keys move the curve, Space goes back.' : 'Step ' + (f.cur + 1) + ': ' + String(f.stepPrompt(f.cur)).replace(/<[^>]+>/g, '');
+      f.$('.sr').textContent = f.kpick ? 'Curve knob selected: arrow keys move the curve, Space goes back.' : 'Step ' + (f.cur + 1) + ': ' + plain(f.stepPrompt(f.cur));
       f.render(); e.preventDefault(); return;
     }
     if (k === ' ' && hs.length > 1) {
@@ -1333,17 +1383,23 @@
     var h = f.keyHandle(hs); if (!h) return;
     e.preventDefault(); f.kbd = true; f.kfocus = hs.indexOf(h); f.kstep = h.step; f.kpick = true;
     if (k === 'Enter') {
+      // a tool knob (Kit.pull) picked with Space: Enter puts it down and hands the keys back to the current step
+      if (h.tool) {
+        f.kpick = false; f.kstep = null;
+        f.$('.sr').textContent = f.predicting && f.cur < f.spec.steps.length ? 'Curve knob put down. Step ' + (f.cur + 1) + ': ' + plain(f.stepPrompt(f.cur)) : 'Curve knob put down.';
+        f.render(); return;
+      }
       if (h.step != null) {
         f.completeStep(h.step); f.focusStep();
         // the next step has no handle yet (a place or draw step): hand the keys to it
-        if (f.kstep !== f.cur && f.cur < f.spec.steps.length) { f.kpick = false; f.kstep = null; f.$('.sr').textContent = 'Step ' + (f.cur + 1) + ': ' + String(f.stepPrompt(f.cur)).replace(/<[^>]+>/g, ''); }
+        if (f.kstep !== f.cur && f.cur < f.spec.steps.length) { f.kpick = false; f.kstep = null; f.$('.sr').textContent = 'Step ' + (f.cur + 1) + ': ' + plain(f.stepPrompt(f.cur)); }
       }
       f.render(); return;
     }
     var nx = h.x != null ? h.x : S.ix(h.px[0]), ny = h.y != null ? h.y : S.iy(h.px[1]);
     var ks = h.kstep, kx = ks ? (typeof ks === 'object' ? ks.x : ks) : (h.snap ? (typeof h.snap === 'object' ? h.snap.x : h.snap) : S.X / 100);
     var ky = ks ? (typeof ks === 'object' ? ks.y : ks) : (h.snap ? (typeof h.snap === 'object' ? h.snap.y : h.snap) : S.Y / 100);
-    if (h.key) h.key(f, dx * big, dy * big);
+    if (h.key) { h.key(f, dx * big, dy * big); if (f.exploring) { f.ex.touched = true; f.resolve(); f.syncControls(); } }
     else f.setHandle(h, nx + dx * big * (kx || S.X / 100), ny + dy * big * (ky || S.Y / 100));
     var was = f.done.join();
     if (h.step != null && f.predicting && !h.noAutoDone) f.completeStep(h.step, true);   // arrows keep focus; Enter moves on

@@ -363,9 +363,8 @@
       };
     },
     explore: {
-      // the page's start: L = K = Q, MRTS 1. Kit workaround: the first-view draw-in only plays while predicting,
-      // so an explore-first figure would keep base() = 0 (no curve) until a new round; play it here instead.
-      init: function (f) { f.ex.L = f.p.q; if (f.base() < 1) f.play([['base', 0, 900]]); },
+      // the page's start: L = K = Q, MRTS 1 (the kit draws the curve in on first view, explore-first or not)
+      init: function (f) { f.ex.L = f.p.q; },
       hint: function (f) { var m = f.p.m; return 'Drag the green point along the isoquant, or change the output level. Can you find where one more worker replaces ' + mTxt(m) + ' machine' + (m === 1 ? '' : 's') + ' (MRTS = ' + mTxt(m) + ')?'; },
       controls: [{ kind: 'stepper', label: 'Output Q', get: function (f) { return f.p.q; }, set: function (f, v, fin) { f.p.q = fin ? Math.round(v) : v; }, step: 1, min: 2, max: 6, fmt: function (v) { return num(v, 0); }, dur: 400 }],
       readout: function (f) {
