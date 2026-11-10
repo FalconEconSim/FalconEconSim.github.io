@@ -31,9 +31,8 @@
      sparkle, and it is drawn in currentColor so it sits on any ground. */
   var MARK =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
-    '<path d="M3 2.5V21h18.5" stroke-width="2.4"/>' +
-    '<path d="M8 2.6C8.8 10.8 12.2 15 22 15.8" stroke-width="2.6"/>' +
-    '<circle cx="11.6" cy="12" r="3.6" fill="currentColor" stroke="none"/></svg>';
+    '<path d="M4 3.5h16a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4H4A1.5 1.5 0 0 1 2.5 15V5A1.5 1.5 0 0 1 4 3.5z" stroke-width="2.2"/>' +
+    '<path d="M6.5 7C7.2 11 9.8 12.8 17.5 13" stroke-width="2.2"/></svg>';
 
   var LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">' +
     '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
