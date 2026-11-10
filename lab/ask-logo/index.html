@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Course AI mark options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#eff1ee; --raised:#fff; --ink:#14181b; --soft:#4a5257; --rule:#d8dcd7; --plum:#7a1f5c; --blue:#1f6fb2; --orange:#c85a3c; --dark:#1b1f22; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:18px/1.5 'Libre Franklin', Helvetica, Arial, sans-serif; }
+  main { max-width:1180px; margin:0 auto; padding:56px 24px 96px; }
+  h1 { font-size:clamp(32px,5vw,52px); line-height:1.05; margin:0 0 14px; font-weight:800; }
+  .lede { color:var(--soft); max-width:64ch; margin:0 0 40px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; }
+  .card { background:var(--raised); border:2px solid var(--ink); border-radius:14px; padding:22px; }
+  .card.current { border-style:dashed; }
+  .tag { font-size:14px; font-weight:800; color:var(--plum); letter-spacing:.04em; text-transform:uppercase; margin:0 0 4px; }
+  h2 { font-size:24px; margin:0 0 6px; font-weight:800; }
+  .idea { margin:0 0 18px; color:var(--soft); font-size:16px; }
+  .sizes { display:flex; align-items:flex-end; gap:22px; margin:0 0 16px; color:var(--ink); }
+  .sizes span { display:block; font-size:12px; color:var(--soft); text-align:center; margin-top:4px; }
+  .sizes svg { display:block; }
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:14px; }
+  .pill { display:inline-flex; align-items:center; gap:8px; height:46px; padding:0 18px 0 14px; border:2px solid var(--ink); border-radius:999px; background:#fff; font-weight:800; font-size:17px; }
+  .pill svg { width:22px; height:22px; }
+  .dark { background:var(--dark); color:#eef0ee; border-radius:10px; padding:10px 14px; display:inline-flex; gap:14px; align-items:center; }
+  .dark svg { width:28px; height:28px; }
+  .link { display:inline-flex; align-items:center; gap:8px; font-size:16px; color:var(--ink); text-decoration:underline; text-decoration-color:var(--rule); text-underline-offset:4px; text-decoration-thickness:2px; }
+  .link svg { width:20px; height:20px; }
+  .ctx { margin-top:14px; display:flex; flex-direction:column; gap:12px; }
+  footer { margin-top:40px; color:var(--soft); font-size:15px; }
+  @media (max-width:640px) { main { padding:36px 16px 72px; } .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Course AI mark options</h1>
+  <p class="lede">Each option at 16, 24, 40 and 64 pixels, on dark, inside the real "Ask" button, and next to the "Ask about this figure" link. All use one color so they work anywhere. Pick a letter, or mix ideas.</p>
+  <div class="grid" id="grid"></div>
+  <footer>Dev page, not linked from the course site.</footer>
+</main>
+<script>
+// Each mark: 24 x 24 viewBox, drawn in currentColor (accent strokes noted).
+var A = 'fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"';
+var MARKS = [
+  { id:'now', name:'Current', idea:'Axes, a curve and a point on it. Shown for comparison.', current:true,
+    svg:'<path d="M3 2.5V21h18.5" stroke-width="2.4"/><path d="M8 2.6C8.8 10.8 12.2 15 22 15.8" stroke-width="2.6"/><circle cx="11.6" cy="12" r="3.6" fill="currentColor" stroke="none"/>' },
+  { id:'A', name:'Curve question mark', idea:'A question mark whose hook is a smooth curve, with the dot as a point on a graph. Reads instantly as "ask".',
+    svg:'<path d="M7.5 8.2C7.5 4.9 9.6 3 12.2 3c2.8 0 4.8 1.9 4.8 4.4 0 2.6-2.2 3.6-3.6 4.6-1.1.8-1.4 1.6-1.4 3.2" stroke-width="2.8"/><circle cx="12" cy="20.2" r="2.1" fill="currentColor" stroke="none"/>' },
+  { id:'B', name:'Equilibrium cross', idea:'Supply crossing demand, with the answer at the intersection. The most "econ" option.',
+    svg:'<path d="M4 4.5L20 19.5" stroke-width="2.8"/><path d="M4 19.5L20 4.5" stroke-width="2.8"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/>' },
+  { id:'C', name:'Lowest point', idea:'A U-shaped cost curve resting on a line at its minimum: finding the optimum.',
+    svg:'<path d="M3 3.5C5 19.5 19 19.5 21 3.5" stroke-width="2.6"/><path d="M2 15.5H22" stroke-width="2.6"/><circle cx="12" cy="15.5" r="3" fill="currentColor" stroke="none"/>' },
+  { id:'D', name:'Monogram', idea:'A solid tile with "EC" in heavy type. Brand-like, no metaphor to decode.', fill:true,
+    svg:'<mask id="ecm"><rect width="24" height="24" fill="#fff"/><text x="12" y="16.4" text-anchor="middle" font-family="Libre Franklin, Arial, sans-serif" font-weight="800" font-size="11" fill="#000" stroke="none">EC</text></mask><rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="currentColor" stroke="none" mask="url(#ecm)"/>' },
+  { id:'E', name:'Bubble with a curve', idea:'A plain speech bubble with a small curve inside. Familiar "chat" shape, made specific to the course.',
+    svg:'<path d="M4 3.5h16a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4H4A1.5 1.5 0 0 1 2.5 15V5A1.5 1.5 0 0 1 4 3.5z" stroke-width="2.2"/><path d="M6.5 7C7.2 11 9.8 12.8 17.5 13" stroke-width="2.2"/>' },
+  { id:'F', name:'Lens on a curve', idea:'A magnifying glass over a curve: look something up in the course materials.',
+    svg:'<circle cx="10" cy="10" r="7" stroke-width="2.5"/><path d="M15.2 15.2L21 21" stroke-width="3"/><path d="M5.8 8.2C7 11.4 9.4 12.6 14.2 12.2" stroke-width="2.2"/>' },
+  { id:'G', name:'Open book with a curve', idea:'An open book with a curve on its page: answers come from the course’s own pages and textbook.',
+    svg:'<path d="M12 6.5C9.5 4.8 6.5 4.3 2.5 4.5v14c4 -.2 7 .3 9.5 2 2.5-1.7 5.5-2.2 9.5-2V4.5c-4-.2-7 .3-9.5 2z" stroke-width="2.2"/><path d="M12 6.5v14" stroke-width="2.2"/><path d="M14.5 15.5c1.5-3.8 3-5.6 5-6.2" stroke-width="2.2"/>' },
+  { id:'H', name:'Question in a circle', idea:'Typographic and very plain: a bold "?" in a ring. The calmest option.',
+    svg:'<circle cx="12" cy="12" r="10" stroke-width="2.4"/><path d="M9.2 9.4c0-1.8 1.3-3 2.9-3 1.7 0 2.9 1.1 2.9 2.6 0 1.6-1.4 2.1-2.2 2.8-.6.5-.8 1-.8 2" stroke-width="2.5"/><circle cx="12" cy="17.2" r="1.4" fill="currentColor" stroke="none"/>' }
+];
+function mark(m, size, extra) {
+  return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" ' + A + ' aria-hidden="true"' + (extra || '') + '>' + m.svg + '</svg>';
+}
+var html = '';
+MARKS.forEach(function (m) {
+  html += '<section class="card' + (m.current ? ' current' : '') + '">' +
+    '<p class="tag">' + (m.current ? 'Now' : 'Option ' + m.id) + '</p><h2>' + m.name + '</h2><p class="idea">' + m.idea + '</p>' +
+    '<div class="sizes">' + [16, 24, 40, 64].map(function (s) { return '<div>' + mark(m, s) + '<span>' + s + 'px</span></div>'; }).join('') +
+    '<div style="color:var(--plum)">' + mark(m, 40) + '<span>plum</span></div></div>' +
+    '<div class="ctx"><div class="row"><span class="pill">' + mark(m, 22) + 'Ask</span><span class="dark">' + mark(m, 28) + '<b>Ask</b></span></div>' +
+    '<a class="link" href="#" onclick="return false">' + mark(m, 20) + 'Ask about this figure</a></div></section>';
+});
+document.getElementById('grid').innerHTML = html;
+</script>
+</body>
+</html>
