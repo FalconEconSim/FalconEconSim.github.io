@@ -22,6 +22,17 @@
   if (window.__ec224Fab) return;            // guard against a double inject
   window.__ec224Fab = true;
 
+  // The feedback form ("Suggest or report" on figures, "Feedback" in the footer) rides along
+  // with this script, so every student page gets it without a page edit. See assets/feedback.js.
+  (function loadFeedback() {
+    if (window.__ec224Feedback || document.querySelector('script[src*="feedback.js"]')) return;
+    var me = (document.currentScript && document.currentScript.src) || "";
+    var s = document.createElement("script");
+    s.src = me ? me.replace(/ask-widget\.js(\?.*)?$/, "feedback.js") : "assets/feedback.js";
+    s.async = true;
+    document.head.appendChild(s);
+  })();
+
   var FULL_PAGE = "ask.html";
   var SEEN_KEY = "ec224-fab-seen";
   var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -44,7 +55,7 @@
   var FIGURE_STARTERS = ["Explain the idea behind this figure", "Give me a hint, not the answer"];
 
   // the parts of a page the button must never cover
-  var FIGURE_SEL = ".kfig .stage, .kfig .panel, .kfig .ecask-fig, figure.film, video, .fig-bay, .fig-plot, .jxgbox, canvas, .fc-btn-row, .fc-card-inner";
+  var FIGURE_SEL = ".kfig .stage, .kfig .panel, .kfig .ecask-fig, .kfig .ecfb-fig, figure.film, video, .fig-bay, .fig-plot, .jxgbox, canvas, .fc-btn-row, .fc-card-inner";
 
   function weekStarters() {
     var m = location.pathname.match(/week(\d+)/);
