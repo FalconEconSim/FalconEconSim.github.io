@@ -125,11 +125,6 @@
             '<textarea class="ecfb-msg" id="ecfb-msg" name="message" rows="5" maxlength="' + MAX + '" ' +
               'aria-describedby="ecfb-help ecfb-msg-err ecfb-count"></textarea>' +
             '<div class="ecfb-under"><p class="ecfb-err" id="ecfb-msg-err" hidden></p><p class="ecfb-count" id="ecfb-count" aria-live="polite"></p></div>' +
-            '<div class="ecfb-role"><label class="ecfb-lbl ecfb-lbl-sm" for="ecfb-role">I am <span>(optional)</span></label>' +
-              '<select id="ecfb-role" name="role">' +
-                '<option value="">Prefer not to say</option><option value="student">A student</option>' +
-                '<option value="instructor">The instructor</option><option value="other">Someone else</option>' +
-              "</select></div>" +
             '<div class="ecfb-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>' +
           "</div>" +
           '<div class="ecfb-foot">' +
@@ -157,7 +152,6 @@
     els.help = dlg.querySelector("#ecfb-help");
     els.msgErr = dlg.querySelector("#ecfb-msg-err");
     els.count = dlg.querySelector("#ecfb-count");
-    els.role = dlg.querySelector("#ecfb-role");
     els.hp = dlg.querySelector('input[name="website"]');
     els.status = dlg.querySelector("#ecfb-status");
     els.send = dlg.querySelector(".ecfb-send");
@@ -298,7 +292,7 @@
     return {
       kind: KINDS[kindIdx].v,
       message: els.msg.value.trim(),
-      role: els.role.value,
+      role: "",
       page: location.origin + location.pathname + anchor,
       section: ctx.section, figure: ctx.figure, figureTitle: ctx.figureTitle, question: ctx.question,
       viewport: window.innerWidth + "x" + window.innerHeight,
