@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Ask the course AI | EC224</title>
+<meta name="description" content="Ask the EC224 course AI a question; the answer comes from the course pages and textbook.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,400..800;1,400..700&display=swap">
+<link rel="stylesheet" href="assets/x.css">
+<style>
+    /* Page layout only; the transcript, sources and states are styled in assets/ask.css. */
+    .ea-hero { display: flex; align-items: center; gap: 18px; margin: 0 0 12px; }
+    .ea-hero .ea-mark { width: 56px; height: 56px; color: var(--ea-ink); }
+    .ea-hero h1 { margin: 0; font-family: var(--ea-font) !important; font-weight: 800 !important; font-size: clamp(30px, 4vw, 44px); line-height: 1.05; letter-spacing: -0.015em; color: var(--ea-ink); }
+    .ea-hero .byline { margin: 4px 0 0; font-size: 16px; color: var(--ea-soft); }
+    .ea-lede { max-width: 40em; margin: 0 0 28px; font-size: 18px; line-height: 1.55; color: var(--ea-ink); }
+
+    .ea-split { display: grid; grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    .ea-thread, .ea-pv { height: min(700px, calc(100vh - 120px)); min-height: 460px; border: 2px solid var(--ea-ink); border-radius: var(--ea-radius); overflow: hidden; background: var(--ea-paper); }
+    .ea-thread { display: flex; }
+    .ea-thread > .ecbot { flex: 1; min-width: 0; }
+    .ea-pv { display: flex; flex-direction: column; }
+    .ea-pv-frame { flex: 1; width: 100%; border: 0; background: var(--ea-paper); }
+    .ea-pv-frame[hidden] { display: none; }
+    .ea-pv-empty { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 32px; max-width: 34em; margin: 0 auto; font-size: 17px; line-height: 1.5; color: var(--ea-soft); }
+    .ea-pv-empty b { color: var(--ea-ink); font-size: 20px; font-weight: 800; }
+    .ea-pv-empty[hidden] { display: none; }
+
+    @media (max-width: 900px) {
+      .ea-split { grid-template-columns: minmax(0, 1fr); }
+      .ea-thread { height: min(620px, calc(100vh - 96px)); }
+      .ea-pv { height: 70vh; min-height: 380px; }
+    }
+    @media (max-width: 560px) {
+      .ea-hero .ea-mark { width: 44px; height: 44px; }
+      .ea-lede { font-size: 17px; }
+      .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
+      .topbar .btn { padding: 0.4rem 0.6rem; white-space: nowrap; }
+    }
+
+    .ask-back { font-size: 16px; color: var(--ea-soft); margin-top: 28px; }
+    .ask-back a { color: var(--ea-ink); text-underline-offset: 3px; }
+    .site-foot { margin-top: var(--s-9); padding-top: var(--s-5); border-top: 1px solid var(--rule2);
+                 display: flex; align-items: center; justify-content: space-between;
+                 flex-wrap: wrap; gap: var(--s-3); font-size: var(--t-small); color: var(--ink-soft); }
+    .site-foot a { color: var(--ink-soft) !important; text-decoration: none; }
+    .site-foot a:hover { color: var(--unit-ink) !important; }
+    .footer-logo { height: 22px; opacity: 0.5; }
+  </style>
+</head>
+<body>
+<a class="skiplink" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="mark" href="index.html" aria-label="EC224 home"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 3v24h24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="square"/><path d="M9 7c2 9 7 13 18 14" fill="none" stroke="var(--plum)" stroke-width="3.4" stroke-linecap="round"/></svg>EC224<span>&nbsp;Intermediate Microeconomics</span></a><nav aria-label="Site"><details class="weeksel"><summary class="top-link"><span>Weeks</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="weekmenu"><h3>Unit 1: Consumers</h3><a href="week1.html"><b>1</b><span>Foundations of Microeconomics</span></a><a href="week2.html"><b>2</b><span>Indifference Curves &amp; the Consumer Optimum</span></a><a href="week3.html"><b>3</b><span>Demand Curves &amp; Comparative Statics</span></a><a href="week4.html"><b>4</b><span>Elasticity &amp; Consumer Welfare</span></a><h3>Unit 2: Firms</h3><a href="week5.html"><b>5</b><span>Production Theory</span></a><a href="week6.html"><b>6</b><span>Cost Theory</span></a><a href="week7.html"><b>7</b><span>Profit Maximization &amp; the Competitive Firm</span></a><h3>Unit 3: Markets</h3><a href="week8.html"><b>8</b><span>Welfare, Monopoly &amp; Price Discrimination</span></a><a href="week9.html"><b>9</b><span>Non-Linear Pricing, Natural Monopoly &amp; Game Theory</span></a><a href="week10.html"><b>10</b><span>Oligopoly Models &amp; Spatial Competition</span></a><h3>Unit 4: When markets fail</h3><a href="week11.html"><b>11</b><span>Public Goods &amp; Externalities</span></a><a href="week12.html"><b>12</b><span>Adverse Selection &amp; Moral Hazard</span></a></div></details><a class="top-link" href="review.html">Review</a><a class="top-link" href="ask.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 3.5h16a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4H4A1.5 1.5 0 0 1 2.5 15V5A1.5 1.5 0 0 1 4 3.5z" stroke-width="2.2"/><path d="M6.5 7C7.2 11 9.8 12.8 17.5 13" stroke-width="2.2"/></svg>Ask</a></nav></div></header>
+<main id="main"><div class="wrap ask-page"><h1>Ask the course AI</h1><p class="lead">Ask about EC224 in your own words. The answer comes from the course pages and the textbook, and the page it came from opens alongside, scrolled to the passage and highlighted.</p><div class="ea-split"><div class="ea-thread" id="ea-thread"></div><section class="ea-pv" aria-label="Source page"><div class="ea-pv-bar"><b id="ea-pv-title">Source page</b><span class="ea-pv-status" id="ea-pv-status" aria-live="polite"></span><a class="ea-pv-open" id="ea-pv-open" target="_blank" rel="noopener" hidden>Open in a new tab</a></div><div class="ea-pv-empty" id="ea-pv-empty"><b>The source shows up here</b><span>Once a question is answered, the course page it came from opens here with the passage highlighted.</span></div><iframe class="ea-pv-frame" id="ea-pv-frame" title="Course page the answer came from" hidden></iframe></section></div></div></main>
+<footer class="foot"><div><a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a><span>EC224 Intermediate Microeconomics, Prof. Naveen Sunder</span><a href="../index.html">The current course site</a></div><img src="../assets/bentleylogo.png" alt="Bentley University" width="104" height="26"></div></footer>
+<span id="ea-hero-mark" hidden></span>
+<script src="../assets/chatbot.js"></script>
+<script>
+(function () {
+  var Bot = window.EC224Bot;
+  document.getElementById("ea-hero-mark").innerHTML = Bot.MARK;
+
+  var frame = document.getElementById("ea-pv-frame");
+  var empty = document.getElementById("ea-pv-empty");
+  var title = document.getElementById("ea-pv-title");
+  var status = document.getElementById("ea-pv-status");
+  var openLink = document.getElementById("ea-pv-open");
+
+  function showEmpty(head, body) {
+    frame.hidden = true; frame.src = "about:blank";
+    empty.hidden = false;
+    empty.innerHTML = "";
+    var b = document.createElement("b"); b.textContent = head;
+    var s = document.createElement("span"); s.textContent = body;
+    empty.appendChild(b); empty.appendChild(s);
+    title.textContent = "Source page"; status.textContent = ""; openLink.hidden = true;
+  }
+
+  // Open a source page in the preview, jumped to (and highlighting) the passage.
+  function showSource(match, btn, buttons) {
+    (buttons || []).forEach(function (c) { c.classList.toggle("active", c === btn); c.setAttribute("aria-pressed", c === btn ? "true" : "false"); });
+    empty.hidden = true;
+    frame.hidden = false;
+    title.textContent = Bot.prettyLabel(match.url);
+    openLink.href = match.url; openLink.hidden = false;
+    status.textContent = "Loading the page";
+    frame.onload = function () {
+      // declutter whether or not the exact line is found: the preview is a reading pane
+      try { Bot.injectFrameStyles(frame.contentDocument); } catch (e) {}
+      status.textContent = Bot.previewStatus(frame, match);
+    };
+    frame.src = match.url;
+  }
+
+  var handle = Bot.mountThread(document.getElementById("ea-thread"), {
+    bare: true,
+    starters: [
+      "What is the difference between Slutsky and Hicks?",
+      "Why does the MRTS diminish along an isoquant?",
+      "When is marginal revenue less than price?",
+      "What causes deadweight loss under monopoly?"
+    ],
+    intro: "Start with one of these, or type your own question below.",
+    placeholder: "Ask about the course",
+    onSourceClick: showSource,
+    onAnswer: function (data, turn, buttons) {
+      if (!data.answered) {
+        showEmpty("No source page", "That question is outside the course materials, so there is no page to show.");
+        return;
+      }
+      var pages = (data.matches || []).filter(function (m) { return m.url && m.kind !== "textbook"; });
+      if (pages.length && buttons.length) showSource(pages[0], buttons[0], buttons);
+      else showEmpty("From the textbook", "This answer came from the course textbook, which is not online, so there is no page to show.");
+    },
+  });
+
+  // a question carried over from the Ask popover (?q=...)
+  var incoming = (new URLSearchParams(location.search).get("q") || "").trim();
+  if (incoming) setTimeout(function () { handle.ask(incoming); }, 100);
+  else if (window.matchMedia && matchMedia("(pointer: fine)").matches) handle.focus();
+})();
+</script>
+<script src="../assets/feedback.js"></script>
+</body>
+</html>

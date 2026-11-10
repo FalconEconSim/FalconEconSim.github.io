@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en" data-unit="1">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Week 2 practice problems | EC224</title>
+<meta name="description" content="Randomly generated practice problems for week 2, with worked solutions.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,400..800;1,400..700&display=swap">
+<link rel="stylesheet" href="assets/x.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraph.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.min.js"></script>
+<style>:root { --paper-raised: #ffffff; --paper-sunk: #e4e8e4; --brand-wash: var(--plum-wash); --brand: var(--u); --d-gain: #256647; --d-loss: #93301f; --d-transfer: #7d5a00; --t-body-sm: 18px; --t-body: 19px; --t-lead: 22px; --t-h2: 34px; --t-h3: 26px; --measure-wide: 48rem; --font-body: inherit; --u1-ink: var(--u); --rule2: var(--line); --radius: 12px; --dur-state: .2s; --ease-out: ease-out; --s-10: 128px; --accent: var(--u); --edge: var(--ink); --ink-mute: var(--soft); }
+.practice-host { font-size: 19px; } .practice-host button { font-family: inherit; }
+
+    /* ── Problem card ── */
+    .prob-card {
+      background: var(--paper-raised);
+      border: 1px solid var(--rule-strong);
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem;
+      margin: 1.4rem 0 1rem;
+    }
+    .prob-type-badge {
+      display: inline-block;
+      font-size: var(--t-caption); font-weight: 500;
+      letter-spacing: normal; text-transform: none;
+      background: var(--brand-wash); color: var(--unit-ink);
+      border: 1px solid var(--rule-strong);
+      border-radius: 20px; padding: 2px 10px; margin-bottom: 0.75rem;
+    }
+    .prob-statement {
+      font-size: var(--t-body-sm); color: var(--ink);
+      line-height: 1.75; margin-bottom: 0.9rem;
+    }
+    .method-hint {
+      background: var(--paper-sunk);
+      border-left: 3px solid var(--unit-ink);
+      border-radius: 0 6px 6px 0;
+      padding: 0.65rem 0.9rem;
+      font-size: var(--t-caption); color: var(--ink-soft); line-height: 1.55;
+    }
+    .method-hint strong { color: var(--ink); }
+
+    /* ── Answer inputs ── */
+    .answer-section { margin: 1rem 0 0.5rem; }
+    .answer-section-label {
+      font-size: var(--t-caption); font-weight: 500;
+      letter-spacing: normal; text-transform: none;
+      color: var(--ink-soft); margin-bottom: 0.6rem;
+    }
+    .answer-row {
+      display: flex; gap: 0.8rem;
+      align-items: center; flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+    .ans-label {
+      font-family: var(--font-mono); font-size: var(--t-small);
+      font-weight: 500; color: var(--ink); min-width: 38px;
+    }
+    .ans-input {
+      font-family: var(--font-mono); font-size: var(--t-small);
+      width: 110px; padding: 0.32rem 0.65rem;
+      border: 1px solid var(--rule-strong); border-radius: 6px;
+      background: var(--paper-raised); color: var(--ink);
+      outline: none; transition: border-color 0.15s;
+    }
+    .ans-input:focus { border-color: var(--unit-ink); }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex; gap: 0.45rem; flex-wrap: wrap;
+      align-items: center; margin: 0.5rem 0 0.7rem;
+    }
+    .pp-btn {
+      font-family: var(--font-body); font-size: var(--t-caption); font-weight: 500;
+      padding: 0.38rem 0.9rem; border-radius: 6px;
+      cursor: pointer; transition: all 0.15s; border: 1px solid transparent;
+      display: inline-flex; align-items: center; gap: 0.3rem;
+    }
+    .btn-check  { background: var(--unit-ink); color: white; border-color: var(--unit-ink); }
+    .btn-check:hover  { background: var(--unit-ink); }
+    .btn-sol    { background: var(--paper-sunk); color: var(--ink); border-color: var(--rule-strong); }
+    .btn-sol:hover    { border-color: var(--unit-ink); background: var(--brand-wash); color: var(--unit-ink); }
+    .btn-new    { background: var(--paper-sunk); color: var(--ink-soft); border-color: var(--rule-strong); }
+    .btn-new:hover    { border-color: var(--unit-ink); color: var(--unit-ink); background: var(--brand-wash); }
+    .attempts-tag {
+      font-family: var(--font-mono); font-size: var(--t-caption); color: var(--ink-soft);
+      padding: 0.2rem 0.55rem; background: var(--paper-sunk);
+      border: 1px solid var(--rule-strong); border-radius: 20px;
+    }
+
+    /* ── Feedback ── */
+    .feedback-area { margin: 0.4rem 0 0.2rem; }
+    .fb-ok {
+      background: var(--paper-raised); border: 1px solid var(--d-gain);
+      border-radius: 7px; padding: 0.65rem 1rem;
+      font-size: var(--t-small); color: var(--d-gain); line-height: 1.6;
+    }
+    .fb-wrong {
+      background: var(--paper-raised); border: 1px solid var(--d-transfer);
+      border-radius: 7px; padding: 0.65rem 1rem;
+      font-size: var(--t-small); color: var(--d-transfer);
+    }
+    .fb-hint {
+      margin-top: 0.5rem; padding: 0.6rem 0.9rem;
+      background: var(--paper-sunk); border: 1px solid var(--rule-strong);
+      border-radius: 7px; font-size: var(--t-caption); color: var(--ink-soft); line-height: 1.6;
+    }
+    .fb-hint strong { color: var(--unit-ink); }
+    .fb-error {
+      background: var(--paper-raised); border: 1px solid var(--d-loss);
+      border-radius: 7px; padding: 0.65rem 1rem;
+      font-size: var(--t-small); color: var(--d-loss);
+    }
+
+    /* ── Solution ── */
+    .solution-wrapper {
+      margin: 1.4rem 0 0;
+      animation: pp-fadein 0.3s ease;
+    }
+    @keyframes pp-fadein {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .sol-label {
+      font-size: var(--t-caption); font-weight: 500;
+      letter-spacing: normal; text-transform: none;
+      color: var(--unit-ink); margin-bottom: 0.7rem;
+    }
+    .solution-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--rule-strong); border-radius: 10px;
+      overflow: hidden; background: var(--paper-raised);
+    }
+    .sol-graph  { border-right: 1px solid var(--rule-strong); }
+    .sol-steps  { padding: 1.2rem 1.1rem; overflow-y: auto; }
+
+    .step-card {
+      display: flex; gap: 0.7rem; align-items: flex-start;
+      padding: 0.72rem 0.85rem; border-radius: 7px;
+      margin-bottom: 0.55rem;
+      background: var(--paper-sunk);
+      border-left: 3px solid var(--unit-ink);
+    }
+    .step-card.verify { border-left-color: var(--d-gain); }
+    .step-num  { font-family: var(--font-mono); font-size: var(--t-lead); font-weight: 500; color: var(--unit-ink); min-width: 24px; padding-top: 0; }
+    .step-card.verify .step-num { color: var(--d-gain); }
+    .step-body { font-size: var(--t-caption); color: var(--ink); line-height: 1.7; }
+    .step-title { font-weight: 500; font-size: var(--t-caption); color: var(--unit-ink); margin-bottom: 3px; }
+    .step-card.verify .step-title { color: var(--d-gain); }
+    .ans-box {
+      background: var(--paper-raised); border-radius: 7px;
+      padding: 0.55rem 0.85rem; margin-top: 0.5rem;
+      font-size: var(--t-small); color: var(--d-gain); font-weight: 500;
+    }
+
+    /* ── Intuition box ── */
+    .intuition-box {
+      margin-top: 1.1rem;
+      background: var(--brand-wash);
+      border: 1px solid var(--rule-strong);
+      border-left: 4px solid var(--unit-ink);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.2rem;
+    }
+    .intuition-label {
+      font-size: var(--t-caption); font-weight: 700;
+      letter-spacing: normal; text-transform: none;
+      color: var(--unit-ink); margin-bottom: 0.45rem;
+    }
+    .intuition-title {
+      font-size: var(--t-small); font-weight: 500;
+      color: var(--ink); margin-bottom: 0.5rem;
+    }
+    .intuition-body {
+      font-size: var(--t-small); color: var(--ink-soft); line-height: 1.7;
+    }
+    .intuition-body strong { color: var(--ink); }
+
+    /* ── Responsive ── */
+    @media (max-width: 660px) {
+      .solution-grid { grid-template-columns: 1fr; }
+      .sol-graph { border-right: none; border-bottom: 1px solid var(--rule-strong); }
+    }
+    @media (max-width: 480px) {
+      .ans-input { width: 90px; }
+    }
+
+    /* ds2 practice */
+    /* AG-2: prose page, so it takes the reading width. */
+    .layout-solo { max-width: calc(var(--measure-wide) + var(--s-5) * 2); }
+    /* AG-1: the problem was three nested bordered panels. One container. */
+    .problem-card, .prob-card, .pq-card {
+      border: 0 !important; background: var(--paper-raised) !important;
+      border-radius: var(--radius) !important; padding: var(--s-6) !important;
+      box-shadow: none !important;
+    }
+    .approach-box, .approach, .hint-box {
+      border: 0 !important; border-left: 3px solid var(--rule-strong) !important;
+      background: none !important; border-radius: 0 !important;
+      padding: 0 0 0 var(--s-4) !important; margin-top: var(--s-5) !important;
+      color: var(--ink-soft);
+    }
+    /* AUDIT P-2: the answer area was the only unstyled region on a page of
+       boxes, ie the part the student uses had the least design attention. */
+    .answers-title, .ans-heading {
+      font-size: var(--t-caption); letter-spacing: normal; text-transform: none;
+      color: var(--ink-soft); margin: var(--s-7) 0 var(--s-3);
+    }
+    .answer-row { display: flex; align-items: center; gap: var(--s-4); margin-bottom: var(--s-3); }
+    .ans-label { color: var(--ink); }
+    .ans-input {
+      font-family: var(--font-mono); font-size: var(--t-body-sm);
+      padding: 0.55rem 0.7rem; min-width: 9rem;   /* fits the "your answer" placeholder; 8rem clipped it */
+      border: 1px solid var(--rule-strong); border-radius: var(--radius);
+      background: var(--paper-raised); color: var(--ink);
+      transition: border-color var(--dur-state) var(--ease-out);
+    }
+    .ans-input:focus { outline: 2px solid var(--unit-ink); outline-offset: 2px; border-color: var(--unit-ink); }
+    .ans-input.correct { border-color: var(--d-gain); }
+    .ans-input.incorrect { border-color: var(--d-loss); }
+    /* AUDIT P-3: "Attempts: 0" is a counter, not a button. */
+    .attempts, #attempts, .attempt-count {
+      border: 0 !important; background: none !important; padding: 0 !important;
+      color: var(--ink-soft) !important; font-size: var(--t-small) !important;
+    }
+    .type-btn, .mode-btn { font: 500 var(--t-small)/1 var(--font-body); padding: 0.55rem 0.9rem;
+      border: 1px solid var(--rule-strong); border-radius: var(--radius);
+      background: var(--paper-raised); color: var(--ink); cursor: pointer; }
+    .type-btn.active, .mode-btn.active { background: var(--unit-ink); border-color: var(--unit-ink); color: var(--paper-raised); }
+
+    /* ds2 page furniture */
+    .page-hd { margin-bottom: var(--s-7); position: relative; max-width: var(--measure-wide); }
+    .page-hd .numeral { position: absolute; left: -4.75rem; top: -0.45rem; }
+    @media (max-width: 1200px) { .page-hd .numeral { display: none; } }
+    .site-foot { margin-top: var(--s-9); padding-top: var(--s-5); border-top: 1px solid var(--rule2);
+                 display: flex; align-items: center; justify-content: space-between;
+                 flex-wrap: wrap; gap: var(--s-3); font-size: var(--t-small); color: var(--ink-soft); }
+    .site-foot a { color: var(--ink-soft) !important; text-decoration: none; }
+    .site-foot a:hover { color: var(--unit-ink) !important; }
+    .footer-logo { height: 22px; opacity: 0.5; }
+    @media (max-width: 560px) {
+      .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
+      .topbar .btn { padding: 0.4rem 0.6rem; white-space: nowrap; }
+    }
+  </style>
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }, options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+</head>
+<body>
+<a class="skiplink" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="mark" href="index.html" aria-label="EC224 home"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 3v24h24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="square"/><path d="M9 7c2 9 7 13 18 14" fill="none" stroke="var(--plum)" stroke-width="3.4" stroke-linecap="round"/></svg>EC224<span>&nbsp;Intermediate Microeconomics</span></a><nav aria-label="Site"><details class="weeksel"><summary class="top-link"><span>Week 2</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="weekmenu"><h3>Unit 1: Consumers</h3><a href="week1.html"><b>1</b><span>Foundations of Microeconomics</span></a><a href="week2.html" aria-current="page"><b>2</b><span>Indifference Curves &amp; the Consumer Optimum</span></a><a href="week3.html"><b>3</b><span>Demand Curves &amp; Comparative Statics</span></a><a href="week4.html"><b>4</b><span>Elasticity &amp; Consumer Welfare</span></a><h3>Unit 2: Firms</h3><a href="week5.html"><b>5</b><span>Production Theory</span></a><a href="week6.html"><b>6</b><span>Cost Theory</span></a><a href="week7.html"><b>7</b><span>Profit Maximization &amp; the Competitive Firm</span></a><h3>Unit 3: Markets</h3><a href="week8.html"><b>8</b><span>Welfare, Monopoly &amp; Price Discrimination</span></a><a href="week9.html"><b>9</b><span>Non-Linear Pricing, Natural Monopoly &amp; Game Theory</span></a><a href="week10.html"><b>10</b><span>Oligopoly Models &amp; Spatial Competition</span></a><h3>Unit 4: When markets fail</h3><a href="week11.html"><b>11</b><span>Public Goods &amp; Externalities</span></a><a href="week12.html"><b>12</b><span>Adverse Selection &amp; Moral Hazard</span></a></div></details><a class="top-link" href="review.html">Review</a><button type="button" class="top-link" data-ask><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 3.5h16a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4H4A1.5 1.5 0 0 1 2.5 15V5A1.5 1.5 0 0 1 4 3.5z" stroke-width="2.2"/><path d="M6.5 7C7.2 11 9.8 12.8 17.5 13" stroke-width="2.2"/></svg>Ask</button></nav></div></header>
+<main id="main">
+<header class="band"><div class="wrap"><div><span class="band-unit"><a href="week2.html#check">Week 2: Indifference Curves &amp; the Consumer Optimum</a></span><h1>Practice problems</h1><p class="desc">Randomly generated problems across Cobb-Douglas, perfect substitutes, and perfect complements. Attempt each, then reveal the full worked solution with graph.</p></div><div class="art poster"><svg viewBox="0 0 320 200" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid meet"><path class="ax" d="M26 20 L26 176 L302 176" fill="none" stroke-opacity=".22" stroke-width="1.5"/><polyline class="c1" points="72.9,25.4 79.1,36.2 85.3,45.6 91.5,53.8 97.8,61.1 104.0,67.5 110.2,73.2 116.4,78.4 122.6,83.1 128.8,87.3 135.0,91.2 141.2,94.7 147.4,98.0 153.7,101.0 159.9,103.8 166.1,106.4 172.3,108.8 178.5,111.0 184.7,113.2 190.9,115.1 197.1,117.0 203.3,118.7 209.5,120.4 215.8,121.9 222.0,123.4 228.2,124.8 234.4,126.1 240.6,127.3 246.8,128.5 253.0,129.7 259.2,130.7 265.4,131.8 271.6,132.8 277.9,133.7 284.1,134.6 290.3,135.5 296.5,136.3" fill="none" stroke-width="3.5" stroke-linecap="round"/><line class="c2" x1="42.56" y1="27.80000000000001" x2="288.2" y2="166.64" stroke-width="3.5" stroke-linecap="round"/><circle class="dt" cx="128.12" cy="104.24" r="6" stroke-width="2.5"/></svg></div></div></header>
+<div class="wrap"><div class="practice-host"><div class="note" style="margin:var(--s-6) 0 var(--s-7)">
+      <span>A new randomized problem appears each time. Work through it on paper first, enter your answer below, then check it. <em>Show Solution</em> (available after your first attempt) reveals a full worked solution with graph and real-world intuition.</span>
+    </div>
+
+  <!-- Dynamic content -->
+  <div id="prob-container"></div>
+  <div id="sol-container"></div></div><nav class="more" aria-label="Back to the week"><a href="week2.html#check"><b>Back to week 2</b><span>Flashcards, the figures and the rest of the week.</span></a><a href="review.html?weeks=1-2"><b>Mixed review</b><span>Figures and cards from weeks 1 to 2.</span></a></nav></div>
+</main>
+<footer class="foot"><div><a href="https://www.bentley.edu" target="_blank" rel="noopener">Bentley University</a><span>EC224 Intermediate Microeconomics, Prof. Naveen Sunder</span><a href="../index.html">The current course site</a></div><img src="../assets/bentleylogo.png" alt="Bentley University" width="104" height="26"></div></footer>
+<script src="assets/course-data.js"></script>
+<script src="assets/x.js"></script>
+<script>
+/* ============================================================
+   EC224 · Week 2 Practice Problem Generator
+   ============================================================ */
+
+// ── State ─────────────────────────────────────────────────────
+let currentProb = null;
+let currentSol  = null;
+let solBoard    = null;
+let attempts    = 0;
+
+// ── Utilities ─────────────────────────────────────────────────
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+function lcm(a, b) { return (a * b) / gcd(a, b); }
+function randInt(lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; }
+
+function parseAnswer(s) {
+  if (!s || !s.trim()) return null;
+  const t = s.trim();
+  const frac = t.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+  if (frac) return parseInt(frac[1]) / parseInt(frac[2]);
+  const n = parseFloat(t);
+  return isNaN(n) ? null : n;
+}
+
+function niceNum(n) {
+  if (Math.abs(n - Math.round(n)) < 1e-6) return String(Math.round(n));
+  const r = Math.round(n * 100) / 100;
+  return r.toFixed(2);
+}
+
+// Convert decimal alpha to LaTeX fraction string
+function fracTex(n) {
+  const m = { 0.1:'\\tfrac{1}{10}', 0.2:'\\tfrac{1}{5}', 0.3:'\\tfrac{3}{10}',
+              0.4:'\\tfrac{2}{5}',  0.5:'\\tfrac{1}{2}', 0.6:'\\tfrac{3}{5}',
+              0.7:'\\tfrac{7}{10}', 0.8:'\\tfrac{4}{5}', 0.9:'\\tfrac{9}{10}' };
+  return m[Math.round(n * 10) / 10] || n.toFixed(1);
+}
+
+function typeName(t) {
+  return { cobb_douglas:'Cobb-Douglas', perfect_substitutes:'Perfect Substitutes',
+           perfect_complements:'Perfect Complements' }[t];
+}
+
+// ── Hints ─────────────────────────────────────────────────────
+const HINTS = {
+  cobb_douglas: [
+    'Use the tangency condition: set \\(\\mathrm{MRS} = P_x/P_y\\). For \\(U = X^\\alpha Y^\\beta\\), \\(\\mathrm{MRS} = (\\alpha/\\beta)\\cdot(Y/X)\\).',
+    'Shortcut: \\(X^* = \\alpha \\cdot I/P_x\\) and \\(Y^* = \\beta \\cdot I/P_y\\). Plug the numbers straight in.'
+  ],
+  perfect_substitutes: [
+    'Compare bang-for-buck: \\(MU_x/P_x\\) vs \\(MU_y/P_y\\). Spend all income on the good with the higher ratio.',
+    'If \\(a/P_x > b/P_y\\): set \\(X^* = I/P_x\\), \\(Y^*=0\\). If \\(b/P_y > a/P_x\\): set \\(Y^* = I/P_y\\), \\(X^*=0\\).'
+  ],
+  perfect_complements: [
+    'At the kink of the L-shape: \\(X/a = Y/b\\). Use this to express \\(Y\\) in terms of \\(X\\).',
+    'Substitute \\(Y=(b/a)X\\) into the budget \\(P_x X + P_y Y = I\\) and solve for \\(X^*\\), then \\(Y^*\\).'
+  ]
+};
+
+// ── Method blurbs ──────────────────────────────────────────────
+const METHOD = {
+  cobb_douglas:       '<strong>Approach: Interior solution.</strong> Smooth, strictly convex ICs: set \\(\\mathrm{MRS} = P_x/P_y\\) and combine with the budget constraint.',
+  perfect_substitutes:'<strong>Approach: Corner solution.</strong> Straight-line ICs: compare \\(MU_x/P_x\\) vs \\(MU_y/P_y\\) and spend all income on the higher-value good.',
+  perfect_complements:'<strong>Approach: Kink solution.</strong> L-shaped ICs: the optimum is always at the kink. Use the fixed-proportions condition \\(X/a = Y/b\\).'
+};
+
+// ── Economic intuition ─────────────────────────────────────────
+function intuition(prob, sol) {
+  const { t, Px, Py, I, a, b } = prob;
+  const { xs, ys } = sol;
+  const pct_x = Math.round(a * 100), pct_y = Math.round((1 - a) * 100);
+
+  if (t === 'cobb_douglas') {
+    return {
+      title: 'The Fixed Budget-Share Property',
+      body: `Think of a student dividing a $${I} weekly budget between dining out&nbsp;(X) and groceries&nbsp;(Y).
+             With \\(\\alpha=${fracTex(a)}\\) and \\(\\beta=${fracTex(1-a)}\\), they will <strong>always spend ${pct_x}% on X and ${pct_y}% on Y</strong>
+             at any prices. Verify: \\(P_x X^* = ${Px}\\times${niceNum(xs)} = ${niceNum(Px*xs)}\\),
+             which is exactly ${pct_x}% of \\(I=${I}\\).
+             This <strong>constant budget-share</strong> result (\\(P_x X^* = \\alpha I\\) always) is why Cobb-Douglas preferences
+             are the workhorse of macroeconomics: household survey data consistently shows remarkably stable
+             expenditure shares across income levels and over time.`
+    };
+  }
+  if (t === 'perfect_substitutes') {
+    const bx = (a / Px).toFixed(3), by = (b / Py).toFixed(3);
+    const winner = a/Px > b/Py ? 'X' : 'Y';
+    return {
+      title: 'Why the Best Value per Dollar Captures the Market',
+      body: `Imagine a commuter choosing between two fuel brands: Brand&nbsp;X at $${Px}/unit and Brand&nbsp;Y at $${Py}/unit,
+             where a unit of X is worth ${a} util${a>1?'s':''} to them and a unit of Y is worth ${b}. Since they're perfect substitutes, the only factor is
+             <strong>utility per dollar</strong>: X gives \\(${a}/${Px} = ${bx}\\) utils per dollar; Y gives \\(${b}/${Py} = ${by}\\).
+             ${winner} wins, so the consumer spends the <strong>entire budget on ${winner}</strong>.
+             This corner-solution logic explains commodity pricing: when two goods are truly interchangeable,
+             even a small difference in value per dollar shifts all demand to the better buy.`
+    };
+  }
+  // perfect_complements
+  return {
+    title: 'Fixed Proportions: When More of One is Useless',
+    body: `Consider baking bread, where a recipe requires exactly ${a}&nbsp;cup${a>1?'s':''} of flour&nbsp;(X)
+           for every ${b}&nbsp;egg${b>1?'s':''}&nbsp;(Y). Having 10 cups of flour and 2 eggs yields only
+           ${Math.floor(2/b)}&nbsp;batch${Math.floor(2/b)!==1?'es':''}: extra flour without matching eggs is worthless.
+           The utility function \\(U=\\min\\!\\left(X/${a},\\,Y/${b}\\right)\\) captures this exactly.
+           At the optimum, verify the kink condition: \\(X^*/${a} = ${niceNum(xs)}/${a} = ${niceNum(xs/a)}\\)
+           and \\(Y^*/${b} = ${niceNum(ys)}/${b} = ${niceNum(ys/b)}\\) .
+           This fixed-proportions structure appears throughout economics: cars and tires, smartphones and chargers,
+           machines and operators: all consumed in set ratios where neither input alone adds value.`
+  };
+}
+
+// ── Problem generation ─────────────────────────────────────────
+const ALPHAS = [0.2, 0.4, 0.5, 0.6, 0.8];
+
+function generateProblem() {
+  const types = ['cobb_douglas', 'perfect_substitutes', 'perfect_complements'];
+  const weights = [0.45, 0.30, 0.25];
+  let r = Math.random(), t, cum = 0;
+  for (let i = 0; i < types.length; i++) { cum += weights[i]; if (r < cum) { t = types[i]; break; } }
+  if (!t) t = 'cobb_douglas';
+  for (let k = 0; k < 400; k++) { const p = tryGen(t); if (p) return p; }
+  return tryGen('cobb_douglas');
+}
+
+function tryGen(t) {
+  if (t === 'cobb_douglas') {
+    const Px = randInt(2, 10), Py = randInt(2, 10);
+    const L = lcm(Px, Py), mult = randInt(4, 14), I = mult * L;
+    if (I > 360 || I < 60) return null;
+    const a = ALPHAS[randInt(0, ALPHAS.length - 1)];
+    const b = Math.round((1 - a) * 10) / 10;
+    const xs = a * I / Px, ys = b * I / Py;
+    if (xs < 4 || ys < 4 || xs > 55 || ys > 55) return null;
+    return { t, Px, Py, I, a, b };
+
+  } else if (t === 'perfect_substitutes') {
+    const Px = randInt(2, 10), Py = randInt(2, 10);
+    const L = lcm(Px, Py), mult = randInt(4, 14), I = mult * L;
+    if (I > 360 || I < 60) return null;
+    const a = randInt(1, 5), b = randInt(1, 5);
+    if (Math.abs(a / Px - b / Py) < 0.08) return null;
+    return { t, Px, Py, I, a, b };
+
+  } else { // perfect_complements: ensure integer answers via common factor
+    const a = randInt(1, 3), b = randInt(1, 3);
+    const Px = randInt(2, 8), Py = randInt(2, 8);
+    const s = randInt(4, 15);
+    const I = s * (Px * a + Py * b);
+    if (I > 380 || I < 40) return null;
+    return { t, Px, Py, I, a, b };
+  }
+}
+
+// ── Solver ─────────────────────────────────────────────────────
+function solve(prob) {
+  const { Px, Py, I, t } = prob;
+  let xs, ys;
+  if (t === 'cobb_douglas') {
+    xs = prob.a * I / Px; ys = prob.b * I / Py;
+  } else if (t === 'perfect_substitutes') {
+    const bx = prob.a / Px, by = prob.b / Py;
+    if (bx > by)      { xs = I / Px; ys = 0; }
+    else if (by > bx) { xs = 0; ys = I / Py; }
+    else              { xs = I / (2 * Px); ys = I / (2 * Py); }
+  } else {
+    const s = I / (Px * prob.a + Py * prob.b);
+    xs = prob.a * s; ys = prob.b * s;
+  }
+  return { xs, ys, xi: I / Px, yi: I / Py };
+}
+
+// ── Utility function display ───────────────────────────────────
+function utilTex(prob) {
+  const { t, a, b } = prob;
+  if (t === 'cobb_douglas')
+    return `\\(U(X,Y)=X^{${fracTex(a)}}\\!Y^{${fracTex(b)}}\\)`;
+  if (t === 'perfect_substitutes')
+    return `\\(U(X,Y)=${a}X+${b}Y\\)`;
+  return `\\(U(X,Y)=\\min\\!\\left(\\dfrac{X}{${a}},\\,\\dfrac{Y}{${b}}\\right)\\)`;
+}
+
+// ── Render problem ─────────────────────────────────────────────
+function renderProblem() {
+  const { t, Px, Py, I } = currentProb;
+
+  document.getElementById('prob-container').innerHTML = `
+    <div class="prob-card">
+      <span class="prob-type-badge">${typeName(t)}</span>
+      <div class="prob-statement">
+        A consumer has income \\(I=${I}\\) and faces prices \\(P_x=${Px}\\) and \\(P_y=${Py}\\).<br>
+        Their utility function is ${utilTex(currentProb)}.<br><br>
+        <strong>Find the optimal bundle \\((X^*,\\,Y^*)\\) that maximizes utility subject to the budget constraint.</strong>
+      </div>
+      <div class="method-hint">${METHOD[t]}</div>
+    </div>
+
+    <div class="answer-section">
+      <div class="answer-section-label">Your Answer</div>
+      <div class="answer-row">
+        <span class="ans-label">\\(X^*\\) =</span>
+        <input class="ans-input" id="ans-x" type="text" placeholder="your answer" autocomplete="off" />
+        <span class="ans-label">\\(Y^*\\) =</span>
+        <input class="ans-input" id="ans-y" type="text" placeholder="your answer" autocomplete="off" />
+      </div>
+      <div class="btn-row">
+        <button class="pp-btn btn-check"  onclick="checkAnswer()">Check Answer</button>
+        <button class="pp-btn btn-sol"    onclick="showSolution()">Show Solution</button>
+        <button class="pp-btn btn-new"    onclick="newProblem()">New problem</button>
+        <span class="attempts-tag" id="att-lbl">Attempts: 0</span>
+      </div>
+      <div class="feedback-area" id="feedback"></div>
+    </div>
+
+    `;
+
+  document.getElementById('sol-container').innerHTML = '';
+
+  if (window.MathJax) MathJax.typesetPromise([document.getElementById('prob-container')]);
+  setTimeout(() => { const el = document.getElementById('ans-x'); if (el) el.focus({ preventScroll: true }); }, 120);
+}
+
+// ── Check answer ───────────────────────────────────────────────
+function checkAnswer() {
+  const xv = parseAnswer((document.getElementById('ans-x') || {}).value || '');
+  const yv = parseAnswer((document.getElementById('ans-y') || {}).value || '');
+  const fb = document.getElementById('feedback');
+
+  if (xv === null || yv === null) {
+    fb.innerHTML = `<div class="fb-error">Could not parse your answer. Use formats like <code>10</code>, <code>5.5</code>, or <code>25/2</code>.</div>`;
+    return;
+  }
+
+  attempts++;
+  document.getElementById('att-lbl').textContent = `Attempts: ${attempts}`;
+
+  const { xs, ys } = currentSol;
+  const tol = Math.max(0.05, (Math.abs(xs) + Math.abs(ys)) * 0.005);
+
+  if (Math.abs(xv - xs) <= tol && Math.abs(yv - ys) <= tol) {
+    const { Px, Py, I } = currentProb;
+    fb.innerHTML = `<div class="fb-ok"> <strong>Correct!</strong> \\(X^* = ${niceNum(xs)},\\; Y^* = ${niceNum(ys)}\\). Budget check: \\(${Px}\\times${niceNum(xs)} + ${Py}\\times${niceNum(ys)} = ${niceNum(Px*xs+Py*ys)} = I\\) </div>`;
+  } else {
+    const hints = HINTS[currentProb.t];
+    const hi = Math.min(attempts - 1, hints.length - 1);
+    fb.innerHTML = `<div class="fb-wrong">Not quite. Try again.</div>
+      <div class="fb-hint"><strong>Hint ${attempts > 1 ? '(stronger)' : ''}:</strong> ${hints[hi]}</div>`;
+  }
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+// ── Show solution ──────────────────────────────────────────────
+function showSolution() {
+  const fb = document.getElementById('feedback');
+  if (attempts === 0) {
+    fb.innerHTML = `<div class="fb-error">Please attempt the problem at least once before viewing the solution.</div>`;
+    if (window.MathJax) MathJax.typesetPromise([fb]);
+    return;
+  }
+
+  const prob = currentProb, sol = currentSol;
+  const intuit = intuition(prob, sol);
+
+  document.getElementById('sol-container').innerHTML = `
+    <div class="solution-wrapper">
+      <div class="sol-label">Full Solution</div>
+      <div class="solution-grid">
+        <div class="sol-graph">
+          <div id="jxg-practice" style="width:100%;aspect-ratio:1/1;min-height:280px;"></div>
+        </div>
+        <div class="sol-steps">
+          ${buildSteps(prob, sol)}
+        </div>
+      </div>
+      <div class="intuition-box">
+        <div class="intuition-label">Economic Intuition</div>
+        <div class="intuition-title">${intuit.title}</div>
+        <div class="intuition-body">${intuit.body}</div>
+      </div>
+    </div>`;
+
+  const sc = document.getElementById('sol-container');
+  if (window.MathJax) {
+    MathJax.typesetPromise([sc]).then(() => {
+      drawGraph(prob, sol);
+      sc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  } else {
+    drawGraph(prob, sol);
+    sc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ── Build step-by-step solution HTML ──────────────────────────
+function buildSteps(prob, sol) {
+  const { Px, Py, I, t } = prob;
+  const { xs, ys, xi, yi } = sol;
+
+  const s1 = step('①', 'Budget Constraint',
+    `\\(${Px}X + ${Py}Y = ${I}\\)<br>
+     Intercepts: \\(I/P_x = ${niceNum(xi)}\\), \\(\\;I/P_y = ${niceNum(yi)}\\)<br>
+     Slope: \\(-P_x/P_y = ${niceNum(-Px/Py)}\\)`);
+
+  let s2;
+  if (t === 'cobb_douglas') {
+    const { a, b } = prob;
+    s2 = step('②', 'Tangency Condition',
+      `\\(\\mathrm{MRS} = \\frac{\\alpha}{\\beta}\\cdot\\frac{Y}{X} = \\frac{P_x}{P_y}\\)<br>
+       \\(X^* = \\alpha\\cdot\\frac{I}{P_x} = ${fracTex(a)}\\times\\frac{${I}}{${Px}} = ${niceNum(xs)}\\)<br>
+       \\(Y^* = \\beta\\cdot\\frac{I}{P_y} = ${fracTex(b)}\\times\\frac{${I}}{${Py}} = ${niceNum(ys)}\\)`);
+  } else if (t === 'perfect_substitutes') {
+    const { a, b } = prob;
+    const bx = (a/Px).toFixed(3), by = (b/Py).toFixed(3);
+    const xWins = a/Px > b/Py;
+    s2 = step('②', 'Bang-for-Buck Comparison',
+      `\\(MU_x/P_x = ${a}/${Px} = ${bx}\\quad\\) vs \\(\\quad MU_y/P_y = ${b}/${Py} = ${by}\\)<br>
+       ${xWins
+         ? `X gives more utility per dollar → spend all on X<br>\\(X^*=I/P_x=${niceNum(xs)},\\quad Y^*=0\\)`
+         : `Y gives more utility per dollar → spend all on Y<br>\\(Y^*=I/P_y=${niceNum(ys)},\\quad X^*=0\\)`}`);
+  } else {
+    const { a, b } = prob;
+    s2 = step('②', 'Fixed-Proportions (Kink) Condition',
+      `At the kink: \\(\\dfrac{X}{${a}}=\\dfrac{Y}{${b}}\\;\\Rightarrow\\; Y=\\dfrac{${b}}{${a}}X\\)<br>
+       Substitute: \\(${Px}X+${Py}\\cdot\\dfrac{${b}}{${a}}X=${I}\\)<br>
+       \\(X^*=${niceNum(xs)},\\quad Y^*=${niceNum(ys)}\\)`);
+  }
+
+  const bchk = Px * xs + Py * ys;
+  const s3 = step('③', 'Verify Budget Exhaustion',
+    `\\(${Px}(${niceNum(xs)})+${Py}(${niceNum(ys)})=${niceNum(bchk)}=I\\;\\checkmark\\)`, true);
+
+  const ansBox = `<div class="ans-box">\\((X^*,\\,Y^*)=(${niceNum(xs)},\\,${niceNum(ys)})\\)</div>`;
+
+  return s1 + s2 + s3 + ansBox;
+}
+
+function step(num, title, body, verify = false) {
+  return `<div class="step-card${verify ? ' verify' : ''}">
+    <div class="step-num">${num}</div>
+    <div class="step-body">
+      <div class="step-title">${title}</div>
+      ${body}
+    </div>
+  </div>`;
+}
+
+// ── Draw JSXGraph ──────────────────────────────────────────────
+function drawGraph(prob, sol) {
+  if (solBoard) { try { JXG.JSXGraph.freeBoard(solBoard); } catch(e) {} solBoard = null; }
+
+  const { Px, Py, t } = prob;
+  const { xs, ys, xi, yi } = sol;
+  const pad = 0.10;
+  const xmax = Math.max(xi, xs, 1) * 1.32;
+  const ymax = Math.max(yi, ys, 1) * 1.32;
+
+  solBoard = JXG.JSXGraph.initBoard('jxg-practice', {
+    boundingbox: [-xmax * pad, ymax * (1 + pad), xmax * (1 + pad), -ymax * pad],
+    axis: true, showNavigation: false, showCopyright: false,
+    pan: { enabled: false }, zoom: { enabled: false },
+    defaultAxes: {
+      x: { withLabel: false, ticks: { strokeColor: '#e3ded5', label: { fontSize: 13, color: '#8b95a5', offset: [0,-8] } } },
+      y: { withLabel: false, ticks: { strokeColor: '#e3ded5', label: { fontSize: 13, color: '#8b95a5', offset: [-8,0] } } }
+    }
+  });
+
+  const b = solBoard;
+  const IC_OPT   = 'var(--unit-ink)';
+  const BUDGET   = 'var(--ink)';
+  const OPT_PT   = 'var(--d-loss)';
+  const FEASIBLE = 'var(--brand-wash)';
+
+  // Feasible region
+  b.create('polygon', [[0,0],[xi,0],[0,yi]], {
+    fillColor: FEASIBLE, fillOpacity: 0.45,
+    strokeWidth: 0, vertices: { visible: false, fixed: true },
+    fixed: true
+  });
+
+  // Budget line - solid black, not draggable
+  b.create('segment', [[0, yi], [xi, 0]], {
+    strokeColor: BUDGET, strokeWidth: 2.5, fixed: true
+  });
+
+  // Optimal indifference curve only (no faint extras, no dotted lines)
+  if (t === 'cobb_douglas') {
+    const a = prob.a, bv = prob.b;
+    const ustar = (xs > 0 && ys > 0) ? Math.pow(xs, a) * Math.pow(ys, bv) : 1;
+    b.create('functiongraph', [
+      x => x > 0.01 ? Math.pow(ustar / Math.pow(x, a), 1 / bv) : NaN,
+      0.01, xmax
+    ], { strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true });
+
+  } else if (t === 'perfect_substitutes') {
+    const a = prob.a, bv = prob.b;
+    const ustar = a * xs + bv * ys;
+    // Clamp to x>=0, y>=0
+    const xStart = 0;
+    const xEnd   = Math.min(ustar / a, xmax);
+    const yAtX0  = ustar / bv;
+    const xAtY0  = ustar / a;
+    const p1x = Math.max(0, Math.min(xEnd, xmax));
+    const p1y = Math.max(0, (ustar - a * p1x) / bv);
+    const p2x = 0;
+    const p2y = Math.min(ustar / bv, ymax);
+    b.create('segment', [[p2x, p2y], [Math.min(xAtY0, xmax), 0]], {
+      strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true
+    });
+
+  } else { // perfect_complements: only the optimal L, no others
+    const a = prob.a, bv = prob.b;
+    const ustar = Math.min(xs / a, ys / bv);
+    const xk = a * ustar, yk = bv * ustar;
+    // Vertical arm bounded at y >= yk, x = xk
+    b.create('segment', [[xk, yk], [xk, ymax * 1.05]], { strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true });
+    // Horizontal arm bounded at x >= xk, y = yk
+    b.create('segment', [[xk, yk], [xmax * 1.05, yk]], { strokeColor: IC_OPT, strokeWidth: 2.2, fixed: true });
+  }
+
+  // Optimal point - fixed (not draggable)
+  b.create('point', [xs, ys], {
+    size: 5, strokeColor: OPT_PT, fillColor: OPT_PT, fixed: true,
+    name: `(${niceNum(xs)}, ${niceNum(ys)})`,
+    label: { fontSize: 13, color: OPT_PT, offset: [8, 8] }
+  });
+}
+
+// ── Boot ───────────────────────────────────────────────────────
+function newProblem() {
+  attempts = 0;
+  currentProb = generateProblem();
+  currentSol  = solve(currentProb);
+  renderProblem();
+}
+
+document.addEventListener('DOMContentLoaded', newProblem);
+
+// Allow Enter key to check answer
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (document.activeElement.id === 'ans-x' || document.activeElement.id === 'ans-y')) {
+    checkAnswer();
+  }
+});
+
+</script>
+<script src="../assets/chatbot.js"></script>
+<script src="assets/ask-drawer.js"></script>
+<script src="../assets/feedback.js"></script>
+</body>
+</html>
