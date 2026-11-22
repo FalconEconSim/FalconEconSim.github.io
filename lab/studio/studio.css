@@ -1,0 +1,171 @@
+/* EC224 studio (dev): Allo type, live equations, Python notebooks. Loaded after the site's own CSS.
+ * Allo by Josh Puckett, SIL Open Font License 1.1 (fonts/OFL.txt). Variable: wght 100-900, opsz 9-32, ROND 0-100. */
+@font-face { font-family: 'Allo'; src: url('fonts/AlloVariable.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Allo'; src: url('fonts/Allo-Oblique.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Allo'; src: url('fonts/Allo-SemiBoldOblique.woff2') format('woff2'); font-weight: 600; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Allo'; src: url('fonts/Allo-BoldOblique.woff2') format('woff2'); font-weight: 700 900; font-style: italic; font-display: swap; }
+
+:root, html[data-ds="v2"] {
+  --font-display: 'Allo', 'Libre Franklin', Helvetica, Arial, sans-serif;
+  --font-body: 'Allo', 'Libre Franklin', Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-body);
+  --round-text: 40;      /* Allo's roundness axis: a little softer than sharp for reading */
+  --round-head: 72;      /* friendlier for headings and numerals you can touch */
+  --code: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
+}
+html[data-ds="v2"] body, body {
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+  font-variation-settings: 'ROND' var(--round-text);
+  font-feature-settings: 'calt' 1, 'ss03' 1;   /* ss03: open 4, 6, 9, easier to tell apart in numbers */
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, .sec-n, .page-hero h1, .lede, .tg-title, .nb-md h2, .nb-md h3 { font-variation-settings: 'ROND' var(--round-head); }
+h1 { font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-weight: 750; letter-spacing: -0.012em; }
+/* numbers line up: tabular figures for readouts, tables and anything that changes while you drag */
+.kfig, .tg, .nb-out, table { font-variant-numeric: tabular-nums; }
+/* the figures inherit Allo too (the studio's copy of kit.js measures labels in Allo) */
+.kfig, .kfig .plot text { font-family: var(--font-body) !important; font-variation-settings: 'ROND' 55; }
+
+/* dev banner */
+.studio-banner { position: relative; z-index: 60; background: #14181b; color: #eef0ee; font: 600 14px/1.4 var(--font-body);
+  padding: 7px 16px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.studio-banner a { color: #f0d9a8; text-underline-offset: 3px; }
+.studio-banner b { font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; font-size: 12px; background: #7a1f5c; padding: 2px 8px; border-radius: 99px; }
+
+/* ===================== live equations (tangle.js) ===================== */
+.studio-live { margin: var(--s-6, 2rem) 0 var(--s-5, 1.5rem); }
+.studio-live-k { font: 800 12px/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: #7a1f5c; margin: 0 0 8px; }
+.tg { position: relative; background: #fff; border: 2px solid #14181b; border-radius: 16px; padding: 18px 20px 16px; }
+.tg-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.tg .tg-title { font: 750 1.25rem/1.25 var(--font-display) !important; margin: 0; letter-spacing: -0.01em; }
+.tg-lede { margin: 6px 0 0; color: #4a5257; font-size: 1rem; max-width: 62ch; }
+.tg-reset { font: 600 14px var(--font-body); background: none; border: 1.5px solid #c9cfca; border-radius: 99px; padding: 4px 12px; color: #4a5257; cursor: pointer; }
+.tg-reset:hover { border-color: #7a1f5c; color: #7a1f5c; }
+.tg-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 18px 26px; align-items: center; margin-top: 10px; }
+.tg-body.no-chart { grid-template-columns: 1fr; }
+.tg-eq { font-size: 1.12rem; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+.tg-eq .katex-display { margin: 0.55em 0; text-align: left; }
+.tg-eq .katex-display > .katex { text-align: left; }
+.tg-prose { font-size: 1.06rem; line-height: 1.75; margin: 10px 0 0; }
+.tg-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tg-notes { margin: 12px 0 0; font-size: 0.94rem; color: #4a5257; }
+.tg-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+/* a number you can drag: plum, like every control on the site */
+.tg-p { color: #7a1f5c; font-weight: 700; cursor: ew-resize; border-radius: 5px; padding: 0 2px; margin: 0 -2px;
+  background: linear-gradient(transparent 0 calc(100% - 2px), rgba(122, 31, 92, 0.55) 0) no-repeat;
+  background-size: 100% 100%; touch-action: none; user-select: none; -webkit-user-select: none;
+  font-variation-settings: 'ROND' 85; transition: background-color 120ms ease; }
+.tg-p:hover, .tg-p:focus-visible, .tg-p.on { background-color: rgba(122, 31, 92, 0.11); outline: none; }
+.tg-p:focus-visible { box-shadow: 0 0 0 2px #7a1f5c; }
+.tg.dragging, .tg.dragging * { cursor: ew-resize !important; }
+.tg .katex .tg-p { padding: 0 0.08em; }
+.tg-o { font-weight: 700; }
+.tg-range { position: absolute; z-index: 5; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; pointer-events: none;
+  background: #14181b; color: #eef0ee; font: 600 12px/1 var(--font-body); padding: 6px 10px; border-radius: 99px; white-space: nowrap; }
+.tg-range-bar { position: relative; width: 90px; height: 4px; background: #4a5257; border-radius: 4px; }
+.tg-range-bar i { position: absolute; top: -4px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #e7a6cf; }
+.tg-edit { position: absolute; z-index: 6; display: flex; gap: 8px; align-items: center; background: #fff; border: 2px solid #7a1f5c; border-radius: 10px; padding: 6px 8px; box-shadow: 0 8px 22px rgba(20,24,27,.14); }
+.tg-edit input { width: 84px; font: 600 16px var(--font-body); border: 1px solid #c9cfca; border-radius: 6px; padding: 3px 6px; }
+.tg-edit-hint { font-size: 12px; color: #4a5257; }
+.tg-axes line { stroke: #8b9396; stroke-width: 1.2; }
+.tg-axes text { font: 500 12px var(--font-body); fill: #4a5257; }
+.tg-axis { fill: none; stroke: #14181b; stroke-width: 2; }
+.tg-axl { font: 700 14px var(--font-body) !important; fill: #14181b !important; }
+.tg-lab { font: 700 14px var(--font-body); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+.tg-lab.sm { font-size: 12px; font-weight: 600; }
+@media (max-width: 760px) { .tg-body { grid-template-columns: 1fr; } .tg { padding: 16px 14px 14px; } .tg-eq { font-size: 1rem; } }
+
+/* the notebook teaser on a week page */
+.studio-nbcard { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; margin: var(--s-6, 2rem) 0;
+  background: #14181b; color: #eef0ee; border-radius: 16px; padding: 20px 22px; }
+.studio-nbcard h3 { margin: 0 0 4px; font: 750 1.3rem/1.2 var(--font-display); color: #fff; }
+.studio-nbcard p { margin: 0; color: #c7ccc8; font-size: 1rem; max-width: 60ch; }
+.studio-nbcard pre { margin: 0; font: 500 13px/1.5 var(--code); color: #e7a6cf; background: #1f2427; padding: 10px 12px; border-radius: 10px; }
+.studio-nbcard a.go { font: 700 16px var(--font-body); color: #14181b; background: #f0d9a8; padding: 11px 18px; border-radius: 99px; text-decoration: none; white-space: nowrap; }
+.studio-nbcard a.go:hover { background: #fff; }
+@media (max-width: 760px) { .studio-nbcard { grid-template-columns: 1fr; } }
+
+/* ===================== notebook page (notebook.js) ===================== */
+.nb-page { max-width: 54rem; margin: 0 auto; padding: 28px 16px 120px; }
+.nb-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 10px 0 24px;
+  position: sticky; top: 3rem; z-index: 20; background: var(--paper, #eff1ee); padding: 10px 0; border-bottom: 2px solid #14181b; }
+.nb-status { font: 600 14px/1.3 var(--font-body); color: #4a5257; display: flex; align-items: center; gap: 8px; }
+.nb-status::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #a07800; animation: nbpulse 1.2s ease-in-out infinite; }
+.nb-status.ok::before { background: #2f7d55; animation: none; }
+.nb-status.err { color: #93301f; } .nb-status.err::before { background: #b03a2e; animation: none; }
+@keyframes nbpulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .nb-status::before { animation: none; } }
+.nb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.nb-actions button, .nb-actions a { font: 600 14px var(--font-body); background: #fff; color: #14181b; border: 1.5px solid #14181b; border-radius: 99px; padding: 6px 14px; cursor: pointer; text-decoration: none; }
+.nb-actions button:hover, .nb-actions a:hover { background: #14181b; color: #fff; }
+.nb-md { font-size: 1.125rem; line-height: 1.65; max-width: 62ch; }
+.nb-md h2 { font-weight: 800 !important; font: 800 2rem/1.15 var(--font-display); margin: 2.2rem 0 .6rem; letter-spacing: -0.015em; }
+.nb-md h3 { font-weight: 750 !important; font: 750 1.4rem/1.25 var(--font-display); margin: 1.8rem 0 .4rem; }
+.nb-md h4 { font-weight: 700 !important; font: 700 1.1rem/1.3 var(--font-display); margin: 1.4rem 0 .3rem; }
+.nb-md code { font: 500 0.9em var(--code); background: #e3e7e3; padding: 1px 5px; border-radius: 5px; }
+.nb-md .nb-dmath { overflow-x: auto; }
+.nb-try { border-left: 4px solid #7a1f5c; background: #f6eef3; padding: 10px 16px; border-radius: 0 10px 10px 0; margin: 1rem 0; }
+.nb-cell { margin: 14px 0 22px; border: 2px solid #14181b; border-radius: 14px; background: #fff; overflow: hidden; transition: opacity 150ms; }
+.nb-cell.stale { opacity: .55; }
+.nb-cell.edited { border-color: #7a1f5c; }
+.nb-bar { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; border-bottom: 1px solid #e3e7e3; background: #f7f8f6; }
+.nb-label { font: 700 12px/1 var(--font-body); letter-spacing: .07em; text-transform: uppercase; color: #4a5257; margin-right: auto; }
+.nb-run, .nb-rst { font: 700 13px var(--font-body); border-radius: 99px; padding: 5px 12px; cursor: pointer; }
+.nb-run { background: #7a1f5c; color: #fff; border: 0; }
+.nb-run:hover { background: #5e1747; }
+.nb-root:not(.ready) .nb-run { opacity: .6; }
+.nb-rst { background: none; border: 1.5px solid #c9cfca; color: #4a5257; }
+.nb-ed .CodeMirror { height: auto; font: 15px/1.55 var(--code); background: #fff; color: #14181b; padding: 6px 4px; }
+.nb-ed .CodeMirror-cursor { border-left: 2px solid #7a1f5c; }
+.nb-ed .cm-keyword { color: #7a1f5c; font-weight: 600; } .nb-ed .cm-def { color: #14568c; font-weight: 600; }
+.nb-ed .cm-number { color: #a8431f; } .nb-ed .cm-string { color: #256647; } .nb-ed .cm-comment { color: #6b7378; font-style: italic; }
+.nb-ed .cm-builtin { color: #5a4590; } .nb-ed .cm-variable-2 { color: #14568c; } .nb-ed .cm-operator { color: #4a5257; }
+.nb-ed .CodeMirror-selected { background: #f1dceb !important; }
+.nb-out { border-top: 1px solid #e3e7e3; padding: 10px 14px; background: #fbfbfa; }
+.nb-out[hidden] { display: none; }
+.nb-out pre { margin: 0 0 6px; font: 14px/1.5 var(--code); white-space: pre-wrap; word-break: break-word; }
+.nb-ok { color: #256647; font-weight: 700; } .nb-no { color: #93301f; font-weight: 700; }
+.nb-res { color: #14568c; }
+.nb-err { color: #93301f; background: #fff3f1; padding: 8px 10px; border-radius: 8px; }
+.nb-fig svg { width: 100%; max-width: 640px; height: auto; display: block; margin: 4px auto; }
+.nb-setup > summary { cursor: pointer; padding: 10px 14px; font: 600 14px var(--font-body); color: #4a5257; }
+.nb-setup[open] > summary { border-bottom: 1px solid #e3e7e3; }
+.nb-knobs .tg { border: 0; border-radius: 0; padding: 14px 16px 6px; }
+.nb-knobs .tg-prose { font-size: 1.15rem; margin-top: 4px; }
+.nb-knob-tip { margin: 0; padding: 0 16px 8px; font-size: 13px; color: #4a5257; }
+.nb-knob-code { padding: 0 16px 10px; font-size: 13px; color: #4a5257; }
+.nb-knob-code summary { cursor: pointer; }
+.nb-knob-code pre { font: 13px/1.5 var(--code); margin: 6px 0 0; color: #14181b; }
+.nb-knobs-cell { border-color: #7a1f5c; }
+.nb-cell.nb-knobs { border-color: #7a1f5c; }
+
+/* studio top bar: the three studio weeks and the notebook */
+.studio-weeks { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.studio-weeks a { font: 600 14px var(--font-body); color: var(--ink, #14181b); text-decoration: none; padding: 5px 10px; border-radius: 99px; }
+.studio-weeks a:hover { background: rgba(20, 24, 27, 0.07); }
+.studio-weeks a[aria-current="page"] { background: #14181b; color: #fff; }
+.studio-weeks .studio-nb-link { background: #7a1f5c; color: #fff; margin-left: 4px; }
+.studio-weeks .studio-nb-link:hover { background: #5e1747; }
+.nb-hero h1 { font: 800 clamp(2.2rem, 5vw, 3.4rem)/1.05 var(--font-display); letter-spacing: -0.025em; margin: 6px 0 12px; }
+.nb-hero .lede { font-size: 1.2rem; color: #4a5257; max-width: 60ch; }
+@media (max-width: 760px) { .studio-weeks a:not(.studio-nb-link) { display: none; } .nb-top { top: 3rem; } }
+.topbar .studio-weeks a { color: var(--ink, #14181b); }
+.topbar .studio-weeks a[aria-current="page"], .topbar .studio-weeks .studio-nb-link { color: #fff; }
+
+/* live blocks span the figure column, like the figures */
+.sec.page > .studio-live { grid-column: full-start / full-end; min-width: 0; }
+.tg-eqs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; column-gap: 40px; row-gap: 0; padding-bottom: 6px; border-bottom: 1px solid #e3e7e3; }
+.tg-eqs .tg-eq { flex: 0 1 auto; max-width: 100%; }
+.tg-body { align-items: start; }
+.tg-text { align-self: center; }
+@media (max-width: 760px) { .nb-top { position: static; } .nb-actions button, .nb-actions a { padding: 5px 11px; font-size: 13px; } }
+/* folded code: output first, code one click away */
+.nb-fold > summary { cursor: pointer; padding: 8px 14px; font: 600 14px var(--font-body); color: #4a5257; border-bottom: 1px solid #e3e7e3; }
+.nb-fold > summary:hover { color: #7a1f5c; }
+.nb-cell.folded { display: flex; flex-direction: column; }
+.nb-cell.folded > .nb-out { order: 2; border-top: 0; }
+.nb-cell.folded > .nb-fold { order: 3; border-top: 1px solid #e3e7e3; }
+.nb-cell.folded > .nb-fold > summary { border-bottom: 0; }
+.nb-cell.folded > .nb-fold[open] > summary { border-bottom: 1px solid #e3e7e3; }
